@@ -237,23 +237,32 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestFavoritesManagementSaveAndRestore()
         {
-            var vm = new MainViewModel();
-            vm.CurrentIris.Name = "特選サファイア";
-            vm.CurrentIris.SizeMm = 20.0;
-            vm.AddFavoriteCommand.Execute(null);
+            // A temporary store: adding a favorite auto-saves, and must never touch the user's real favorites
+            string favoritesPath = Path.Combine(Path.GetTempPath(), $"favorites_{Guid.NewGuid():N}.json");
+            try
+            {
+                var vm = new MainViewModel(new FakeDialogService(), new FavoritesStore(favoritesPath));
+                vm.CurrentIris.Name = "特選サファイア";
+                vm.CurrentIris.SizeMm = 20.0;
+                vm.AddFavoriteCommand.Execute(null);
 
-            Assert.NotEmpty(vm.Favorites);
-            var fav = vm.Favorites[0];
-            Assert.Equal("特選サファイア", fav.Name);
+                Assert.NotEmpty(vm.Favorites);
+                var fav = vm.Favorites[0];
+                Assert.Equal("特選サファイア", fav.Name);
 
-            // Change current iris
-            vm.CurrentIris.Name = "別のデザイン";
-            vm.CurrentIris.SizeMm = 14.0;
+                // Change current iris
+                vm.CurrentIris.Name = "別のデザイン";
+                vm.CurrentIris.SizeMm = 14.0;
 
-            // Restore from favorite
-            vm.LoadFavoriteCommand.Execute(fav);
-            Assert.Equal("特選サファイア", vm.CurrentIris.Name);
-            Assert.Equal(20.0, vm.CurrentIris.SizeMm);
+                // Restore from favorite
+                vm.LoadFavoriteCommand.Execute(fav);
+                Assert.Equal("特選サファイア", vm.CurrentIris.Name);
+                Assert.Equal(20.0, vm.CurrentIris.SizeMm);
+            }
+            finally
+            {
+                File.Delete(favoritesPath);
+            }
         }
 
         [Fact]

@@ -3,5 +3,7 @@ obj/
 .vs/
 *.user
 
-# Full-size original of the app logo (kept locally only)
+# Full-size image originals stay local by default...
 *_original.png
+# ...except this archived copy of the full-size logo (not part of the build)
+!assets/source/*_original.png
