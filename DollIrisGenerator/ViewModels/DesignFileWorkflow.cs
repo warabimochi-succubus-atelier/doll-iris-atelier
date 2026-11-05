@@ -62,12 +62,40 @@ namespace DollIrisGenerator.ViewModels
                 if (loaded != null)
                 {
                     applyLoaded(loaded);
-                    _reportStatus($"パラメータを読み込みました: {Path.GetFileName(path)}");
+                    string message = $"パラメータを読み込みました: {Path.GetFileName(path)}";
+                    string? sizeNote = DescribeSizeAdjustment(json, loaded.SizeMm);
+                    _reportStatus(sizeNote == null ? message : $"{message} ({sizeNote})");
                 }
             }
             catch (Exception ex)
             {
                 _dialogs.ShowError($"読み込みエラー: {ex.Message}", "エラー");
+            }
+        }
+
+        /// <summary>
+        /// Files saved before the size range became iris-only (4-20 mm) can hold eye-sized values such as 24 mm.
+        /// The model clamps them on load; this says so, so the user notices the design got smaller.
+        /// Returns null when the saved size was already in range (or is missing / unreadable).
+        /// </summary>
+        public static string? DescribeSizeAdjustment(string json, double appliedSizeMm)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind != JsonValueKind.Object
+                    || !doc.RootElement.TryGetProperty(nameof(IrisParameters.SizeMm), out var size)
+                    || !size.TryGetDouble(out double savedSizeMm))
+                {
+                    return null;
+                }
+                if (Math.Abs(savedSizeMm - appliedSizeMm) < 1e-9) return null;
+                return $"保存されていた虹彩サイズ {savedSizeMm:F1}mm は範囲外 " +
+                       $"({IrisParameters.MinSizeMm:F0}〜{IrisParameters.MaxSizeMm:F0}mm) のため {appliedSizeMm:F1}mm に調整しました";
+            }
+            catch (JsonException)
+            {
+                return null;
             }
         }
 

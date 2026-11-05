@@ -18,7 +18,7 @@ namespace DollIrisGenerator.ViewModels
         private OddEyeTemplate? _selectedOddEyeTemplate;
         private PdfTemplatePreset? _selectedPdfTemplate;
         private PreviewMode _previewMode = PreviewMode.Pair;
-        private double _zoomScale = 1.8;
+        private double _zoomScale = WpfIrisRenderer.DefaultPreviewZoom;
         private bool _showCutLines = true;
         private bool _showCenterMarks = true;
         private PrintSheetConfig _sheetConfig;
@@ -140,7 +140,7 @@ namespace DollIrisGenerator.ViewModels
         public double ZoomScale
         {
             get => _zoomScale;
-            set { _zoomScale = Math.Max(0.2, Math.Min(12.0, value)); OnPropertyChanged(); }
+            set { _zoomScale = Math.Clamp(value, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom); OnPropertyChanged(); }
         }
 
         public bool ShowCutLines
@@ -311,7 +311,7 @@ namespace DollIrisGenerator.ViewModels
             RandomizeAttributesCommand = new RelayCommand(OnRandomizeAttributes);
             ZoomInCommand = new RelayCommand(() => ZoomScale *= 1.25);
             ZoomOutCommand = new RelayCommand(() => ZoomScale /= 1.25);
-            ZoomResetCommand = new RelayCommand(() => ZoomScale = 1.8);
+            ZoomResetCommand = new RelayCommand(() => ZoomScale = WpfIrisRenderer.DefaultPreviewZoom);
             ZoomRealSizeCommand = new RelayCommand(() =>
             {
                 ZoomScale = 1.0;

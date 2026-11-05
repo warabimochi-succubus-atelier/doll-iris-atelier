@@ -8,12 +8,22 @@ namespace DollIrisGenerator.Services
     public static class WpfIrisRenderer
     {
         /// <summary>
-        /// Physical size of one "style unit" (ray thickness, lens ring width, glitter size, guide lines):
-        /// one screen DIP at the default 180% preview zoom, i.e. 25.4 / (96 * 1.8) = 0.147 mm.
-        /// Tying these to millimetres makes the preview (at any zoom), PDF, PNG and SVG all match the
-        /// default-zoom preview the design was made with.
+        /// Preview zoom the app opens at (and "リセット" returns to). 360% shows the default 10 mm iris
+        /// about 136 DIP across, the same on-screen size the old 20 mm default had at 180%.
         /// </summary>
-        public const double MmPerStyleUnit = 25.4 / (96.0 * 1.8);
+        public const double DefaultPreviewZoom = 3.6;
+        public const double MinPreviewZoom = 0.2;
+        public const double MaxPreviewZoom = 16.0;
+
+        /// <summary>
+        /// Physical size of one "style unit" (ray thickness, lens ring width, glitter size, guide lines):
+        /// one screen DIP at the default preview zoom, i.e. 25.4 / (96 * 3.6) = 0.0735 mm.
+        /// Tying these to millimetres makes the preview (at any zoom), PDF, PNG and SVG all match the
+        /// default-zoom preview the design was made with. It moved together with the default zoom when the
+        /// size range changed from eye-sized (around 20 mm) to iris-sized (around 10 mm) values, so the
+        /// built-in presets keep the same proportions on the smaller iris.
+        /// </summary>
+        public const double MmPerStyleUnit = 25.4 / (96.0 * DefaultPreviewZoom);
 
         public static void RenderIris(
             DrawingContext dc,

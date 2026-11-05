@@ -38,7 +38,7 @@ namespace DollIrisGenerator.Tests
             var original = new IrisParameters
             {
                 Name = "テスト虹彩デザイン",
-                SizeMm = 22.5,
+                SizeMm = 11.5,
                 Shape = IrisShape.VerticalOval,
                 AspectRatio = 1.18,
                 TiltAngle = 12.0,
@@ -212,9 +212,87 @@ namespace DollIrisGenerator.Tests
             var sheetConfig = new PrintSheetConfig();
             template1_3.ApplyTo(sheetConfig);
 
-            Assert.Equal(3, sheetConfig.ManualColumns);
-            Assert.Equal(4, sheetConfig.ManualRows);
+            Assert.Equal(4, sheetConfig.ManualColumns);
+            Assert.Equal(8, sheetConfig.ManualRows);
             Assert.Equal(18.0, sheetConfig.PageMarginTopMm);
+        }
+
+        [Theory]
+        [InlineData(PdfTemplateType.Scale1_3_Doll, 12.0)] // largest iris named in each template
+        [InlineData(PdfTemplateType.Scale1_4_Doll, 10.0)]
+        [InlineData(PdfTemplateType.Scale1_6_Doll, 7.0)]
+        [InlineData(PdfTemplateType.CirclePunchGrid, 12.0)]
+        public void TestManualGridTemplatesFitAFullPageAtTheTopOfTheirSizeRange(PdfTemplateType type, double sizeMm)
+        {
+            var config = new PrintSheetConfig();
+            PdfTemplatePreset.All.Find(t => t.Type == type)!.ApplyTo(config);
+            Assert.False(config.AutoCalculateGrid);
+
+            int fullPage = config.ManualColumns * config.ManualRows;
+            var layout = new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = sizeMm }, fullPage) }, config);
+            Assert.Equal(1, layout.PageCount);
+            Assert.True(layout.FitsOnPage, $"{type} at {sizeMm} mm: {layout.GridWidthMm:F1} x {layout.GridHeightMm:F1} mm");
+        }
+
+        [Theory]
+        [InlineData(9.0, 6, 12)]
+        [InlineData(10.0, 6, 11)]
+        [InlineData(11.0, 6, 11)]
+        [InlineData(12.0, 5, 10)]
+        public void TestDefaultAutoLayoutCapacityForQuickSelectSizes(double sizeMm, int columns, int rows)
+        {
+            var layout = new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = sizeMm }, 1) }, new PrintSheetConfig());
+            Assert.Equal(columns, layout.Columns);
+            Assert.Equal(rows, layout.Rows);
+
+            var full = new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = sizeMm }, columns * rows) }, new PrintSheetConfig());
+            Assert.Equal(1, full.PageCount);
+            Assert.True(full.FitsOnPage);
+        }
+
+        [Fact]
+        public void TestIrisSizeDefaultsToTenMillimetresAndClampsToFourToTwenty()
+        {
+            Assert.Equal(10.0, new IrisParameters().SizeMm);
+            Assert.Equal(20.0, new IrisParameters { SizeMm = 24.0 }.SizeMm);
+            Assert.Equal(4.0, new IrisParameters { SizeMm = 2.0 }.SizeMm);
+            Assert.Equal(12.3, new IrisParameters { SizeMm = 12.3 }.SizeMm);
+
+            // Eye-sized values saved by older versions are pulled into the iris range on load
+            var loaded = JsonSerializer.Deserialize<IrisParameters>("{\"SizeMm\": 36.0}")!;
+            Assert.Equal(IrisParameters.MaxSizeMm, loaded.SizeMm);
+        }
+
+        [Fact]
+        public void TestSizeAdjustmentNoteOnlyWhenTheSavedSizeWasOutOfRange()
+        {
+            string? note = DesignFileWorkflow.DescribeSizeAdjustment("{\"SizeMm\": 24.0}", 20.0);
+            Assert.NotNull(note);
+            Assert.Contains("24.0mm", note);
+            Assert.Contains("20.0mm", note);
+
+            Assert.Null(DesignFileWorkflow.DescribeSizeAdjustment("{\"SizeMm\": 10.5}", 10.5));
+            Assert.Null(DesignFileWorkflow.DescribeSizeAdjustment("{\"Name\": \"x\"}", 10.0));
+            Assert.Null(DesignFileWorkflow.DescribeSizeAdjustment("[1, 2]", 10.0));
+        }
+
+        [Theory]
+        [InlineData(9.0, "9.0", true)]
+        [InlineData(10.0, "10.0", true)]
+        [InlineData(11.04, "11.0", true)]  // slider steps are 0.1 mm; tiny float error still matches
+        [InlineData(11.1, "11.0", false)]
+        [InlineData(12.0, "11.0", false)]
+        [InlineData(12.0, "12.0", true)]
+        public void TestQuickSizeButtonsShowTheCurrentIrisSize(double sizeMm, string buttonSize, bool expectedChecked)
+        {
+            var converter = new DollIrisGenerator.Converters.SizeMatchesConverter();
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("de-DE"); // decimal comma: parameter must still parse as 11.0
+            Assert.Equal(expectedChecked, converter.Convert(sizeMm, typeof(bool), buttonSize, culture));
+            if (expectedChecked)
+            {
+                Assert.Equal(double.Parse(buttonSize, System.Globalization.CultureInfo.InvariantCulture),
+                    converter.ConvertBack(true, typeof(double), buttonSize, culture));
+            }
         }
 
         [Fact]
@@ -404,19 +482,19 @@ namespace DollIrisGenerator.Tests
                 string outDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\SampleOutputs");
                 Directory.CreateDirectory(outDir);
 
-                var blue = new IrisParameters { Name = "サファイアブルー", SizeMm = 20.0, Seed = 12345 };
+                var blue = new IrisParameters { Name = "サファイアブルー", SizeMm = 10.0, Seed = 12345 };
                 ColorPresets.ApplyPreset(blue, ColorPresets.All[0]);
 
-                var galaxy = new IrisParameters { Name = "ギャラクシー", SizeMm = 20.0, Seed = 45678 };
+                var galaxy = new IrisParameters { Name = "ギャラクシー", SizeMm = 10.0, Seed = 45678 };
                 ColorPresets.ApplyPreset(galaxy, ColorPresets.All[9]);
 
-                var sakura = new IrisParameters { Name = "サクラ (桜舞う春風)", SizeMm = 20.0, Seed = 56789 };
+                var sakura = new IrisParameters { Name = "サクラ (桜舞う春風)", SizeMm = 10.0, Seed = 56789 };
                 ColorPresets.ApplyPreset(sakura, ColorPresets.All[7]); // Sakura preset with SakuraPetal symbol
 
                 // Export SVGs
-                File.WriteAllText(Path.Combine(outDir, "Sample_SapphireBlue_20.0mm.svg"), SvgExporter.GeneratePairSvg(blue, includePrintGuides: true));
-                File.WriteAllText(Path.Combine(outDir, "Sample_Galaxy_20.0mm.svg"), SvgExporter.GeneratePairSvg(galaxy, includePrintGuides: true));
-                File.WriteAllText(Path.Combine(outDir, "Sample_Sakura_20.0mm.svg"), SvgExporter.GeneratePairSvg(sakura, includePrintGuides: true));
+                File.WriteAllText(Path.Combine(outDir, "Sample_SapphireBlue_10.0mm.svg"), SvgExporter.GeneratePairSvg(blue, includePrintGuides: true));
+                File.WriteAllText(Path.Combine(outDir, "Sample_Galaxy_10.0mm.svg"), SvgExporter.GeneratePairSvg(galaxy, includePrintGuides: true));
+                File.WriteAllText(Path.Combine(outDir, "Sample_Sakura_10.0mm.svg"), SvgExporter.GeneratePairSvg(sakura, includePrintGuides: true));
 
                 // Export Sample PDF Sheet
                 var sheetItems = new ObservableCollection<SheetItem>
@@ -609,7 +687,7 @@ namespace DollIrisGenerator.Tests
         {
             var iris = new IrisParameters
             {
-                SizeMm = 24.5,
+                SizeMm = 12.5,
                 Shape = IrisShape.VerticalOval,
                 AspectRatio = 1.35,
                 TiltAngle = -18.0,
@@ -622,7 +700,7 @@ namespace DollIrisGenerator.Tests
                 IrisRandomizer.RandomizeAttributes(iris);
 
                 // Dimension and size attributes MUST remain exactly identical
-                Assert.Equal(24.5, iris.SizeMm);
+                Assert.Equal(12.5, iris.SizeMm);
                 Assert.Equal(IrisShape.VerticalOval, iris.Shape);
                 Assert.Equal(1.35, iris.AspectRatio);
                 Assert.Equal(-18.0, iris.TiltAngle);
@@ -715,12 +793,12 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestSheetLayoutSizesCellsFromLargestDesignSoMixedSizesNeverOverlap()
         {
-            var small = new IrisParameters { SizeMm = 18.0 };
-            var large = new IrisParameters { SizeMm = 24.0 };
+            var small = new IrisParameters { SizeMm = 9.0 };
+            var large = new IrisParameters { SizeMm = 12.0 };
             var config = new PrintSheetConfig();
             var layout = new SheetLayout(new ObservableCollection<SheetItem> { new(small, 1), new(large, 1) }, config);
 
-            Assert.Equal(24.0, layout.CellEyeWidthMm, 3);
+            Assert.Equal(12.0, layout.CellEyeWidthMm, 3);
             Assert.True(layout.Columns >= 2);
 
             // Right edge of the small pair's right eye must not reach the large pair's left eye
@@ -927,7 +1005,7 @@ namespace DollIrisGenerator.Tests
                     PdfExporter.ExportA4SheetToPdf(enPdf, new ObservableCollection<SheetItem> { new(new IrisParameters { Name = "Sapphire" }, 1) }, config);
                     string en = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(enPdf));
                     Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(en, "/Subtype /Image").Count);
-                    Assert.Contains("(20.0mm - Sapphire) Tj", en);
+                    Assert.Contains("(10.0mm - Sapphire) Tj", en);
                 }
                 finally
                 {
@@ -982,7 +1060,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(100.0, x, 6);                                   // (210 - 10) / 2
             Assert.Equal(297.0 - SheetLayout.ScaleMarkBottomOffsetMm, y, 6);
             Assert.True(vertical);
-            double gridBottom = 15.0 + roomy.Rows * roomy.PairTotalHeightMm + (roomy.Rows - 1) * 12.0;
+            double gridBottom = 15.0 + roomy.Rows * roomy.PairTotalHeightMm + (roomy.Rows - 1) * roomy.Config.RowSpacingMm;
             Assert.True(y - SheetLayout.ScaleMarkLengthMm > gridBottom, "vertical bar must stay below the last row");
 
             // Manual grid that runs to the bottom of the page -> horizontal bar only
@@ -1089,8 +1167,9 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestLineWidthsUseTheSameMillimetreUnitEverywhere()
         {
-            // 1 style unit = 1 screen DIP at the default 180% zoom
-            Assert.Equal(25.4 / (96.0 * 1.8), WpfIrisRenderer.MmPerStyleUnit, 9);
+            // 1 style unit = 1 screen DIP at the default 360% zoom
+            Assert.Equal(25.4 / (96.0 * 3.6), WpfIrisRenderer.MmPerStyleUnit, 9);
+            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, new MainViewModel().ZoomScale, 9);
 
             var p = new IrisParameters { RayThickness = 1.2 };
             string svg = SvgExporter.GeneratePairSvg(p);
@@ -1106,30 +1185,31 @@ namespace DollIrisGenerator.Tests
                 new(new ObservableCollection<SheetItem> { new(p, 1) }, cfg);
 
             // Automatic grid always fits, including the largest designs the sliders allow
-            Assert.True(Layout(new IrisParameters { SizeMm = 20 }, new PrintSheetConfig()).FitsOnPage);
-            Assert.True(Layout(new IrisParameters { SizeMm = 36, Shape = IrisShape.HorizontalOval, AspectRatio = 2.0 }, new PrintSheetConfig()).FitsOnPage);
-            Assert.True(Layout(new IrisParameters { SizeMm = 36, Shape = IrisShape.HorizontalOval, AspectRatio = 2.0, TiltAngle = 45 }, new PrintSheetConfig()).FitsOnPage);
+            Assert.True(Layout(new IrisParameters { SizeMm = 10 }, new PrintSheetConfig()).FitsOnPage);
+            Assert.True(Layout(new IrisParameters { SizeMm = 20, Shape = IrisShape.HorizontalOval, AspectRatio = 2.5 }, new PrintSheetConfig()).FitsOnPage);
+            Assert.True(Layout(new IrisParameters { SizeMm = 20, Shape = IrisShape.HorizontalOval, AspectRatio = 2.5, TiltAngle = 45 }, new PrintSheetConfig()).FitsOnPage);
 
-            // Design larger than the page (only possible via a hand-edited / shared JSON file)
-            var huge = Layout(new IrisParameters { SizeMm = 60, Shape = IrisShape.HorizontalOval, AspectRatio = 2.5 }, new PrintSheetConfig());
+            // Pair wider than the space between very wide margins
+            var wideMargins = new PrintSheetConfig { PageMarginLeftMm = 60, PageMarginRightMm = 60 };
+            var huge = Layout(new IrisParameters { SizeMm = 20, Shape = IrisShape.HorizontalOval, AspectRatio = 2.5 }, wideMargins);
             Assert.False(huge.FitsOnPage);
-            Assert.Equal(304.0, huge.GridWidthMm, 6);   // 2 x 150 mm + 4 mm gap
-            Assert.Equal(180.0, huge.UsableWidthMm, 6); // 210 - 15 - 15
+            Assert.Equal(103.0, huge.GridWidthMm, 6);  // 2 x 50 mm + 3 mm gap
+            Assert.Equal(90.0, huge.UsableWidthMm, 6); // 210 - 60 - 60
 
-            // Manual grid too wide for the margins: 4 filled columns of 20 mm pairs = 4 x 44 + 3 x 10 = 206 mm > 180 mm
-            var manualCfg = new PrintSheetConfig { AutoCalculateGrid = false, ManualColumns = 4, ManualRows = 6 };
-            var fourPairs = new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = 20 }, 4) }, manualCfg);
-            Assert.Equal(206.0, fourPairs.GridWidthMm, 6);
-            Assert.False(fourPairs.FitsOnPage);
+            // Manual grid too wide for the margins: 6 filled columns of 12 mm pairs = 6 x 27 + 5 x 6 = 192 mm > 180 mm
+            var manualCfg = new PrintSheetConfig { AutoCalculateGrid = false, ManualColumns = 6, ManualRows = 6 };
+            var sixPairs = new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = 12 }, 6) }, manualCfg);
+            Assert.Equal(192.0, sixPairs.GridWidthMm, 6);
+            Assert.False(sixPairs.FitsOnPage);
 
             // Same grid with only one pair: the empty cells print nothing, so it fits (no false alarm)
-            var onePair = Layout(new IrisParameters { SizeMm = 20 }, manualCfg);
-            Assert.Equal(44.0, onePair.GridWidthMm, 6);
+            var onePair = Layout(new IrisParameters { SizeMm = 12 }, manualCfg);
+            Assert.Equal(27.0, onePair.GridWidthMm, 6);
             Assert.True(onePair.FitsOnPage);
 
-            // 3 columns of 20 mm pairs = 3 x 44 + 2 x 10 = 152 mm: fits
-            Assert.True(new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = 20 }, 18) },
-                new PrintSheetConfig { AutoCalculateGrid = false, ManualColumns = 3, ManualRows = 6 }).FitsOnPage);
+            // 5 columns of 12 mm pairs = 5 x 27 + 4 x 6 = 159 mm: fits
+            Assert.True(new SheetLayout(new ObservableCollection<SheetItem> { new(new IrisParameters { SizeMm = 12 }, 30) },
+                new PrintSheetConfig { AutoCalculateGrid = false, ManualColumns = 5, ManualRows = 6 }).FitsOnPage);
         }
 
         [Fact]

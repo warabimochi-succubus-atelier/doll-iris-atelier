@@ -11,8 +11,17 @@ namespace DollIrisGenerator.Models
 {
     public class IrisParameters : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Iris diameter range. This is the iris only, not the whole doll eye: the iris is roughly half the
+        /// eye (a 20 mm eye has an iris of about 10 mm), so 4-20 mm covers small dolls up to oversized irises.
+        /// The setter clamps to this range, so saved JSON / favorites with a size outside it are pulled in.
+        /// </summary>
+        public const double MinSizeMm = 4.0;
+        public const double MaxSizeMm = 20.0;
+        public const double DefaultSizeMm = 10.0;
+
         private string _name = "新規虹彩デザイン";
-        private double _sizeMm = 20.0;
+        private double _sizeMm = DefaultSizeMm;
         private IrisShape _shape = IrisShape.Circle;
         private double _aspectRatio = 1.15; // used when shape is oval
         private double _tiltAngle = 0.0;    // degrees (-45 to 45) for stylized doll eyes
@@ -133,7 +142,7 @@ namespace DollIrisGenerator.Models
         public double SizeMm
         {
             get => _sizeMm;
-            set { _sizeMm = Math.Max(4.0, Math.Min(60.0, value)); OnPropertyChanged(); }
+            set { _sizeMm = Math.Clamp(value, MinSizeMm, MaxSizeMm); OnPropertyChanged(); }
         }
 
         public IrisShape Shape
