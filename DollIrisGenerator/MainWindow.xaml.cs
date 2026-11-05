@@ -12,19 +12,31 @@ namespace DollIrisGenerator
         {
             InitializeComponent();
             WindowSettingsService.ApplySettings(this);
-            Loaded += (_, _) => (DataContext as MainViewModel)?.ShowFavoritesLoadProblem();
+            Loaded += (_, _) =>
+            {
+                if (DataContext is not MainViewModel vm) return;
+                vm.ShowFavoritesLoadProblem();
+                vm.ShowPrintSheetLoadProblem();
+            };
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            // The design being edited is not saved automatically (only favorites are), so confirm first
+            // The design being edited is not saved automatically (only favorites and the A4 sheet are), so confirm first
             bool exporting = DataContext is MainViewModel { IsExportingPdf: true };
             string message = exporting
                 ? "PDF を出力中です。今終了すると PDF は正しく保存されません。\n\nそれでも Doll Iris Atelier を終了しますか？"
-                : "Doll Iris Atelier を終了しますか？\n\n編集中のデザインは自動保存されません。残したい場合は「💾 JSON保存」または「⭐ お気に入り追加」で保存してください。";
+                : "Doll Iris Atelier を終了しますか？\n\n編集中のデザインは自動保存されません。残したい場合は「💾 JSON保存」または「⭐ お気に入り追加」で保存してください。\n" +
+                  "（A4印刷シートの中身と設定は保存され、次回起動時に復元されます）";
             var answer = MessageBox.Show(this, message, "終了の確認",
                 MessageBoxButton.YesNo, exporting ? MessageBoxImage.Warning : MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            if (DataContext is MainViewModel vm && !vm.SavePrintSheetBeforeExit())
             {
                 e.Cancel = true;
                 return;
