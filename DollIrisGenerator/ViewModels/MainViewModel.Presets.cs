@@ -80,11 +80,30 @@ namespace DollIrisGenerator.ViewModels
             }
         }
 
+        /// <summary>Tells the user if the saved favorites could not be read. Call once the main window is showing.</summary>
+        public void ShowFavoritesLoadProblem()
+        {
+            if (_favoritesLoadProblem == null) return;
+            string problem = _favoritesLoadProblem;
+            _favoritesLoadProblem = null;
+            _dialogs.ShowWarning(problem, "お気に入りの読み込み");
+        }
+
+        private void SaveFavorites()
+        {
+            if (!_favoritesStore.TrySavePersisted(Favorites, out string error))
+            {
+                _dialogs.ShowWarning(
+                    $"お気に入りを保存できませんでした。このまま終了すると、今回の変更は失われます。\n\n理由: {error}",
+                    "お気に入りの保存");
+            }
+        }
+
         private void OnAddFavorite()
         {
             var favorite = new FavoriteItem(CurrentIris);
             Favorites.Insert(0, favorite);
-            _favoritesStore.SavePersisted(Favorites);
+            SaveFavorites();
             StatusMessage = $"「{CurrentIris.Name}」をお気に入りに追加しました (計 {Favorites.Count} 件)。";
         }
 
@@ -93,7 +112,7 @@ namespace DollIrisGenerator.ViewModels
             if (param is FavoriteItem item)
             {
                 Favorites.Remove(item);
-                _favoritesStore.SavePersisted(Favorites);
+                SaveFavorites();
                 StatusMessage = "お気に入りから削除しました。";
             }
         }
@@ -149,7 +168,7 @@ namespace DollIrisGenerator.ViewModels
                             addedCount++;
                         }
                     }
-                    _favoritesStore.SavePersisted(Favorites);
+                    SaveFavorites();
                     StatusMessage = $"お気に入りファイルから {addedCount} 件を読み込みました。";
                 }
             }

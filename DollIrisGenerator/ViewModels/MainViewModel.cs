@@ -47,6 +47,7 @@ namespace DollIrisGenerator.ViewModels
         private ObservableCollection<FavoriteItem> _favorites = new();
         private FavoriteItem? _selectedFavorite;
         private readonly FavoritesStore _favoritesStore;
+        private string? _favoritesLoadProblem;
 
         // Dialogs and file flows
         private readonly IDialogService _dialogs;
@@ -296,10 +297,12 @@ namespace DollIrisGenerator.ViewModels
             _sheetItems.Add(new SheetItem(_currentIris.Clone(), 1));
 
             // Load persisted favorites if exists
-            foreach (var favorite in _favoritesStore.LoadPersisted())
+            var loadedFavorites = _favoritesStore.LoadPersisted();
+            foreach (var favorite in loadedFavorites.Favorites)
             {
                 _favorites.Add(favorite);
             }
+            _favoritesLoadProblem = loadedFavorites.Problem;
 
             // Setup base commands
             NewDesignCommand = new RelayCommand(OnNewDesign);
