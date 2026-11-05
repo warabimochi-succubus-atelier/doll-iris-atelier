@@ -1,0 +1,736 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
+using System.Xml;
+using System.Xml.Linq;
+using DollIrisGenerator.Controls;
+using DollIrisGenerator.Models;
+using DollIrisGenerator.Services;
+using Microsoft.Win32;
+
+namespace DollIrisGenerator.ViewModels
+{
+    public partial class MainViewModel : INotifyPropertyChanged
+    {
+        private IrisParameters _currentIris;
+        private PresetDefinition? _selectedPreset;
+        private OddEyeTemplate? _selectedOddEyeTemplate;
+        private PdfTemplatePreset? _selectedPdfTemplate;
+        private PreviewMode _previewMode = PreviewMode.Pair;
+        private double _zoomScale = 1.8;
+        private bool _showCutLines = true;
+        private bool _showCenterMarks = true;
+        private PrintSheetConfig _sheetConfig;
+        private ObservableCollection<SheetItem> _sheetItems = new();
+        private SheetItem? _selectedSheetItem;
+        private string _statusMessage = "準備完了";
+
+        // SVG Editing Mode
+        private string _svgSourceText = "";
+        private bool _autoSyncSvg = true;
+
+        // History Management (Undo / Redo Stack)
+        private ObservableCollection<HistoryItem> _historyItems = new();
+        private readonly List<IrisParameters> _undoStack = new();
+        private readonly List<IrisParameters> _redoStack = new();
+        private bool _isInternalStateChange = false;
+
+        // Manual edits (sliders, colors, text) are grouped into one undo step: the state before the first
+        // change is pushed immediately, and the step is closed after a short pause with no further changes.
+        private static readonly TimeSpan ManualEditCommitDelay = TimeSpan.FromMilliseconds(700);
+        private readonly DispatcherTimer _manualEditTimer;
+        private IrisParameters _undoBaseline;
+        private bool _manualEditPending = false;
+        private bool _suppressManualEditTracking = false; // set while a command applies its own changes
+
+        // Favorites Management
+        private ObservableCollection<FavoriteItem> _favorites = new();
+        private FavoriteItem? _selectedFavorite;
+        private readonly string _favoritesFilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "DollIrisAtelier",
+            "favorites.json");
+
+        public IrisParameters CurrentIris
+        {
+            get => _currentIris;
+            set
+            {
+                if (_currentIris != null)
+                {
+                    _currentIris.PropertyChanged -= OnIrisPropertyChanged;
+                }
+                _currentIris = value;
+                if (_currentIris != null)
+                {
+                    _currentIris.PropertyChanged += OnIrisPropertyChanged;
+                }
+                ResetManualEditTracking();
+                OnPropertyChanged();
+                UpdateSvgSource();
+            }
+        }
+
+        public ObservableCollection<PresetDefinition> Presets => ColorPresets.All;
+
+        public PresetDefinition? SelectedPreset
+        {
+            get => _selectedPreset;
+            set
+            {
+                _selectedPreset = value;
+                OnPropertyChanged();
+                if (value != null)
+                {
+                    PushUndo();
+                    ColorPresets.ApplyPreset(CurrentIris, value);
+                    RecordHistory($"プリセット適用: {value.Name}");
+                    StatusMessage = $"プリセット「{value.Name}」を適用しました。";
+                }
+            }
+        }
+
+        // Odd-Eye Templates
+        public List<OddEyeTemplate> OddEyeTemplates => OddEyeTemplate.Presets;
+
+        public OddEyeTemplate? SelectedOddEyeTemplate
+        {
+            get => _selectedOddEyeTemplate;
+            set
+            {
+                _selectedOddEyeTemplate = value;
+                OnPropertyChanged();
+                if (value != null)
+                {
+                    PushUndo();
+                    ApplyOddEyeTemplate(value);
+                    RecordHistory($"オッドアイテンプレート適用: {value.Name}");
+                    StatusMessage = $"オッドアイテンプレート「{value.Name}」を適用しました。";
+                }
+            }
+        }
+
+        // PDF Layout Templates
+        public List<PdfTemplatePreset> PdfTemplates => PdfTemplatePreset.All;
+
+        public PdfTemplatePreset? SelectedPdfTemplate
+        {
+            get => _selectedPdfTemplate;
+            set
+            {
+                _selectedPdfTemplate = value;
+                OnPropertyChanged();
+                if (value != null)
+                {
+                    value.ApplyTo(SheetConfig);
+                    StatusMessage = $"PDFテンプレート「{value.Name}」を適用しました。";
+                }
+            }
+        }
+
+        public PreviewMode PreviewMode
+        {
+            get => _previewMode;
+            set { _previewMode = value; OnPropertyChanged(); }
+        }
+
+        public double ZoomScale
+        {
+            get => _zoomScale;
+            set { _zoomScale = Math.Max(0.2, Math.Min(12.0, value)); OnPropertyChanged(); }
+        }
+
+        public bool ShowCutLines
+        {
+            get => _showCutLines;
+            set { _showCutLines = value; OnPropertyChanged(); UpdateSvgSource(); }
+        }
+
+        public bool ShowCenterMarks
+        {
+            get => _showCenterMarks;
+            set { _showCenterMarks = value; OnPropertyChanged(); }
+        }
+
+        public PrintSheetConfig SheetConfig
+        {
+            get => _sheetConfig;
+            set { _sheetConfig = value; OnPropertyChanged(); }
+        }
+
+        public ObservableCollection<SheetItem> SheetItems
+        {
+            get => _sheetItems;
+            set { _sheetItems = value; OnPropertyChanged(); }
+        }
+
+        public SheetItem? SelectedSheetItem
+        {
+            get => _selectedSheetItem;
+            set { _selectedSheetItem = value; OnPropertyChanged(); }
+        }
+
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set { _statusMessage = value; OnPropertyChanged(); }
+        }
+
+        // SVG Editor Properties
+        // Setter is only reached by the user typing in the SVG editor (generated SVG is written to the field),
+        // so any change here means the text is now hand-edited and must not be overwritten or discarded on save.
+        public string SvgSourceText
+        {
+            get => _svgSourceText;
+            set
+            {
+                if (value == _svgSourceText) return;
+                _svgSourceText = value;
+                OnPropertyChanged();
+                IsSvgManuallyEdited = true;
+            }
+        }
+
+        private bool _isSvgManuallyEdited = false;
+        public bool IsSvgManuallyEdited
+        {
+            get => _isSvgManuallyEdited;
+            private set { if (_isSvgManuallyEdited == value) return; _isSvgManuallyEdited = value; OnPropertyChanged(); }
+        }
+
+        public bool AutoSyncSvg
+        {
+            get => _autoSyncSvg;
+            set { _autoSyncSvg = value; OnPropertyChanged(); if (value) UpdateSvgSource(); }
+        }
+
+        // History & Favorites Properties
+        public ObservableCollection<HistoryItem> HistoryItems => _historyItems;
+
+        public ObservableCollection<FavoriteItem> Favorites => _favorites;
+
+        public FavoriteItem? SelectedFavorite
+        {
+            get => _selectedFavorite;
+            set { _selectedFavorite = value; OnPropertyChanged(); }
+        }
+
+        private bool _isExportingPdf = false;
+        public bool IsExportingPdf
+        {
+            get => _isExportingPdf;
+            private set
+            {
+                _isExportingPdf = value;
+                OnPropertyChanged();
+                CommandManager.InvalidateRequerySuggested(); // re-enable / disable the PDF buttons
+            }
+        }
+
+        public bool CanUndo => _undoStack.Count > 0;
+        public bool CanRedo => _redoStack.Count > 0;
+
+        // Commands
+        public ICommand NewDesignCommand { get; }
+        public ICommand RandomizeSeedCommand { get; }
+        public ICommand RandomizeAttributesCommand { get; }
+        public ICommand ZoomInCommand { get; }
+        public ICommand ZoomOutCommand { get; }
+        public ICommand ZoomResetCommand { get; }
+        public ICommand ZoomRealSizeCommand { get; }
+        public ICommand AddHighlightCommand { get; }
+        public ICommand RemoveHighlightCommand { get; }
+        public ICommand AddSymbolCommand { get; }
+        public ICommand RemoveSymbolCommand { get; }
+        public ICommand AddCurrentToSheetCommand { get; }
+        public ICommand FillSheetWithCurrentCommand { get; }
+        public ICommand RemoveSelectedSheetItemCommand { get; }
+        public ICommand ClearSheetCommand { get; }
+        public ICommand LoadFromSheetItemCommand { get; }
+        public ICommand SaveJsonCommand { get; }
+        public ICommand LoadJsonCommand { get; }
+        public ICommand ExportPdfCommand { get; }
+        public ICommand ExportSvgCommand { get; }
+        public ICommand ExportPng600Command { get; }
+        public ICommand ExportPng1200Command { get; }
+
+        // New Feature Commands
+        public ICommand AddCurrentAsPresetCommand { get; }
+        public ICommand ExportPresetsCommand { get; }
+        public ICommand ImportPresetsCommand { get; }
+        public ICommand CopySvgCommand { get; }
+        public ICommand RefreshSvgCommand { get; }
+        public ICommand UndoCommand { get; }
+        public ICommand RedoCommand { get; }
+        public ICommand RestoreHistoryCommand { get; }
+        public ICommand ClearHistoryCommand { get; }
+        public ICommand AddFavoriteCommand { get; }
+        public ICommand RemoveFavoriteCommand { get; }
+        public ICommand LoadFavoriteCommand { get; }
+        public ICommand ExportFavoritesCommand { get; }
+        public ICommand ImportFavoritesCommand { get; }
+
+        public MainViewModel()
+        {
+            _currentIris = new IrisParameters();
+            _currentIris.PropertyChanged += OnIrisPropertyChanged;
+            _undoBaseline = _currentIris.Clone();
+            _manualEditTimer = new DispatcherTimer { Interval = ManualEditCommitDelay };
+            _manualEditTimer.Tick += (_, _) => CommitManualEdit();
+            _sheetConfig = new PrintSheetConfig();
+
+            // Default preset
+            _selectedPreset = Presets[0];
+            _selectedPdfTemplate = PdfTemplates[0];
+
+            // Initialize default sheet with 1 pair of starting iris
+            _sheetItems.Add(new SheetItem(_currentIris.Clone(), 1));
+
+            // Load persisted favorites if exists
+            LoadPersistedFavorites();
+
+            // Setup base commands
+            NewDesignCommand = new RelayCommand(OnNewDesign);
+            RandomizeSeedCommand = new RelayCommand(OnRandomizeSeed);
+            RandomizeAttributesCommand = new RelayCommand(OnRandomizeAttributes);
+            ZoomInCommand = new RelayCommand(() => ZoomScale *= 1.25);
+            ZoomOutCommand = new RelayCommand(() => ZoomScale /= 1.25);
+            ZoomResetCommand = new RelayCommand(() => ZoomScale = 1.8);
+            ZoomRealSizeCommand = new RelayCommand(() =>
+            {
+                ZoomScale = 1.0;
+                StatusMessage = "実寸表示 (100% mm) に設定しました。画面上で原寸大を確認できます。";
+            });
+
+            AddHighlightCommand = new RelayCommand(OnAddHighlight);
+            RemoveHighlightCommand = new RelayCommand(OnRemoveHighlight);
+            AddSymbolCommand = new RelayCommand(OnAddSymbol);
+            RemoveSymbolCommand = new RelayCommand(OnRemoveSymbol);
+
+            AddCurrentToSheetCommand = new RelayCommand(OnAddCurrentToSheet);
+            FillSheetWithCurrentCommand = new RelayCommand(OnFillSheetWithCurrent);
+            RemoveSelectedSheetItemCommand = new RelayCommand(OnRemoveSelectedSheetItem);
+            ClearSheetCommand = new RelayCommand(OnClearSheet);
+            LoadFromSheetItemCommand = new RelayCommand(OnLoadFromSheetItem);
+
+            SaveJsonCommand = new RelayCommand(OnSaveJson);
+            LoadJsonCommand = new RelayCommand(OnLoadJson);
+            ExportPdfCommand = new RelayCommand(OnExportPdf, () => !IsExportingPdf);
+            ExportSvgCommand = new RelayCommand(OnExportSvg);
+            ExportPng600Command = new RelayCommand(() => OnExportPng(600.0));
+            ExportPng1200Command = new RelayCommand(() => OnExportPng(1200.0));
+
+            // Setup extension commands
+            AddCurrentAsPresetCommand = new RelayCommand(OnAddCurrentAsPreset);
+            ExportPresetsCommand = new RelayCommand(OnExportPresets);
+            ImportPresetsCommand = new RelayCommand(OnImportPresets);
+            CopySvgCommand = new RelayCommand(OnCopySvg);
+            RefreshSvgCommand = new RelayCommand(OnRefreshSvg);
+
+            UndoCommand = new RelayCommand(OnUndo, () => CanUndo);
+            RedoCommand = new RelayCommand(OnRedo, () => CanRedo);
+            RestoreHistoryCommand = new RelayCommand(OnRestoreHistory);
+            ClearHistoryCommand = new RelayCommand(() => { ResetManualEditTracking(); _historyItems.Clear(); _undoStack.Clear(); _redoStack.Clear(); OnPropertyChanged(nameof(CanUndo)); OnPropertyChanged(nameof(CanRedo)); });
+
+            AddFavoriteCommand = new RelayCommand(OnAddFavorite);
+            RemoveFavoriteCommand = new RelayCommand(OnRemoveFavorite);
+            LoadFavoriteCommand = new RelayCommand(OnLoadFavorite);
+            ExportFavoritesCommand = new RelayCommand(OnExportFavorites);
+            ImportFavoritesCommand = new RelayCommand(OnImportFavorites);
+
+            // Record initial history state
+            RecordHistory("初期状態作成");
+            UpdateSvgSource();
+        }
+
+        private void OnIrisPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(CurrentIris));
+            if (!_isInternalStateChange)
+            {
+                if (!_suppressManualEditTracking)
+                {
+                    TrackManualEdit();
+                }
+                if (_autoSyncSvg)
+                {
+                    UpdateSvgSource();
+                }
+            }
+        }
+
+        private void TrackManualEdit()
+        {
+            if (!_manualEditPending)
+            {
+                AddUndoSnapshot(_undoBaseline);
+                _manualEditPending = true;
+            }
+            // Restart the pause timer: a whole slider drag becomes a single undo step
+            _manualEditTimer.Stop();
+            _manualEditTimer.Start();
+        }
+
+        private void CommitManualEdit()
+        {
+            if (!_manualEditPending) return;
+            _manualEditTimer.Stop();
+            _manualEditPending = false;
+            RecordHistory("パラメータ調整");
+        }
+
+        private void ResetManualEditTracking()
+        {
+            _manualEditTimer?.Stop();
+            _manualEditPending = false;
+            _suppressManualEditTracking = false;
+            if (_currentIris != null) _undoBaseline = _currentIris.Clone();
+        }
+
+        private void AddUndoSnapshot(IrisParameters snapshot)
+        {
+            _undoStack.Add(snapshot);
+            if (_undoStack.Count > 40) _undoStack.RemoveAt(0);
+            _redoStack.Clear();
+            OnPropertyChanged(nameof(CanUndo));
+            OnPropertyChanged(nameof(CanRedo));
+        }
+
+        private void PushUndo()
+        {
+            if (_isInternalStateChange) return;
+            CommitManualEdit();
+            AddUndoSnapshot(CurrentIris.Clone());
+            // The command's own changes are covered by this snapshot; RecordHistory re-enables tracking
+            _suppressManualEditTracking = true;
+        }
+
+        private void OnUndo()
+        {
+            CommitManualEdit();
+            if (_undoStack.Count > 0)
+            {
+                _isInternalStateChange = true;
+                try
+                {
+                    _redoStack.Add(CurrentIris.Clone());
+                    var previous = _undoStack[^1];
+                    _undoStack.RemoveAt(_undoStack.Count - 1);
+                    CurrentIris = previous;
+                    StatusMessage = "デザインを1つ前の状態に戻しました (元に戻す)。";
+                }
+                finally
+                {
+                    _isInternalStateChange = false;
+                    OnPropertyChanged(nameof(CanUndo));
+                    OnPropertyChanged(nameof(CanRedo));
+                    UpdateSvgSource();
+                }
+            }
+        }
+
+        private void OnRedo()
+        {
+            CommitManualEdit();
+            if (_redoStack.Count > 0)
+            {
+                _isInternalStateChange = true;
+                try
+                {
+                    _undoStack.Add(CurrentIris.Clone());
+                    var next = _redoStack[^1];
+                    _redoStack.RemoveAt(_redoStack.Count - 1);
+                    CurrentIris = next;
+                    StatusMessage = "元に戻したデザインの変更をやり直しました (やり直す)。";
+                }
+                finally
+                {
+                    _isInternalStateChange = false;
+                    OnPropertyChanged(nameof(CanUndo));
+                    OnPropertyChanged(nameof(CanRedo));
+                    UpdateSvgSource();
+                }
+            }
+        }
+
+        private void RecordHistory(string action)
+        {
+            var item = new HistoryItem(CurrentIris, action);
+            _historyItems.Insert(0, item);
+            if (_historyItems.Count > 50) _historyItems.RemoveAt(_historyItems.Count - 1);
+
+            // This state is now the starting point for the next manual edit
+            _suppressManualEditTracking = false;
+            _undoBaseline = CurrentIris.Clone();
+        }
+
+        private void OnRestoreHistory(object? param)
+        {
+            if (param is HistoryItem item)
+            {
+                PushUndo();
+                _isInternalStateChange = true;
+                try
+                {
+                    CurrentIris = item.Snapshot.Clone();
+                    StatusMessage = $"履歴「{item.Title}」({item.Timestamp:HH:mm:ss}) の状態に復元しました。";
+                }
+                finally
+                {
+                    _isInternalStateChange = false;
+                    UpdateSvgSource();
+                }
+            }
+        }
+
+        public void ApplyOddEyeTemplate(OddEyeTemplate template)
+        {
+            CurrentIris.IsOddEye = true;
+            CurrentIris.BaseColor = template.LeftBaseColor;
+            CurrentIris.InnerColor = template.LeftInnerColor;
+            CurrentIris.OuterColor = template.LeftOuterColor;
+            CurrentIris.RayColor = template.LeftRayColor;
+
+            CurrentIris.OddEyeBaseColor = template.RightBaseColor;
+            CurrentIris.OddEyeInnerColor = template.RightInnerColor;
+            CurrentIris.OddEyeOuterColor = template.RightOuterColor;
+            CurrentIris.OddEyeRayColor = template.RightRayColor;
+        }
+
+        private string GenerateSvg() =>
+            SvgExporter.GeneratePairSvg(CurrentIris, includePrintGuides: ShowCutLines, pairSpacingMm: SheetConfig.PairSpacingXMm);
+
+        private void UpdateSvgSource()
+        {
+            // Hand edits win: keep them until the user explicitly discards them (🔄 最新に更新)
+            if (IsSvgManuallyEdited) return;
+            try
+            {
+                _svgSourceText = GenerateSvg();
+                OnPropertyChanged(nameof(SvgSourceText));
+            }
+            catch (Exception ex)
+            {
+                // Ignore transient update errors (this runs on every edit, so only log in debug builds)
+                System.Diagnostics.Debug.WriteLine($"SVGソースの更新に失敗: {ex.Message}");
+            }
+        }
+
+        private void OnRefreshSvg()
+        {
+            bool hadEdits = IsSvgManuallyEdited;
+            IsSvgManuallyEdited = false;
+            UpdateSvgSource();
+            StatusMessage = hadEdits
+                ? "SVG の手動編集を破棄し、現在のパラメータから再生成しました。"
+                : "SVG を現在のパラメータから再生成しました。";
+        }
+
+        /// <summary>Checks that hand-edited SVG is well-formed XML. DTDs are refused (no external entity loading).</summary>
+        public static bool IsWellFormedSvg(string text, out string error)
+        {
+            error = "";
+            try
+            {
+                var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
+                using var reader = XmlReader.Create(new StringReader(text), settings);
+                var doc = XDocument.Load(reader);
+                if (doc.Root == null || doc.Root.Name.LocalName != "svg")
+                {
+                    error = "ルート要素が <svg> ではありません。";
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        private void OnCopySvg()
+        {
+            try
+            {
+                Clipboard.SetText(SvgSourceText);
+                StatusMessage = "SVG ベクターコードをクリップボードにコピーしました。";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"コピーに失敗しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void OnNewDesign()
+        {
+            PushUndo();
+            var p = new IrisParameters();
+            if (SelectedPreset != null)
+            {
+                ColorPresets.ApplyPreset(p, SelectedPreset);
+            }
+            CurrentIris = p;
+            RecordHistory("新規デザイン作成");
+            StatusMessage = "新規虹彩デザインを作成しました。";
+        }
+
+        private void OnRandomizeSeed()
+        {
+            PushUndo();
+            CurrentIris.Seed = Random.Shared.Next(1, 999999);
+            RecordHistory($"シード変更: {CurrentIris.Seed}");
+            StatusMessage = $"乱数シードを変更しました: {CurrentIris.Seed}";
+        }
+
+        private void OnRandomizeAttributes()
+        {
+            PushUndo();
+            _isInternalStateChange = true;
+            try
+            {
+                double preservedSizeMm = CurrentIris.SizeMm;
+                IrisShape preservedShape = CurrentIris.Shape;
+                double preservedAspectRatio = CurrentIris.AspectRatio;
+                double preservedTiltAngle = CurrentIris.TiltAngle;
+
+                IrisRandomizer.RandomizeAttributes(CurrentIris);
+
+                // Explicit guarantee that size and dimensions are preserved
+                CurrentIris.SizeMm = preservedSizeMm;
+                CurrentIris.Shape = preservedShape;
+                CurrentIris.AspectRatio = preservedAspectRatio;
+                CurrentIris.TiltAngle = preservedTiltAngle;
+
+                RecordHistory($"属性ランダム生成: {CurrentIris.Name}");
+                StatusMessage = $"サイズ ({preservedSizeMm:F1}mm) と寸法を保持したまま属性をランダム生成しました: {CurrentIris.Name}";
+            }
+            finally
+            {
+                _isInternalStateChange = false;
+                OnPropertyChanged(nameof(CurrentIris));
+                UpdateSvgSource();
+            }
+        }
+
+        private void OnAddHighlight()
+        {
+            PushUndo();
+            CurrentIris.Highlights.Add(new HighlightItem
+            {
+                Shape = HighlightShape.Circle,
+                PositionX = 0.25,
+                PositionY = 0.25,
+                Size = 0.15,
+                Color = "#FFFFFF",
+                Opacity = 0.85,
+                Enabled = true
+            });
+            RecordHistory("ハイライト追加");
+            StatusMessage = "新しいハイライトを追加しました。";
+        }
+
+        private void OnRemoveHighlight(object? param)
+        {
+            if (param is HighlightItem item)
+            {
+                PushUndo();
+                CurrentIris.Highlights.Remove(item);
+                RecordHistory("ハイライト削除");
+                StatusMessage = "ハイライトを削除しました。";
+            }
+        }
+
+        private void OnAddSymbol()
+        {
+            PushUndo();
+            CurrentIris.Symbols.Add(new DecorativeSymbolItem
+            {
+                Type = SymbolType.Star4,
+                Count = 1,
+                Size = 0.18,
+                PositionX = 0.25,
+                PositionY = -0.15,
+                Color = "#FFFFFF",
+                Opacity = 0.85,
+                Enabled = true
+            });
+            RecordHistory("装飾記号追加");
+            StatusMessage = "装飾記号を追加しました。";
+        }
+
+        private void OnRemoveSymbol(object? param)
+        {
+            if (param is DecorativeSymbolItem item)
+            {
+                PushUndo();
+                CurrentIris.Symbols.Remove(item);
+                RecordHistory("装飾記号削除");
+                StatusMessage = "装飾記号を削除しました。";
+            }
+        }
+
+        private void OnAddCurrentToSheet()
+        {
+            SheetItems.Add(new SheetItem(CurrentIris.Clone(), 1));
+            StatusMessage = $"現在のデザイン「{CurrentIris.Name}」をA4印刷シートに追加しました (計 {SheetItems.Count} 種)。";
+        }
+
+        private void OnFillSheetWithCurrent()
+        {
+            var design = CurrentIris.Clone();
+            var layout = new SheetLayout(new List<IrisParameters> { design }, SheetConfig);
+            int cols = layout.Columns;
+            int rows = layout.Rows;
+            int capacity = layout.PairsPerPage;
+
+            SheetItems.Clear();
+            SheetItems.Add(new SheetItem(design, capacity));
+            StatusMessage = $"A4シートを現在のデザインで満杯 ({cols}列 × {rows}行 = 計 {capacity} セット) に配置しました。";
+        }
+
+        private void OnRemoveSelectedSheetItem(object? param)
+        {
+            // The row's ✕ button passes its own item; fall back to the list selection
+            var target = param as SheetItem ?? SelectedSheetItem;
+            if (target != null)
+            {
+                SheetItems.Remove(target);
+                StatusMessage = "シートからアイテムを削除しました。";
+            }
+        }
+
+        private void OnClearSheet()
+        {
+            SheetItems.Clear();
+            StatusMessage = "A4印刷シートをクリアしました。";
+        }
+
+        private void OnLoadFromSheetItem()
+        {
+            if (SelectedSheetItem != null)
+            {
+                PushUndo();
+                CurrentIris = SelectedSheetItem.Parameters.Clone();
+                RecordHistory($"シートから読込: {CurrentIris.Name}");
+                StatusMessage = $"シートから「{CurrentIris.Name}」のパラメータを読み込みました。";
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? propName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+        }
+    }
+}
