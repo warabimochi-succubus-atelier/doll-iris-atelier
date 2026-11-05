@@ -141,23 +141,7 @@ namespace DollIrisGenerator.Services
         public static void WriteToFile(string path, IEnumerable<FavoriteItem> favorites)
         {
             var opt = new JsonSerializerOptions { WriteIndented = true };
-            string json = JsonSerializer.Serialize(favorites, opt);
-
-            string tempPath = $"{path}.{Guid.NewGuid():N}.tmp";
-            try
-            {
-                using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write))
-                {
-                    byte[] bytes = new UTF8Encoding(false).GetBytes(json);
-                    stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush(flushToDisk: true);
-                }
-                File.Move(tempPath, path, overwrite: true);
-            }
-            finally
-            {
-                if (File.Exists(tempPath)) File.Delete(tempPath);
-            }
+            AtomicFileWriter.WriteAllText(path, JsonSerializer.Serialize(favorites, opt));
         }
 
         /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>

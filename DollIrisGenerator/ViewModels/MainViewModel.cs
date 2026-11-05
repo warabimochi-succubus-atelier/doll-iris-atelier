@@ -50,6 +50,10 @@ namespace DollIrisGenerator.ViewModels
         private readonly FavoritesStore _favoritesStore;
         private string? _favoritesLoadProblem;
 
+        // A4 print sheet persistence (saved on exit, restored on start)
+        private readonly PrintSheetStore? _printSheetStore;
+        private string? _printSheetLoadProblem;
+
         // Dialogs and file flows
         private readonly IDialogService _dialogs;
         private readonly DesignFileWorkflow _files;
@@ -273,14 +277,16 @@ namespace DollIrisGenerator.ViewModels
         public ICommand ExportFavoritesCommand { get; }
         public ICommand ImportFavoritesCommand { get; }
 
-        public MainViewModel() : this(new WpfDialogService(), new FavoritesStore())
+        public MainViewModel() : this(new WpfDialogService(), new FavoritesStore(), new PrintSheetStore())
         {
         }
 
-        public MainViewModel(IDialogService dialogs, FavoritesStore favoritesStore)
+        /// <param name="printSheetStore">Saves and restores the A4 print sheet. Null keeps the sheet in memory only.</param>
+        public MainViewModel(IDialogService dialogs, FavoritesStore favoritesStore, PrintSheetStore? printSheetStore = null)
         {
             _dialogs = dialogs;
             _favoritesStore = favoritesStore;
+            _printSheetStore = printSheetStore;
             _files = new DesignFileWorkflow(dialogs, status => StatusMessage = status);
 
             _currentIris = new IrisParameters();
@@ -296,6 +302,14 @@ namespace DollIrisGenerator.ViewModels
 
             // Initialize default sheet with 1 pair of starting iris
             _sheetItems.Add(new SheetItem(_currentIris.Clone(), 1));
+
+            // Restore the A4 print sheet saved on the last exit, replacing the default sheet above
+            if (_printSheetStore != null)
+            {
+                var loadedSheet = _printSheetStore.Load();
+                if (loadedSheet.State != null) ApplyPrintSheetState(loadedSheet.State);
+                _printSheetLoadProblem = loadedSheet.Problem;
+            }
 
             // Load persisted favorites if exists
             var loadedFavorites = _favoritesStore.LoadPersisted();
