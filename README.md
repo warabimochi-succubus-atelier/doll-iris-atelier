@@ -78,10 +78,36 @@ dotnet run --project .\DollIrisGenerator
 ```powershell
 dotnet test .\DollIrisGenerator.Tests
 ```
-全 47 件のユニットテストが合格します。主な対象: 楕円チルト、レンズ風パターン、オッドアイ、パレット共有、PDFテンプレート、履歴・Undo/Redo（スライダー操作を含む）、お気に入り、JSON復元、SVG XML妥当性と手動編集、A4 PDF生成（面付け・改ページ・異なるサイズの混在・日本語ラベル）、PNG/PDF画像の描画内容、傾けた楕円の出力とカットライン、線幅の実寸連動、1cm スケール、用紙からのはみ出し検出、±0.1mm精度計算、読み込みファイルの安全性（サイズ上限・値の範囲）。
+`main` へのプルリクエストでは、同じテストが GitHub Actions でも自動実行されます。主な対象: 楕円チルト、レンズ風パターン、オッドアイ、パレット共有、PDFテンプレート、履歴・Undo/Redo（スライダー操作を含む）、お気に入り、JSON復元、SVG XML妥当性と手動編集、A4 PDF生成（面付け・改ページ・異なるサイズの混在・日本語ラベル）、PNG/PDF画像の描画内容、傾けた楕円の出力とカットライン、線幅の実寸連動、1cm スケール、用紙からのはみ出し検出、±0.1mm精度計算、読み込みファイルの安全性（サイズ上限・値の範囲）、お気に入りのデータ保護。
+
+---
+
+## 🛠️ ビルドと配布
+
+必要なもの: Windows、.NET 10 SDK（バージョンは `global.json` を参照）
+
+### ビルド
+```powershell
+dotnet build .\DollIrisGenerator --configuration Release
+```
+
+### 配布用ファイルの作成
+.NET のインストールが不要な形式です。出力された `dist\DollIrisAtelier` フォルダーごと配布します。
+```powershell
+dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --self-contained true --output .\dist\DollIrisAtelier
+```
+
+配布先に .NET 10 デスクトップランタイムがある場合は、`--self-contained false` でサイズを小さくできます。
+
+### バージョンの記録
+配布したコミットにはタグを付けると、どの時点のものか後から分かります。
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ---
 
 ## 📄 ライセンス
 
-[MIT License](LICENSE) のもとで公開しています。
+[MIT License](LICENSE) のもとで公開しています。ただし、ロゴとアイコンは対象外です。詳しくは [NOTICE.md](NOTICE.md) を参照してください。

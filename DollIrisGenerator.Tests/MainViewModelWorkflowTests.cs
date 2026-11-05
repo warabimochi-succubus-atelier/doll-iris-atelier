@@ -164,7 +164,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal("残すデザイン", Assert.Single(reopened.Favorites).Name);
 
             reopened.RemoveFavoriteCommand.Execute(reopened.Favorites[0]);
-            Assert.Empty(new FavoritesStore(FavoritesPath).LoadPersisted());
+            Assert.Empty(new FavoritesStore(FavoritesPath).LoadPersisted().Favorites);
         }
 
         [Fact]
@@ -182,15 +182,92 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestFavoritesStoreToleratesMissingAndCorruptFiles()
+        public void TestFavoritesStoreToleratesMissingAndPartlyInvalidFiles()
         {
-            Assert.Empty(new FavoritesStore(PathIn("missing.json")).LoadPersisted());
-
-            File.WriteAllText(PathIn("corrupt.json"), "{ not json");
-            Assert.Empty(new FavoritesStore(PathIn("corrupt.json")).LoadPersisted());
+            var missing = new FavoritesStore(PathIn("missing.json")).LoadPersisted();
+            Assert.Empty(missing.Favorites);
+            Assert.Null(missing.Problem);
 
             File.WriteAllText(PathIn("partial.json"), "[null, {\"Name\":\"no parameters\",\"Parameters\":null}]");
-            Assert.Empty(new FavoritesStore(PathIn("partial.json")).LoadPersisted());
+            var partial = new FavoritesStore(PathIn("partial.json")).LoadPersisted();
+            Assert.Empty(partial.Favorites);
+            Assert.Null(partial.Problem);
+        }
+
+        private string[] BrokenBackups() => Directory.GetFiles(_dir, "favorites.broken-*.json");
+
+        [Fact]
+        public void TestCorruptFavoritesAreKeptAndNotOverwrittenByTheNextSave()
+        {
+            const string corrupt = "[{ \"Name\": \"途中で切れたファイル";
+            File.WriteAllText(FavoritesPath, corrupt);
+
+            var dialogs = new FakeDialogService();
+            var vm = new MainViewModel(dialogs, new FavoritesStore(FavoritesPath));
+            Assert.Empty(vm.Favorites);
+            Assert.Empty(dialogs.Errors); // nothing is shown until the window is up
+
+            string backup = Assert.Single(BrokenBackups());
+            Assert.Equal(corrupt, File.ReadAllText(backup));
+
+            vm.ShowFavoritesLoadProblem();
+            Assert.Contains(backup, Assert.Single(dialogs.Errors));
+            vm.ShowFavoritesLoadProblem();
+            Assert.Single(dialogs.Errors); // only once
+
+            // The app keeps working, and saving no longer touches the recovered copy
+            vm.AddFavoriteCommand.Execute(null);
+            Assert.Single(new FavoritesStore(FavoritesPath).LoadPersisted().Favorites);
+            Assert.Equal(corrupt, File.ReadAllText(backup));
+            Assert.Single(dialogs.Errors);
+        }
+
+        [Fact]
+        public void TestFavoritesAreNotSavedWhenUnreadableFileCannotBeSetAside()
+        {
+            const string corrupt = "{ not json";
+            File.WriteAllText(FavoritesPath, corrupt);
+
+            var dialogs = new FakeDialogService();
+            MainViewModel vm;
+            using (new FileStream(FavoritesPath, FileMode.Open, FileAccess.Read, FileShare.Read)) // blocks the move
+            {
+                vm = new MainViewModel(dialogs, new FavoritesStore(FavoritesPath));
+            }
+            Assert.Empty(BrokenBackups());
+
+            vm.ShowFavoritesLoadProblem();
+            Assert.Contains("保存しません", Assert.Single(dialogs.Errors));
+
+            vm.AddFavoriteCommand.Execute(null);
+            Assert.Equal(corrupt, File.ReadAllText(FavoritesPath));
+            Assert.Contains("保存できませんでした", dialogs.Errors[^1]);
+            Assert.Single(vm.Favorites); // the in-memory list keeps working
+        }
+
+        [Fact]
+        public void TestFavoritesSaveFailureIsReportedAndListKeepsWorking()
+        {
+            File.WriteAllText(PathIn("a-file"), "");
+            var dialogs = new FakeDialogService();
+            var vm = new MainViewModel(dialogs, new FavoritesStore(Path.Combine(PathIn("a-file"), "favorites.json")));
+
+            vm.AddFavoriteCommand.Execute(null);
+
+            Assert.Single(vm.Favorites);
+            Assert.Contains("保存できませんでした", Assert.Single(dialogs.Errors));
+        }
+
+        [Fact]
+        public void TestFavoritesWriteReplacesFileAndLeavesNoTemporaryFile()
+        {
+            File.WriteAllText(FavoritesPath, "old contents");
+            var favorite = new FavoriteItem(new IrisParameters { Name = "新しい内容" });
+
+            FavoritesStore.WriteToFile(FavoritesPath, new[] { favorite });
+
+            Assert.Equal("新しい内容", Assert.Single(FavoritesStore.ReadFromFile(FavoritesPath)!).Name);
+            Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
         }
 
         [Theory]

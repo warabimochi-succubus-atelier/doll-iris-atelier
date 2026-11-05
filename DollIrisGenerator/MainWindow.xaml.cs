@@ -12,6 +12,7 @@ namespace DollIrisGenerator
         {
             InitializeComponent();
             WindowSettingsService.ApplySettings(this);
+            Loaded += (_, _) => (DataContext as MainViewModel)?.ShowFavoritesLoadProblem();
         }
 
         protected override void OnClosing(CancelEventArgs e)
