@@ -213,6 +213,21 @@ namespace DollIrisGenerator.Models
                     target.Symbols[0].Color = preset.SymbolColor;
                     target.Symbols[0].Enabled = true;
                 }
+                else
+                {
+                    // ランダム生成などで記号が 0 個のときも、プリセットの記号を反映する
+                    target.Symbols.Add(new DecorativeSymbolItem
+                    {
+                        Type = preset.DefaultSymbol,
+                        Count = 1,
+                        Size = 0.18,
+                        PositionX = 0.25,
+                        PositionY = -0.15,
+                        Color = preset.SymbolColor,
+                        Opacity = 0.85,
+                        Enabled = true
+                    });
+                }
             }
         }
 

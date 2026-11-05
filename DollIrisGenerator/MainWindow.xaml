@@ -472,12 +472,35 @@
                                 <!-- Decorative Symbols -->
                                 <GroupBox Header="装飾記号 (Section 11)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock Text="装飾記号一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Button Content="➕ 装飾記号追加" Command="{Binding AddSymbolCommand}"
+                                                    HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
+                                        </DockPanel>
+
+                                        <TextBlock Text="装飾記号はありません。「➕ 装飾記号追加」で追加できます。" Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentIris.Symbols.Count}" Value="0">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
                                         <ItemsControl ItemsSource="{Binding CurrentIris.Symbols}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
                                                         <StackPanel>
-                                                            <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                                            <DockPanel Margin="0,0,0,6">
+                                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
+                                                            </DockPanel>
 
                                                             <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                             <WrapPanel Margin="0,0,0,6">
