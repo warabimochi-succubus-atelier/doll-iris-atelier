@@ -169,10 +169,13 @@ namespace DollIrisGenerator.Models
             set { _parameters = value; OnPropertyChanged(); }
         }
 
+        /// <summary>Upper limit of the quantity box; "fill sheet" never raises an existing row above it either.</summary>
+        public const int MaxPairCount = 100;
+
         public int PairCount
         {
             get => _pairCount;
-            set { _pairCount = Math.Max(1, Math.Min(100, value)); OnPropertyChanged(); }
+            set { _pairCount = Math.Max(1, Math.Min(MaxPairCount, value)); OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

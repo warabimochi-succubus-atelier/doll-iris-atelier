@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -687,17 +688,59 @@ namespace DollIrisGenerator.ViewModels
             StatusMessage = $"現在のデザイン「{CurrentIris.Name}」をA4印刷シートに追加しました (計 {SheetItems.Count} 種)。";
         }
 
+        /// <summary>
+        /// Fills the empty slots of the sheet while keeping every design already on it.
+        /// The current design is added first when it is not on the sheet yet (it may enlarge the cells and so
+        /// lower the capacity), then the free slots of the last page are shared in proportion to the quantities.
+        /// A sheet that is already exactly full is left unchanged.
+        /// </summary>
         private void OnFillSheetWithCurrent()
         {
-            var design = CurrentIris.Clone();
-            var layout = new SheetLayout(new List<IrisParameters> { design }, SheetConfig);
-            int cols = layout.Columns;
-            int rows = layout.Rows;
-            int capacity = layout.PairsPerPage;
+            if (SheetItems.Count == 0)
+            {
+                var design = CurrentIris.Clone();
+                var single = new SheetLayout(new List<IrisParameters> { design }, SheetConfig);
+                SheetItems.Add(new SheetItem(design, single.PairsPerPage));
+                StatusMessage = $"A4シートを現在のデザインで満杯 ({single.Columns}列 × {single.Rows}行 = 計 {single.PairsPerPage} セット) に配置しました。";
+                return;
+            }
 
-            SheetItems.Clear();
-            SheetItems.Add(new SheetItem(design, capacity));
-            StatusMessage = $"A4シートを現在のデザインで満杯 ({cols}列 × {rows}行 = 計 {capacity} セット) に配置しました。";
+            // Cells are sized from the largest design, so the capacity depends on WHICH designs are on the sheet, not on their quantities
+            var before = new SheetLayout(SheetItems, SheetConfig);
+            int totalBefore = SheetItems.Sum(i => i.PairCount);
+            if (totalBefore == SheetFill.TargetPairs(totalBefore, before.PairsPerPage))
+            {
+                StatusMessage = $"A4シートはすでに満杯です ({before.Columns}列 × {before.Rows}行 × {before.PageCount} ページ = 計 {totalBefore} セット)。" +
+                                "デザインを入れ替えるには数量を減らすか、行を削除してください。";
+                return;
+            }
+
+            string currentKey = JsonSerializer.Serialize(CurrentIris);
+            bool addedCurrent = !SheetItems.Any(i => JsonSerializer.Serialize(i.Parameters) == currentKey);
+            if (addedCurrent) SheetItems.Add(new SheetItem(CurrentIris.Clone(), 1));
+
+            var layout = new SheetLayout(SheetItems, SheetConfig);
+            var counts = SheetItems.Select(i => i.PairCount).ToList();
+            int total = counts.Sum();
+            int target = SheetFill.TargetPairs(total, layout.PairsPerPage);
+            var filled = SheetFill.Distribute(counts, target, SheetItem.MaxPairCount);
+            for (int i = 0; i < filled.Length; i++)
+            {
+                if (filled[i] != counts[i]) SheetItems[i].PairCount = filled[i];
+            }
+
+            int filledTotal = filled.Sum();
+            int pages = SheetFill.TargetPairs(filledTotal, layout.PairsPerPage) / layout.PairsPerPage;
+            string pageText = pages > 1 ? $" × {pages} ページ" : "";
+            string addedText = addedCurrent ? $"現在のデザイン「{CurrentIris.Name}」を加え、" : "";
+            string message = $"A4シートを満杯 ({layout.Columns}列 × {layout.Rows}行{pageText} = 計 {filledTotal} セット) に配置しました。" +
+                             $"{addedText}{SheetItems.Count} 種のデザインに空き {filledTotal - totalBefore} 枠を数量の比率で配分しています。";
+            if (filledTotal < target)
+            {
+                message = $"A4シートを {filledTotal} / {target} セットまで配置しました。{addedText}すべての行が上限 {SheetItem.MaxPairCount} セットに達したため、" +
+                          $"残り {target - filledTotal} 枠は空いています。";
+            }
+            StatusMessage = message;
         }
 
         private void OnRemoveSelectedSheetItem(object? param)
