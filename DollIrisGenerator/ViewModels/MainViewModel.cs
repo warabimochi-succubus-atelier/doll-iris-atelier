@@ -1,22 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
-using System.Xml;
-using System.Xml.Linq;
 using DollIrisGenerator.Controls;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
-using Microsoft.Win32;
 
 namespace DollIrisGenerator.ViewModels
 {
@@ -56,10 +46,11 @@ namespace DollIrisGenerator.ViewModels
         // Favorites Management
         private ObservableCollection<FavoriteItem> _favorites = new();
         private FavoriteItem? _selectedFavorite;
-        private readonly string _favoritesFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "DollIrisAtelier",
-            "favorites.json");
+        private readonly FavoritesStore _favoritesStore;
+
+        // Dialogs and file flows
+        private readonly IDialogService _dialogs;
+        private readonly DesignFileWorkflow _files;
 
         public IrisParameters CurrentIris
         {
@@ -280,8 +271,16 @@ namespace DollIrisGenerator.ViewModels
         public ICommand ExportFavoritesCommand { get; }
         public ICommand ImportFavoritesCommand { get; }
 
-        public MainViewModel()
+        public MainViewModel() : this(new WpfDialogService(), new FavoritesStore())
         {
+        }
+
+        public MainViewModel(IDialogService dialogs, FavoritesStore favoritesStore)
+        {
+            _dialogs = dialogs;
+            _favoritesStore = favoritesStore;
+            _files = new DesignFileWorkflow(dialogs, status => StatusMessage = status);
+
             _currentIris = new IrisParameters();
             _currentIris.PropertyChanged += OnIrisPropertyChanged;
             _undoBaseline = _currentIris.Clone();
@@ -297,7 +296,10 @@ namespace DollIrisGenerator.ViewModels
             _sheetItems.Add(new SheetItem(_currentIris.Clone(), 1));
 
             // Load persisted favorites if exists
-            LoadPersistedFavorites();
+            foreach (var favorite in _favoritesStore.LoadPersisted())
+            {
+                _favorites.Add(favorite);
+            }
 
             // Setup base commands
             NewDesignCommand = new RelayCommand(OnNewDesign);
@@ -323,10 +325,10 @@ namespace DollIrisGenerator.ViewModels
             ClearSheetCommand = new RelayCommand(OnClearSheet);
             LoadFromSheetItemCommand = new RelayCommand(OnLoadFromSheetItem);
 
-            SaveJsonCommand = new RelayCommand(OnSaveJson);
+            SaveJsonCommand = new RelayCommand(() => _files.SaveJson(CurrentIris));
             LoadJsonCommand = new RelayCommand(OnLoadJson);
             ExportPdfCommand = new RelayCommand(OnExportPdf, () => !IsExportingPdf);
-            ExportSvgCommand = new RelayCommand(OnExportSvg);
+            ExportSvgCommand = new RelayCommand(() => _files.ExportSvg(CurrentIris, IsSvgManuallyEdited ? SvgSourceText : null, GenerateSvg));
             ExportPng600Command = new RelayCommand(() => OnExportPng(600.0));
             ExportPng1200Command = new RelayCommand(() => OnExportPng(1200.0));
 
@@ -352,6 +354,22 @@ namespace DollIrisGenerator.ViewModels
             RecordHistory("初期状態作成");
             UpdateSvgSource();
         }
+
+        private void OnLoadJson() => _files.LoadJson(loaded =>
+        {
+            PushUndo();
+            CurrentIris = loaded;
+            RecordHistory($"JSON読込: {loaded.Name}");
+        });
+
+        private async void OnExportPdf()
+        {
+            if (IsExportingPdf) return;
+            await _files.ExportPdfAsync(SheetItems, CurrentIris, SheetConfig, busy => IsExportingPdf = busy);
+        }
+
+        private void OnExportPng(double dpi) =>
+            _files.ExportPng(CurrentIris, dpi, SheetConfig.PairSpacingXMm, ShowCutLines, ShowCenterMarks);
 
         private void OnIrisPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -537,27 +555,7 @@ namespace DollIrisGenerator.ViewModels
         }
 
         /// <summary>Checks that hand-edited SVG is well-formed XML. DTDs are refused (no external entity loading).</summary>
-        public static bool IsWellFormedSvg(string text, out string error)
-        {
-            error = "";
-            try
-            {
-                var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
-                using var reader = XmlReader.Create(new StringReader(text), settings);
-                var doc = XDocument.Load(reader);
-                if (doc.Root == null || doc.Root.Name.LocalName != "svg")
-                {
-                    error = "ルート要素が <svg> ではありません。";
-                    return false;
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                error = ex.Message;
-                return false;
-            }
-        }
+        public static bool IsWellFormedSvg(string text, out string error) => SvgValidator.IsWellFormed(text, out error);
 
         private void OnCopySvg()
         {
@@ -568,7 +566,7 @@ namespace DollIrisGenerator.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"コピーに失敗しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _dialogs.ShowWarning($"コピーに失敗しました: {ex.Message}", "エラー");
             }
         }
 
