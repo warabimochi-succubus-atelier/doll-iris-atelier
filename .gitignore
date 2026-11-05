@@ -1,6 +1,7 @@
 bin/
 obj/
 .vs/
+dist/
 *.user
 
 # Full-size image originals stay local by default...
