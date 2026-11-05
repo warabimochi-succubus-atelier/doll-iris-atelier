@@ -67,9 +67,24 @@ namespace DollIrisGenerator.Tests
             _vm.LoadJsonCommand.Execute(null);
 
             Assert.Equal("保存したデザイン", _vm.CurrentIris.Name);
-            Assert.Equal("保存したデザイン (20.0mm)", _vm.HistoryItems[0].Title);
+            Assert.Equal("保存したデザイン (10.0mm)", _vm.HistoryItems[0].Title);
             Assert.Contains("読み込みました", _vm.StatusMessage);
+            Assert.DoesNotContain("調整しました", _vm.StatusMessage);
             Assert.True(_vm.CanUndo);
+        }
+
+        [Fact]
+        public void TestLoadingAnEyeSizedDesignClampsToTheIrisRangeAndSaysSo()
+        {
+            // Files saved before the iris-only range could hold eye-sized values such as 24 mm
+            File.WriteAllText(PathIn("old.json"), "{\"Name\": \"旧デザイン\", \"SizeMm\": 24.0}");
+            _dialogs.NextOpenPath = PathIn("old.json");
+            _vm.LoadJsonCommand.Execute(null);
+
+            Assert.Equal("旧デザイン", _vm.CurrentIris.Name);
+            Assert.Equal(20.0, _vm.CurrentIris.SizeMm);
+            Assert.Contains("24.0mm", _vm.StatusMessage);
+            Assert.Contains("20.0mm に調整しました", _vm.StatusMessage);
         }
 
         [Fact]

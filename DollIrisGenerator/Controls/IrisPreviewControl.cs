@@ -204,7 +204,7 @@ namespace DollIrisGenerator.Controls
         {
             double factor = e.Delta > 0 ? 1.15 : 0.85;
             // Two-way bound: keeps the toolbar zoom buttons and status bar in sync (same range as MainViewModel)
-            ZoomScale = Math.Max(0.2, Math.Min(12.0, ZoomScale * factor));
+            ZoomScale = Math.Clamp(ZoomScale * factor, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom);
             InvalidateVisual();
         }
 

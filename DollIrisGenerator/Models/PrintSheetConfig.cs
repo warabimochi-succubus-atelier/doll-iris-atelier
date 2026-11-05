@@ -10,9 +10,10 @@ namespace DollIrisGenerator.Models
         private double _pageMarginTopMm = 15.0;
         private double _pageMarginRightMm = 15.0;
         private double _pageMarginBottomMm = 15.0;
-        private double _pairSpacingXMm = 4.0;   // gap between left & right eye in a pair
-        private double _columnSpacingMm = 10.0; // gap between different pairs horizontally
-        private double _rowSpacingMm = 12.0;    // gap between rows vertically
+        // Defaults sized for 9-12 mm irises (see SPECIFICATION.md): 10 mm fills 6 x 11 = 66 pairs per A4 page
+        private double _pairSpacingXMm = 3.0;   // gap between left & right eye in a pair
+        private double _columnSpacingMm = 6.0;  // gap between different pairs horizontally
+        private double _rowSpacingMm = 8.0;     // gap between rows vertically
 
         private bool _showCutLines = true;      // カットライン (裁断補助線)
         private string _cutLineColor = "#A0A0A0";
@@ -23,11 +24,11 @@ namespace DollIrisGenerator.Models
         private double _centerMarkLengthMm = 3.0;
 
         private bool _showTrimGuides = true;    // トリムガイド (トンボ)
-        private bool _showLabels = true;        // パターン名・サイズ表記 (例: "20.0mm #1")
+        private bool _showLabels = true;        // パターン名・サイズ表記 (例: "10.0mm #1")
 
         private bool _autoCalculateGrid = true;
-        private int _manualColumns = 4;
-        private int _manualRows = 6;
+        private int _manualColumns = 6;
+        private int _manualRows = 11;
 
         public double PageMarginLeftMm
         {

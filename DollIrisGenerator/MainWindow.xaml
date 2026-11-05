@@ -212,15 +212,18 @@
                                             <TextBlock Text="虹彩サイズ (直径):" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding CurrentIris.SizeMm, StringFormat='{}{0:F1} mm'}" Foreground="#80D8FF" FontWeight="Bold" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="6.0" Maximum="36.0" Value="{Binding CurrentIris.SizeMm}" TickFrequency="1.0" IsSnapToTickEnabled="False" Margin="0,0,0,6"/>
+                                        <!-- Iris only (not the whole eye): 4-20 mm in 0.1 mm steps, same range as IrisParameters.MinSizeMm / MaxSizeMm -->
+                                        <Slider Minimum="4.0" Maximum="20.0" Value="{Binding CurrentIris.SizeMm}" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                                SmallChange="0.1" LargeChange="1.0" Margin="0,0,0,6"
+                                                ToolTip="虹彩（黒目の色の部分）の直径です。アイ全体の直径ではありません。目安: 20mm のアイなら虹彩は約 10mm"/>
 
-                                        <!-- Quick Size Presets -->
+                                        <!-- Quick Size Presets (iris diameter) -->
                                         <WrapPanel Margin="0,0,0,10">
                                             <TextBlock Text="クイック選択: " Foreground="{StaticResource TextMuted}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <RadioButton Content="18.0mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=18.0}"/>
-                                            <RadioButton Content="20.0mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=20.0}"/>
-                                            <RadioButton Content="22.0mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=22.0}"/>
-                                            <RadioButton Content="24.0mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=24.0}"/>
+                                            <RadioButton Content="9mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=9.0}"/>
+                                            <RadioButton Content="10mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=10.0}"/>
+                                            <RadioButton Content="11mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=11.0}"/>
+                                            <RadioButton Content="12mm" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.SizeMm, Converter={StaticResource SizeMatchesConverter}, ConverterParameter=12.0}"/>
                                         </WrapPanel>
 
                                         <!-- Shape -->
@@ -864,13 +867,13 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="手動列数 (Columns):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                <Slider Minimum="1" Maximum="8" Value="{Binding SheetConfig.ManualColumns}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                <Slider Minimum="1" Maximum="12" Value="{Binding SheetConfig.ManualColumns}" TickFrequency="1" IsSnapToTickEnabled="True"
                                                         IsEnabled="{Binding SheetConfig.AutoCalculateGrid, Converter={StaticResource InverseBoolConverter}}"/>
                                                 <TextBlock Text="{Binding SheetConfig.ManualColumns, StringFormat='{}{0} 列'}" FontSize="11" HorizontalAlignment="Right" Foreground="#80D8FF"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
                                                 <TextBlock Text="手動行数 (Rows):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                <Slider Minimum="1" Maximum="12" Value="{Binding SheetConfig.ManualRows}" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                <Slider Minimum="1" Maximum="20" Value="{Binding SheetConfig.ManualRows}" TickFrequency="1" IsSnapToTickEnabled="True"
                                                         IsEnabled="{Binding SheetConfig.AutoCalculateGrid, Converter={StaticResource InverseBoolConverter}}"/>
                                                 <TextBlock Text="{Binding SheetConfig.ManualRows, StringFormat='{}{0} 行'}" FontSize="11" HorizontalAlignment="Right" Foreground="#80D8FF"/>
                                             </StackPanel>
@@ -885,19 +888,19 @@
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="ペア内左右の間隔 (mm):" FontSize="10" Foreground="{StaticResource TextMuted}"/>
-                                                <Slider Minimum="1.0" Maximum="15.0" Value="{Binding SheetConfig.PairSpacingXMm}"/>
+                                                <Slider Minimum="1.0" Maximum="10.0" Value="{Binding SheetConfig.PairSpacingXMm}"/>
                                                 <TextBlock Text="{Binding SheetConfig.PairSpacingXMm, StringFormat='{}{0:F1} mm'}" FontSize="10" HorizontalAlignment="Right"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
                                                 <TextBlock Text="列間隔 (mm):" FontSize="10" Foreground="{StaticResource TextMuted}"/>
-                                                <Slider Minimum="4.0" Maximum="25.0" Value="{Binding SheetConfig.ColumnSpacingMm}"/>
+                                                <Slider Minimum="2.0" Maximum="20.0" Value="{Binding SheetConfig.ColumnSpacingMm}"/>
                                                 <TextBlock Text="{Binding SheetConfig.ColumnSpacingMm, StringFormat='{}{0:F1} mm'}" FontSize="10" HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </Grid>
 
                                         <DockPanel Margin="0,0,0,8">
                                             <TextBlock Text="行間隔 (mm):" FontSize="10" Foreground="{StaticResource TextMuted}" Width="100"/>
-                                            <Slider Minimum="4.0" Maximum="30.0" Value="{Binding SheetConfig.RowSpacingMm}"/>
+                                            <Slider Minimum="4.0" Maximum="20.0" Value="{Binding SheetConfig.RowSpacingMm}"/>
                                         </DockPanel>
 
                                         <Grid Margin="0,0,0,8">
