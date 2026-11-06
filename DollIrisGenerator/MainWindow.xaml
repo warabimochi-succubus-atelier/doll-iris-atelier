@@ -68,6 +68,11 @@
         <KeyBinding Key="Z" Modifiers="Ctrl+Shift" Command="{Binding RedoCommand}"/>
     </Window.InputBindings>
 
+    <!-- F1 (the built-in gesture of ApplicationCommands.Help) opens the manual on GitHub -->
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Help" Executed="OnHelpExecuted"/>
+    </Window.CommandBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Top Toolbar -->
@@ -86,9 +91,9 @@
                             <BitmapImage UriSource="IrisGenerationApp.png" DecodePixelWidth="84"/>
                         </Image.Source>
                     </Image>
-                    <TextBlock Text="Doll Iris Atelier" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static local:AppInfo.Name}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                     <Border Background="#1E3A5F" CornerRadius="4" Margin="8,0,0,0" Padding="6,2" VerticalAlignment="Center">
-                        <TextBlock Text="v1.0 Plus" FontSize="10" Foreground="#80D8FF" FontWeight="SemiBold"/>
+                        <TextBlock Text="{x:Static local:AppInfo.VersionLabel}" FontSize="10" Foreground="#80D8FF" FontWeight="SemiBold"/>
                     </Border>
                 </StackPanel>
 
@@ -143,7 +148,12 @@
 
                     <Button Content="📄 A4 PDF 出力" Command="{Binding ExportPdfCommand}"
                             Background="#00695C" Foreground="#FFFFFF" BorderBrush="#00897B"
-                            FontWeight="Bold" Padding="12,5" Margin="0,2,0,2" Cursor="Hand" ToolTip="高精度 ±0.1mm A4印刷用PDFを出力"/>
+                            FontWeight="Bold" Padding="12,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="高精度 ±0.1mm A4印刷用PDFを出力"/>
+
+                    <Button Content="ⓘ" Click="OnAboutClick" FontSize="14"
+                            Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
+                            Padding="9,3" Margin="0,2,0,2" Cursor="Hand"
+                            ToolTip="バージョン情報 (作者・マニュアル・GitHub へのリンク)。F1 キーでマニュアルを開きます"/>
                 </WrapPanel>
             </DockPanel>
         </Border>

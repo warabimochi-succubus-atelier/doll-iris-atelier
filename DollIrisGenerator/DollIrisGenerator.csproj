@@ -10,11 +10,15 @@
     <Product>Doll Iris Atelier</Product>
     <Title>Doll Iris Atelier</Title>
     <AssemblyTitle>Doll Iris Atelier</AssemblyTitle>
+    <Authors>わらびもちサキュバス工房</Authors>
+    <Company>わらびもちサキュバス工房</Company>
+    <Copyright>© 2026 わらびもちサキュバス工房</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
     <Resource Include="IrisGenerationApp.png" />
     <Resource Include="app.ico" />
+    <Resource Include="AuthorLogo.png" />
   </ItemGroup>
 
 </Project>
