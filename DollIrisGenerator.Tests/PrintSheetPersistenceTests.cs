@@ -49,6 +49,43 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestResetSheetConfigRestoresTheSelectedTemplateAndKeepsItems()
+        {
+            var vm = StartApp();
+            vm.SelectedPdfTemplate = vm.PdfTemplates.First(t => t.Type == PdfTemplateType.Scale1_3_Doll);
+            vm.SheetConfig.PageMarginTopMm = 40.0;
+            vm.SheetConfig.ManualColumns = 2;
+            vm.SheetConfig.ShowScaleMark = false;
+            vm.SheetConfig.ShowLabels = false;
+            vm.SheetItems[0].PairCount = 5;
+
+            vm.ResetSheetConfigCommand.Execute(null);
+
+            Assert.Equal(18.0, vm.SheetConfig.PageMarginTopMm);
+            Assert.Equal(4, vm.SheetConfig.ManualColumns);
+            Assert.False(vm.SheetConfig.AutoCalculateGrid);
+            Assert.True(vm.SheetConfig.ShowScaleMark);
+            Assert.True(vm.SheetConfig.ShowLabels);
+            Assert.Equal(PdfTemplateType.Scale1_3_Doll, vm.SelectedPdfTemplate!.Type);
+            Assert.Equal(5, vm.SheetItems[0].PairCount);
+        }
+
+        [Fact]
+        public void TestResetSheetConfigOnTheStandardTemplateRestoresAppDefaults()
+        {
+            var vm = StartApp();
+            vm.SheetConfig.RowSpacingMm = 20.0;
+            vm.SheetConfig.AutoCalculateGrid = false;
+
+            vm.ResetSheetConfigCommand.Execute(null);
+
+            var defaults = new PrintSheetConfig();
+            Assert.Equal(defaults.RowSpacingMm, vm.SheetConfig.RowSpacingMm);
+            Assert.Equal(defaults.PageMarginLeftMm, vm.SheetConfig.PageMarginLeftMm);
+            Assert.True(vm.SheetConfig.AutoCalculateGrid);
+        }
+
+        [Fact]
         public void TestRestoringDoesNotReapplyTheTemplateOverSavedSettings()
         {
             var first = StartApp();
