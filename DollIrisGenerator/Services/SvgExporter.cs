@@ -245,6 +245,12 @@ namespace DollIrisGenerator.Services
                 string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
                 sb.AppendLine($@"      <ellipse id=""{idPrefix}_aurora"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToString("F2", Inv)}"" />");
             }
+            if (p.NebulaOpacity > 0.01)
+            {
+                // The same cloud pixels the screen / PDF renderer draws, embedded as a PNG over the iris box
+                string png = Convert.ToBase64String(NebulaTexture.Png(p, effectiveSeed, isRightEye));
+                sb.AppendLine($@"      <image id=""{idPrefix}_nebula"" x=""{F(irisBox.X)}"" y=""{F(irisBox.Y)}"" width=""{F(irisBox.Width)}"" height=""{F(irisBox.Height)}"" preserveAspectRatio=""none"" opacity=""{p.NebulaOpacity.ToString("F2", Inv)}"" href=""data:image/png;base64,{png}"" />");
+            }
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_upper_shadow"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)
             {
@@ -330,6 +336,30 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{prx.ToString("F3", Inv)}"" ry=""{pry.ToString("F3", Inv)}"" />");
                 }
                 sb.AppendLine("      </g>");
+
+                // Gem-cut facets (宝石カット), clipped to the same pupil outline
+                if (p.PupilFacetIntensity > 0.01)
+                {
+                    string facetClip = $"{idPrefix}_pupil_facet_clip";
+                    sb.AppendLine("      <defs>");
+                    sb.AppendLine($@"        <clipPath id=""{facetClip}"">");
+                    if (pupilOutline != null)
+                        sb.AppendLine($@"          <path d=""{pupilOutline.ToSvgPathData(cx, cy)}"" />");
+                    else if (p.PupilShape == PupilShape.VerticalOval)
+                        sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}"" />");
+                    else
+                        sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}"" />");
+                    sb.AppendLine("        </clipPath>");
+                    sb.AppendLine("      </defs>");
+                    sb.AppendLine($@"      <g id=""{idPrefix}_pupil_facets"" clip-path=""url(#{facetClip})"">");
+                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx, pry, p.PupilFacetCount, effectiveSeed, isRightEye))
+                    {
+                        double alpha = p.PupilOpacity * p.PupilFacetIntensity * IrisPatterns.MaxFacetAlpha * Math.Abs(shade);
+                        string color = shade >= 0 ? "#FFFFFF" : "#000000";
+                        sb.AppendLine($@"        <path d=""{ShapeOutline.Polygon(poly).ToSvgPathData(cx, cy)}"" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
+                    }
+                    sb.AppendLine("      </g>");
+                }
             }
 
             // Particles / Glitter

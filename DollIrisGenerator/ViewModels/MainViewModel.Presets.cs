@@ -25,7 +25,13 @@ namespace DollIrisGenerator.ViewModels
                 ParticleColor = CurrentIris.ParticleColor,
                 PupilShape = CurrentIris.PupilShape,
                 InnerGradientRadius = CurrentIris.InnerGradientRadius,
-                OuterGradientRadius = CurrentIris.OuterGradientRadius
+                OuterGradientRadius = CurrentIris.OuterGradientRadius,
+                // The color layers belong to the palette too (applying a preset always sets them)
+                AuroraColor = CurrentIris.AuroraColor,
+                AuroraOpacity = CurrentIris.AuroraOpacity,
+                NebulaColor = CurrentIris.NebulaColor,
+                NebulaOpacity = CurrentIris.NebulaOpacity,
+                PupilFacetIntensity = CurrentIris.PupilFacetIntensity
             };
 
             Presets.Add(customPreset);

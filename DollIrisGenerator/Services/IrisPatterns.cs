@@ -202,6 +202,58 @@ namespace DollIrisGenerator.Services
             (1.0, 0.0)
         };
 
+        private const int FacetSeedOffset = 5000;
+
+        /// <summary>Strongest facet alpha (at 宝石カット 100 % and a facet's full shade).</summary>
+        public const double MaxFacetAlpha = 0.75;
+
+        /// <summary>
+        /// Gem-cut facets (宝石カット) of the pupil, around the pupil center (0, 0) with radii <paramref name="prx"/> /
+        /// <paramref name="pry"/>. A ring of "table" triangles round a point a little above the center, and around it
+        /// three crown facets per step reaching well past the pupil (the renderers clip them to the pupil's outline).
+        /// Shade is -1..1: positive facets are lightened (white), negative ones darkened (black).
+        /// </summary>
+        public static List<(Point[] Polygon, double Shade)> PupilFacets(double prx, double pry, int count, int seed, bool mirror)
+        {
+            var facets = new List<(Point[], double)>(count * 4);
+            if (count <= 0 || prx <= 0 || pry <= 0) return facets;
+
+            var rng = new Random(seed + FacetSeedOffset);
+            var apex = new Point(0, -0.08 * pry);
+            double inX = 0.5 * prx, inY = 0.5 * pry;
+            double reach = 3.0 * Math.Max(prx, pry);
+
+            Point Inner(double a) => new(apex.X + inX * Math.Cos(a), apex.Y + inY * Math.Sin(a));
+            Point Outer(double a) => new(apex.X + reach * Math.Cos(a), apex.Y + reach * Math.Sin(a));
+            double Shade(double sign) => sign * (0.25 + 0.75 * rng.NextDouble());
+
+            for (int i = 0; i < count; i++)
+            {
+                double a0 = -Math.PI / 2.0 + 2.0 * Math.PI * i / count;
+                double a1 = -Math.PI / 2.0 + 2.0 * Math.PI * (i + 1) / count;
+                double am = (a0 + a1) / 2.0;
+                double sign = i % 2 == 0 ? 1.0 : -1.0;
+
+                // Table, then the crown: (inner edge → outer middle), and the two triangles either side of it
+                facets.Add((new[] { apex, Inner(a0), Inner(a1) }, Shade(sign)));
+                facets.Add((new[] { Inner(a0), Inner(a1), Outer(am) }, Shade(-sign)));
+                facets.Add((new[] { Inner(a0), Outer(am), Outer(a0) }, Shade(sign)));
+                facets.Add((new[] { Inner(a1), Outer(a1), Outer(am) }, Shade(-sign * 0.6)));
+            }
+
+            if (mirror)
+            {
+                for (int k = 0; k < facets.Count; k++)
+                {
+                    var (poly, shade) = facets[k];
+                    var m = new Point[poly.Length];
+                    for (int j = 0; j < poly.Length; j++) m[j] = new Point(-poly[j].X, poly[j].Y);
+                    facets[k] = (m, shade);
+                }
+            }
+            return facets;
+        }
+
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>
         public static ShapeOutline Flare(double size, double length) => ShapeOutline.Star(4, size * length * 0.6, 0.07);
     }

@@ -173,6 +173,25 @@ namespace DollIrisGenerator.Services
             return brush;
         }
 
+        /// <summary>The nebula clouds as a frozen bitmap (same pixels the SVG export embeds).</summary>
+        private static System.Windows.Media.Imaging.BitmapSource NebulaBitmap(IrisParameters p, int seed, bool mirror)
+        {
+            int n = NebulaTexture.Resolution;
+            var rgba = NebulaTexture.Rgba(p, seed, mirror);
+            // WPF wants BGRA
+            var bgra = new byte[rgba.Length];
+            for (int i = 0; i < rgba.Length; i += 4)
+            {
+                bgra[i] = rgba[i + 2];
+                bgra[i + 1] = rgba[i + 1];
+                bgra[i + 2] = rgba[i];
+                bgra[i + 3] = rgba[i + 3];
+            }
+            var bmp = System.Windows.Media.Imaging.BitmapSource.Create(n, n, 96, 96, PixelFormats.Bgra32, null, bgra, n * 4);
+            bmp.Freeze();
+            return bmp;
+        }
+
         internal static Point PolarPoint(Point c, double r, double degrees)
         {
             double rad = degrees * Math.PI / 180.0;
@@ -271,6 +290,14 @@ namespace DollIrisGenerator.Services
             {
                 var auroraBrush = CreateFillBrush(p.AuroraColor, p.AuroraOpacity, irisBox, isRightEye);
                 dc.DrawGeometry(auroraBrush, null, boundaryGeometry);
+            }
+
+            // Nebula layer (星雲): the shared cloud image stretched over the iris ellipse
+            if (p.NebulaOpacity > 0.01)
+            {
+                dc.PushOpacity(p.NebulaOpacity);
+                dc.DrawImage(NebulaBitmap(p, effectiveSeed, isRightEye), irisBox);
+                dc.Pop();
             }
 
             // Upper Shadow (Eyelid depth)
@@ -413,6 +440,21 @@ namespace DollIrisGenerator.Services
 
                 dc.PushTransform(new TranslateTransform(center.X, center.Y));
                 dc.DrawGeometry(pupilBrush, null, pupilGeo);
+
+                // Gem-cut facets (宝石カット), clipped to the pupil's outline
+                if (p.PupilFacetIntensity > 0.01)
+                {
+                    dc.PushClip(pupilGeo);
+                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx, pry, p.PupilFacetCount, effectiveSeed, isRightEye))
+                    {
+                        double alpha = p.PupilOpacity * p.PupilFacetIntensity * IrisPatterns.MaxFacetAlpha * Math.Abs(shade);
+                        var c = shade >= 0 ? Colors.White : Colors.Black;
+                        var facetBrush = new SolidColorBrush(Color.FromArgb((byte)Math.Clamp((int)(alpha * 255), 0, 255), c.R, c.G, c.B));
+                        facetBrush.Freeze();
+                        dc.DrawGeometry(facetBrush, null, ShapeOutline.Polygon(poly).ToPathGeometry());
+                    }
+                    dc.Pop();
+                }
 
                 if (p.PupilSoftness > 0.02)
                 {

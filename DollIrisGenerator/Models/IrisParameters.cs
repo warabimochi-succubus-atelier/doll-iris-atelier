@@ -23,6 +23,14 @@ namespace DollIrisGenerator.Models
         /// <summary>Aurora layer color a new design starts with: pink → blue → violet → mint round the iris, back to pink.</summary>
         public const string DefaultAuroraColor = "conic-gradient(from 270deg, #FF80AB 0%, #80D8FF 30%, #B388FF 55%, #A7FFEB 80%, #FF80AB 100%)";
 
+        /// <summary>Nebula color a new design starts with: magenta in the middle, violet, then sky blue outside.</summary>
+        public const string DefaultNebulaColor = "radial-gradient(#E040FB 0%, #7C4DFF 50%, #40C4FF 100%)";
+
+        public const int MinPupilFacetCount = 4;
+        public const int MaxPupilFacetCount = 24;
+        public const double MinNebulaScale = 0.5;
+        public const double MaxNebulaScale = 3.0;
+
         public const double MinRayCurve = -1.0;
         public const double MaxRayCurve = 1.0;
         public const double MinParticleFlareLength = 1.0;
@@ -73,6 +81,15 @@ namespace DollIrisGenerator.Models
         private double _pupilOpacity = 1.0;
         private double _pupilSoftness = 0.08;
         private double _pupilCornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0)
+        private double _pupilFacetIntensity = 0.0; // 宝石カット: strength of the light / dark facets inside the pupil. 0 = off
+        private int _pupilFacetCount = 10;          // facets round the pupil
+
+        // Nebula layer (星雲): soft clouds over the iris body. 0 = off.
+        private string _nebulaColor = DefaultNebulaColor;
+        private double _nebulaOpacity = 0.0;
+        private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
+        private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
+        private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
 
         // Radial Pattern (放射状ライン / 放射模様)
         private int _rayCount = 48;
@@ -310,6 +327,55 @@ namespace DollIrisGenerator.Models
         /// How much the corners of the cat slit / heart / star pupil are rounded: 0 = sharp (as before) to 1 = fully rounded.
         /// No effect on the round and oval pupils.
         /// </summary>
+        /// <summary>宝石カット: strength (0..1) of the faceted light / dark planes cut into the pupil, like a gem. 0 = off.</summary>
+        public double PupilFacetIntensity
+        {
+            get => _pupilFacetIntensity;
+            set { _pupilFacetIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>カット面の数: facets round the pupil.</summary>
+        public int PupilFacetCount
+        {
+            get => _pupilFacetCount;
+            set { _pupilFacetCount = Math.Clamp(value, MinPupilFacetCount, MaxPupilFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>Color of the nebula clouds (solid or gradient, laid across the iris like the other iris-wide colors).</summary>
+        public string NebulaColor
+        {
+            get => _nebulaColor;
+            set { _nebulaColor = value ?? DefaultNebulaColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>Strength of the nebula layer. 0 = off.</summary>
+        public double NebulaOpacity
+        {
+            get => _nebulaOpacity;
+            set { _nebulaOpacity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>雲の細かさ: higher values give smaller, busier clouds.</summary>
+        public double NebulaScale
+        {
+            get => _nebulaScale;
+            set { _nebulaScale = ClampFinite(value, MinNebulaScale, MaxNebulaScale, 1.2); OnPropertyChanged(); }
+        }
+
+        /// <summary>雲の量: how much of the iris the clouds cover (0..1).</summary>
+        public double NebulaDensity
+        {
+            get => _nebulaDensity;
+            set { _nebulaDensity = ClampFinite(value, 0.0, 1.0, 0.5); OnPropertyChanged(); }
+        }
+
+        /// <summary>渦巻き: spiral twist of the clouds round the pupil; the sign picks the direction (mirrored in the right eye).</summary>
+        public double NebulaSwirl
+        {
+            get => _nebulaSwirl;
+            set { _nebulaSwirl = ClampFinite(value, -1.0, 1.0, 0.4); OnPropertyChanged(); }
+        }
+
         public double PupilCornerRounding
         {
             get => _pupilCornerRounding;

@@ -164,9 +164,13 @@ namespace DollIrisGenerator.Tests
             Assert.Contains("\"RayColor\":\"#B3E5FC\"", saved);
             // The aurora layer (newer than these files) starts with a conic gradient but is off (strength 0);
             // every color the old file had stays a plain color
+            // The same goes for the nebula layer
             Assert.Equal(0.0, p.AuroraOpacity);
-            string savedWithoutAurora = saved.Replace(JsonSerializer.Serialize(IrisParameters.DefaultAuroraColor), "\"\"");
-            Assert.DoesNotContain("gradient", savedWithoutAurora);
+            Assert.Equal(0.0, p.NebulaOpacity);
+            string savedWithoutLayers = saved
+                .Replace(JsonSerializer.Serialize(IrisParameters.DefaultAuroraColor), "\"\"")
+                .Replace(JsonSerializer.Serialize(IrisParameters.DefaultNebulaColor), "\"\"");
+            Assert.DoesNotContain("gradient", savedWithoutLayers);
         }
 
         [Fact]

@@ -236,6 +236,34 @@ namespace DollIrisGenerator.Services
                     }).ToString();
                 }
                 p.AuroraOpacity = aurora ? Math.Round(0.20 + strength * 0.25, 2) : 0.0;
+
+                // 20%: nebula clouds, from the theme's hue toward its second hue (or a neighbour)
+                bool nebula = rng.Next(10) < 2;
+                double nebStrength = rng.NextDouble(), nebDensity = rng.NextDouble(), nebScale = rng.NextDouble(), nebSwirl = rng.NextDouble();
+                if (nebula)
+                {
+                    double h2 = theme.DualTone ? theme.DualHue : baseHue + 40.0;
+                    p.NebulaColor = ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
+                    {
+                        new ColorStop(HslToHex(h2, 0.85, 0.66), 0.0),
+                        new ColorStop(HslToHex(baseHue, 0.85, 0.62), 0.55),
+                        new ColorStop(HslToHex(baseHue - 30.0, 0.80, 0.58), 1.0)
+                    }).ToString();
+                    p.NebulaDensity = Math.Round(0.35 + nebDensity * 0.4, 2);
+                    p.NebulaScale = Math.Round(0.9 + nebScale * 1.0, 2);
+                    p.NebulaSwirl = Math.Round((nebSwirl - 0.5) * 1.4, 2);
+                }
+                p.NebulaOpacity = nebula ? Math.Round(0.45 + nebStrength * 0.35, 2) : 0.0;
+            }
+
+            // Gem cut: mostly with heart / star pupils, where it reads as a jewel
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                bool jewelShape = p.PupilShape is PupilShape.Heart or PupilShape.Star;
+                double roll = rng.NextDouble(), facet = rng.NextDouble(), count = rng.NextDouble();
+                bool facets = roll < (jewelShape ? 0.6 : 0.1);
+                p.PupilFacetIntensity = facets ? Math.Round(0.45 + facet * 0.45, 2) : 0.0;
+                p.PupilFacetCount = 6 + (int)(count * 10);
             }
 
             // 14. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)

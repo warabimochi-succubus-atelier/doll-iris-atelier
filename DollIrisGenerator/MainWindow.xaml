@@ -406,7 +406,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="虹彩カラー設定 (Section 7)" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない (すべての色)" IsChecked="{Binding LockColors}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・オーロラ層・デザイン名をランダム生成で変えない"/>
+                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・オーロラ層・星雲・デザイン名をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -455,6 +455,28 @@
                                             <TextBlock Text="オーロラ層の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.AuroraOpacity}" Minimum="0.0" Maximum="1.0"/>
                                         </DockPanel>
+
+                                        <!-- Nebula layer (星雲) -->
+                                        <DockPanel Margin="0,8,0,4" ToolTip="虹彩に重ねる雲のような模様の色。グラデーションにすると、虹彩の場所ごとに雲の色が変わります (銀河・星雲風)">
+                                            <TextBlock Text="星雲の色:" VerticalAlignment="Center" Width="120"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.NebulaColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0 でオフ">
+                                            <TextBlock Text="星雲の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <Slider Value="{Binding CurrentIris.NebulaOpacity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="雲がどれだけ虹彩を覆うか">
+                                            <TextBlock Text="星雲の量:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <Slider Value="{Binding CurrentIris.NebulaDensity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="大きいほど細かい雲になります">
+                                            <TextBlock Text="星雲の細かさ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <Slider Value="{Binding CurrentIris.NebulaScale}" Minimum="0.5" Maximum="3.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="雲を瞳孔のまわりで渦巻かせます。マイナスで逆回り (右目は自動で鏡像)">
+                                            <TextBlock Text="星雲の渦巻き:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <Slider Value="{Binding CurrentIris.NebulaSwirl}" Minimum="-1.0" Maximum="1.0"/>
+                                        </DockPanel>
                                     </StackPanel>
                                 </GroupBox>
                             </StackPanel>
@@ -473,7 +495,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="瞳孔模様 (Section 9)" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockPupil}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="瞳孔の形・大きさ・不透明度・ぼかし・色をランダム生成で変えない"/>
+                                                      ToolTip="瞳孔の形・大きさ・不透明度・ぼかし・宝石カット・色をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -519,7 +541,20 @@
                                             <TextBlock Text="角の丸み (猫目・ハート・星):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilCornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilCornerRounding}"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilCornerRounding}" Margin="0,0,0,10"/>
+
+                                        <!-- Gem cut (宝石カット) -->
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中に、宝石のカット面のような明暗の面を入れます。0% でオフ。ハート型・星型と組み合わせると宝石風になります">
+                                            <TextBlock Text="宝石カット:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilFacetIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilFacetIntensity}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔のまわりを何面にカットするか">
+                                            <TextBlock Text="カット面の数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilFacetCount, StringFormat='{}{0} 面'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="4" Maximum="24" Value="{Binding CurrentIris.PupilFacetCount}" TickFrequency="1" IsSnapToTickEnabled="True"/>
                                     </StackPanel>
                                 </GroupBox>
 
