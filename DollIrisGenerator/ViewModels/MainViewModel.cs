@@ -32,8 +32,9 @@ namespace DollIrisGenerator.ViewModels
 
         // History Management (Undo / Redo Stack)
         private ObservableCollection<HistoryItem> _historyItems = new();
-        private readonly List<IrisParameters> _undoStack = new();
-        private readonly List<IrisParameters> _redoStack = new();
+        // Each cell of the split preview has its own stacks; these point at the selected cell's (see MainViewModel.Compare.cs)
+        private List<IrisParameters> _undoStack = new();
+        private List<IrisParameters> _redoStack = new();
         private bool _isInternalStateChange = false;
 
         // Manual edits (sliders, colors, text) are grouped into one undo step: the state before the first
@@ -71,6 +72,8 @@ namespace DollIrisGenerator.ViewModels
                 if (_currentIris != null)
                 {
                     _currentIris.PropertyChanged += OnIrisPropertyChanged;
+                    // Undo, loads and new designs replace the instance: the selected cell keeps showing it
+                    if (_selectedSlot != null) _selectedSlot.Iris = _currentIris;
                 }
                 ResetManualEditTracking();
                 OnPropertyChanged();
@@ -336,6 +339,7 @@ namespace DollIrisGenerator.ViewModels
             _manualEditTimer = new DispatcherTimer { Interval = ManualEditCommitDelay };
             _manualEditTimer.Tick += (_, _) => CommitManualEdit();
             _sheetConfig = new PrintSheetConfig();
+            InitializeCompareSlots();
 
             // Default preset
             _selectedPreset = Presets[0];
@@ -403,7 +407,7 @@ namespace DollIrisGenerator.ViewModels
             UndoCommand = new RelayCommand(OnUndo, () => CanUndo);
             RedoCommand = new RelayCommand(OnRedo, () => CanRedo);
             RestoreHistoryCommand = new RelayCommand(OnRestoreHistory);
-            ClearHistoryCommand = new RelayCommand(() => { ResetManualEditTracking(); _historyItems.Clear(); _undoStack.Clear(); _redoStack.Clear(); OnPropertyChanged(nameof(CanUndo)); OnPropertyChanged(nameof(CanRedo)); });
+            ClearHistoryCommand = new RelayCommand(() => { ResetManualEditTracking(); _historyItems.Clear(); ClearAllUndoHistory(); OnPropertyChanged(nameof(CanUndo)); OnPropertyChanged(nameof(CanRedo)); });
 
             AddFavoriteCommand = new RelayCommand(OnAddFavorite);
             RemoveFavoriteCommand = new RelayCommand(OnRemoveFavorite);

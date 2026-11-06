@@ -168,6 +168,17 @@
                                          IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=A4Sheet}"/>
                         </StackPanel>
 
+                        <!-- Split count of the pair preview (1-9 cells, each its own design) -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,12,2"
+                                    IsEnabled="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pair}"
+                                    ToolTip="左右ペア表示を最大 9 つの枠に分割し、複数のアイを並べて比較します。枠をクリックすると、そのアイが編集対象になります">
+                            <TextBlock Text="分割:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12"/>
+                            <ComboBox ItemsSource="{x:Static vm:MainViewModel.CompareCountOptions}" SelectedItem="{Binding CompareCount}" Width="56"/>
+                            <Button Content="⤢ 枠に合わせる" Click="OnFitCompareZoomClick" Height="26" Padding="6,0" Margin="6,0,0,0" Cursor="Hand"
+                                    Background="#333842" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}"
+                                    ToolTip="すべての枠のアイが枠内にちょうど収まる拡大率にし、表示位置も中央に戻します。分割数を増やしたときは、はみ出す場合だけ自動で縮小します"/>
+                        </StackPanel>
+
                         <!-- Zoom & Guide Toggles -->
                         <WrapPanel VerticalAlignment="Center" Margin="0,2,0,2">
                             <Button Content="📏 実寸表示 (100% mm)" Command="{Binding ZoomRealSizeCommand}" Click="OnResetViewClick"
@@ -186,15 +197,96 @@
                     </WrapPanel>
                 </Border>
 
-                <!-- Interactive Preview Canvas -->
+                <!-- Interactive Preview Canvas (A4 sheet mode) -->
                 <controls:IrisPreviewControl x:Name="PreviewCanvas" Grid.Row="1"
                                              Parameters="{Binding CurrentIris}"
-                                             PreviewMode="{Binding PreviewMode}"
+                                             PreviewMode="A4Sheet"
                                              ZoomScale="{Binding ZoomScale}"
                                              ShowCutLines="{Binding ShowCutLines}"
                                              ShowCenterMarks="{Binding ShowCenterMarks}"
                                              SheetConfig="{Binding SheetConfig}"
-                                             SheetItems="{Binding SheetItems}"/>
+                                             SheetItems="{Binding SheetItems}">
+                    <controls:IrisPreviewControl.Style>
+                        <Style TargetType="controls:IrisPreviewControl">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PreviewMode}" Value="A4Sheet">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </controls:IrisPreviewControl.Style>
+                </controls:IrisPreviewControl>
+
+                <!-- Pair mode: split into CompareCount cells; clicking a cell makes its design the one being edited -->
+                <ItemsControl x:Name="CompareGrid" Grid.Row="1" ItemsSource="{Binding VisibleSlots}" Background="#1E2026">
+                    <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PreviewMode}" Value="A4Sheet">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ItemsControl.Style>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="{Binding DataContext.CompareColumns, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:CompareSlot}">
+                            <Border Margin="1" BorderThickness="2" PreviewMouseDown="OnCompareCellMouseDown">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="#3E4451"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.IsCompareSplit, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="False">
+                                                <Setter Property="BorderBrush" Value="Transparent"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsSelected}" Value="True"/>
+                                                    <Condition Binding="{Binding DataContext.IsCompareSplit, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="BorderBrush" Value="#FFD54F"/>
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <controls:IrisPreviewControl Parameters="{Binding Iris}"
+                                                                 PreviewMode="Pair"
+                                                                 ZoomScale="{Binding DataContext.ZoomScale, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                 ShowCutLines="{Binding DataContext.ShowCutLines, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                 ShowCenterMarks="{Binding DataContext.ShowCenterMarks, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                 SheetConfig="{Binding DataContext.SheetConfig, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                                    <!-- Cell number and design name (not hit-testable: clicks reach the preview) -->
+                                    <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4" Padding="6,2" CornerRadius="3"
+                                            Background="#CC181A1F" IsHitTestVisible="False"
+                                            Visibility="{Binding DataContext.IsCompareSplit, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource BoolToVisConverter}}">
+                                        <TextBlock FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="220">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="#FFD54F"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <Run Text="{Binding Number, Mode=OneWay}"/><Run Text=": "/><Run Text="{Binding Iris.Name, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Grid>
 
             <!-- Splitter -->
