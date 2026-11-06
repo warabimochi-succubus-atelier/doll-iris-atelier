@@ -12,6 +12,8 @@ namespace DollIrisGenerator.Services
         /// about 136 DIP across, the same on-screen size the old 20 mm default had at 180%.
         /// </summary>
         public const double DefaultPreviewZoom = 3.6;
+        /// <summary>Starting zoom of the A4 sheet view: actual size (100%), so the whole sheet is easier to take in.</summary>
+        public const double DefaultSheetPreviewZoom = 1.0;
         public const double MinPreviewZoom = 0.2;
         public const double MaxPreviewZoom = 16.0;
 

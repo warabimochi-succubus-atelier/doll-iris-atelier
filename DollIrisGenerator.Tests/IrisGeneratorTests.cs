@@ -1146,13 +1146,20 @@ namespace DollIrisGenerator.Tests
             var vm = new MainViewModel { PreviewMode = PreviewMode.Pair };
             vm.ZoomScale = 2.0;
             vm.PreviewMode = PreviewMode.A4Sheet;
-            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, vm.ZoomScale, 9); // the sheet keeps its own zoom
+            Assert.Equal(1.0, vm.ZoomScale, 9); // the sheet keeps its own zoom, starting at actual size
             vm.ZoomScale = 0.5;
             Assert.Equal(2.0, vm.PairZoomScale, 9);
 
             vm.PreviewMode = PreviewMode.Pair;
             Assert.Equal(2.0, vm.ZoomScale, 9);
             Assert.Equal(0.5, vm.SheetZoomScale, 9);
+
+            // リセット goes back to each view's own starting zoom
+            vm.ZoomResetCommand.Execute(null);
+            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, vm.PairZoomScale, 9);
+            vm.PreviewMode = PreviewMode.A4Sheet;
+            vm.ZoomResetCommand.Execute(null);
+            Assert.Equal(1.0, vm.SheetZoomScale, 9);
         }
 
         [Fact]

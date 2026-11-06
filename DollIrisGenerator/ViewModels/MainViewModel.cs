@@ -20,7 +20,7 @@ namespace DollIrisGenerator.ViewModels
         private PreviewMode _previewMode = PreviewMode.Pair;
         // The pair view and the A4 sheet view each keep their own zoom
         private double _pairZoomScale = WpfIrisRenderer.DefaultPreviewZoom;
-        private double _sheetZoomScale = WpfIrisRenderer.DefaultPreviewZoom;
+        private double _sheetZoomScale = WpfIrisRenderer.DefaultSheetPreviewZoom;
         private bool _showCutLines = true;
         private bool _showCenterMarks = true;
         private PrintSheetConfig _sheetConfig;
@@ -377,7 +377,10 @@ namespace DollIrisGenerator.ViewModels
             RandomizeAttributesCommand = new RelayCommand(OnRandomizeAttributes);
             ZoomInCommand = new RelayCommand(() => ZoomScale *= 1.25);
             ZoomOutCommand = new RelayCommand(() => ZoomScale /= 1.25);
-            ZoomResetCommand = new RelayCommand(() => ZoomScale = WpfIrisRenderer.DefaultPreviewZoom);
+            // Each view goes back to its own starting zoom (pair 360%, A4 sheet 100%)
+            ZoomResetCommand = new RelayCommand(() => ZoomScale = PreviewMode == PreviewMode.A4Sheet
+                ? WpfIrisRenderer.DefaultSheetPreviewZoom
+                : WpfIrisRenderer.DefaultPreviewZoom);
             ZoomRealSizeCommand = new RelayCommand(() =>
             {
                 ZoomScale = 1.0;
