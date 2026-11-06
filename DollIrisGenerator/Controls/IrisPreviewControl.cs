@@ -96,6 +96,32 @@ namespace DollIrisGenerator.Controls
         // Standard screen pixel per mm at 96 DPI
         public const double ScreenDipsPerMm = 96.0 / 25.4; // ~3.7795 DIP/mm
 
+        // Room kept around a pair when fitting it into a view: the L / R labels under the eyes (drawn 16 DIP
+        // below the eye, ~16 DIP tall) and the cell's number label at the top. Kept on both sides because the pair is centred.
+        public const double FitMarginX = 16.0;
+        public const double FitMarginY = 36.0;
+
+        /// <summary>
+        /// Largest zoom at which every design's pair (left eye, gap, mirrored right eye and labels) fits inside a
+        /// view of <paramref name="viewWidth"/> × <paramref name="viewHeight"/> DIP, clamped to the preview zoom range.
+        /// </summary>
+        public static double FitPairZoom(IEnumerable<IrisParameters> designs, double pairSpacingMm, double viewWidth, double viewHeight)
+        {
+            double widestMm = 0, tallestMm = 0;
+            foreach (var design in designs)
+            {
+                var (wMm, hMm) = SheetLayout.GetEyeFootprintMm(design);
+                widestMm = Math.Max(widestMm, 2 * wMm + pairSpacingMm);
+                tallestMm = Math.Max(tallestMm, hMm);
+            }
+            if (widestMm <= 0 || tallestMm <= 0) return WpfIrisRenderer.DefaultPreviewZoom;
+
+            double usableW = Math.Max(1, viewWidth - 2 * FitMarginX);
+            double usableH = Math.Max(1, viewHeight - 2 * FitMarginY);
+            double zoom = Math.Min(usableW / (widestMm * ScreenDipsPerMm), usableH / (tallestMm * ScreenDipsPerMm));
+            return Math.Clamp(zoom, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom);
+        }
+
         private Point _panOffset = new Point(0, 0);
         private Point _lastMousePos;
         private bool _isDragging = false;
