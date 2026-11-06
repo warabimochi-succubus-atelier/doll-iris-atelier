@@ -409,6 +409,40 @@ namespace DollIrisGenerator.Services
             return points;
         }
 
+        /// <summary>
+        /// Bounding box of the outline (curves sampled), optionally mirrored left-right first.
+        /// Gradients on symbols and the pupil are laid across this box.
+        /// </summary>
+        public Rect GetBounds(bool mirrorX = false)
+        {
+            double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+            foreach (var p in Flatten(16))
+            {
+                double x = mirrorX ? -p.X : p.X;
+                minX = Math.Min(minX, x); maxX = Math.Max(maxX, x);
+                minY = Math.Min(minY, p.Y); maxY = Math.Max(maxY, p.Y);
+            }
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        /// <summary>The same outline moved by (<paramref name="dx"/>, <paramref name="dy"/>), for drawing without a geometry transform.</summary>
+        public ShapeOutline Offset(double dx, double dy)
+        {
+            Point T(Point p) => new(p.X + dx, p.Y + dy);
+            var segments = new List<OutlineSegment>(Segments.Count);
+            foreach (var s in Segments) segments.Add(new OutlineSegment(T(s.C1), T(s.C2), T(s.End), s.IsLine));
+            return new ShapeOutline(T(Start), segments);
+        }
+
+        /// <summary>The same outline mirrored left-right (right eye moon), for drawing without a geometry transform.</summary>
+        public ShapeOutline MirroredX()
+        {
+            static Point M(Point p) => new(-p.X, p.Y);
+            var segments = new List<OutlineSegment>(Segments.Count);
+            foreach (var s in Segments) segments.Add(new OutlineSegment(M(s.C1), M(s.C2), M(s.End), s.IsLine));
+            return new ShapeOutline(M(Start), segments);
+        }
+
         // ------------------------------------------------------------------
         // Cubic Bezier math
         // ------------------------------------------------------------------

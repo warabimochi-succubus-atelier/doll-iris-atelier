@@ -46,6 +46,8 @@ namespace DollIrisGenerator.Services
         public static string SanitizeColorHex(string? hex, string defaultHex = "#000000")
         {
             if (string.IsNullOrWhiteSpace(hex)) return defaultHex;
+            // A gradient where one color is needed (e.g. a hand-edited file): use its first color
+            if (Models.ColorFill.Parse(hex) is { IsGradient: true } fill) hex = fill.PrimaryColor;
             hex = hex.Trim();
             if (HexColorRegex.IsMatch(hex))
             {
@@ -57,6 +59,8 @@ namespace DollIrisGenerator.Services
         public static Color ParseHexColor(string? hex, double alpha = 1.0)
         {
             if (string.IsNullOrWhiteSpace(hex)) return Colors.Black;
+            // A gradient where one color is needed (e.g. a hand-edited file): use its first color
+            if (Models.ColorFill.Parse(hex) is { IsGradient: true } fill) hex = fill.PrimaryColor;
             try
             {
                 hex = hex.Trim().TrimStart('#');
