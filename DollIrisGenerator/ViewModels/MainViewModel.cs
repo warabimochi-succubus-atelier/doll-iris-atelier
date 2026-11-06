@@ -18,7 +18,9 @@ namespace DollIrisGenerator.ViewModels
         private OddEyeTemplate? _selectedOddEyeTemplate;
         private PdfTemplatePreset? _selectedPdfTemplate;
         private PreviewMode _previewMode = PreviewMode.Pair;
-        private double _zoomScale = WpfIrisRenderer.DefaultPreviewZoom;
+        // The pair view and the A4 sheet view each keep their own zoom
+        private double _pairZoomScale = WpfIrisRenderer.DefaultPreviewZoom;
+        private double _sheetZoomScale = WpfIrisRenderer.DefaultPreviewZoom;
         private bool _showCutLines = true;
         private bool _showCenterMarks = true;
         private PrintSheetConfig _sheetConfig;
@@ -136,14 +138,51 @@ namespace DollIrisGenerator.ViewModels
         public PreviewMode PreviewMode
         {
             get => _previewMode;
-            set { _previewMode = value; OnPropertyChanged(); }
+            set
+            {
+                _previewMode = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ZoomScale)); // the status bar now shows the other view's zoom
+            }
         }
 
+        /// <summary>Zoom of the 左右ペア view (shared by every cell of the split preview).</summary>
+        public double PairZoomScale
+        {
+            get => _pairZoomScale;
+            set
+            {
+                _pairZoomScale = ClampZoom(value);
+                OnPropertyChanged();
+                if (PreviewMode == PreviewMode.Pair) OnPropertyChanged(nameof(ZoomScale));
+            }
+        }
+
+        /// <summary>Zoom of the A4 シート view.</summary>
+        public double SheetZoomScale
+        {
+            get => _sheetZoomScale;
+            set
+            {
+                _sheetZoomScale = ClampZoom(value);
+                OnPropertyChanged();
+                if (PreviewMode == PreviewMode.A4Sheet) OnPropertyChanged(nameof(ZoomScale));
+            }
+        }
+
+        /// <summary>Zoom of the view currently shown (what the zoom buttons and the status bar act on).</summary>
         public double ZoomScale
         {
-            get => _zoomScale;
-            set { _zoomScale = Math.Clamp(value, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom); OnPropertyChanged(); }
+            get => PreviewMode == PreviewMode.A4Sheet ? SheetZoomScale : PairZoomScale;
+            set
+            {
+                if (PreviewMode == PreviewMode.A4Sheet) SheetZoomScale = value;
+                else PairZoomScale = value;
+            }
         }
+
+        private static double ClampZoom(double value) =>
+            Math.Clamp(value, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom);
 
         public bool ShowCutLines
         {

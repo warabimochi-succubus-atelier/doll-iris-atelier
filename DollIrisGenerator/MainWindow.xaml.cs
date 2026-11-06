@@ -95,7 +95,7 @@ namespace DollIrisGenerator
         private const double CompareCellChrome = 6.0;
 
         /// <summary>
-        /// Sets the shared zoom so every visible cell's pair fits in its cell and re-centres the cells.
+        /// Sets the pair view's zoom so every visible cell's pair fits in its cell and re-centres the cells.
         /// With <paramref name="shrinkOnly"/>, the zoom is only lowered (and only when the pairs overflow).
         /// </summary>
         private void FitCompareZoom(bool shrinkOnly)
@@ -105,11 +105,11 @@ namespace DollIrisGenerator
             double cellW = CompareGrid.ActualWidth / vm.CompareColumns - CompareCellChrome;
             double cellH = CompareGrid.ActualHeight / vm.CompareRows - CompareCellChrome;
             double fit = IrisPreviewControl.FitPairZoom(vm.VisibleSlots.Select(s => s.Iris), vm.SheetConfig.PairSpacingXMm, cellW, cellH);
-            if (shrinkOnly && fit >= vm.ZoomScale) return;
+            if (shrinkOnly && fit >= vm.PairZoomScale) return;
 
-            vm.ZoomScale = fit;
+            vm.PairZoomScale = fit;
             ResetAllPans();
-            vm.StatusMessage = $"アイが枠に収まる拡大率 ({vm.ZoomScale * 100:F0}%) にしました。";
+            vm.StatusMessage = $"アイが枠に収まる拡大率 ({vm.PairZoomScale * 100:F0}%) にしました。";
         }
 
         // Clicking anywhere in a cell of the split preview makes that cell's design the one being edited.

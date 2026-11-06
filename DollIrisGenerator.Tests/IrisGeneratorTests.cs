@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Xml.Linq;
+using DollIrisGenerator.Controls;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 using DollIrisGenerator.ViewModels;
@@ -1137,6 +1138,21 @@ namespace DollIrisGenerator.Tests
                     if (File.Exists(pdf)) File.Delete(pdf);
                 }
             });
+        }
+
+        [Fact]
+        public void TestPairAndSheetViewsKeepTheirOwnZoom()
+        {
+            var vm = new MainViewModel { PreviewMode = PreviewMode.Pair };
+            vm.ZoomScale = 2.0;
+            vm.PreviewMode = PreviewMode.A4Sheet;
+            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, vm.ZoomScale, 9); // the sheet keeps its own zoom
+            vm.ZoomScale = 0.5;
+            Assert.Equal(2.0, vm.PairZoomScale, 9);
+
+            vm.PreviewMode = PreviewMode.Pair;
+            Assert.Equal(2.0, vm.ZoomScale, 9);
+            Assert.Equal(0.5, vm.SheetZoomScale, 9);
         }
 
         [Fact]
