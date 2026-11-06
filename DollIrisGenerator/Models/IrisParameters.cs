@@ -48,6 +48,7 @@ namespace DollIrisGenerator.Models
         private string _pupilColor = "#060A18";
         private double _pupilOpacity = 1.0;
         private double _pupilSoftness = 0.08;
+        private double _pupilCornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0)
 
         // Radial Pattern (放射状ライン / 放射模様)
         private int _rayCount = 48;
@@ -267,6 +268,20 @@ namespace DollIrisGenerator.Models
             get => _pupilSoftness;
             set { _pupilSoftness = Math.Max(0.0, Math.Min(0.5, value)); OnPropertyChanged(); }
         }
+
+        /// <summary>
+        /// How much the corners of the cat slit / heart / star pupil are rounded: 0 = sharp (as before) to 1 = fully rounded.
+        /// No effect on the round and oval pupils.
+        /// </summary>
+        public double PupilCornerRounding
+        {
+            get => _pupilCornerRounding;
+            set { _pupilCornerRounding = ClampCornerRounding(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>Corner rounding is 0..1; NaN / infinity from a hand-edited file become 0 (sharp).</summary>
+        public static double ClampCornerRounding(double value) =>
+            double.IsFinite(value) ? Math.Clamp(value, 0.0, 1.0) : 0.0;
 
         // Rays
         public int RayCount
