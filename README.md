@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩自動生成メーカー) v1.0 Plus
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v1.0 Plus
 
 仕様書 `#_Automated Iris Generator for Dolls_Specification_v1_0.txt` の全基本要件、および **Section 20「将来の拡張機能」全項目** に完全対応した、Windows 11 向けのアニメ調ドールアイ用虹彩パラメトリック自動生成デスクトップアプリケーションです。
 
