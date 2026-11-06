@@ -1105,6 +1105,13 @@
                                                             </DockPanel>
                                                             <Slider Minimum="0.05" Maximum="0.40" Value="{Binding Size}" Margin="0,0,0,6"/>
 
+                                                            <!-- Same range as DecorativeSymbolItem.Count (1-12); 2 or more puts the copies in a ring round the position -->
+                                                            <DockPanel Margin="0,0,0,4" ToolTip="同じ記号をいくつ並べるか。2 以上にすると、位置のまわりに円を描くように並びます">
+                                                                <TextBlock Text="繰り返し数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="1" Maximum="12" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
+
                                                             <Grid Margin="0,0,0,6">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>

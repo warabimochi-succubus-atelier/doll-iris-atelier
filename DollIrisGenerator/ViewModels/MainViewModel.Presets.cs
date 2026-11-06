@@ -250,9 +250,13 @@ namespace DollIrisGenerator.ViewModels
 
             try
             {
-                var loaded = FavoritesStore.ReadImportFile(path);
+                var loaded = FavoritesStore.ReadImportFile(path, out string? singleDesignJson);
                 if (loaded != null)
                 {
+                    // A single design saved by an older version may hold an eye-sized value such as 24 mm: say it was clamped
+                    string? sizeNote = singleDesignJson != null && loaded.Count == 1
+                        ? DesignFileWorkflow.DescribeSizeAdjustment(singleDesignJson, loaded[0].Parameters.SizeMm)
+                        : null;
                     int addedCount = 0;
                     foreach (var fav in loaded)
                     {
@@ -263,7 +267,8 @@ namespace DollIrisGenerator.ViewModels
                         }
                     }
                     SaveFavorites();
-                    StatusMessage = $"お気に入りファイルから {addedCount} 件を読み込みました。";
+                    StatusMessage = $"お気に入りファイルから {addedCount} 件を読み込みました。" +
+                                    (sizeNote == null ? "" : $" ({sizeNote})");
                 }
             }
             catch (Exception ex)
