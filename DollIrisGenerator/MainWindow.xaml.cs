@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using DollIrisGenerator.Controls;
 using DollIrisGenerator.Services;
 using DollIrisGenerator.ViewModels;
 
@@ -10,8 +11,10 @@ namespace DollIrisGenerator
     {
         public MainWindow()
         {
+            var settings = WindowSettingsService.LoadSettings();
+            ColorPickerBox.PreferredInputMode = settings.ColorInputMode; // before the color boxes are created
             InitializeComponent();
-            WindowSettingsService.ApplySettings(this);
+            WindowSettingsService.ApplySettings(this, settings);
             Loaded += (_, _) =>
             {
                 if (DataContext is not MainViewModel vm) return;
@@ -43,7 +46,7 @@ namespace DollIrisGenerator
             }
 
             base.OnClosing(e);
-            WindowSettingsService.SaveSettings(this);
+            WindowSettingsService.SaveSettings(this, colorInputMode: ColorPickerBox.PreferredInputMode);
         }
 
         // リセット / 実寸表示 also bring a panned preview back to the centre (zoom is handled by their commands)

@@ -5,6 +5,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="32" d:DesignWidth="180">
+    <UserControl.Resources>
+        <!-- C / M / Y / K percent boxes: applied on Enter or when leaving the box, ↑↓ = ±1 % -->
+        <Style x:Key="CmykValueBoxStyle" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1,0"/>
+            <Setter Property="Background" Value="#2D3139"/>
+            <Setter Property="Foreground" Value="#E0E6ED"/>
+            <Setter Property="BorderBrush" Value="#444A56"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <EventSetter Event="PreviewKeyDown" Handler="OnCmykValueBoxKeyDown"/>
+            <EventSetter Event="LostKeyboardFocus" Handler="OnCmykValueBoxLostFocus"/>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -94,9 +110,20 @@
 
                     <Border BorderBrush="#3A404D" BorderThickness="0,1,0,0" Margin="0,4,0,8"/>
 
-                    <!-- RGB Custom Sliders -->
-                    <TextBlock Text="カスタム RGB 調整" Foreground="#B0B8C5" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4"/>
+                    <!-- Custom color: RGB or CMYK sliders (the value is stored as #RRGGBB either way) -->
+                    <DockPanel Margin="0,0,0,4">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <RadioButton x:Name="RgbModeBtn" Content="RGB"
+                                         Style="{StaticResource {x:Type ToggleButton}}" FontSize="10" Padding="8,0" MinWidth="40"
+                                         Checked="OnInputModeChecked" ToolTip="赤・緑・青 (0〜255) で調整します"/>
+                            <RadioButton x:Name="CmykModeBtn" Content="CMYK"
+                                         Style="{StaticResource {x:Type ToggleButton}}" FontSize="10" Padding="8,0" MinWidth="40" Margin="2,0,0,0"
+                                         Checked="OnInputModeChecked" ToolTip="シアン・マゼンタ・イエロー・ブラック (0〜100%) で調整します"/>
+                        </StackPanel>
+                        <TextBlock Text="カスタム調整" Foreground="#B0B8C5" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                    </DockPanel>
 
+                    <StackPanel x:Name="RgbPanel">
                     <DockPanel Margin="0,0,0,2">
                         <TextBlock Text="R" Foreground="#FF8A80" Width="14" FontSize="11" VerticalAlignment="Center"/>
                         <TextBlock x:Name="RValueTxt" Text="0" Foreground="#888888" Width="26" FontSize="10" TextAlignment="Right" VerticalAlignment="Center"/>
@@ -114,6 +141,36 @@
                         <TextBlock x:Name="BValueTxt" Text="0" Foreground="#888888" Width="26" FontSize="10" TextAlignment="Right" VerticalAlignment="Center"/>
                         <Slider x:Name="BSlider" Minimum="0" Maximum="255" ValueChanged="OnRgbSliderChanged" Margin="4,0,0,0"/>
                     </DockPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="CmykPanel" Visibility="Collapsed">
+                        <DockPanel Margin="0,0,0,2">
+                            <TextBlock Text="C" Foreground="#80DEEA" Width="14" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="#888888" FontSize="10" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="CValueBox" DockPanel.Dock="Right" Width="34" Tag="0" Style="{StaticResource CmykValueBoxStyle}" ToolTip="シアン (0〜100%)"/>
+                            <Slider x:Name="CSlider" Tag="0" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnCmykSliderChanged" Margin="4,0,4,0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,2">
+                            <TextBlock Text="M" Foreground="#F48FB1" Width="14" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="#888888" FontSize="10" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="MValueBox" DockPanel.Dock="Right" Width="34" Tag="1" Style="{StaticResource CmykValueBoxStyle}" ToolTip="マゼンタ (0〜100%)"/>
+                            <Slider x:Name="MSlider" Tag="1" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnCmykSliderChanged" Margin="4,0,4,0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,2">
+                            <TextBlock Text="Y" Foreground="#FFF59D" Width="14" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="#888888" FontSize="10" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="YValueBox" DockPanel.Dock="Right" Width="34" Tag="2" Style="{StaticResource CmykValueBoxStyle}" ToolTip="イエロー (0〜100%)"/>
+                            <Slider x:Name="YSlider" Tag="2" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnCmykSliderChanged" Margin="4,0,4,0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="K" Foreground="#BDBDBD" Width="14" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Right" Text="%" Foreground="#888888" FontSize="10" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="KValueBox" DockPanel.Dock="Right" Width="34" Tag="3" Style="{StaticResource CmykValueBoxStyle}" ToolTip="ブラック (0〜100%)"/>
+                            <Slider x:Name="KSlider" Tag="3" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnCmykSliderChanged" Margin="4,0,4,0" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Foreground="#8C95A6" FontSize="10" TextWrapping="Wrap"
+                                   Text="CMYK は色を決めるための目安です。色は RGB (#RRGGBB) で保存され、印刷したときのインクの色とは一致しません。"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Popup>

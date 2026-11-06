@@ -18,6 +18,7 @@ using Xunit;
 namespace DollIrisGenerator.Tests
 {
     /// <summary>Gradient color settings (単色 / グラデーション): model, saving, rendering, SVG, UI.</summary>
+    [Collection(ColorPickerBoxUiCollection.Name)]
     public class ColorGradientTests
     {
         private const string RedToBlue = "linear-gradient(0deg, #FF0000 0%, #0000FF 100%)";
