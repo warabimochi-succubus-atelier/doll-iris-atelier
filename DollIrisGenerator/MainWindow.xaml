@@ -451,7 +451,7 @@
                                             <TextBlock Text="オーロラ層の色:" VerticalAlignment="Center" Width="120"/>
                                             <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.AuroraColor, Mode=TwoWay}"/>
                                         </DockPanel>
-                                        <DockPanel Margin="0,0,0,4" ToolTip="0 でオフ (これまでどおり)">
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0 でオフ">
                                             <TextBlock Text="オーロラ層の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.AuroraOpacity}" Minimum="0.0" Maximum="1.0"/>
                                         </DockPanel>
@@ -575,7 +575,7 @@
                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.RayRandomness}" Margin="0,0,0,10"/>
 
                                         <!-- Fiber look (繊維の質感) -->
-                                        <TextBlock Text="繊維の質感 (0 でこれまでどおりの直線)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
+                                        <TextBlock Text="繊維の質感 (すべて 0 で直線)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
 
                                         <DockPanel Margin="0,0,0,4" ToolTip="瞳孔側を太く、先端を細く尖らせます">
                                             <TextBlock Text="先細り:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -687,7 +687,7 @@
                                         <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.ParticleRadiusRatio}" Margin="0,0,0,10"/>
 
                                         <!-- Glowing glitter (光るラメ) -->
-                                        <TextBlock Text="光るラメ (0 でこれまでどおりの粒)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
+                                        <TextBlock Text="光るラメ (0 でにじみ・フレアなし)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
 
                                         <DockPanel Margin="0,0,0,4" ToolTip="粒のまわりにふんわりした光をにじませます">
                                             <TextBlock Text="光のにじみ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>

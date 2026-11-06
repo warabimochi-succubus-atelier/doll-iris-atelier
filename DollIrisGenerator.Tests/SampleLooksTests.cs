@@ -11,6 +11,13 @@ namespace DollIrisGenerator.Tests
     /// <summary>Conic (円周) gradients / aurora layer, fiber-style rays and glowing glitter.</summary>
     public class SampleLooksTests
     {
+        /// <summary>A design with every new look turned off (they are on by default).</summary>
+        private static IrisParameters Plain() => new()
+        {
+            RayTaper = 0, RayWidthVariation = 0, RayCurve = 0, RayFineLayer = 0,
+            ParticleGlow = 0, ParticleFlareRatio = 0
+        };
+
         private const string Aurora = "conic-gradient(from 270deg, #FF0000 0%, #00FF00 50%, #FF0000 100%)";
 
         /// <summary>WPF rendering needs an STA thread; failures are rethrown on the test thread.</summary>
@@ -188,19 +195,33 @@ namespace DollIrisGenerator.Tests
         // ---------------- Fiber rays ----------------
 
         [Fact]
-        public void TestFiberSettingsDefaultToTheOldPlainLines()
+        public void TestNewLooksAreOnByDefault()
         {
             var p = new IrisParameters();
+            Assert.True(p.HasFiberRays);
+            Assert.True(p.ParticleGlow > 0 && p.ParticleFlareRatio > 0);
+            Assert.Equal(0.0, p.AuroraOpacity); // the aurora does not suit every color, so it stays off
+            string svg = SvgExporter.GeneratePairSvg(p);
+            Assert.Contains("<g id=\"left_eye_rays\" fill=", svg);
+            Assert.Contains("<g id=\"left_eye_fine_rays\" fill=", svg);
+            Assert.Contains("<g id=\"left_eye_glitter_glow\">", svg);
+        }
+
+        [Fact]
+        public void TestAllFiberSettingsAtZeroGivePlainLines()
+        {
+            var p = Plain();
             Assert.False(p.HasFiberRays);
             string svg = SvgExporter.GeneratePairSvg(p);
             Assert.Contains("<g id=\"left_eye_rays\" stroke=", svg);
             Assert.DoesNotContain("fine_rays", svg);
+            Assert.DoesNotContain("glitter_glow", svg);
         }
 
         [Fact]
         public void TestFiberSettingsLeaveTheRayLayoutAlone()
         {
-            var plain = new IrisParameters();
+            var plain = Plain();
             var fiber = new IrisParameters { RayTaper = 0.8, RayWidthVariation = 0.9, RayCurve = 0.5, RayFineLayer = 0.6 };
             var a = IrisPatterns.MainRays(plain, 100, plain.Seed, false);
             var b = IrisPatterns.MainRays(fiber, 100, fiber.Seed, false);
@@ -250,7 +271,8 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestFineRaysWithPlainLinesAreThinner()
         {
-            var p = new IrisParameters { RayFineLayer = 0.5 };
+            var p = Plain();
+            p.RayFineLayer = 0.5;
             string svg = SvgExporter.GeneratePairSvg(p);
             double main = p.RayThickness * WpfIrisRenderer.MmPerStyleUnit;
             Assert.Contains($"<g id=\"left_eye_fine_rays\" stroke=\"{p.RayColor}\" stroke-width=\"{(main * IrisPatterns.FineRayWidthFactor).ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}\"", svg);
@@ -261,7 +283,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestGlowAndFlaresLeaveTheGrainsWhereTheyWere()
         {
-            var plain = new IrisParameters();
+            var plain = Plain();
             var glowing = new IrisParameters { ParticleGlow = 0.8, ParticleFlareRatio = 0.5, ParticleFlareLength = 6 };
             var a = IrisPatterns.Grains(plain, new Point(0, 0), 50, 50, 50, plain.Seed, false, 1.0, 1.0);
             var b = IrisPatterns.Grains(glowing, new Point(0, 0), 50, 50, 50, glowing.Seed, false, 1.0, 1.0);
@@ -296,21 +318,29 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestNewSettingsAreOffOrDefaultForOldFilesAndClamp()
+        public void TestOldFilesGetTheNewLooksAndValuesClamp()
         {
+            // Saved before these settings existed: loads with the new looks
             var old = JsonSerializer.Deserialize<IrisParameters>("{\"Name\":\"旧\",\"RayCount\":40}")!;
-            Assert.Equal(0.0, old.RayTaper);
-            Assert.Equal(0.0, old.RayWidthVariation);
-            Assert.Equal(0.0, old.RayCurve);
-            Assert.Equal(0.0, old.RayFineLayer);
-            Assert.Equal(0.0, old.ParticleGlow);
-            Assert.Equal(0.0, old.ParticleFlareRatio);
+            Assert.Equal(IrisParameters.DefaultRayTaper, old.RayTaper);
+            Assert.Equal(IrisParameters.DefaultRayWidthVariation, old.RayWidthVariation);
+            Assert.Equal(IrisParameters.DefaultRayCurve, old.RayCurve);
+            Assert.Equal(IrisParameters.DefaultRayFineLayer, old.RayFineLayer);
+            Assert.Equal(IrisParameters.DefaultParticleGlow, old.ParticleGlow);
+            Assert.Equal(IrisParameters.DefaultParticleFlareRatio, old.ParticleFlareRatio);
 
+            // Turned off and saved: stays off
+            var off = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(Plain()))!;
+            Assert.False(off.HasFiberRays);
+            Assert.Equal(0.0, off.RayFineLayer);
+            Assert.Equal(0.0, off.ParticleGlow);
+
+            // Out of range is clamped; NaN / infinity (hand-edited file) falls back to the default
             var p = new IrisParameters { RayCurve = -5, RayTaper = double.NaN, ParticleFlareLength = 99, ParticleGlow = double.PositiveInfinity };
             Assert.Equal(-1.0, p.RayCurve);
-            Assert.Equal(0.0, p.RayTaper);
+            Assert.Equal(IrisParameters.DefaultRayTaper, p.RayTaper);
             Assert.Equal(IrisParameters.MaxParticleFlareLength, p.ParticleFlareLength);
-            Assert.Equal(0.0, p.ParticleGlow);
+            Assert.Equal(IrisParameters.DefaultParticleGlow, p.ParticleGlow);
 
             var clone = new IrisParameters { RayTaper = 0.4, ParticleGlow = 0.3, AuroraOpacity = 0.2, AuroraColor = Aurora }.Clone();
             Assert.Equal(0.4, clone.RayTaper);

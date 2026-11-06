@@ -202,30 +202,27 @@ namespace DollIrisGenerator.Services
                 }
             }
 
-            // 13. Newer looks (fiber rays, glowing glitter, aurora). Drawn last from the sequence, so every
-            //     setting above comes out exactly as it did before these existed.
+            // 13. Newer looks (fiber rays, glowing glitter, aurora): always fibers and glow, in varying amounts
             if (!Locked(RandomizeLocks.Rays))
             {
-                bool fiber = rng.Next(10) < 6; // 60%: fiber-textured rays
                 double taper = rng.NextDouble(), widthVar = rng.NextDouble(), curve = rng.NextDouble(), fine = rng.NextDouble();
-                p.RayTaper = fiber ? Math.Round(0.3 + taper * 0.6, 2) : 0.0;
-                p.RayWidthVariation = fiber ? Math.Round(0.2 + widthVar * 0.5, 2) : 0.0;
-                p.RayCurve = fiber && curve < 0.4 ? Math.Round((curve - 0.2) * 1.5, 2) : 0.0; // gentle swirl, either way
-                p.RayFineLayer = fiber ? Math.Round(0.3 + fine * 0.5, 2) : 0.0;
+                p.RayTaper = Math.Round(0.5 + taper * 0.4, 2);
+                p.RayWidthVariation = Math.Round(0.3 + widthVar * 0.4, 2);
+                p.RayCurve = Math.Round((curve - 0.5) * 0.7, 2); // gentle swirl, either way
+                p.RayFineLayer = Math.Round(0.4 + fine * 0.4, 2);
             }
 
             if (!Locked(RandomizeLocks.Particles))
             {
-                bool glow = rng.Next(10) < 6; // 60%: glowing glitter
                 double g = rng.NextDouble(), f = rng.NextDouble(), len = rng.NextDouble();
-                p.ParticleGlow = glow ? Math.Round(0.3 + g * 0.5, 2) : 0.0;
-                p.ParticleFlareRatio = glow ? Math.Round(0.05 + f * 0.15, 2) : 0.0;
-                p.ParticleFlareLength = Math.Round(2.5 + len * 2.5, 1);
+                p.ParticleGlow = Math.Round(0.5 + g * 0.4, 2);
+                p.ParticleFlareRatio = Math.Round(0.08 + f * 0.17, 2);
+                p.ParticleFlareLength = Math.Round(3.0 + len * 2.5, 1);
             }
 
             if (!colorsLocked)
             {
-                bool aurora = rng.Next(10) < 2; // 20%: an aurora layer in the theme's hues
+                bool aurora = rng.Next(10) < 3; // 30%: an aurora layer in the theme's hues
                 double hueShift = rng.NextDouble() * 360.0, strength = rng.NextDouble();
                 if (aurora)
                 {
