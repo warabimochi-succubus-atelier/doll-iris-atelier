@@ -202,7 +202,71 @@ namespace DollIrisGenerator.Services
                 }
             }
 
-            // 13. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
+            // 13. Newer looks (fiber rays, glowing glitter, aurora): always fibers and glow, in varying amounts
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                double taper = rng.NextDouble(), widthVar = rng.NextDouble(), curve = rng.NextDouble(), fine = rng.NextDouble();
+                p.RayTaper = Math.Round(0.5 + taper * 0.4, 2);
+                p.RayWidthVariation = Math.Round(0.3 + widthVar * 0.4, 2);
+                p.RayCurve = Math.Round((curve - 0.5) * 0.7, 2); // gentle swirl, either way
+                p.RayFineLayer = Math.Round(0.4 + fine * 0.4, 2);
+            }
+
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                double g = rng.NextDouble(), f = rng.NextDouble(), len = rng.NextDouble();
+                p.ParticleGlow = Math.Round(0.5 + g * 0.4, 2);
+                p.ParticleFlareRatio = Math.Round(0.08 + f * 0.17, 2);
+                p.ParticleFlareLength = Math.Round(3.0 + len * 2.5, 1);
+            }
+
+            if (!colorsLocked)
+            {
+                bool aurora = rng.Next(10) < 3; // 30%: an aurora layer in the theme's hues
+                double hueShift = rng.NextDouble() * 360.0, strength = rng.NextDouble();
+                if (aurora)
+                {
+                    double h1 = baseHue, h2 = theme.DualTone ? theme.DualHue : baseHue + 60.0, h3 = hueShift;
+                    p.AuroraColor = ColorFill.Create(ColorFillKind.Conic, ColorFill.ConicDefaultAngle, new[]
+                    {
+                        new ColorStop(HslToHex(h1, 0.85, 0.70), 0.0),
+                        new ColorStop(HslToHex(h2, 0.85, 0.72), 0.33),
+                        new ColorStop(HslToHex(h3, 0.80, 0.74), 0.66),
+                        new ColorStop(HslToHex(h1, 0.85, 0.70), 1.0)
+                    }).ToString();
+                }
+                p.AuroraOpacity = aurora ? Math.Round(0.20 + strength * 0.25, 2) : 0.0;
+
+                // 20%: nebula clouds, from the theme's hue toward its second hue (or a neighbour)
+                bool nebula = rng.Next(10) < 2;
+                double nebStrength = rng.NextDouble(), nebDensity = rng.NextDouble(), nebScale = rng.NextDouble(), nebSwirl = rng.NextDouble();
+                if (nebula)
+                {
+                    double h2 = theme.DualTone ? theme.DualHue : baseHue + 40.0;
+                    p.NebulaColor = ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
+                    {
+                        new ColorStop(HslToHex(h2, 0.85, 0.66), 0.0),
+                        new ColorStop(HslToHex(baseHue, 0.85, 0.62), 0.55),
+                        new ColorStop(HslToHex(baseHue - 30.0, 0.80, 0.58), 1.0)
+                    }).ToString();
+                    p.NebulaDensity = Math.Round(0.35 + nebDensity * 0.4, 2);
+                    p.NebulaScale = Math.Round(0.9 + nebScale * 1.0, 2);
+                    p.NebulaSwirl = Math.Round((nebSwirl - 0.5) * 1.4, 2);
+                }
+                p.NebulaOpacity = nebula ? Math.Round(0.45 + nebStrength * 0.35, 2) : 0.0;
+            }
+
+            // Gem cut: mostly with heart / star pupils, where it reads as a jewel
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                bool jewelShape = p.PupilShape is PupilShape.Heart or PupilShape.Star;
+                double roll = rng.NextDouble(), facet = rng.NextDouble(), count = rng.NextDouble();
+                bool facets = roll < (jewelShape ? 0.6 : 0.1);
+                p.PupilFacetIntensity = facets ? Math.Round(0.45 + facet * 0.45, 2) : 0.0;
+                p.PupilFacetCount = 6 + (int)(count * 10);
+            }
+
+            // 14. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;
             p.AspectRatio = preservedAspectRatio;

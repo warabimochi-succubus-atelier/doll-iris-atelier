@@ -75,11 +75,12 @@
                     <ComboBox x:Name="KindCombo" FontSize="11" SelectionChanged="OnKindChanged">
                         <ComboBoxItem Content="線形 (直線方向)"/>
                         <ComboBoxItem Content="放射状 (中心から外へ)"/>
+                        <ComboBoxItem Content="円周 (中心の周りを一周)"/>
                     </ComboBox>
                 </DockPanel>
 
                 <DockPanel x:Name="AnglePanel" Margin="0,0,0,4">
-                    <TextBlock Text="角度:" Foreground="#B0B8C5" FontSize="11" Width="40" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="AngleLabel" Text="角度:" Foreground="#B0B8C5" FontSize="11" Width="40" VerticalAlignment="Center"/>
                     <TextBlock x:Name="AngleValueTxt" DockPanel.Dock="Right" Text="90°" Foreground="#80D8FF" FontSize="11" Width="40"
                                TextAlignment="Right" VerticalAlignment="Center"/>
                     <Slider x:Name="AngleSlider" Minimum="0" Maximum="360" SmallChange="1" LargeChange="15"
@@ -89,6 +90,9 @@
 
                 <TextBlock x:Name="RadialHint" Foreground="#8C95A6" FontSize="10" Margin="0,0,0,4" TextWrapping="Wrap" Visibility="Collapsed"
                            Text="0% が中心側、100% が外側の色です (外輪・放射ライン・ラメなどは帯の内側→外側)"/>
+
+                <TextBlock x:Name="ConicHint" Foreground="#8C95A6" FontSize="10" Margin="0,0,0,4" TextWrapping="Wrap" Visibility="Collapsed"
+                           Text="開始の向き (0°=右、90°=下、270°=上) から時計回りに 0% → 100% と一周します。最初と最後を同じ色にすると継ぎ目が出ません (オーロラ・虹色向け)"/>
 
                 <TextBlock Text="色と位置 (0% → 100%):" Foreground="#B0B8C5" FontSize="11" Margin="0,2,0,2"/>
                 <StackPanel x:Name="StopsPanel"/>

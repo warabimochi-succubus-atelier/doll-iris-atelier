@@ -1171,7 +1171,8 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(25.4 / (96.0 * 3.6), WpfIrisRenderer.MmPerStyleUnit, 9);
             Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, new MainViewModel().ZoomScale, 9);
 
-            var p = new IrisParameters { RayThickness = 1.2 };
+            // Plain lines (the fiber look, on by default, draws filled outlines instead of strokes)
+            var p = new IrisParameters { RayThickness = 1.2, RayTaper = 0, RayWidthVariation = 0, RayCurve = 0 };
             string svg = SvgExporter.GeneratePairSvg(p);
             string expectedWidth = (1.2 * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
             Assert.Contains($"_rays\" stroke=\"{p.RayColor}\" stroke-width=\"{expectedWidth}\"", svg); // plain mm (viewBox units), no "mm" suffix

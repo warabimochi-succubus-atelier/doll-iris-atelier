@@ -20,6 +20,38 @@ namespace DollIrisGenerator.Models
         public const double MaxSizeMm = 20.0;
         public const double DefaultSizeMm = 10.0;
 
+        /// <summary>Aurora layer color a new design starts with: pink → blue → violet → mint round the iris, back to pink.</summary>
+        public const string DefaultAuroraColor = "conic-gradient(from 270deg, #FF80AB 0%, #80D8FF 30%, #B388FF 55%, #A7FFEB 80%, #FF80AB 100%)";
+
+        /// <summary>Nebula color a new design starts with: magenta in the middle, violet, then sky blue outside.</summary>
+        public const string DefaultNebulaColor = "radial-gradient(#E040FB 0%, #7C4DFF 50%, #40C4FF 100%)";
+
+        public const int MinPupilFacetCount = 4;
+        public const int MaxPupilFacetCount = 24;
+        public const double MinNebulaScale = 0.5;
+        public const double MaxNebulaScale = 3.0;
+
+        public const double MinRayCurve = -1.0;
+        public const double MaxRayCurve = 1.0;
+        public const double MinParticleFlareLength = 1.0;
+        public const double MaxParticleFlareLength = 8.0;
+
+        /// <summary>
+        /// Fiber rays and glowing glitter are on by default, closer to the glossy sample eyes. A file saved before
+        /// these settings existed has none of them, so it loads with these values too (and looks richer than it did).
+        /// </summary>
+        public const double DefaultRayTaper = 0.7;
+        public const double DefaultRayWidthVariation = 0.5;
+        public const double DefaultRayCurve = 0.2;
+        public const double DefaultRayFineLayer = 0.6;
+        public const double DefaultParticleGlow = 0.7;
+        public const double DefaultParticleFlareRatio = 0.15;
+        public const double DefaultParticleFlareLength = 4.0;
+
+        /// <summary>Clamps a loaded / bound value; NaN or infinity (hand-edited file) falls back to <paramref name="fallback"/>.</summary>
+        private static double ClampFinite(double value, double min, double max, double fallback) =>
+            double.IsFinite(value) ? Math.Clamp(value, min, max) : fallback;
+
         private string _name = "新規虹彩デザイン";
         private double _sizeMm = DefaultSizeMm;
         private IrisShape _shape = IrisShape.Circle;
@@ -49,6 +81,15 @@ namespace DollIrisGenerator.Models
         private double _pupilOpacity = 1.0;
         private double _pupilSoftness = 0.08;
         private double _pupilCornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0)
+        private double _pupilFacetIntensity = 0.0; // 宝石カット: strength of the light / dark facets inside the pupil. 0 = off
+        private int _pupilFacetCount = 10;          // facets round the pupil
+
+        // Nebula layer (星雲): soft clouds over the iris body. 0 = off.
+        private string _nebulaColor = DefaultNebulaColor;
+        private double _nebulaOpacity = 0.0;
+        private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
+        private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
+        private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
 
         // Radial Pattern (放射状ライン / 放射模様)
         private int _rayCount = 48;
@@ -58,6 +99,15 @@ namespace DollIrisGenerator.Models
         private double _rayRandomness = 0.45;
         private string _rayColor = "#B3E5FC";
         private double _rayInnerRadiusRatio = 0.32;
+        // Fiber look (繊維の質感). On by default (also for files saved before it existed); all 0 = plain straight lines.
+        private double _rayTaper = DefaultRayTaper;         // 0 = even width, 1 = wide at the pupil, pointed at the tip
+        private double _rayWidthVariation = DefaultRayWidthVariation;  // per-ray width spread
+        private double _rayCurve = DefaultRayCurve;         // -1..1: bend (swirl) direction and amount
+        private double _rayFineLayer = DefaultRayFineLayer;       // strength of a second layer of fine rays between the main ones
+
+        // Aurora layer (オーロラ層): a color laid over the iris body, usually a conic (円周) gradient. 0 = off.
+        private string _auroraColor = DefaultAuroraColor;
+        private double _auroraOpacity = 0.0;
 
         // Lens-Style Optical Pattern (レンズ風パターン)
         private bool _lensPatternEnabled = false;
@@ -74,6 +124,10 @@ namespace DollIrisGenerator.Models
         private double _particleOpacity = 0.85;
         private string _particleColor = "#FFFFFF";
         private double _particleRadiusRatio = 0.75;
+        // Glowing glitter (光るラメ). On by default (also for older files); 0 = plain grains.
+        private double _particleGlow = DefaultParticleGlow;       // soft halo around every grain
+        private double _particleFlareRatio = DefaultParticleFlareRatio;   // share of grains that also get a cross-shaped flare
+        private double _particleFlareLength = DefaultParticleFlareLength;  // flare length, in grain sizes
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -273,6 +327,55 @@ namespace DollIrisGenerator.Models
         /// How much the corners of the cat slit / heart / star pupil are rounded: 0 = sharp (as before) to 1 = fully rounded.
         /// No effect on the round and oval pupils.
         /// </summary>
+        /// <summary>宝石カット: strength (0..1) of the faceted light / dark planes cut into the pupil, like a gem. 0 = off.</summary>
+        public double PupilFacetIntensity
+        {
+            get => _pupilFacetIntensity;
+            set { _pupilFacetIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>カット面の数: facets round the pupil.</summary>
+        public int PupilFacetCount
+        {
+            get => _pupilFacetCount;
+            set { _pupilFacetCount = Math.Clamp(value, MinPupilFacetCount, MaxPupilFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>Color of the nebula clouds (solid or gradient, laid across the iris like the other iris-wide colors).</summary>
+        public string NebulaColor
+        {
+            get => _nebulaColor;
+            set { _nebulaColor = value ?? DefaultNebulaColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>Strength of the nebula layer. 0 = off.</summary>
+        public double NebulaOpacity
+        {
+            get => _nebulaOpacity;
+            set { _nebulaOpacity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>雲の細かさ: higher values give smaller, busier clouds.</summary>
+        public double NebulaScale
+        {
+            get => _nebulaScale;
+            set { _nebulaScale = ClampFinite(value, MinNebulaScale, MaxNebulaScale, 1.2); OnPropertyChanged(); }
+        }
+
+        /// <summary>雲の量: how much of the iris the clouds cover (0..1).</summary>
+        public double NebulaDensity
+        {
+            get => _nebulaDensity;
+            set { _nebulaDensity = ClampFinite(value, 0.0, 1.0, 0.5); OnPropertyChanged(); }
+        }
+
+        /// <summary>渦巻き: spiral twist of the clouds round the pupil; the sign picks the direction (mirrored in the right eye).</summary>
+        public double NebulaSwirl
+        {
+            get => _nebulaSwirl;
+            set { _nebulaSwirl = ClampFinite(value, -1.0, 1.0, 0.4); OnPropertyChanged(); }
+        }
+
         public double PupilCornerRounding
         {
             get => _pupilCornerRounding;
@@ -324,6 +427,52 @@ namespace DollIrisGenerator.Models
         {
             get => _rayInnerRadiusRatio;
             set { _rayInnerRadiusRatio = Math.Max(0.1, Math.Min(0.8, value)); OnPropertyChanged(); }
+        }
+
+        /// <summary>先細り: 0 = even width (round caps), 1 = wide at the pupil side and pointed at the tip.</summary>
+        public double RayTaper
+        {
+            get => _rayTaper;
+            set { _rayTaper = ClampFinite(value, 0.0, 1.0, DefaultRayTaper); OnPropertyChanged(); }
+        }
+
+        /// <summary>太さのばらつき: 0 = every ray as wide as 線幅, 1 = from about a third to twice as wide.</summary>
+        public double RayWidthVariation
+        {
+            get => _rayWidthVariation;
+            set { _rayWidthVariation = ClampFinite(value, 0.0, 1.0, DefaultRayWidthVariation); OnPropertyChanged(); }
+        }
+
+        /// <summary>うねり: rays bend round the pupil (swirl); the sign picks the direction, the right eye mirrors it.</summary>
+        public double RayCurve
+        {
+            get => _rayCurve;
+            set { _rayCurve = ClampFinite(value, MinRayCurve, MaxRayCurve, DefaultRayCurve); OnPropertyChanged(); }
+        }
+
+        /// <summary>細線レイヤー: opacity (relative to 強度) of a second set of thin rays between the main ones.</summary>
+        public double RayFineLayer
+        {
+            get => _rayFineLayer;
+            set { _rayFineLayer = ClampFinite(value, 0.0, 1.0, DefaultRayFineLayer); OnPropertyChanged(); }
+        }
+
+        /// <summary>True when any fiber setting is on; the rays are then drawn as shaped outlines instead of plain lines.</summary>
+        [JsonIgnore]
+        public bool HasFiberRays => RayTaper > 0.001 || RayWidthVariation > 0.001 || Math.Abs(RayCurve) > 0.001;
+
+        /// <summary>Color of the aurora layer (solid or gradient; a conic gradient gives the aurora look).</summary>
+        public string AuroraColor
+        {
+            get => _auroraColor;
+            set { _auroraColor = value ?? DefaultAuroraColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>Strength of the aurora layer over the iris body. 0 = off.</summary>
+        public double AuroraOpacity
+        {
+            get => _auroraOpacity;
+            set { _auroraOpacity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
         // Lens-Style Optical Pattern
@@ -398,6 +547,27 @@ namespace DollIrisGenerator.Models
         {
             get => _particleRadiusRatio;
             set { _particleRadiusRatio = Math.Max(0.1, Math.Min(1.0, value)); OnPropertyChanged(); }
+        }
+
+        /// <summary>光のにじみ: a soft halo of the grain's color around every grain. 0 = off.</summary>
+        public double ParticleGlow
+        {
+            get => _particleGlow;
+            set { _particleGlow = ClampFinite(value, 0.0, 1.0, DefaultParticleGlow); OnPropertyChanged(); }
+        }
+
+        /// <summary>十字フレアの割合: share of grains (0..1) that also get a thin cross-shaped flare.</summary>
+        public double ParticleFlareRatio
+        {
+            get => _particleFlareRatio;
+            set { _particleFlareRatio = ClampFinite(value, 0.0, 1.0, DefaultParticleFlareRatio); OnPropertyChanged(); }
+        }
+
+        /// <summary>フレアの長さ: flare reach, in multiples of the grain's size.</summary>
+        public double ParticleFlareLength
+        {
+            get => _particleFlareLength;
+            set { _particleFlareLength = ClampFinite(value, MinParticleFlareLength, MaxParticleFlareLength, DefaultParticleFlareLength); OnPropertyChanged(); }
         }
 
         // Collections

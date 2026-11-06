@@ -11,7 +11,9 @@ namespace DollIrisGenerator.Models
     {
         Solid,
         Linear,
-        Radial
+        Radial,
+        /// <summary>円周 (角度方向): the color changes going around the center, like an aurora or a color wheel.</summary>
+        Conic
     }
 
     /// <summary>One color stop of a gradient: a "#RRGGBB" / "#AARRGGBB" / "#RGB" color at 0..1 along the gradient.</summary>
@@ -26,8 +28,12 @@ namespace DollIrisGenerator.Models
     /// <item>単色: the plain hex color, exactly as before (e.g. <c>#FFFFFF</c>).</item>
     /// <item>線形: <c>linear-gradient(90deg, #FFFFFF 0%, #80D8FF 100%)</c></item>
     /// <item>放射状: <c>radial-gradient(#FFFFFF 0%, #80D8FF 100%)</c></item>
+    /// <item>円周: <c>conic-gradient(from 270deg, #FF80AB 0%, #80D8FF 50%, #FF80AB 100%)</c></item>
     /// </list>
     /// The angle is in degrees, clockwise on screen: 0° = left → right, 90° = top → bottom.
+    /// For a conic gradient it is the direction (seen from the center) where 0 % sits, in the same
+    /// convention (0° = right, 90° = down, 270° = up); the colors then go round clockwise to 100 %.
+    /// Like the linear angle, this is the app's own convention, not CSS's.
     /// A gradient has <see cref="MinStops"/>..<see cref="MaxStops"/> stops, sorted by position.
     /// Anything that is not a well-formed gradient is treated as a solid color string (the renderers then
     /// sanitize it as they always did), so a broken or hand-edited value can never break rendering.
@@ -38,10 +44,13 @@ namespace DollIrisGenerator.Models
         public const int MaxStops = 5;
         public const double DefaultAngle = 90.0;
 
+        /// <summary>Where a new conic gradient starts: straight up.</summary>
+        public const double ConicDefaultAngle = 270.0;
+
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
         private static readonly Regex HexRegex = new(@"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$", RegexOptions.Compiled);
-        private static readonly Regex GradientRegex = new(@"^\s*(linear|radial)-gradient\s*\((.*)\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        private static readonly Regex AngleRegex = new(@"^\s*([-+]?\d+(?:\.\d+)?)\s*deg\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex GradientRegex = new(@"^\s*(linear|radial|conic)-gradient\s*\((.*)\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        private static readonly Regex AngleRegex = new(@"^\s*(from\s+)?([-+]?\d+(?:\.\d+)?)\s*deg\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex StopRegex = new(@"^\s*(#[0-9a-fA-F]+)\s*(?:([-+]?\d+(?:\.\d+)?)\s*%)?\s*$", RegexOptions.Compiled);
 
         /// <summary>Longest string <see cref="Parse"/> looks at; a crafted file cannot make it parse megabytes.</summary>
@@ -49,7 +58,7 @@ namespace DollIrisGenerator.Models
 
         public ColorFillKind Kind { get; }
 
-        /// <summary>Linear gradient direction in degrees (0..360). Unused for solid / radial.</summary>
+        /// <summary>Linear gradient direction / conic start direction in degrees (0..360). Unused for solid / radial.</summary>
         public double Angle { get; }
 
         /// <summary>For a solid fill: the single entry with the color as stored. For a gradient: 2..5 stops sorted by offset.</summary>
@@ -104,18 +113,24 @@ namespace DollIrisGenerator.Models
             var m = GradientRegex.Match(value);
             if (!m.Success) return Solid(value);
 
-            var kind = m.Groups[1].Value.Equals("linear", StringComparison.OrdinalIgnoreCase) ? ColorFillKind.Linear : ColorFillKind.Radial;
+            var kind = m.Groups[1].Value.ToLowerInvariant() switch
+            {
+                "linear" => ColorFillKind.Linear,
+                "conic" => ColorFillKind.Conic,
+                _ => ColorFillKind.Radial
+            };
             var parts = m.Groups[2].Value.Split(',');
             int index = 0;
-            double angle = DefaultAngle;
+            double angle = kind == ColorFillKind.Conic ? ConicDefaultAngle : DefaultAngle;
 
             if (parts.Length > 0)
             {
                 var am = AngleRegex.Match(parts[0]);
                 if (am.Success)
                 {
-                    if (kind != ColorFillKind.Linear) return Solid(value);
-                    angle = double.Parse(am.Groups[1].Value, Inv);
+                    // A radial gradient has no angle; "from" is written for a conic one only
+                    if (kind == ColorFillKind.Radial || am.Groups[1].Success != (kind == ColorFillKind.Conic)) return Solid(value);
+                    angle = double.Parse(am.Groups[2].Value, Inv);
                     index = 1;
                 }
             }
@@ -143,17 +158,75 @@ namespace DollIrisGenerator.Models
             if (Kind == ColorFillKind.Solid) return Stops[0].Color;
 
             var sb = new StringBuilder();
-            sb.Append(Kind == ColorFillKind.Linear ? "linear-gradient(" : "radial-gradient(");
+            sb.Append(Kind switch
+            {
+                ColorFillKind.Linear => "linear-gradient(",
+                ColorFillKind.Conic => "conic-gradient(",
+                _ => "radial-gradient("
+            });
             if (Kind == ColorFillKind.Linear)
                 sb.Append(FormatNumber(Angle)).Append("deg, ");
+            else if (Kind == ColorFillKind.Conic)
+                sb.Append("from ").Append(FormatNumber(Angle)).Append("deg, ");
             sb.Append(string.Join(", ", Stops.Select(s => $"{s.Color} {FormatNumber(s.Offset * 100.0)}%")));
             sb.Append(')');
             return sb.ToString();
         }
 
-        /// <summary>Same fill seen in a mirror (right eye): a linear gradient's direction is flipped left-right.</summary>
-        public ColorFill MirroredX() =>
-            Kind == ColorFillKind.Linear ? new ColorFill(Kind, NormalizeAngle(180.0 - Angle), Stops) : this;
+        /// <summary>
+        /// Same fill seen in a mirror (right eye): a linear gradient's direction is flipped left-right; a conic one
+        /// starts from the mirrored direction and goes round the other way (its stops reversed).
+        /// </summary>
+        public ColorFill MirroredX() => Kind switch
+        {
+            ColorFillKind.Linear => new ColorFill(Kind, NormalizeAngle(180.0 - Angle), Stops),
+            ColorFillKind.Conic => Create(Kind, 180.0 - Angle, Stops.Select(s => new ColorStop(s.Color, 1.0 - s.Offset)).Reverse()),
+            _ => this
+        };
+
+        /// <summary>
+        /// Color at <paramref name="t"/> (0..1) along <paramref name="stops"/> (sorted by offset), interpolated per
+        /// channel including alpha, as "#AARRGGBB". Before the first / after the last stop the end color holds.
+        /// </summary>
+        public static string ColorAt(IReadOnlyList<ColorStop> stops, double t)
+        {
+            if (stops == null || stops.Count == 0) return "#FFFFFFFF";
+            if (!double.IsFinite(t)) t = 0.0;
+            if (t <= stops[0].Offset) return ToArgbHex(stops[0].Color);
+            for (int i = 1; i < stops.Count; i++)
+            {
+                if (t > stops[i].Offset) continue;
+                var a = ToArgb(stops[i - 1].Color);
+                var b = ToArgb(stops[i].Color);
+                double span = stops[i].Offset - stops[i - 1].Offset;
+                double f = span <= 1e-9 ? 1.0 : (t - stops[i - 1].Offset) / span;
+                return $"#{Mix(a.A, b.A, f):X2}{Mix(a.R, b.R, f):X2}{Mix(a.G, b.G, f):X2}{Mix(a.B, b.B, f):X2}";
+            }
+            return ToArgbHex(stops[^1].Color);
+
+            static int Mix(int x, int y, double f) => (int)Math.Round(x + (y - x) * f);
+        }
+
+        private static string ToArgbHex(string color)
+        {
+            var c = ToArgb(color);
+            return $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+        }
+
+        /// <summary>ARGB of a hex color ("#RGB", "#RRGGBB" or the app's "#AARRGGBB"); invalid input gives opaque white.</summary>
+        private static (int A, int R, int G, int B) ToArgb(string hex)
+        {
+            if (!IsHexColor(hex)) return (255, 255, 255, 255);
+            string h = hex.Trim().TrimStart('#');
+            int a = 255;
+            if (h.Length == 8)
+            {
+                a = Convert.ToInt32(h.Substring(0, 2), 16);
+                h = h.Substring(2);
+            }
+            var (r, g, b) = ToRgb("#" + h);
+            return (a, r, g, b);
+        }
 
         /// <summary>
         /// The gradient the "グラデーション" switch starts from: the current color at 0 %, and a lighter version of
@@ -167,6 +240,10 @@ namespace DollIrisGenerator.Models
             (int R, int G, int B) target = luminance > 0.7 ? (0, 0, 0) : (255, 255, 255);
             double t = luminance > 0.7 ? 0.4 : 0.5;
             string end = $"#{Lerp(r, target.R, t):X2}{Lerp(g, target.G, t):X2}{Lerp(b, target.B, t):X2}";
+            // Conic: round from the top and back to the start color, so there is no seam where 100 % meets 0 %
+            if (kind == ColorFillKind.Conic)
+                return Create(kind, ConicDefaultAngle,
+                    new[] { new ColorStop(start, 0.0), new ColorStop(end, 0.5), new ColorStop(start, 1.0) });
             return Create(kind == ColorFillKind.Solid ? ColorFillKind.Linear : kind, DefaultAngle,
                 new[] { new ColorStop(start, 0.0), new ColorStop(end, 1.0) });
 

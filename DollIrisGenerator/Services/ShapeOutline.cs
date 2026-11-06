@@ -197,7 +197,8 @@ namespace DollIrisGenerator.Services
             _ => null
         };
 
-        private static ShapeOutline Polygon(IReadOnlyList<Point> vertices)
+        /// <summary>Closed outline through <paramref name="vertices"/> with straight edges.</summary>
+        public static ShapeOutline Polygon(IReadOnlyList<Point> vertices)
         {
             var segments = new List<OutlineSegment>(vertices.Count);
             for (int i = 0; i < vertices.Count; i++)
