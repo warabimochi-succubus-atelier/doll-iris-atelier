@@ -198,7 +198,7 @@
 
                             <Button Content="➕" Command="{Binding ZoomInCommand}" Width="28" Height="26" Margin="0,0,3,0" Background="#333842" Foreground="#FFFFFF" BorderBrush="{StaticResource BorderDark}"/>
                             <Button Content="➖" Command="{Binding ZoomOutCommand}" Width="28" Height="26" Margin="0,0,3,0" Background="#333842" Foreground="#FFFFFF" BorderBrush="{StaticResource BorderDark}"/>
-                            <Button Content="リセット" Command="{Binding ZoomResetCommand}" Click="OnResetViewClick" ToolTip="拡大率と表示位置を元に戻す (プレビューのダブルクリックでも中央に戻ります)" Height="26" Padding="6,0" Margin="0,0,12,0" Background="#333842" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}"/>
+                            <Button Content="リセット" Command="{Binding ZoomResetCommand}" Click="OnResetViewClick" ToolTip="拡大率と表示位置を元に戻す (プレビューのダブルクリックでも戻ります。A4シートは用紙の上端から表示します)" Height="26" Padding="6,0" Margin="0,0,12,0" Background="#333842" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}"/>
 
                             <CheckBox Content="カットライン" IsChecked="{Binding ShowCutLines}" Margin="0,0,8,0"/>
                             <CheckBox Content="センターマーク" IsChecked="{Binding ShowCenterMarks}"/>

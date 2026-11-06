@@ -105,6 +105,18 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestA4SheetStartsAtItsTopEdgeWhenTallerThanTheView()
+        {
+            // 100% A4 (297mm ≈ 1123 DIP) in a 700 DIP view: the paper's top edge is 16 DIP below the view's top
+            double sheetH = 297.0 * IrisPreviewControl.ScreenDipsPerMm;
+            double center = IrisPreviewControl.SheetHomeCenterY(700, sheetH);
+            Assert.Equal(16.0, center - sheetH / 2.0, 6);
+
+            // A sheet that fits stays centred
+            Assert.Equal(600.0, IrisPreviewControl.SheetHomeCenterY(1200, 500));
+        }
+
+        [Fact]
         public void TestEditsGoToTheSelectedCellOnly()
         {
             var first = _vm.VisibleSlots[0];

@@ -254,6 +254,7 @@ namespace DollIrisGenerator.Controls
 
             if (PreviewMode == PreviewMode.A4Sheet)
             {
+                cy = SheetHomeCenterY(h, A4HeightMm * pixelsPerMm) + _panOffset.Y;
                 RenderA4SheetPreview(dc, cx, cy, pixelsPerMm, p);
                 return;
             }
@@ -302,13 +303,28 @@ namespace DollIrisGenerator.Controls
             }
         }
 
+        private const double A4HeightMm = 297.0;
+
+        // Gap above the paper when its top edge is pinned to the top of the view
+        private const double SheetTopGapPx = 16.0;
+
+        /// <summary>
+        /// Vertical centre of the A4 paper before panning: centred when it fits in the view, otherwise its top
+        /// edge sits just below the top of the view so the start of the sheet is what you see first
+        /// (initial display, view switch, リセット and double-click all come back here).
+        /// </summary>
+        public static double SheetHomeCenterY(double viewHeight, double sheetHeightPx) =>
+            sheetHeightPx + 2 * SheetTopGapPx <= viewHeight
+                ? viewHeight / 2.0
+                : SheetTopGapPx + sheetHeightPx / 2.0;
+
         private void RenderA4SheetPreview(DrawingContext dc, double cx, double cy, double pixelsPerMm, IrisParameters p)
         {
             var cfg = SheetConfig ?? new PrintSheetConfig();
 
             // A4 dimensions in mm
             double a4W_Mm = 210.0;
-            double a4H_Mm = 297.0;
+            double a4H_Mm = A4HeightMm;
 
             double sheetW_Px = a4W_Mm * pixelsPerMm;
             double sheetH_Px = a4H_Mm * pixelsPerMm;
