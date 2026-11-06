@@ -162,7 +162,11 @@ namespace DollIrisGenerator.Tests
 
             string saved = JsonSerializer.Serialize(p);
             Assert.Contains("\"RayColor\":\"#B3E5FC\"", saved);
-            Assert.DoesNotContain("gradient", saved);
+            // The aurora layer (newer than these files) starts with a conic gradient but is off (strength 0);
+            // every color the old file had stays a plain color
+            Assert.Equal(0.0, p.AuroraOpacity);
+            string savedWithoutAurora = saved.Replace(JsonSerializer.Serialize(IrisParameters.DefaultAuroraColor), "\"\"");
+            Assert.DoesNotContain("gradient", savedWithoutAurora);
         }
 
         [Fact]
@@ -499,6 +503,34 @@ namespace DollIrisGenerator.Tests
                 mode.SelectedIndex = 0;
                 Assert.Equal("#0D47A1", box.SelectedColorHex);
                 Assert.Equal(Visibility.Collapsed, editor.Visibility);
+            });
+        }
+
+        [Fact]
+        public void TestColorBoxMakesAConicGradient()
+        {
+            RunOnSta(() =>
+            {
+                var box = new ColorPickerBox { AllowGradient = true, SelectedColorHex = "#FF80AB" };
+                ((ComboBox)box.FindName("ModeCombo")).SelectedIndex = 1;
+                var kind = (ComboBox)box.FindName("KindCombo");
+                kind.SelectedIndex = 2;
+
+                var fill = ColorFill.Parse(box.SelectedColorHex);
+                Assert.Equal(ColorFillKind.Conic, fill.Kind);
+                Assert.Equal(ColorFill.ConicDefaultAngle, fill.Angle);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)box.FindName("AnglePanel")).Visibility);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)box.FindName("ConicHint")).Visibility);
+                Assert.Equal("開始:", ((TextBlock)box.FindName("AngleLabel")).Text);
+
+                // Shown again from outside: the conic choice stays selected; back to linear restores the linear default angle
+                box.SelectedColorHex = "conic-gradient(from 45deg, #FF0000 0%, #0000FF 100%)";
+                Assert.Equal(2, kind.SelectedIndex);
+                Assert.Equal(45, ((Slider)box.FindName("AngleSlider")).Value);
+                kind.SelectedIndex = 0;
+                fill = ColorFill.Parse(box.SelectedColorHex);
+                Assert.Equal(ColorFillKind.Linear, fill.Kind);
+                Assert.Equal(ColorFill.DefaultAngle, fill.Angle);
             });
         }
 

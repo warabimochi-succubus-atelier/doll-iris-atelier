@@ -28,6 +28,12 @@ namespace DollIrisGenerator.Services
             if (mirror) fill = fill.MirroredX();
             var map = GradientMapping.Create(fill, box, bandInner, bandOuter);
 
+            if (map.Kind == ColorFillKind.Conic)
+            {
+                AppendConicPattern(sb, indent, id, map);
+                return $"url(#{id})";
+            }
+
             sb.AppendLine($"{indent}<defs>");
             if (map.Kind == ColorFillKind.Radial)
             {
@@ -47,6 +53,35 @@ namespace DollIrisGenerator.Services
             sb.AppendLine(map.Kind == ColorFillKind.Radial ? $"{indent}  </radialGradient>" : $"{indent}  </linearGradient>");
             sb.AppendLine($"{indent}</defs>");
             return $"url(#{id})";
+        }
+
+        /// <summary>
+        /// A conic (円周) gradient: SVG has none, so it is a pattern holding the same thin wedges the screen renderer
+        /// draws (<see cref="GradientMapping.ConicWedges"/>). The single tile covers <see cref="GradientMapping.ConicArea"/>
+        /// in user space (its content is placed relative to the tile's corner), and crispEdges keeps seams from
+        /// showing between neighbouring wedges, like the aliased wedges on screen.
+        /// </summary>
+        private static void AppendConicPattern(StringBuilder sb, string indent, string id, GradientMapping map)
+        {
+            var area = map.ConicArea();
+            double reach = Math.Sqrt(area.Width * area.Width + area.Height * area.Height);
+            // Tile-relative center
+            var c = new Point(map.Center.X - area.X, map.Center.Y - area.Y);
+
+            sb.AppendLine($"{indent}<defs>");
+            sb.AppendLine($@"{indent}  <pattern id=""{id}"" patternUnits=""userSpaceOnUse"" x=""{F(area.X)}"" y=""{F(area.Y)}"" width=""{F(area.Width)}"" height=""{F(area.Height)}"">");
+            sb.AppendLine($@"{indent}    <g shape-rendering=""crispEdges"">");
+            foreach (var (from, to, color) in map.ConicWedges())
+            {
+                var a = WpfIrisRenderer.PolarPoint(c, reach, from);
+                var b = WpfIrisRenderer.PolarPoint(c, reach, to);
+                var (rgb, alpha) = SvgStopColor(color);
+                string opacityAttr = alpha < 1.0 ? $@" fill-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine($@"{indent}      <path d=""M{F(c.X)},{F(c.Y)} L{F(a.X)},{F(a.Y)} L{F(b.X)},{F(b.Y)} Z"" fill=""{rgb}""{opacityAttr} />");
+            }
+            sb.AppendLine($"{indent}    </g>");
+            sb.AppendLine($"{indent}  </pattern>");
+            sb.AppendLine($"{indent}</defs>");
         }
 
         /// <summary>
@@ -205,6 +240,11 @@ namespace DollIrisGenerator.Services
 
             // Base Background
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_base"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""url(#{radGradId})"" />");
+            if (p.AuroraOpacity > 0.01)
+            {
+                string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
+                sb.AppendLine($@"      <ellipse id=""{idPrefix}_aurora"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToString("F2", Inv)}"" />");
+            }
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_upper_shadow"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)
             {
@@ -214,37 +254,19 @@ namespace DollIrisGenerator.Services
             // Radial Rays
             if (p.RayCount > 0 && p.RayIntensity > 0.01)
             {
-                var rayRng = new Random(effectiveSeed);
-                double pupilR = baseR * p.PupilSizeRatio;
-                double innerR = Math.Max(pupilR * 0.85, baseR * p.RayInnerRadiusRatio);
-                double outerR = baseR * p.RayLengthRatio;
+                double innerR = IrisPatterns.InnerRayRadius(p, baseR);
+                double bandInner = innerR / baseR, bandOuter = Math.Min(0.96, p.RayLengthRatio);
+                var center = new Point(cx, cy);
 
-                string rayPaint = Paint(sb, "      ", $"{idPrefix}_rays_fill", effectiveRayColor, "#B3E5FC", irisBox, isRightEye,
-                    innerR / baseR, Math.Min(0.96, p.RayLengthRatio));
-                sb.AppendLine($@"      <g id=""{idPrefix}_rays"" stroke=""{rayPaint}"" stroke-width=""{(p.RayThickness * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" stroke-linecap=""round"" opacity=""{p.RayIntensity.ToString("F2", Inv)}"">");
+                string rayPaint = Paint(sb, "      ", $"{idPrefix}_rays_fill", effectiveRayColor, "#B3E5FC", irisBox, isRightEye, bandInner, bandOuter);
+                AppendRays(sb, $"{idPrefix}_rays", IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayPaint, p.RayIntensity,
+                    p, center, rx, ry, baseR, isRightEye);
 
-                for (int i = 0; i < p.RayCount; i++)
+                if (p.RayFineLayer > 0.01)
                 {
-                    double baseAngle = (2.0 * Math.PI * i) / p.RayCount;
-                    double jitter = (rayRng.NextDouble() - 0.5) * (p.RayRandomness * 0.5);
-                    double angle = baseAngle + jitter;
-                    if (isRightEye) angle = Math.PI - angle;
-
-                    double lenVariation = 1.0 + (rayRng.NextDouble() - 0.5) * p.RayRandomness * 0.6;
-                    double curOuterR = Math.Min(baseR * 0.96, outerR * lenVariation);
-                    double curInnerR = innerR * (0.9 + rayRng.NextDouble() * 0.2);
-
-                    double cosA = Math.Cos(angle);
-                    double sinA = Math.Sin(angle);
-
-                    double x1 = cx + curInnerR * cosA * (rx / baseR);
-                    double y1 = cy + curInnerR * sinA * (ry / baseR);
-                    double x2 = cx + curOuterR * cosA * (rx / baseR);
-                    double y2 = cy + curOuterR * sinA * (ry / baseR);
-
-                    sb.AppendLine($@"        <line x1=""{x1.ToString("F3", Inv)}"" y1=""{y1.ToString("F3", Inv)}"" x2=""{x2.ToString("F3", Inv)}"" y2=""{y2.ToString("F3", Inv)}"" />");
+                    AppendRays(sb, $"{idPrefix}_fine_rays", IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), rayPaint,
+                        p.RayIntensity * p.RayFineLayer, p, center, rx, ry, baseR, isRightEye);
                 }
-                sb.AppendLine("      </g>");
             }
 
             // Lens-Style Pattern (Fresnel Rings)
@@ -313,30 +335,58 @@ namespace DollIrisGenerator.Services
             // Particles / Glitter
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
-                string glitterPaint = Paint(sb, "      ", $"{idPrefix}_glitter_fill", p.ParticleColor, "#FFFFFF", irisBox, isRightEye,
-                    p.PupilSizeRatio * 0.95, p.ParticleRadiusRatio);
-                sb.AppendLine($@"      <g id=""{idPrefix}_glitter"" fill=""{glitterPaint}"" opacity=""{p.ParticleOpacity.ToString("F2", Inv)}"">");
-                var pRng = new Random(effectiveSeed + 1000);
-                double minR = baseR * p.PupilSizeRatio * 0.95;
-                double maxR = baseR * p.ParticleRadiusRatio;
+                double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
+                var grains = IrisPatterns.Grains(p, new Point(cx, cy), rx, ry, baseR, effectiveSeed, isRightEye, WpfIrisRenderer.MmPerStyleUnit, 0.5);
 
-                for (int i = 0; i < p.ParticleCount; i++)
+                // Halos (光のにじみ): one small radial gradient per distinct grain color, opacity baked into its stops
+                if (p.ParticleGlow > 0.01)
                 {
-                    double dist = minR + pRng.NextDouble() * Math.Max(0.5, maxR - minR);
-                    double angle = pRng.NextDouble() * 2.0 * Math.PI;
-                    if (isRightEye) angle = Math.PI - angle;
-
-                    double pSize = (p.ParticleMinSize + pRng.NextDouble() * Math.Max(0.1, p.ParticleMaxSize - p.ParticleMinSize)) * WpfIrisRenderer.MmPerStyleUnit;
-                    double px = cx + dist * Math.Cos(angle) * (rx / baseR);
-                    double py = cy + dist * Math.Sin(angle) * (ry / baseR);
-
-                    if (i % 5 == 0)
+                    var colorAt = WpfIrisRenderer.GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
+                    var haloIds = new System.Collections.Generic.Dictionary<string, string>();
+                    var halos = new StringBuilder();
+                    sb.AppendLine("      <defs>");
+                    foreach (var g in grains)
                     {
-                        sb.AppendLine(BuildSvgStar4(px, py, pSize * 1.5, 0.25));
+                        string color = colorAt(g.Position);
+                        if (!haloIds.TryGetValue(color, out var haloId))
+                        {
+                            haloId = $"{idPrefix}_halo{haloIds.Count}";
+                            haloIds[color] = haloId;
+                            var (rgb, alpha) = SvgStopColor(color);
+                            sb.AppendLine($@"        <radialGradient id=""{haloId}"">");
+                            foreach (var (offset, a) in IrisPatterns.HaloStops(p.ParticleGlow))
+                                sb.AppendLine($@"          <stop offset=""{(offset * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}"" stop-opacity=""{(alpha * a * p.ParticleOpacity).ToString("0.###", Inv)}"" />");
+                            sb.AppendLine("        </radialGradient>");
+                        }
+                        double hr = IrisPatterns.HaloRadius(g.Size, p.ParticleGlow);
+                        halos.AppendLine($@"        <circle cx=""{F(g.Position.X)}"" cy=""{F(g.Position.Y)}"" r=""{F(hr)}"" fill=""url(#{haloId})"" />");
+                    }
+                    sb.AppendLine("      </defs>");
+                    sb.AppendLine($@"      <g id=""{idPrefix}_glitter_glow"">");
+                    sb.Append(halos);
+                    sb.AppendLine("      </g>");
+                }
+
+                string glitterPaint = Paint(sb, "      ", $"{idPrefix}_glitter_fill", p.ParticleColor, "#FFFFFF", irisBox, isRightEye, bandInner, bandOuter);
+                sb.AppendLine($@"      <g id=""{idPrefix}_glitter"" fill=""{glitterPaint}"" opacity=""{p.ParticleOpacity.ToString("F2", Inv)}"">");
+                foreach (var g in grains)
+                {
+                    if (g.IsStar)
+                    {
+                        sb.AppendLine(BuildSvgStar4(g.Position.X, g.Position.Y, g.Size * 1.5, 0.25));
                     }
                     else
                     {
-                        sb.AppendLine($@"        <circle cx=""{px.ToString("F3", Inv)}"" cy=""{py.ToString("F3", Inv)}"" r=""{(pSize * 0.5).ToString("F3", Inv)}"" />");
+                        sb.AppendLine($@"        <circle cx=""{g.Position.X.ToString("F3", Inv)}"" cy=""{g.Position.Y.ToString("F3", Inv)}"" r=""{(g.Size * 0.5).ToString("F3", Inv)}"" />");
+                    }
+                }
+                // Cross flares (十字フレア)
+                if (p.ParticleFlareRatio > 0.001)
+                {
+                    foreach (var g in grains)
+                    {
+                        if (!g.HasFlare) continue;
+                        sb.AppendLine($@"        <path d=""{IrisPatterns.Flare(g.Size, p.ParticleFlareLength).ToSvgPathData(g.Position.X, g.Position.Y)}"" />");
                     }
                 }
                 sb.AppendLine("      </g>");
@@ -475,6 +525,40 @@ namespace DollIrisGenerator.Services
 
             // Close tilt group
             sb.AppendLine("  </g>");
+        }
+
+        /// <summary>
+        /// Writes a group of rays: plain round-capped lines when no fiber setting is on (as earlier versions),
+        /// otherwise each ray's fiber outline (the same outline the screen renderer fills).
+        /// </summary>
+        private static void AppendRays(StringBuilder sb, string id, System.Collections.Generic.IEnumerable<RaySpec> rays, string paint,
+            double opacity, IrisParameters p, Point center, double rx, double ry, double baseR, bool isRightEye)
+        {
+            double width = p.RayThickness * WpfIrisRenderer.MmPerStyleUnit;
+            if (!p.HasFiberRays)
+            {
+                // Without 太さのばらつき all rays of a group share one width (the fine rays a thinner one)
+                double groupFactor = 1.0;
+                foreach (var r in rays) { groupFactor = r.WidthFactor; break; }
+                sb.AppendLine($@"      <g id=""{id}"" stroke=""{paint}"" stroke-width=""{(width * groupFactor).ToString("F3", Inv)}"" stroke-linecap=""round"" opacity=""{opacity.ToString("F2", Inv)}"">");
+                foreach (var ray in rays)
+                {
+                    var a = IrisPatterns.OnIris(center, rx, ry, baseR, ray.InnerR, ray.Angle);
+                    var b = IrisPatterns.OnIris(center, rx, ry, baseR, ray.OuterR, ray.Angle);
+                    string widthAttr = Math.Abs(ray.WidthFactor - groupFactor) > 1e-9 ? $@" stroke-width=""{(width * ray.WidthFactor).ToString("F3", Inv)}""" : "";
+                    sb.AppendLine($@"        <line x1=""{a.X.ToString("F3", Inv)}"" y1=""{a.Y.ToString("F3", Inv)}"" x2=""{b.X.ToString("F3", Inv)}"" y2=""{b.Y.ToString("F3", Inv)}""{widthAttr} />");
+                }
+                sb.AppendLine("      </g>");
+                return;
+            }
+
+            sb.AppendLine($@"      <g id=""{id}"" fill=""{paint}"" opacity=""{opacity.ToString("F2", Inv)}"">");
+            foreach (var ray in rays)
+            {
+                var outline = IrisPatterns.FiberOutline(center, rx, ry, baseR, ray, width * ray.WidthFactor, p.RayTaper, p.RayCurve, isRightEye);
+                sb.AppendLine($@"        <path d=""{outline.ToSvgPathData(0, 0)}"" />");
+            }
+            sb.AppendLine("      </g>");
         }
 
         private static string BuildSvgStar4(double cx, double cy, double radius, double innerRatio, string transform = "", string? fill = null, double opacity = 1.0)

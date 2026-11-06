@@ -473,6 +473,13 @@ namespace DollIrisGenerator.Controls
 
         private ColorFill CurrentFill() => ColorFill.Create(_kind, _angle, _stops);
 
+        private static int KindToIndex(ColorFillKind kind) => kind switch
+        {
+            ColorFillKind.Radial => 1,
+            ColorFillKind.Conic => 2,
+            _ => 0
+        };
+
         private void WriteGradient()
         {
             var fill = CurrentFill();
@@ -500,11 +507,16 @@ namespace DollIrisGenerator.Controls
             _suppressGradientEvents = true;
             try
             {
-                KindCombo.SelectedIndex = _kind == ColorFillKind.Radial ? 1 : 0;
+                KindCombo.SelectedIndex = KindToIndex(_kind);
                 AngleSlider.Value = _angle;
                 AngleValueTxt.Text = $"{_angle:0}°";
-                AnglePanel.Visibility = _kind == ColorFillKind.Linear ? Visibility.Visible : Visibility.Collapsed;
+                AngleLabel.Text = _kind == ColorFillKind.Conic ? "開始:" : "角度:";
+                AngleSlider.ToolTip = _kind == ColorFillKind.Conic
+                    ? "0% の色がある向き: 0° = 右、90° = 下、180° = 左、270° = 上 (そこから時計回り)"
+                    : "0° = 左→右、90° = 上→下、180° = 右→左、270° = 下→上";
+                AnglePanel.Visibility = _kind == ColorFillKind.Radial ? Visibility.Collapsed : Visibility.Visible;
                 RadialHint.Visibility = _kind == ColorFillKind.Radial ? Visibility.Visible : Visibility.Collapsed;
+                ConicHint.Visibility = _kind == ColorFillKind.Conic ? Visibility.Visible : Visibility.Collapsed;
                 AddStopBtn.IsEnabled = _stops.Count < ColorFill.MaxStops;
             }
             finally
@@ -528,6 +540,7 @@ namespace DollIrisGenerator.Controls
         {
             if (!fill.IsGradient) return new SolidColorBrush(GeometryHelper.ParseHexColor(fill.PrimaryColor));
             var map = GradientMapping.Create(fill, new Rect(0, 0, 1, 1));
+            if (map.Kind == ColorFillKind.Conic) return WpfIrisRenderer.CreateConicBrush(map, 1.0, BrushMappingMode.RelativeToBoundingBox);
             var stops = new GradientStopCollection(map.Stops.Select(s => new GradientStop(GeometryHelper.ParseHexColor(s.Color), s.Offset)));
             return map.Kind == ColorFillKind.Radial
                 ? new RadialGradientBrush(stops) { Center = map.Center, GradientOrigin = map.Center, RadiusX = map.RadiusX, RadiusY = map.RadiusY }
@@ -537,7 +550,17 @@ namespace DollIrisGenerator.Controls
         private void OnKindChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_suppressGradientEvents || !_gradientMode) return;
-            _kind = KindCombo.SelectedIndex == 1 ? ColorFillKind.Radial : ColorFillKind.Linear;
+            var previous = _kind;
+            _kind = KindCombo.SelectedIndex switch
+            {
+                1 => ColorFillKind.Radial,
+                2 => ColorFillKind.Conic,
+                _ => ColorFillKind.Linear
+            };
+            // The angle means a direction of travel for linear but a starting direction for conic: switching
+            // to conic starts from the top (the usual place for an aurora's first color)
+            if (_kind == ColorFillKind.Conic && previous != ColorFillKind.Conic) _angle = ColorFill.ConicDefaultAngle;
+            else if (previous == ColorFillKind.Conic && _kind == ColorFillKind.Linear) _angle = ColorFill.DefaultAngle;
             RefreshGradientWidgets();
             WriteGradient();
         }

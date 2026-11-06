@@ -202,7 +202,46 @@ namespace DollIrisGenerator.Services
                 }
             }
 
-            // 13. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
+            // 13. Newer looks (fiber rays, glowing glitter, aurora). Drawn last from the sequence, so every
+            //     setting above comes out exactly as it did before these existed.
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                bool fiber = rng.Next(10) < 6; // 60%: fiber-textured rays
+                double taper = rng.NextDouble(), widthVar = rng.NextDouble(), curve = rng.NextDouble(), fine = rng.NextDouble();
+                p.RayTaper = fiber ? Math.Round(0.3 + taper * 0.6, 2) : 0.0;
+                p.RayWidthVariation = fiber ? Math.Round(0.2 + widthVar * 0.5, 2) : 0.0;
+                p.RayCurve = fiber && curve < 0.4 ? Math.Round((curve - 0.2) * 1.5, 2) : 0.0; // gentle swirl, either way
+                p.RayFineLayer = fiber ? Math.Round(0.3 + fine * 0.5, 2) : 0.0;
+            }
+
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                bool glow = rng.Next(10) < 6; // 60%: glowing glitter
+                double g = rng.NextDouble(), f = rng.NextDouble(), len = rng.NextDouble();
+                p.ParticleGlow = glow ? Math.Round(0.3 + g * 0.5, 2) : 0.0;
+                p.ParticleFlareRatio = glow ? Math.Round(0.05 + f * 0.15, 2) : 0.0;
+                p.ParticleFlareLength = Math.Round(2.5 + len * 2.5, 1);
+            }
+
+            if (!colorsLocked)
+            {
+                bool aurora = rng.Next(10) < 2; // 20%: an aurora layer in the theme's hues
+                double hueShift = rng.NextDouble() * 360.0, strength = rng.NextDouble();
+                if (aurora)
+                {
+                    double h1 = baseHue, h2 = theme.DualTone ? theme.DualHue : baseHue + 60.0, h3 = hueShift;
+                    p.AuroraColor = ColorFill.Create(ColorFillKind.Conic, ColorFill.ConicDefaultAngle, new[]
+                    {
+                        new ColorStop(HslToHex(h1, 0.85, 0.70), 0.0),
+                        new ColorStop(HslToHex(h2, 0.85, 0.72), 0.33),
+                        new ColorStop(HslToHex(h3, 0.80, 0.74), 0.66),
+                        new ColorStop(HslToHex(h1, 0.85, 0.70), 1.0)
+                    }).ToString();
+                }
+                p.AuroraOpacity = aurora ? Math.Round(0.20 + strength * 0.25, 2) : 0.0;
+            }
+
+            // 14. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;
             p.AspectRatio = preservedAspectRatio;

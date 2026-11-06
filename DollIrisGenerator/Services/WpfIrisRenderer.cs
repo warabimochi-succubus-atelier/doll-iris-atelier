@@ -44,6 +44,7 @@ namespace DollIrisGenerator.Services
 
             if (mirror) fill = fill.MirroredX();
             var map = GradientMapping.Create(fill, box, bandInner, bandOuter);
+            if (map.Kind == ColorFillKind.Conic) return CreateConicBrush(map, opacity, BrushMappingMode.Absolute);
             var stops = new GradientStopCollection();
             foreach (var s in map.Stops) stops.Add(new GradientStop(GeometryHelper.ParseHexColor(s.Color, opacity), s.Offset));
 
@@ -64,6 +65,118 @@ namespace DollIrisGenerator.Services
                 };
             brush.Freeze();
             return brush;
+        }
+
+        /// <summary>
+        /// Brush for a conic (円周) gradient: WPF has no such gradient brush, so it is a DrawingBrush of thin wedges
+        /// around the center (<see cref="GradientMapping.ConicWedges"/>, the same wedges the SVG export writes).
+        /// The wedges are drawn aliased so no hairline seams show between them; they are only 2° wide, so their
+        /// edges are not visible either. <paramref name="units"/> is Absolute for the iris (map in drawing
+        /// coordinates) and RelativeToBoundingBox for a swatch (map on the unit box).
+        /// </summary>
+        public static Brush CreateConicBrush(GradientMapping map, double opacity, BrushMappingMode units)
+        {
+            var area = map.ConicArea();
+            // Long enough to reach every corner of the area from the center
+            double reach = Math.Sqrt(area.Width * area.Width + area.Height * area.Height);
+            var group = new DrawingGroup { ClipGeometry = new RectangleGeometry(area) };
+            RenderOptions.SetEdgeMode(group, EdgeMode.Aliased);
+            var c = map.Center;
+            foreach (var (from, to, color) in map.ConicWedges())
+            {
+                var geo = new StreamGeometry();
+                using (var ctx = geo.Open())
+                {
+                    ctx.BeginFigure(c, true, true);
+                    ctx.LineTo(PolarPoint(c, reach, from), false, false);
+                    ctx.LineTo(PolarPoint(c, reach, to), false, false);
+                }
+                geo.Freeze();
+                var wedgeBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(color, opacity));
+                wedgeBrush.Freeze();
+                group.Children.Add(new GeometryDrawing(wedgeBrush, null, geo));
+            }
+            group.Freeze();
+
+            var brush = new DrawingBrush(group)
+            {
+                Viewbox = area,
+                ViewboxUnits = BrushMappingMode.Absolute,
+                Viewport = area,
+                ViewportUnits = units,
+                Stretch = Stretch.Fill,
+                TileMode = TileMode.None
+            };
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>
+        /// Draws rays: plain round-capped lines when no fiber setting is on (exactly as earlier versions), otherwise
+        /// each ray's fiber outline (先細り / 太さのばらつき / うねり) filled with the same brush.
+        /// </summary>
+        private static void DrawRays(DrawingContext dc, System.Collections.Generic.IEnumerable<RaySpec> rays, Brush brush,
+            IrisParameters p, Point center, double rx, double ry, double baseR, double style, bool isRightEye)
+        {
+            double width = p.RayThickness * style;
+            if (!p.HasFiberRays)
+            {
+                // Pens per width factor (the fine rays are thinner); without 太さのばらつき there are at most two
+                var pens = new System.Collections.Generic.Dictionary<double, Pen>();
+                foreach (var ray in rays)
+                {
+                    if (!pens.TryGetValue(ray.WidthFactor, out var pen))
+                    {
+                        pen = new Pen(brush, width * ray.WidthFactor) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
+                        pen.Freeze();
+                        pens[ray.WidthFactor] = pen;
+                    }
+                    dc.DrawLine(pen,
+                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.InnerR, ray.Angle),
+                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.OuterR, ray.Angle));
+                }
+                return;
+            }
+
+            foreach (var ray in rays)
+            {
+                var outline = IrisPatterns.FiberOutline(center, rx, ry, baseR, ray, width * ray.WidthFactor, p.RayTaper, p.RayCurve, isRightEye);
+                dc.DrawGeometry(brush, null, outline.ToPathGeometry());
+            }
+        }
+
+        /// <summary>
+        /// Color ("#AARRGGBB" or plain hex) a glitter grain has where it sits: the solid color, or the iris-wide
+        /// gradient's color at that point (placed exactly like the grains' brush). Shared with the SVG export.
+        /// </summary>
+        internal static Func<Point, string> GrainColorSampler(string? value, Rect irisBox, bool mirror, double bandInner, double bandOuter)
+        {
+            var fill = ColorFill.Parse(value);
+            if (!fill.IsGradient)
+            {
+                string solid = GeometryHelper.SanitizeColorHex(value, "#FFFFFF");
+                return _ => solid;
+            }
+            if (mirror) fill = fill.MirroredX();
+            var map = GradientMapping.Create(fill, irisBox, bandInner, bandOuter);
+            return pt => map.ColorAt(pt);
+        }
+
+        /// <summary>Soft round halo of one color, on the grain's own circle (relative to its bounds).</summary>
+        private static Brush CreateHaloBrush(string color, double opacity, double glow)
+        {
+            var stops = new GradientStopCollection();
+            foreach (var (offset, alpha) in IrisPatterns.HaloStops(glow))
+                stops.Add(new GradientStop(GeometryHelper.ParseHexColor(color, opacity * alpha), offset));
+            var brush = new RadialGradientBrush(stops);
+            brush.Freeze();
+            return brush;
+        }
+
+        internal static Point PolarPoint(Point c, double r, double degrees)
+        {
+            double rad = degrees * Math.PI / 180.0;
+            return new Point(c.X + r * Math.Cos(rad), c.Y + r * Math.Sin(rad));
         }
 
         /// <summary>Local box (around 0, 0) of a highlight shape, the area its gradient is laid across.</summary>
@@ -153,6 +266,13 @@ namespace DollIrisGenerator.Services
 
             dc.DrawGeometry(baseRadialBrush, null, boundaryGeometry);
 
+            // Aurora layer (オーロラ層): a color over the iris body, under the shading so the depth stays
+            if (p.AuroraOpacity > 0.01)
+            {
+                var auroraBrush = CreateFillBrush(p.AuroraColor, p.AuroraOpacity, irisBox, isRightEye);
+                dc.DrawGeometry(auroraBrush, null, boundaryGeometry);
+            }
+
             // Upper Shadow (Eyelid depth)
             var upperShadowBrush = new LinearGradientBrush(
                 Color.FromArgb(160, 0, 0, 0),
@@ -178,50 +298,18 @@ namespace DollIrisGenerator.Services
             // 3. Radial Rays (放射状ライン / 放射模様)
             if (p.RayCount > 0 && p.RayIntensity > 0.01)
             {
-                var rayRng = new Random(effectiveSeed);
-
-                double pupilR = baseR * p.PupilSizeRatio;
-                double innerR = Math.Max(pupilR * 0.85, baseR * p.RayInnerRadiusRatio);
-                double outerR = baseR * p.RayLengthRatio;
+                double innerR = IrisPatterns.InnerRayRadius(p, baseR);
+                double bandInner = innerR / baseR, bandOuter = Math.Min(0.96, p.RayLengthRatio);
 
                 // Radial gradient: from the rays' start to their (nominal) tips
-                var rayBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity, irisBox, isRightEye,
-                    innerR / baseR, Math.Min(0.96, p.RayLengthRatio));
-                var rayPen = new Pen(rayBrush, p.RayThickness * style)
+                var rayBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity, irisBox, isRightEye, bandInner, bandOuter);
+                DrawRays(dc, IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayBrush, p, center, rx, ry, baseR, style, isRightEye);
+
+                // Fine rays (細線レイヤー) between the main ones, on top so their light lines stay visible
+                if (p.RayFineLayer > 0.01)
                 {
-                    StartLineCap = PenLineCap.Round,
-                    EndLineCap = PenLineCap.Round
-                };
-                rayPen.Freeze();
-
-                for (int i = 0; i < p.RayCount; i++)
-                {
-                    double baseAngle = (2.0 * Math.PI * i) / p.RayCount;
-                    double jitter = (rayRng.NextDouble() - 0.5) * (p.RayRandomness * 0.5);
-                    double angle = baseAngle + jitter;
-
-                    if (isRightEye)
-                    {
-                        angle = Math.PI - angle;
-                    }
-
-                    double lenVariation = 1.0 + (rayRng.NextDouble() - 0.5) * p.RayRandomness * 0.6;
-                    double curOuterR = Math.Min(baseR * 0.96, outerR * lenVariation);
-                    double curInnerR = innerR * (0.9 + rayRng.NextDouble() * 0.2);
-
-                    double cosA = Math.Cos(angle);
-                    double sinA = Math.Sin(angle);
-
-                    Point startPt = new Point(
-                        center.X + curInnerR * cosA * (rx / baseR),
-                        center.Y + curInnerR * sinA * (ry / baseR)
-                    );
-                    Point endPt = new Point(
-                        center.X + curOuterR * cosA * (rx / baseR),
-                        center.Y + curOuterR * sinA * (ry / baseR)
-                    );
-
-                    dc.DrawLine(rayPen, startPt, endPt);
+                    var fineBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity * p.RayFineLayer, irisBox, isRightEye, bandInner, bandOuter);
+                    DrawRays(dc, IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), fineBrush, p, center, rx, ry, baseR, style, isRightEye);
                 }
             }
 
@@ -341,38 +429,53 @@ namespace DollIrisGenerator.Services
             // 7. Particles / Glitter (ラメ・粒子)
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
-                var particleRng = new Random(effectiveSeed + 1000);
-                double minR = baseR * p.PupilSizeRatio * 0.95;
-                double maxR = baseR * p.ParticleRadiusRatio;
+                double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
+                var grains = IrisPatterns.Grains(p, center, rx, ry, baseR, effectiveSeed, isRightEye, style, 1.0);
 
                 // One brush over the whole iris: each grain takes the gradient color of where it sits
                 // (radial: from the inner to the outer edge of the glitter band)
-                var particleBrush = CreateFillBrush(p.ParticleColor, p.ParticleOpacity, irisBox, isRightEye,
-                    p.PupilSizeRatio * 0.95, p.ParticleRadiusRatio);
+                var particleBrush = CreateFillBrush(p.ParticleColor, p.ParticleOpacity, irisBox, isRightEye, bandInner, bandOuter);
 
-                for (int i = 0; i < p.ParticleCount; i++)
+                // Halos first (光のにじみ), so every grain stays crisp on top of its neighbours' glow
+                if (p.ParticleGlow > 0.01)
                 {
-                    double dist = minR + particleRng.NextDouble() * Math.Max(1.0, maxR - minR);
-                    double angle = particleRng.NextDouble() * 2.0 * Math.PI;
-
-                    if (isRightEye)
+                    var colorAt = GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
+                    var haloBrushes = new System.Collections.Generic.Dictionary<string, Brush>();
+                    foreach (var g in grains)
                     {
-                        angle = Math.PI - angle;
+                        string color = colorAt(g.Position);
+                        if (!haloBrushes.TryGetValue(color, out var halo))
+                        {
+                            halo = CreateHaloBrush(color, p.ParticleOpacity, p.ParticleGlow);
+                            haloBrushes[color] = halo;
+                        }
+                        double hr = IrisPatterns.HaloRadius(g.Size, p.ParticleGlow);
+                        dc.DrawEllipse(halo, null, g.Position, hr, hr);
                     }
+                }
 
-                    double pSize = (p.ParticleMinSize + particleRng.NextDouble() * Math.Max(0.1, p.ParticleMaxSize - p.ParticleMinSize)) * style;
-                    double px = center.X + dist * Math.Cos(angle) * (rx / baseR);
-                    double py = center.Y + dist * Math.Sin(angle) * (ry / baseR);
-
-                    if (i % 5 == 0)
+                foreach (var g in grains)
+                {
+                    if (g.IsStar)
                     {
                         // Built in place (no geometry transform) so the iris-wide brush is not shifted
-                        var glitterGeo = ShapeOutline.Star(4, pSize * 1.5, 0.2).Offset(px, py).ToPathGeometry();
+                        var glitterGeo = ShapeOutline.Star(4, g.Size * 1.5, 0.2).Offset(g.Position.X, g.Position.Y).ToPathGeometry();
                         dc.DrawGeometry(particleBrush, null, glitterGeo);
                     }
                     else
                     {
-                        dc.DrawEllipse(particleBrush, null, new Point(px, py), pSize * 0.5, pSize * 0.5);
+                        dc.DrawEllipse(particleBrush, null, g.Position, g.Size * 0.5, g.Size * 0.5);
+                    }
+                }
+
+                // Cross flares (十字フレア) on the chosen grains
+                if (p.ParticleFlareRatio > 0.001)
+                {
+                    foreach (var g in grains)
+                    {
+                        if (!g.HasFlare) continue;
+                        var flareGeo = IrisPatterns.Flare(g.Size, p.ParticleFlareLength).Offset(g.Position.X, g.Position.Y).ToPathGeometry();
+                        dc.DrawGeometry(particleBrush, null, flareGeo);
                     }
                 }
             }
