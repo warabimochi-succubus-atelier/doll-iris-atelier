@@ -26,10 +26,6 @@ namespace DollIrisGenerator.ViewModels
         private SheetItem? _selectedSheetItem;
         private string _statusMessage = "準備完了";
 
-        // SVG Editing Mode
-        private string _svgSourceText = "";
-        private bool _autoSyncSvg = true;
-
         // History Management (Undo / Redo Stack)
         private ObservableCollection<HistoryItem> _historyItems = new();
         // Each cell of the split preview has its own stacks; these point at the selected cell's (see MainViewModel.Compare.cs)
@@ -77,7 +73,6 @@ namespace DollIrisGenerator.ViewModels
                 }
                 ResetManualEditTracking();
                 OnPropertyChanged();
-                UpdateSvgSource();
             }
         }
 
@@ -153,7 +148,7 @@ namespace DollIrisGenerator.ViewModels
         public bool ShowCutLines
         {
             get => _showCutLines;
-            set { _showCutLines = value; OnPropertyChanged(); UpdateSvgSource(); }
+            set { _showCutLines = value; OnPropertyChanged(); }
         }
 
         public bool ShowCenterMarks
@@ -225,34 +220,6 @@ namespace DollIrisGenerator.ViewModels
             set { _statusMessage = value; OnPropertyChanged(); }
         }
 
-        // SVG Editor Properties
-        // Setter is only reached by the user typing in the SVG editor (generated SVG is written to the field),
-        // so any change here means the text is now hand-edited and must not be overwritten or discarded on save.
-        public string SvgSourceText
-        {
-            get => _svgSourceText;
-            set
-            {
-                if (value == _svgSourceText) return;
-                _svgSourceText = value;
-                OnPropertyChanged();
-                IsSvgManuallyEdited = true;
-            }
-        }
-
-        private bool _isSvgManuallyEdited = false;
-        public bool IsSvgManuallyEdited
-        {
-            get => _isSvgManuallyEdited;
-            private set { if (_isSvgManuallyEdited == value) return; _isSvgManuallyEdited = value; OnPropertyChanged(); }
-        }
-
-        public bool AutoSyncSvg
-        {
-            get => _autoSyncSvg;
-            set { _autoSyncSvg = value; OnPropertyChanged(); if (value) UpdateSvgSource(); }
-        }
-
         // History & Favorites Properties
         public ObservableCollection<HistoryItem> HistoryItems => _historyItems;
 
@@ -308,7 +275,6 @@ namespace DollIrisGenerator.ViewModels
         public ICommand ExportPresetsCommand { get; }
         public ICommand ImportPresetsCommand { get; }
         public ICommand CopySvgCommand { get; }
-        public ICommand RefreshSvgCommand { get; }
         public ICommand UndoCommand { get; }
         public ICommand RedoCommand { get; }
         public ICommand RestoreHistoryCommand { get; }
@@ -393,7 +359,7 @@ namespace DollIrisGenerator.ViewModels
             SaveJsonCommand = new RelayCommand(() => _files.SaveJson(CurrentIris));
             LoadJsonCommand = new RelayCommand(OnLoadJson);
             ExportPdfCommand = new RelayCommand(OnExportPdf, () => !IsExportingPdf);
-            ExportSvgCommand = new RelayCommand(() => _files.ExportSvg(CurrentIris, IsSvgManuallyEdited ? SvgSourceText : null, GenerateSvg));
+            ExportSvgCommand = new RelayCommand(() => _files.ExportSvg(CurrentIris, GenerateSvg));
             ExportPng600Command = new RelayCommand(() => OnExportPng(600.0));
             ExportPng1200Command = new RelayCommand(() => OnExportPng(1200.0));
 
@@ -402,7 +368,6 @@ namespace DollIrisGenerator.ViewModels
             ExportPresetsCommand = new RelayCommand(OnExportPresets);
             ImportPresetsCommand = new RelayCommand(OnImportPresets);
             CopySvgCommand = new RelayCommand(OnCopySvg);
-            RefreshSvgCommand = new RelayCommand(OnRefreshSvg);
 
             UndoCommand = new RelayCommand(OnUndo, () => CanUndo);
             RedoCommand = new RelayCommand(OnRedo, () => CanRedo);
@@ -419,7 +384,6 @@ namespace DollIrisGenerator.ViewModels
 
             // Record initial history state
             RecordHistory("初期状態作成");
-            UpdateSvgSource();
         }
 
         private void OnLoadJson() => _files.LoadJson(loaded =>
@@ -441,16 +405,9 @@ namespace DollIrisGenerator.ViewModels
         private void OnIrisPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(CurrentIris));
-            if (!_isInternalStateChange)
+            if (!_isInternalStateChange && !_suppressManualEditTracking)
             {
-                if (!_suppressManualEditTracking)
-                {
-                    TrackManualEdit();
-                }
-                if (_autoSyncSvg)
-                {
-                    UpdateSvgSource();
-                }
+                TrackManualEdit();
             }
         }
 
@@ -519,7 +476,6 @@ namespace DollIrisGenerator.ViewModels
                     _isInternalStateChange = false;
                     OnPropertyChanged(nameof(CanUndo));
                     OnPropertyChanged(nameof(CanRedo));
-                    UpdateSvgSource();
                 }
             }
         }
@@ -543,7 +499,6 @@ namespace DollIrisGenerator.ViewModels
                     _isInternalStateChange = false;
                     OnPropertyChanged(nameof(CanUndo));
                     OnPropertyChanged(nameof(CanRedo));
-                    UpdateSvgSource();
                 }
             }
         }
@@ -573,7 +528,6 @@ namespace DollIrisGenerator.ViewModels
                 finally
                 {
                     _isInternalStateChange = false;
-                    UpdateSvgSource();
                 }
             }
         }
@@ -595,40 +549,11 @@ namespace DollIrisGenerator.ViewModels
         private string GenerateSvg() =>
             SvgExporter.GeneratePairSvg(CurrentIris, includePrintGuides: ShowCutLines, pairSpacingMm: SheetConfig.PairSpacingXMm);
 
-        private void UpdateSvgSource()
-        {
-            // Hand edits win: keep them until the user explicitly discards them (🔄 最新に更新)
-            if (IsSvgManuallyEdited) return;
-            try
-            {
-                _svgSourceText = GenerateSvg();
-                OnPropertyChanged(nameof(SvgSourceText));
-            }
-            catch (Exception ex)
-            {
-                // Ignore transient update errors (this runs on every edit, so only log in debug builds)
-                System.Diagnostics.Debug.WriteLine($"SVGソースの更新に失敗: {ex.Message}");
-            }
-        }
-
-        private void OnRefreshSvg()
-        {
-            bool hadEdits = IsSvgManuallyEdited;
-            IsSvgManuallyEdited = false;
-            UpdateSvgSource();
-            StatusMessage = hadEdits
-                ? "SVG の手動編集を破棄し、現在のパラメータから再生成しました。"
-                : "SVG を現在のパラメータから再生成しました。";
-        }
-
-        /// <summary>Checks that hand-edited SVG is well-formed XML. DTDs are refused (no external entity loading).</summary>
-        public static bool IsWellFormedSvg(string text, out string error) => SvgValidator.IsWellFormed(text, out error);
-
         private void OnCopySvg()
         {
             try
             {
-                Clipboard.SetText(SvgSourceText);
+                Clipboard.SetText(GenerateSvg());
                 StatusMessage = "SVG ベクターコードをクリップボードにコピーしました。";
             }
             catch (Exception ex)
@@ -693,7 +618,6 @@ namespace DollIrisGenerator.ViewModels
             {
                 _isInternalStateChange = false;
                 OnPropertyChanged(nameof(CurrentIris));
-                UpdateSvgSource();
             }
         }
 

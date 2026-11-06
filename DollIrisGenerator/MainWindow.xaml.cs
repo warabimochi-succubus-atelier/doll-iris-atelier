@@ -118,10 +118,7 @@ namespace DollIrisGenerator
         {
             if (sender is FrameworkElement { DataContext: CompareSlot slot } && DataContext is MainViewModel vm)
             {
-                // Switching away from hand-edited SVG asks first; after that dialog the click must not start a pan
-                bool asks = vm.IsSvgManuallyEdited && !ReferenceEquals(slot, vm.SelectedSlot);
                 vm.SelectSlot(slot);
-                if (asks) e.Handled = true;
             }
         }
     }

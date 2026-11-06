@@ -6,7 +6,7 @@ namespace DollIrisGenerator.Services
 {
     public static class SvgValidator
     {
-        /// <summary>Checks that hand-edited SVG is well-formed XML. DTDs are refused (no external entity loading).</summary>
+        /// <summary>Checks that SVG text is well-formed XML with an &lt;svg&gt; root (used by the tests on generated SVG). DTDs are refused (no external entity loading).</summary>
         public static bool IsWellFormed(string text, out string error)
         {
             error = "";
