@@ -210,7 +210,7 @@
                 <controls:IrisPreviewControl x:Name="PreviewCanvas" Grid.Row="1"
                                              Parameters="{Binding CurrentIris}"
                                              PreviewMode="A4Sheet"
-                                             ZoomScale="{Binding ZoomScale}"
+                                             ZoomScale="{Binding SheetZoomScale}"
                                              ShowCutLines="{Binding ShowCutLines}"
                                              ShowCenterMarks="{Binding ShowCenterMarks}"
                                              SheetConfig="{Binding SheetConfig}"
@@ -269,7 +269,7 @@
                                 <Grid>
                                     <controls:IrisPreviewControl Parameters="{Binding Iris}"
                                                                  PreviewMode="Pair"
-                                                                 ZoomScale="{Binding DataContext.ZoomScale, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                 ZoomScale="{Binding DataContext.PairZoomScale, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  ShowCutLines="{Binding DataContext.ShowCutLines, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  ShowCenterMarks="{Binding DataContext.ShowCenterMarks, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  SheetConfig="{Binding DataContext.SheetConfig, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
