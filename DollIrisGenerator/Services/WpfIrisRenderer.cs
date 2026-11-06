@@ -241,30 +241,21 @@ namespace DollIrisGenerator.Services
                 pupilBrush.Freeze();
 
                 Geometry pupilGeo;
-                switch (p.PupilShape)
+                var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry);
+                if (pupilOutline != null)
                 {
-                    case PupilShape.VerticalOval:
-                        pupilGeo = new EllipseGeometry(center, prx * 0.75, pry * 1.25);
-                        break;
-                    case PupilShape.CatSlit:
-                        var slit = GeometryHelper.CreateCatSlitGeometry(prx * 0.45, pry * 1.15);
-                        slit.Transform = new TranslateTransform(center.X, center.Y);
-                        pupilGeo = slit;
-                        break;
-                    case PupilShape.Heart:
-                        var heart = GeometryHelper.CreateHeartGeometry(prx * 0.95);
-                        heart.Transform = new TranslateTransform(center.X, center.Y);
-                        pupilGeo = heart;
-                        break;
-                    case PupilShape.Star:
-                        var star = GeometryHelper.CreateStar5Geometry(prx * 1.05);
-                        star.Transform = new TranslateTransform(center.X, center.Y);
-                        pupilGeo = star;
-                        break;
-                    case PupilShape.Round:
-                    default:
-                        pupilGeo = new EllipseGeometry(center, prx, pry);
-                        break;
+                    // Cat slit / heart / star: shared outline (same as SVG), corners rounded as requested
+                    var shaped = pupilOutline.Rounded(p.PupilCornerRounding).ToPathGeometry();
+                    shaped.Transform = new TranslateTransform(center.X, center.Y);
+                    pupilGeo = shaped;
+                }
+                else if (p.PupilShape == PupilShape.VerticalOval)
+                {
+                    pupilGeo = new EllipseGeometry(center, prx * 0.75, pry * 1.25);
+                }
+                else
+                {
+                    pupilGeo = new EllipseGeometry(center, prx, pry);
                 }
 
                 dc.DrawGeometry(pupilBrush, null, pupilGeo);
@@ -341,6 +332,9 @@ namespace DollIrisGenerator.Services
                     var symBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(symbol.Color, symbol.Opacity));
                     symBrush.Freeze();
 
+                    // Same outline as the SVG export; rounded once and reused for every copy
+                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);
+
                     for (int c = 0; c < symbol.Count; c++)
                     {
                         double curX = symX;
@@ -355,42 +349,19 @@ namespace DollIrisGenerator.Services
                             curY += symRadius * 1.4 * Math.Sin(offsetAngle);
                         }
 
-                        Geometry symGeo;
-                        switch (symbol.Type)
+                        if (symOutline == null) continue;
+                        Geometry symGeo = symOutline.ToPathGeometry();
+
+                        if (symbol.Type == SymbolType.Moon && isRightEye)
                         {
-                            case SymbolType.Star4:
-                                symGeo = GeometryHelper.CreateStar4Geometry(symRadius, 0.28);
-                                break;
-                            case SymbolType.Star5:
-                                symGeo = GeometryHelper.CreateStar5Geometry(symRadius, 0.42);
-                                break;
-                            case SymbolType.Heart:
-                                symGeo = GeometryHelper.CreateHeartGeometry(symRadius);
-                                break;
-                            case SymbolType.Moon:
-                                symGeo = GeometryHelper.CreateMoonGeometry(symRadius);
-                                if (isRightEye)
-                                {
-                                    var tg = new TransformGroup();
-                                    tg.Children.Add(new ScaleTransform(-1, 1));
-                                    tg.Children.Add(new RotateTransform(curRot));
-                                    tg.Children.Add(new TranslateTransform(curX, curY));
-                                    symGeo.Transform = tg;
-                                    dc.DrawGeometry(symBrush, null, symGeo);
-                                    continue;
-                                }
-                                break;
-                            case SymbolType.Cross:
-                                symGeo = GeometryHelper.CreateCrossGeometry(symRadius);
-                                break;
-                            case SymbolType.Diamond:
-                                symGeo = GeometryHelper.CreateDiamondGeometry(symRadius * 0.7, symRadius);
-                                break;
-                            case SymbolType.SakuraPetal:
-                                symGeo = GeometryHelper.CreateSakuraPetalGeometry(symRadius);
-                                break;
-                            default:
-                                continue;
+                            // The moon faces the other way in the right eye
+                            var tg = new TransformGroup();
+                            tg.Children.Add(new ScaleTransform(-1, 1));
+                            tg.Children.Add(new RotateTransform(curRot));
+                            tg.Children.Add(new TranslateTransform(curX, curY));
+                            symGeo.Transform = tg;
+                            dc.DrawGeometry(symBrush, null, symGeo);
+                            continue;
                         }
 
                         var transform = new TransformGroup();

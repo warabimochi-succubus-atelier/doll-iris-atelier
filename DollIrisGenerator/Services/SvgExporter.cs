@@ -224,26 +224,19 @@ namespace DollIrisGenerator.Services
                 else if (p.Shape == IrisShape.HorizontalOval) prx *= p.AspectRatio;
 
                 sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{safePupilColor}"" opacity=""{p.PupilOpacity.ToString("F2", Inv)}"">");
-                switch (p.PupilShape)
+                var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry);
+                if (pupilOutline != null)
                 {
-                    case PupilShape.VerticalOval:
-                        sb.AppendLine($@"        <ellipse cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{(prx * 0.75).ToString("F3", Inv)}"" ry=""{(pry * 1.25).ToString("F3", Inv)}"" />");
-                        break;
-                    case PupilShape.CatSlit:
-                        double sx = prx * 0.45;
-                        double sy = pry * 1.15;
-                        sb.AppendLine($@"        <path d=""M {cx.ToString("F3", Inv)},{(cy - sy).ToString("F3", Inv)} Q {(cx + sx * 1.4).ToString("F3", Inv)},{cy.ToString("F3", Inv)} {cx.ToString("F3", Inv)},{(cy + sy).ToString("F3", Inv)} Q {(cx - sx * 1.4).ToString("F3", Inv)},{cy.ToString("F3", Inv)} {cx.ToString("F3", Inv)},{(cy - sy).ToString("F3", Inv)} Z"" />");
-                        break;
-                    case PupilShape.Heart:
-                        sb.AppendLine(BuildSvgHeart(cx, cy, prx * 0.95));
-                        break;
-                    case PupilShape.Star:
-                        sb.AppendLine(BuildSvgStar5(cx, cy, prx * 1.05));
-                        break;
-                    case PupilShape.Round:
-                    default:
-                        sb.AppendLine($@"        <ellipse cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{prx.ToString("F3", Inv)}"" ry=""{pry.ToString("F3", Inv)}"" />");
-                        break;
+                    // Cat slit / heart / star: same outline as the screen / PDF renderer
+                    sb.AppendLine($@"        <path d=""{pupilOutline.Rounded(p.PupilCornerRounding).ToSvgPathData(cx, cy)}"" />");
+                }
+                else if (p.PupilShape == PupilShape.VerticalOval)
+                {
+                    sb.AppendLine($@"        <ellipse cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{(prx * 0.75).ToString("F3", Inv)}"" ry=""{(pry * 1.25).ToString("F3", Inv)}"" />");
+                }
+                else
+                {
+                    sb.AppendLine($@"        <ellipse cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{prx.ToString("F3", Inv)}"" ry=""{pry.ToString("F3", Inv)}"" />");
                 }
                 sb.AppendLine("      </g>");
             }
@@ -301,6 +294,9 @@ namespace DollIrisGenerator.Services
 
                     sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToString("F2", Inv)}"">");
 
+                    // Same outline as the screen / PDF renderer; rounded once and reused for every copy
+                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);
+
                     for (int c = 0; c < symbol.Count; c++)
                     {
                         double curX = symX;
@@ -316,30 +312,10 @@ namespace DollIrisGenerator.Services
                         }
 
                         string rotAttr = Math.Abs(curRot) > 0.1 ? $@" transform=""rotate({curRot.ToString("F1", Inv)}, {curX.ToString("F3", Inv)}, {curY.ToString("F3", Inv)})""" : "";
-                        switch (symbol.Type)
-                        {
-                            case SymbolType.Star4:
-                                sb.AppendLine(BuildSvgStar4(curX, curY, symRadius, 0.28, rotAttr));
-                                break;
-                            case SymbolType.Star5:
-                                sb.AppendLine(BuildSvgStar5(curX, curY, symRadius, rotAttr));
-                                break;
-                            case SymbolType.Heart:
-                                sb.AppendLine(BuildSvgHeart(curX, curY, symRadius, rotAttr));
-                                break;
-                            case SymbolType.Moon:
-                                sb.AppendLine(BuildSvgMoon(curX, curY, symRadius, isRightEye, rotAttr));
-                                break;
-                            case SymbolType.Cross:
-                                sb.AppendLine(BuildSvgCross(curX, curY, symRadius, rotAttr));
-                                break;
-                            case SymbolType.Diamond:
-                                sb.AppendLine(BuildSvgDiamond(curX, curY, symRadius * 0.7, symRadius, rotAttr));
-                                break;
-                            case SymbolType.SakuraPetal:
-                                sb.AppendLine(BuildSvgSakuraPetal(curX, curY, symRadius, rotAttr));
-                                break;
-                        }
+                        if (symOutline == null) continue;
+                        // The moon faces the other way in the right eye (mirrored before the rotation, as on screen)
+                        bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
+                        sb.AppendLine($@"        <path d=""{symOutline.ToSvgPathData(curX, curY, mirror)}""{rotAttr} />");
                     }
                     sb.AppendLine("      </g>");
                 }
@@ -428,94 +404,10 @@ namespace DollIrisGenerator.Services
             return sb.ToString();
         }
 
-        private static string BuildSvgStar5(double cx, double cy, double radius, string transform = "", string? fill = null, double opacity = 1.0)
-        {
-            var sb = new StringBuilder();
-            sb.Append("        <polygon points=\"");
-            for (int i = 0; i < 10; i++)
-            {
-                double angle = i * Math.PI / 5.0 - Math.PI / 2.0;
-                double r = (i % 2 == 0) ? radius : radius * 0.40;
-                double x = cx + r * Math.Cos(angle);
-                double y = cy + r * Math.Sin(angle);
-                sb.Append($"{x.ToString("F3", Inv)},{y.ToString("F3", Inv)} ");
-            }
-            sb.Append("\"");
-            if (fill != null) sb.Append($@" fill=""{fill}"" opacity=""{opacity.ToString("F2", Inv)}""");
-            if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
-            sb.Append(" />");
-            return sb.ToString();
-        }
-
-        private static string BuildSvgHeart(double cx, double cy, double radius, string transform = "", string? fill = null, double opacity = 1.0)
-        {
-            double topY = cy - radius * 0.45;
-            double botY = cy + radius * 0.85;
-            double lx = cx - radius * 0.95;
-            double rx = cx + radius * 0.95;
-
-            var sb = new StringBuilder();
-            sb.Append($@"        <path d=""M {cx.ToString("F3", Inv)},{botY.ToString("F3", Inv)} C {(lx * 1.05).ToString("F3", Inv)},{(botY * 0.2 + cy * 0.8).ToString("F3", Inv)} {lx.ToString("F3", Inv)},{(topY * 1.3).ToString("F3", Inv)} {cx.ToString("F3", Inv)},{topY.ToString("F3", Inv)} C {rx.ToString("F3", Inv)},{(topY * 1.3).ToString("F3", Inv)} {(rx * 1.05).ToString("F3", Inv)},{(botY * 0.2 + cy * 0.8).ToString("F3", Inv)} {cx.ToString("F3", Inv)},{botY.ToString("F3", Inv)} Z""");
-            if (fill != null) sb.Append($@" fill=""{fill}"" opacity=""{opacity.ToString("F2", Inv)}""");
-            if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
-            sb.Append(" />");
-            return sb.ToString();
-        }
-
-        private static string BuildSvgMoon(double cx, double cy, double radius, bool isRightEye, string transform = "")
-        {
-            double topY = cy - radius;
-            double botY = cy + radius;
-            var sb = new StringBuilder();
-            sb.Append($@"        <path d=""M {cx.ToString("F3", Inv)},{topY.ToString("F3", Inv)} A {radius.ToString("F3", Inv)} {radius.ToString("F3", Inv)} 0 0 {(isRightEye ? "0" : "1")} {cx.ToString("F3", Inv)},{botY.ToString("F3", Inv)} A {(radius * 0.82).ToString("F3", Inv)} {(radius * 1.05).ToString("F3", Inv)} 0 0 {(isRightEye ? "1" : "0")} {cx.ToString("F3", Inv)},{topY.ToString("F3", Inv)} Z""");
-            if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
-            sb.Append(" />");
-            return sb.ToString();
-        }
-
-        private static string BuildSvgCross(double cx, double cy, double radius, string transform = "")
-        {
-            double r = radius;
-            double w = radius * 0.32;
-            var sb = new StringBuilder();
-            sb.Append($@"        <path d=""M {(cx - w).ToString("F3", Inv)},{(cy - r).ToString("F3", Inv)} L {(cx + w).ToString("F3", Inv)},{(cy - r).ToString("F3", Inv)} L {(cx + w).ToString("F3", Inv)},{(cy - w).ToString("F3", Inv)} L {(cx + r).ToString("F3", Inv)},{(cy - w).ToString("F3", Inv)} L {(cx + r).ToString("F3", Inv)},{(cy + w).ToString("F3", Inv)} L {(cx + w).ToString("F3", Inv)},{(cy + w).ToString("F3", Inv)} L {(cx + w).ToString("F3", Inv)},{(cy + r).ToString("F3", Inv)} L {(cx - w).ToString("F3", Inv)},{(cy + r).ToString("F3", Inv)} L {(cx - w).ToString("F3", Inv)},{(cy + w).ToString("F3", Inv)} L {(cx - r).ToString("F3", Inv)},{(cy + w).ToString("F3", Inv)} L {(cx - r).ToString("F3", Inv)},{(cy - w).ToString("F3", Inv)} L {(cx - w).ToString("F3", Inv)},{(cy - w).ToString("F3", Inv)} Z""");
-            if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
-            sb.Append(" />");
-            return sb.ToString();
-        }
-
         private static string BuildSvgDiamond(double cx, double cy, double rx, double ry, string transform = "", string? fill = null, double opacity = 1.0)
         {
             var sb = new StringBuilder();
             sb.Append($@"        <polygon points=""{cx.ToString("F3", Inv)},{(cy - ry).ToString("F3", Inv)} {(cx + rx).ToString("F3", Inv)},{cy.ToString("F3", Inv)} {cx.ToString("F3", Inv)},{(cy + ry).ToString("F3", Inv)} {(cx - rx).ToString("F3", Inv)},{cy.ToString("F3", Inv)}""");
-            if (fill != null) sb.Append($@" fill=""{fill}"" opacity=""{opacity.ToString("F2", Inv)}""");
-            if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
-            sb.Append(" />");
-            return sb.ToString();
-        }
-
-        private static string BuildSvgSakuraPetal(double cx, double cy, double radius, string transform = "", string? fill = null, double opacity = 1.0)
-        {
-            double r = radius;
-            double bx = cx;
-            double by = cy + r * 0.85;
-
-            double llx = cx - r * 0.38;
-            double lly = cy - r * 0.95;
-
-            double cleftX = cx;
-            double cleftY = cy - r * 0.68;
-
-            double rlx = cx + r * 0.38;
-            double rly = cy - r * 0.95;
-
-            var sb = new StringBuilder();
-            sb.Append($@"        <path d=""M {bx.ToString("F3", Inv)},{by.ToString("F3", Inv)} ");
-            sb.Append($@"C {(cx - r * 0.65).ToString("F3", Inv)},{(cy + r * 0.35).ToString("F3", Inv)} {(cx - r * 0.70).ToString("F3", Inv)},{(cy - r * 0.55).ToString("F3", Inv)} {llx.ToString("F3", Inv)},{lly.ToString("F3", Inv)} ");
-            sb.Append($@"C {(cx - r * 0.22).ToString("F3", Inv)},{(cy - r * 0.98).ToString("F3", Inv)} {(cx - r * 0.08).ToString("F3", Inv)},{(cy - r * 0.72).ToString("F3", Inv)} {cleftX.ToString("F3", Inv)},{cleftY.ToString("F3", Inv)} ");
-            sb.Append($@"C {(cx + r * 0.08).ToString("F3", Inv)},{(cy - r * 0.72).ToString("F3", Inv)} {(cx + r * 0.22).ToString("F3", Inv)},{(cy - r * 0.98).ToString("F3", Inv)} {rlx.ToString("F3", Inv)},{rly.ToString("F3", Inv)} ");
-            sb.Append($@"C {(cx + r * 0.70).ToString("F3", Inv)},{(cy - r * 0.55).ToString("F3", Inv)} {(cx + r * 0.65).ToString("F3", Inv)},{(cy + r * 0.35).ToString("F3", Inv)} {bx.ToString("F3", Inv)},{by.ToString("F3", Inv)} Z""");
-
             if (fill != null) sb.Append($@" fill=""{fill}"" opacity=""{opacity.ToString("F2", Inv)}""");
             if (!string.IsNullOrEmpty(transform)) sb.Append(transform);
             sb.Append(" />");

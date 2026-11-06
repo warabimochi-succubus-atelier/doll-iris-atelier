@@ -351,7 +351,14 @@
                                             <TextBlock Text="輪郭の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="0.30" Value="{Binding CurrentIris.PupilSoftness}"/>
+                                        <Slider Minimum="0.0" Maximum="0.30" Value="{Binding CurrentIris.PupilSoftness}" Margin="0,0,0,6"/>
+
+                                        <!-- Pupil Corner Rounding -->
+                                        <DockPanel Margin="0,0,0,4" ToolTip="猫目スリット・ハート型・星型の、とがった角を丸めます。0% で従来どおりのとがった形です。正円・縦長楕円には影響しません。">
+                                            <TextBlock Text="角の丸み (猫目・ハート・星):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilCornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilCornerRounding}"/>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -549,6 +556,12 @@
                                                                 <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
                                                             </DockPanel>
                                                             <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                            <DockPanel Margin="0,0,0,4" ToolTip="星の先・ハートの先・三日月の角など、図形のとがった部分を丸めます。0% で従来どおりのとがった形です。">
+                                                                <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
 
                                                             <DockPanel Margin="0,0,0,4">
                                                                 <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>

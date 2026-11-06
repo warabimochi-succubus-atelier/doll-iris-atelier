@@ -17,6 +17,7 @@ namespace DollIrisGenerator.Models
         private string _color = "#FFFFFF";
         private double _opacity = 0.85;
         private double _rotation = 0.0;    // degrees
+        private double _cornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0) .. 1 = fully rounded
         private bool _enabled = false;
 
         public string Id
@@ -73,6 +74,13 @@ namespace DollIrisGenerator.Models
             set { _rotation = Math.Clamp(value, -360.0, 360.0); OnPropertyChanged(); }
         }
 
+        /// <summary>How much the corners / tips of the shape are rounded: 0 = sharp (as before) to 1 = fully rounded.</summary>
+        public double CornerRounding
+        {
+            get => _cornerRounding;
+            set { _cornerRounding = IrisParameters.ClampCornerRounding(value); OnPropertyChanged(); }
+        }
+
         public bool Enabled
         {
             get => _enabled;
@@ -92,6 +100,7 @@ namespace DollIrisGenerator.Models
                 Color = this.Color,
                 Opacity = this.Opacity,
                 Rotation = this.Rotation,
+                CornerRounding = this.CornerRounding,
                 Enabled = this.Enabled
             };
         }
