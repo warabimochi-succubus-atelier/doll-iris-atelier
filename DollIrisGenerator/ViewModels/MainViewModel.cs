@@ -656,6 +656,14 @@ namespace DollIrisGenerator.ViewModels
 
         private void OnRandomizeAttributes()
         {
+            var locks = RandomizeLocks;
+            if (locks == RandomizeLocks.All)
+            {
+                // Nothing would change, so do not add an empty undo step
+                StatusMessage = "すべての属性がロックされているため、ランダム生成で変わる項目がありません。「基本・色」タブでロックを外してください。";
+                return;
+            }
+
             PushUndo();
             _isInternalStateChange = true;
             try
@@ -665,7 +673,7 @@ namespace DollIrisGenerator.ViewModels
                 double preservedAspectRatio = CurrentIris.AspectRatio;
                 double preservedTiltAngle = CurrentIris.TiltAngle;
 
-                IrisRandomizer.RandomizeAttributes(CurrentIris);
+                IrisRandomizer.RandomizeAttributes(CurrentIris, locks);
 
                 // Explicit guarantee that size and dimensions are preserved
                 CurrentIris.SizeMm = preservedSizeMm;
@@ -674,7 +682,8 @@ namespace DollIrisGenerator.ViewModels
                 CurrentIris.TiltAngle = preservedTiltAngle;
 
                 RecordHistory($"属性ランダム生成: {CurrentIris.Name}");
-                StatusMessage = $"サイズ ({preservedSizeMm:F1}mm) と寸法を保持したまま属性をランダム生成しました: {CurrentIris.Name}";
+                string kept = locks == RandomizeLocks.None ? "" : $"・ロック中の項目 ({RandomizeLocksInfo.Describe(locks)})";
+                StatusMessage = $"サイズ ({preservedSizeMm:F1}mm) と寸法{kept}を保持したまま属性をランダム生成しました: {CurrentIris.Name}";
             }
             finally
             {

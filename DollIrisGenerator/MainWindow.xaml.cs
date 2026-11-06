@@ -15,6 +15,10 @@ namespace DollIrisGenerator
             ColorPickerBox.PreferredInputMode = settings.ColorInputMode; // before the color boxes are created
             InitializeComponent();
             WindowSettingsService.ApplySettings(this, settings);
+            if (DataContext is MainViewModel startVm)
+            {
+                startVm.RandomizeLocks = settings.RandomizeLocks; // 「✨ 属性ランダム生成」 locks from the last session
+            }
             Loaded += (_, _) =>
             {
                 if (DataContext is not MainViewModel vm) return;
@@ -46,7 +50,8 @@ namespace DollIrisGenerator
             }
 
             base.OnClosing(e);
-            WindowSettingsService.SaveSettings(this, colorInputMode: ColorPickerBox.PreferredInputMode);
+            WindowSettingsService.SaveSettings(this, colorInputMode: ColorPickerBox.PreferredInputMode,
+                randomizeLocks: (DataContext as MainViewModel)?.RandomizeLocks ?? Models.RandomizeLocks.None);
         }
 
         // リセット / 実寸表示 also bring a panned preview back to the centre (zoom is handled by their commands)
