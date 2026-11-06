@@ -153,14 +153,20 @@ namespace DollIrisGenerator.Services
 
         /// <summary>
         /// Reads a file chosen for import: a favorites list (*.irisfav.json), or a single design saved as JSON
-        /// (the former 「💾 JSON保存」 files), which becomes one favorite.
+        /// (the former 「💾 JSON保存」 files, or SampleOutputs/Preset_*.json), which becomes one favorite.
         /// </summary>
         /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>
-        public static List<FavoriteItem>? ReadImportFile(string path)
+        public static List<FavoriteItem>? ReadImportFile(string path) => ReadImportFile(path, out _);
+
+        /// <param name="singleDesignJson">The file's text when it held a single design, otherwise null.</param>
+        /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>
+        public static List<FavoriteItem>? ReadImportFile(string path, out string? singleDesignJson)
         {
+            singleDesignJson = null;
             string json = SafeFileReader.ReadAllText(path);
             if (json.TrimStart().StartsWith('{'))
             {
+                singleDesignJson = json;
                 var design = JsonSerializer.Deserialize<IrisParameters>(json);
                 return design == null ? null : new List<FavoriteItem> { new FavoriteItem(design) };
             }

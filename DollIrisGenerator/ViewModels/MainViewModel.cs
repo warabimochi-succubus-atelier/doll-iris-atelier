@@ -301,9 +301,6 @@ namespace DollIrisGenerator.ViewModels
         public ICommand FillSheetWithCurrentCommand { get; }
         public ICommand RemoveSelectedSheetItemCommand { get; }
         public ICommand ClearSheetCommand { get; }
-        public ICommand LoadFromSheetItemCommand { get; }
-        public ICommand SaveJsonCommand { get; }
-        public ICommand LoadJsonCommand { get; }
         public ICommand ExportPdfCommand { get; }
         public ICommand ExportSvgCommand { get; }
         public ICommand ExportPng600Command { get; }
@@ -396,10 +393,7 @@ namespace DollIrisGenerator.ViewModels
             FillSheetWithCurrentCommand = new RelayCommand(OnFillSheetWithCurrent);
             RemoveSelectedSheetItemCommand = new RelayCommand(OnRemoveSelectedSheetItem);
             ClearSheetCommand = new RelayCommand(OnClearSheet);
-            LoadFromSheetItemCommand = new RelayCommand(OnLoadFromSheetItem);
 
-            SaveJsonCommand = new RelayCommand(() => _files.SaveJson(CurrentIris));
-            LoadJsonCommand = new RelayCommand(OnLoadJson);
             ExportPdfCommand = new RelayCommand(OnExportPdf, () => !IsExportingPdf);
             ExportSvgCommand = new RelayCommand(() => _files.ExportSvg(CurrentIris, GenerateSvg));
             ExportPng600Command = new RelayCommand(() => OnExportPng(600.0));
@@ -427,13 +421,6 @@ namespace DollIrisGenerator.ViewModels
             // Record initial history state
             RecordHistory("初期状態作成");
         }
-
-        private void OnLoadJson() => _files.LoadJson(loaded =>
-        {
-            PushUndo();
-            CurrentIris = loaded;
-            RecordHistory($"JSON読込: {loaded.Name}");
-        });
 
         private async void OnExportPdf()
         {
@@ -796,17 +783,6 @@ namespace DollIrisGenerator.ViewModels
         {
             SheetItems.Clear();
             StatusMessage = "A4印刷シートをクリアしました。";
-        }
-
-        private void OnLoadFromSheetItem()
-        {
-            if (SelectedSheetItem != null)
-            {
-                PushUndo();
-                CurrentIris = SelectedSheetItem.Parameters.Clone();
-                RecordHistory($"シートから読込: {CurrentIris.Name}");
-                StatusMessage = $"シートから「{CurrentIris.Name}」のパラメータを読み込みました。";
-            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

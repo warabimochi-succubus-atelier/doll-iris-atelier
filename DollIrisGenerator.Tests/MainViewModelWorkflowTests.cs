@@ -55,34 +55,16 @@ namespace DollIrisGenerator.Tests
         public void Dispose() => Directory.Delete(_dir, recursive: true);
 
         [Fact]
-        public void TestJsonSaveThenLoadRestoresDesignAsOneUndoStep()
-        {
-            _dialogs.NextSavePath = PathIn("design.json");
-            _vm.CurrentIris.Name = "保存したデザイン";
-            _vm.SaveJsonCommand.Execute(null);
-            Assert.Contains("design.json", _vm.StatusMessage);
-
-            _vm.CurrentIris.Name = "別のデザイン";
-            _dialogs.NextOpenPath = PathIn("design.json");
-            _vm.LoadJsonCommand.Execute(null);
-
-            Assert.Equal("保存したデザイン", _vm.CurrentIris.Name);
-            Assert.Equal("保存したデザイン (10.0mm)", _vm.HistoryItems[0].Title);
-            Assert.Contains("読み込みました", _vm.StatusMessage);
-            Assert.DoesNotContain("調整しました", _vm.StatusMessage);
-            Assert.True(_vm.CanUndo);
-        }
-
-        [Fact]
-        public void TestLoadingAnEyeSizedDesignClampsToTheIrisRangeAndSaysSo()
+        public void TestImportingAnEyeSizedDesignClampsToTheIrisRangeAndSaysSo()
         {
             // Files saved before the iris-only range could hold eye-sized values such as 24 mm
             File.WriteAllText(PathIn("old.json"), "{\"Name\": \"旧デザイン\", \"SizeMm\": 24.0}");
             _dialogs.NextOpenPath = PathIn("old.json");
-            _vm.LoadJsonCommand.Execute(null);
+            _vm.ImportFavoritesCommand.Execute(null);
 
-            Assert.Equal("旧デザイン", _vm.CurrentIris.Name);
-            Assert.Equal(20.0, _vm.CurrentIris.SizeMm);
+            var imported = Assert.Single(_vm.Favorites);
+            Assert.Equal("旧デザイン", imported.Name);
+            Assert.Equal(20.0, imported.Parameters.SizeMm);
             Assert.Contains("24.0mm", _vm.StatusMessage);
             Assert.Contains("20.0mm に調整しました", _vm.StatusMessage);
         }
@@ -93,26 +75,28 @@ namespace DollIrisGenerator.Tests
             string before = _vm.StatusMessage;
             var irisBefore = _vm.CurrentIris;
 
-            _vm.SaveJsonCommand.Execute(null);
-            _vm.LoadJsonCommand.Execute(null);
+            _vm.ImportFavoritesCommand.Execute(null);
+            _vm.ExportFavoritesCommand.Execute(null);
             _vm.ExportSvgCommand.Execute(null);
 
             Assert.Equal(before, _vm.StatusMessage);
             Assert.Same(irisBefore, _vm.CurrentIris);
+            Assert.Empty(_vm.Favorites);
             Assert.Empty(_dialogs.Errors);
             Assert.Empty(_dialogs.Infos);
         }
 
         [Fact]
-        public void TestLoadingBrokenJsonReportsErrorAndKeepsDesign()
+        public void TestImportingBrokenJsonReportsErrorAndKeepsFavorites()
         {
             File.WriteAllText(PathIn("broken.json"), "{ not json");
             var irisBefore = _vm.CurrentIris;
 
             _dialogs.NextOpenPath = PathIn("broken.json");
-            _vm.LoadJsonCommand.Execute(null);
+            _vm.ImportFavoritesCommand.Execute(null);
 
             Assert.Same(irisBefore, _vm.CurrentIris);
+            Assert.Empty(_vm.Favorites);
             Assert.StartsWith("読み込みエラー:", Assert.Single(_dialogs.Errors));
         }
 
@@ -239,15 +223,20 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestFavoritesImportAcceptsASingleDesignJsonFile()
         {
-            _dialogs.NextSavePath = PathIn("design.json");
-            _vm.CurrentIris.Name = "単体デザイン";
-            _vm.SaveJsonCommand.Execute(null);
+            // A single design file, like SampleOutputs/Preset_*.json
+            var design = new IrisParameters { Name = "単体デザイン", SizeMm = 11.0 };
+            design.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Star5, Count = 6 });
+            File.WriteAllText(PathIn("design.json"), System.Text.Json.JsonSerializer.Serialize(design));
 
             _dialogs.NextOpenPath = PathIn("design.json");
             _vm.ImportFavoritesCommand.Execute(null);
 
-            Assert.Equal("単体デザイン", Assert.Single(_vm.Favorites).Name);
+            var imported = Assert.Single(_vm.Favorites);
+            Assert.Equal("単体デザイン", imported.Name);
+            Assert.Equal(11.0, imported.Parameters.SizeMm);
+            Assert.Equal(6, imported.Parameters.Symbols[^1].Count);
             Assert.Contains("1 件", _vm.StatusMessage);
+            Assert.DoesNotContain("調整しました", _vm.StatusMessage);
         }
 
         [Fact]

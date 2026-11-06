@@ -7,7 +7,7 @@ namespace DollIrisGenerator.ViewModels
 {
     /// <summary>
     /// The user-facing file flows for a design: pick a file, do the work, report the result.
-    /// Covers JSON save / load and PDF / SVG / PNG export; the rendering itself lives in the exporters.
+    /// Covers PDF / SVG / PNG export; the rendering itself lives in the exporters.
     /// </summary>
     public sealed class DesignFileWorkflow
     {
@@ -26,51 +26,6 @@ namespace DollIrisGenerator.ViewModels
             var invalidChars = Path.GetInvalidFileNameChars();
             var cleaned = string.Join("_", name.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries)).Trim();
             return string.IsNullOrWhiteSpace(cleaned) ? fallback : cleaned;
-        }
-
-        public void SaveJson(IrisParameters iris)
-        {
-            string? path = _dialogs.PickSaveFile(
-                "JSON パラメータファイル (*.json)|*.json",
-                $"{GetSafeFileName(iris.Name)}_{iris.SizeMm:F1}mm.json",
-                "虹彩パラメータを保存");
-            if (path == null) return;
-
-            try
-            {
-                var opt = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(iris, opt);
-                File.WriteAllText(path, json);
-                _reportStatus($"パラメータをJSONファイルに保存しました: {Path.GetFileName(path)}");
-            }
-            catch (Exception ex)
-            {
-                _dialogs.ShowError($"保存エラー: {ex.Message}", "エラー");
-            }
-        }
-
-        /// <param name="applyLoaded">Makes the loaded design current. Called only when a design was read.</param>
-        public void LoadJson(Action<IrisParameters> applyLoaded)
-        {
-            string? path = _dialogs.PickOpenFile("JSON パラメータファイル (*.json)|*.json", "虹彩パラメータを読み込み");
-            if (path == null) return;
-
-            try
-            {
-                string json = SafeFileReader.ReadAllText(path);
-                var loaded = JsonSerializer.Deserialize<IrisParameters>(json);
-                if (loaded != null)
-                {
-                    applyLoaded(loaded);
-                    string message = $"パラメータを読み込みました: {Path.GetFileName(path)}";
-                    string? sizeNote = DescribeSizeAdjustment(json, loaded.SizeMm);
-                    _reportStatus(sizeNote == null ? message : $"{message} ({sizeNote})");
-                }
-            }
-            catch (Exception ex)
-            {
-                _dialogs.ShowError($"読み込みエラー: {ex.Message}", "エラー");
-            }
         }
 
         /// <summary>
