@@ -1031,6 +1031,10 @@
                                         <TextBlock Text="ドールサイズや用途に合わせた専用レイアウトを適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,4"/>
                                         <ComboBox ItemsSource="{Binding PdfTemplates}" SelectedItem="{Binding SelectedPdfTemplate}" DisplayMemberPath="Name" Margin="0,0,0,4"/>
                                         <TextBlock Text="{Binding SelectedPdfTemplate.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                        <Button Content="↺ レイアウトをテンプレートの初期値に戻す" Command="{Binding ResetSheetConfigCommand}"
+                                                ToolTip="面付け・余白・間隔・印刷補助マークを、選択中のテンプレートの初期値に戻します（配置アイテムはそのまま）"
+                                                HorizontalAlignment="Left" Padding="10,4" Cursor="Hand"
+                                                Background="#333842" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}"/>
                                     </StackPanel>
                                 </GroupBox>
 

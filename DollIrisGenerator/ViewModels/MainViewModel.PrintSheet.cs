@@ -1,5 +1,6 @@
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
+using System.Windows.Input;
 
 namespace DollIrisGenerator.ViewModels
 {
@@ -35,6 +36,45 @@ namespace DollIrisGenerator.ViewModels
             string problem = _printSheetLoadProblem;
             _printSheetLoadProblem = null;
             _dialogs.ShowWarning(problem, "A4印刷シートの読み込み");
+        }
+
+        private ICommand? _resetSheetConfigCommand;
+
+        /// <summary>
+        /// Puts the layout and print marks back to the selected template's values (the rest at the app defaults).
+        /// Re-choosing the same template in the list does not re-apply it, so this is the only way back for it.
+        /// Sheet items are kept.
+        /// </summary>
+        public ICommand ResetSheetConfigCommand => _resetSheetConfigCommand ??= new RelayCommand(OnResetSheetConfig);
+
+        private void OnResetSheetConfig()
+        {
+            var template = SelectedPdfTemplate ?? PdfTemplates[0];
+            var defaults = new PrintSheetConfig();
+            template.ApplyTo(defaults);
+
+            var target = SheetConfig;
+            target.PageMarginTopMm = defaults.PageMarginTopMm;
+            target.PageMarginBottomMm = defaults.PageMarginBottomMm;
+            target.PageMarginLeftMm = defaults.PageMarginLeftMm;
+            target.PageMarginRightMm = defaults.PageMarginRightMm;
+            target.PairSpacingXMm = defaults.PairSpacingXMm;
+            target.ColumnSpacingMm = defaults.ColumnSpacingMm;
+            target.RowSpacingMm = defaults.RowSpacingMm;
+            target.AutoCalculateGrid = defaults.AutoCalculateGrid;
+            target.ManualColumns = defaults.ManualColumns;
+            target.ManualRows = defaults.ManualRows;
+            target.ShowCutLines = defaults.ShowCutLines;
+            target.CutLineColor = defaults.CutLineColor;
+            target.CutLineThicknessMm = defaults.CutLineThicknessMm;
+            target.ShowCenterMarks = defaults.ShowCenterMarks;
+            target.CenterMarkColor = defaults.CenterMarkColor;
+            target.CenterMarkLengthMm = defaults.CenterMarkLengthMm;
+            target.ShowTrimGuides = defaults.ShowTrimGuides;
+            target.ShowScaleMark = defaults.ShowScaleMark;
+            target.ShowLabels = defaults.ShowLabels;
+
+            StatusMessage = $"面付け・余白・印刷補助マークを「{template.Name}」の初期値に戻しました（配置アイテムはそのままです）。";
         }
 
         /// <summary>Saves the print sheet as the app closes.</summary>
