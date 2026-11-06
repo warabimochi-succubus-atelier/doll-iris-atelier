@@ -155,10 +155,6 @@
                             
                             <RadioButton Content="左右ペア (Pair)" Margin="0,0,12,0"
                                          IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pair}"/>
-                            <RadioButton Content="左目 (Left)" Margin="0,0,12,0"
-                                         IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=LeftEye}"/>
-                            <RadioButton Content="右目 (Right)" Margin="0,0,12,0"
-                                         IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RightEye}"/>
                             <RadioButton Content="A4シート (Sheet)" Margin="0,0,16,0"
                                          IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=A4Sheet}"/>
                         </StackPanel>

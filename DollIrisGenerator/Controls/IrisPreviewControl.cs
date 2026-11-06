@@ -14,8 +14,6 @@ namespace DollIrisGenerator.Controls
 {
     public enum PreviewMode
     {
-        LeftEye,
-        RightEye,
         Pair,
         A4Sheet
     }
@@ -243,34 +241,6 @@ namespace DollIrisGenerator.Controls
 
             switch (PreviewMode)
             {
-                case PreviewMode.LeftEye:
-                    WpfIrisRenderer.RenderIris(
-                        dc,
-                        new Point(cx, cy),
-                        radiusMm,
-                        pixelsPerMm,
-                        p,
-                        isRightEye: false,
-                        showCutLine: ShowCutLines,
-                        showCenterMark: ShowCenterMarks
-                    );
-                    DrawEyeLabel(dc, "左目 (基準)", new Point(cx, cy + (irisH_Mm / 2.0) * pixelsPerMm + 18));
-                    break;
-
-                case PreviewMode.RightEye:
-                    WpfIrisRenderer.RenderIris(
-                        dc,
-                        new Point(cx, cy),
-                        radiusMm,
-                        pixelsPerMm,
-                        p,
-                        isRightEye: true,
-                        showCutLine: ShowCutLines,
-                        showCenterMark: ShowCenterMarks
-                    );
-                    DrawEyeLabel(dc, "右目 (鏡像反転)", new Point(cx, cy + (irisH_Mm / 2.0) * pixelsPerMm + 18));
-                    break;
-
                 case PreviewMode.Pair:
                 default:
                     double halfSpanX = ((irisW_Mm * pixelsPerMm) + (pairSpacingPx / 2.0));
