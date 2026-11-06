@@ -1,4 +1,6 @@
+using System.Collections;
 using System.IO;
+using System.Text.Json;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 
@@ -128,6 +130,92 @@ namespace DollIrisGenerator.ViewModels
             }
         }
 
+        /// <summary>
+        /// Copies a favorite and puts the copy right below it. The copy gets a new name (「〇〇 のコピー」, then
+        /// 「〇〇 のコピー (2)」…) on both the list entry and the design itself, so the two can be told apart.
+        /// </summary>
+        private void OnDuplicateFavorite(object? param)
+        {
+            var source = param as FavoriteItem ?? SelectedFavorite;
+            if (source == null) return;
+
+            string newName = MakeCopyName(source.Name);
+            var parameters = source.Parameters.Clone();
+            parameters.Name = newName;
+            var copy = new FavoriteItem(parameters, source.Note) { Name = newName };
+
+            int index = Favorites.IndexOf(source);
+            Favorites.Insert(index < 0 ? 0 : index + 1, copy);
+            SelectedFavorite = copy;
+            SaveFavorites();
+            StatusMessage = $"お気に入り「{source.Name}」を「{newName}」として複製しました (計 {Favorites.Count} 件)。";
+        }
+
+        private string MakeCopyName(string name)
+        {
+            string baseName = $"{name} のコピー";
+            if (!Favorites.Any(f => f.Name == baseName)) return baseName;
+            for (int n = 2; ; n++)
+            {
+                string candidate = $"{baseName} ({n})";
+                if (!Favorites.Any(f => f.Name == candidate)) return candidate;
+            }
+        }
+
+        /// <summary>The favorites a command acts on: the list's selected items, one favorite, or the current selection.</summary>
+        private List<FavoriteItem> ResolveFavorites(object? param)
+        {
+            var picked = param switch
+            {
+                IList list => list.OfType<FavoriteItem>().ToList(),
+                FavoriteItem single => new List<FavoriteItem> { single },
+                _ => SelectedFavorite != null ? new List<FavoriteItem> { SelectedFavorite } : new List<FavoriteItem>()
+            };
+            // Keep the order of the favorites list, not the order the user clicked them in
+            return picked.Distinct().OrderBy(f => Favorites.IndexOf(f)).ToList();
+        }
+
+        private bool CanAddFavoritesToSheet(object? param) => ResolveFavorites(param).Count > 0;
+
+        /// <summary>
+        /// Adds the chosen favorites to the A4 sheet. A design already on the sheet gets its quantity raised by 1
+        /// instead of a second row, so the sheet list stays easy to read.
+        /// </summary>
+        private void OnAddFavoritesToSheet(object? param)
+        {
+            var chosen = ResolveFavorites(param);
+            if (chosen.Count == 0) return;
+
+            int added = 0, increased = 0, atLimit = 0;
+            foreach (var favorite in chosen)
+            {
+                string key = JsonSerializer.Serialize(favorite.Parameters);
+                var existing = SheetItems.FirstOrDefault(i => JsonSerializer.Serialize(i.Parameters) == key);
+                if (existing == null)
+                {
+                    SheetItems.Add(new SheetItem(favorite.Parameters.Clone(), 1));
+                    added++;
+                }
+                else if (existing.PairCount < SheetItem.MaxPairCount)
+                {
+                    existing.PairCount++;
+                    increased++;
+                }
+                else
+                {
+                    atLimit++;
+                }
+            }
+
+            string what = chosen.Count == 1 ? $"「{chosen[0].Name}」" : $"{chosen.Count} 件のお気に入り";
+            var parts = new List<string>();
+            if (added > 0) parts.Add($"新規 {added} 行");
+            if (increased > 0) parts.Add($"既存 {increased} 行の数量 +1");
+            if (atLimit > 0) parts.Add($"{atLimit} 件は上限 {SheetItem.MaxPairCount} セットのため追加せず");
+            StatusMessage = $"{what}をA4シートに追加しました ({string.Join(" / ", parts)})。" +
+                            $"シート: {SheetRowCount} 行 / 数量合計 {SheetTotalPairs} セット。";
+        }
+
         private void OnExportFavorites()
         {
             string? path = _dialogs.PickSaveFile(
@@ -156,7 +244,7 @@ namespace DollIrisGenerator.ViewModels
 
             try
             {
-                var loaded = FavoritesStore.ReadFromFile(path);
+                var loaded = FavoritesStore.ReadImportFile(path);
                 if (loaded != null)
                 {
                     int addedCount = 0;

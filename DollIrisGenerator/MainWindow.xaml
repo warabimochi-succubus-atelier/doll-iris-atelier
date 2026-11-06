@@ -19,6 +19,39 @@
         <vm:MainViewModel/>
     </Window.DataContext>
 
+    <Window.Resources>
+        <!-- One row of the A4 sheet list; shared by the 「A4印刷・テンプレート」 tab and the 「履歴・お気に入り」 tab -->
+        <DataTemplate x:Key="SheetItemTemplate">
+            <DockPanel Width="400">
+                <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" Width="140" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Parameters.Name}"/>
+                <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"/>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <TextBlock Text="数量:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBox Text="{Binding PairCount, UpdateSourceTrigger=PropertyChanged}" Width="45" TextAlignment="Center" Margin="0,0,8,0"/>
+                    <Button Content="✕" Command="{Binding DataContext.RemoveSelectedSheetItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}" ToolTip="この行をシートから削除"
+                            Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"/>
+                </StackPanel>
+            </DockPanel>
+        </DataTemplate>
+
+        <!-- 「計 N 行 / 数量合計 M セット」 for the A4 sheet list -->
+        <Style x:Key="SheetTotalsText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#80D8FF"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Text">
+                <Setter.Value>
+                    <MultiBinding StringFormat="{}計 {0} 行 / 数量合計 {1} セット">
+                        <Binding Path="SheetRowCount"/>
+                        <Binding Path="SheetTotalPairs"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <!-- Text boxes keep their own Ctrl+Z (text undo); everywhere else these drive design undo/redo -->
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}"/>
@@ -61,9 +94,13 @@
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="8,5" Margin="0,2,8,2" ToolTip="元に戻したデザインの変更をやり直す (Ctrl+Y)。A4シートの配置・余白・間隔は対象外です"/>
 
-                    <Button Content="⭐ お気に入り追加" Command="{Binding AddFavoriteCommand}"
+                    <Button Content="⭐ お気に入りに追加" Command="{Binding AddFavoriteCommand}"
                             Background="#45381A" Foreground="#FFE082" BorderBrush="#FFB300"
-                            Padding="10,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="現在のデザインをお気に入り一覧に保存"/>
+                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="現在のデザインを「履歴・お気に入り」タブのお気に入り一覧に保存 (自動で保存されます)"/>
+
+                    <Button Content="🖨️ A4シートに追加" Command="{Binding AddCurrentToSheetCommand}"
+                            Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"
+                            Padding="10,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="現在のデザインをA4印刷シートの配置アイテムに1行追加"/>
 
                     <Button Content="新規作成" Command="{Binding NewDesignCommand}"
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
@@ -78,14 +115,6 @@
                             Padding="10,5" Margin="0,2,10,2" Cursor="Hand" FontWeight="SemiBold"
                             ToolTip="サイズ・形状・寸法を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
 
-                    <Button Content="💾 JSON保存" Command="{Binding SaveJsonCommand}"
-                            Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="現在のパラメータをJSON形式で保存"/>
-
-                    <Button Content="📂 JSON読込" Command="{Binding LoadJsonCommand}"
-                            Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="保存済みJSONパラメータファイルを読み込み"/>
-
                     <Button Content="🖼️ PNG 600 DPI" Command="{Binding ExportPng600Command}"
                             Background="#2B3A4A" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="高解像度 600 DPI でPNG出力 (一般的な印刷・Web用)"/>
@@ -93,10 +122,6 @@
                     <Button Content="1200 DPI" Command="{Binding ExportPng1200Command}"
                             Background="#2B3A4A" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="10,5" Margin="0,2,8,2" Cursor="Hand" ToolTip="超高解像度 1200 DPI でPNG出力 (高精細印刷用・ファイルサイズ大)"/>
-
-                    <Button Content="📐 SVG出力" Command="{Binding ExportSvgCommand}"
-                            Background="#005B60" Foreground="#A7FFEB" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,8,2" Cursor="Hand" ToolTip="Illustrator / Inkscape 編集用 SVG ベクターデータを出力"/>
 
                     <Button Content="📄 A4 PDF 出力" Command="{Binding ExportPdfCommand}"
                             Background="#00695C" Foreground="#FFFFFF" BorderBrush="#00897B"
@@ -838,7 +863,7 @@
                                 <GroupBox Header="A4シート配置アイテム管理 (Section 15)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <WrapPanel Margin="0,0,0,8">
-                                            <Button Content="➕ 現在のデザインを追加" Command="{Binding AddCurrentToSheetCommand}"
+                                            <Button Content="➕ 現在のデザインをシートに追加" Command="{Binding AddCurrentToSheetCommand}"
                                                     Background="#1E3A5F" Foreground="#80D8FF" Padding="10,6" Margin="0,0,8,4" Cursor="Hand"/>
                                             <Button Content="⚡ A4を満杯に自動配置" Command="{Binding FillSheetWithCurrentCommand}"
                                                     Background="#2E4A3D" Foreground="#A7FFEB" Padding="10,6" Margin="0,0,8,4" Cursor="Hand"/>
@@ -846,24 +871,10 @@
                                                     Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,6" Margin="0,0,0,4"/>
                                         </WrapPanel>
 
-                                        <ListBox ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}"
-                                                 Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Height="110" Margin="0,0,0,8">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <DockPanel Width="400">
-                                                        <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" Width="140"/>
-                                                        <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"/>
-                                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                                                            <TextBlock Text="数量:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                            <TextBox Text="{Binding PairCount, UpdateSourceTrigger=PropertyChanged}" Width="45" TextAlignment="Center" Margin="0,0,8,0"/>
-                                                            <Button Content="✕" Command="{Binding DataContext.RemoveSelectedSheetItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                    CommandParameter="{Binding}" ToolTip="この行をシートから削除"
-                                                                    Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"/>
-                                                        </StackPanel>
-                                                    </DockPanel>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
+                                        <!-- Tall list (about 14 rows): the settings below can be reached by scrolling -->
+                                        <ListBox ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
+                                                 Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Height="380" Margin="0,0,0,4"/>
+                                        <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right" Margin="0,0,4,4"/>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -977,57 +988,94 @@
                     <TabItem Header="履歴・お気に入り">
                         <Grid Margin="8">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>               <!-- Favorites header -->
+                                <RowDefinition Height="Auto"/>               <!-- Favorites actions -->
+                                <RowDefinition Height="3*" MinHeight="140"/> <!-- Favorites list -->
+                                <RowDefinition Height="Auto"/>               <!-- Sheet header -->
+                                <RowDefinition Height="2*" MinHeight="110"/> <!-- Sheet list -->
+                                <RowDefinition Height="Auto"/>               <!-- History header -->
+                                <RowDefinition Height="110"/>                <!-- History list (kept small) -->
                             </Grid.RowDefinitions>
 
-                            <!-- Favorites Header -->
-                            <DockPanel Grid.Row="0" Margin="0,0,0,6">
+                            <!-- Favorites Header (add new favorites with 「⭐ お気に入りに追加」 in the top toolbar) -->
+                            <DockPanel Grid.Row="0" Margin="0,0,0,4">
                                 <TextBlock Text="⭐ お気に入り登録リスト (Section 20)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="📥 インポート" Command="{Binding ImportFavoritesCommand}" Padding="6,2" Margin="0,0,4,0" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"/>
-                                    <Button Content="📤 エクスポート" Command="{Binding ExportFavoritesCommand}" Padding="6,2" Margin="0,0,4,0" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"/>
-                                    <Button Content="➕ 現在を追加" Command="{Binding AddFavoriteCommand}" Padding="8,3" Background="#45381A" Foreground="#FFE082" BorderBrush="#FFB300" FontSize="11"/>
+                                    <Button Content="📥 インポート" Command="{Binding ImportFavoritesCommand}" Padding="6,2" Margin="0,0,4,0" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"
+                                            ToolTip="お気に入りファイル (*.irisfav.json) またはデザイン単体の JSON ファイルを読み込んで一覧に追加"/>
+                                    <Button Content="📤 エクスポート" Command="{Binding ExportFavoritesCommand}" Padding="6,2" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"
+                                            ToolTip="お気に入り一覧をファイル (*.irisfav.json) に書き出し"/>
                                 </StackPanel>
                             </DockPanel>
 
+                            <!-- Favorites Actions -->
+                            <DockPanel Grid.Row="1" Margin="0,0,0,4">
+                                <Button Command="{Binding AddFavoritesToSheetCommand}" CommandParameter="{Binding SelectedItems, ElementName=FavoritesList}"
+                                        Padding="8,3" Background="#1E3A5F" Foreground="#80D8FF" FontSize="11" Cursor="Hand"
+                                        ToolTip="選択中のお気に入りを下の A4シート配置アイテムに追加します。すでにシートにあるデザインは数量が +1 されます">
+                                    <TextBlock>
+                                        <Run Text="🖨️ 選択したお気に入りをA4シートに追加 ("/><Run Text="{Binding SelectedItems.Count, ElementName=FavoritesList, Mode=OneWay}"/><Run Text=" 件)"/>
+                                    </TextBlock>
+                                </Button>
+                                <TextBlock Text="ダブルクリックで復元 / Ctrl・Shift+クリックで複数選択" Foreground="{StaticResource TextMuted}" FontSize="10"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+
                             <!-- Favorites List -->
-                            <ListBox Grid.Row="1" ItemsSource="{Binding Favorites}" SelectedItem="{Binding SelectedFavorite}"
-                                     Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,12">
+                            <ListBox x:Name="FavoritesList" Grid.Row="2" ItemsSource="{Binding Favorites}" SelectedItem="{Binding SelectedFavorite}"
+                                     SelectionMode="Extended"
+                                     Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <DockPanel Width="440" Margin="2">
+                                        <!-- Transparent background so a double-click anywhere on the row restores it -->
+                                        <DockPanel Width="440" Margin="2" Background="Transparent">
+                                            <DockPanel.InputBindings>
+                                                <MouseBinding Gesture="LeftDoubleClick"
+                                                              Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </DockPanel.InputBindings>
                                             <Border Width="16" Height="16" CornerRadius="8" Margin="0,0,8,0" VerticalAlignment="Center">
                                                 <Border.Background>
                                                     <SolidColorBrush Color="{Binding Parameters.BaseColor}"/>
                                                 </Border.Background>
                                             </Border>
-                                            <StackPanel Width="220" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11"/>
-                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10"/>
+                                            <StackPanel Width="196" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="70"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"/>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <Button Content="復元" Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}" Padding="8,3" Margin="0,0,4,0" Background="#1E3A5F" Foreground="#80D8FF" FontSize="10"/>
+                                                        CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0" Background="#1E3A5F" Foreground="#80D8FF" FontSize="10"
+                                                        ToolTip="このお気に入りを現在のデザインとして読み込み (行のダブルクリックでも同じ)"/>
+                                                <Button Content="複製" Command="{Binding DataContext.DuplicateFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0" Background="#333842" Foreground="#FFE082" FontSize="10"
+                                                        ToolTip="このお気に入りをコピーして、すぐ下に「〇〇 のコピー」として追加"/>
                                                 <Button Content="✕" Command="{Binding DataContext.RemoveFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}" Padding="6,3" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="10"/>
+                                                        CommandParameter="{Binding}" Padding="6,3" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="10"
+                                                        ToolTip="このお気に入りを削除"/>
                                             </StackPanel>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
 
+                            <!-- A4 Sheet Items (same list as the 「A4印刷・テンプレート」 tab), to see what was added -->
+                            <DockPanel Grid.Row="3" Margin="0,0,0,4">
+                                <TextBlock Text="🖨️ A4シート配置アイテム (Section 15)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right"/>
+                            </DockPanel>
+                            <ListBox Grid.Row="4" ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
+                                     Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10"/>
+
                             <!-- History Header -->
-                            <DockPanel Grid.Row="2" Margin="0,0,0,6">
+                            <DockPanel Grid.Row="5" Margin="0,0,0,4">
                                 <TextBlock Text="⏪ 生成履歴タイムライン (Section 20)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                 <Button Content="履歴クリア" Command="{Binding ClearHistoryCommand}" HorizontalAlignment="Right" Padding="6,2" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"/>
                             </DockPanel>
 
                             <!-- History List -->
-                            <ListBox Grid.Row="3" ItemsSource="{Binding HistoryItems}"
+                            <ListBox Grid.Row="6" ItemsSource="{Binding HistoryItems}"
                                      Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
