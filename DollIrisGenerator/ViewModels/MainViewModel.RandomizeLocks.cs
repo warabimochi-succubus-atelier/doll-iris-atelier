@@ -37,10 +37,13 @@ namespace DollIrisGenerator.ViewModels
 
         public bool HasRandomizeLocks => _randomizeLocks != RandomizeLocks.None;
 
-        /// <summary>「🔒 ロック中: 色・瞳孔」 or 「ロックなし (すべてランダム)」 for the line under the lock check boxes.</summary>
+        /// <summary>
+        /// 「🔒 ロック中: 色・瞳孔」 or 「ロックなし …」 for the line under the ✨ button. The check boxes themselves sit in
+        /// each settings box across several tabs, so this line is the one place that shows every lock at once.
+        /// </summary>
         public string RandomizeLocksSummary => HasRandomizeLocks
             ? $"🔒 ロック中: {RandomizeLocksInfo.Describe(_randomizeLocks)}"
-            : "ロックなし (サイズ・形状・寸法以外はすべてランダム)";
+            : "ロックなし (各設定枠の「🔒 ランダム生成で変えない」で固定できます)";
 
         public bool LockColors { get => IsLocked(RandomizeLocks.Colors); set => SetLock(RandomizeLocks.Colors, value); }
         public bool LockSeed { get => IsLocked(RandomizeLocks.Seed); set => SetLock(RandomizeLocks.Seed, value); }
