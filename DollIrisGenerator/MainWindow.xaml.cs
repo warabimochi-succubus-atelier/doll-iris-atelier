@@ -41,6 +41,18 @@ namespace DollIrisGenerator
             };
         }
 
+        private void OnAboutClick(object sender, RoutedEventArgs e) =>
+            new Views.AboutWindow { Owner = this }.ShowDialog();
+
+        private void OnHelpExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (!AppInfo.OpenInBrowser(AppInfo.ManualUrl))
+            {
+                MessageBox.Show(this, $"ブラウザを開けませんでした。\n\n{AppInfo.ManualUrl}", "マニュアル",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         protected override void OnClosing(CancelEventArgs e)
         {
             // The design being edited is not saved automatically (only favorites and the A4 sheet are), so confirm first
