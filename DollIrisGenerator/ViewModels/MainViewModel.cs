@@ -168,7 +168,46 @@ namespace DollIrisGenerator.ViewModels
         public ObservableCollection<SheetItem> SheetItems
         {
             get => _sheetItems;
-            set { _sheetItems = value; OnPropertyChanged(); }
+            set
+            {
+                _sheetItems.CollectionChanged -= OnSheetItemsCollectionChanged;
+                foreach (var item in _sheetItems) item.PropertyChanged -= OnSheetItemPropertyChanged;
+                _sheetItems = value;
+                HookSheetItems();
+                OnPropertyChanged();
+                OnSheetTotalsChanged();
+            }
+        }
+
+        /// <summary>Number of rows (designs) on the A4 sheet.</summary>
+        public int SheetRowCount => _sheetItems.Count;
+
+        /// <summary>Sum of the quantities (pairs) of every row on the A4 sheet.</summary>
+        public int SheetTotalPairs => _sheetItems.Sum(i => i.PairCount);
+
+        private void HookSheetItems()
+        {
+            _sheetItems.CollectionChanged += OnSheetItemsCollectionChanged;
+            foreach (var item in _sheetItems) item.PropertyChanged += OnSheetItemPropertyChanged;
+        }
+
+        private void OnSheetItemsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // Clear (Reset) gives no OldItems; the cleared rows are no longer reachable, so their handlers do no harm
+            if (e.OldItems != null) foreach (SheetItem item in e.OldItems) item.PropertyChanged -= OnSheetItemPropertyChanged;
+            if (e.NewItems != null) foreach (SheetItem item in e.NewItems) item.PropertyChanged += OnSheetItemPropertyChanged;
+            OnSheetTotalsChanged();
+        }
+
+        private void OnSheetItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SheetItem.PairCount)) OnSheetTotalsChanged();
+        }
+
+        private void OnSheetTotalsChanged()
+        {
+            OnPropertyChanged(nameof(SheetRowCount));
+            OnPropertyChanged(nameof(SheetTotalPairs));
         }
 
         public SheetItem? SelectedSheetItem
@@ -274,6 +313,8 @@ namespace DollIrisGenerator.ViewModels
         public ICommand AddFavoriteCommand { get; }
         public ICommand RemoveFavoriteCommand { get; }
         public ICommand LoadFavoriteCommand { get; }
+        public ICommand DuplicateFavoriteCommand { get; }
+        public ICommand AddFavoritesToSheetCommand { get; }
         public ICommand ExportFavoritesCommand { get; }
         public ICommand ImportFavoritesCommand { get; }
 
@@ -299,6 +340,8 @@ namespace DollIrisGenerator.ViewModels
             // Default preset
             _selectedPreset = Presets[0];
             _selectedPdfTemplate = PdfTemplates[0];
+
+            HookSheetItems();
 
             // Initialize default sheet with 1 pair of starting iris
             _sheetItems.Add(new SheetItem(_currentIris.Clone(), 1));
@@ -365,6 +408,8 @@ namespace DollIrisGenerator.ViewModels
             AddFavoriteCommand = new RelayCommand(OnAddFavorite);
             RemoveFavoriteCommand = new RelayCommand(OnRemoveFavorite);
             LoadFavoriteCommand = new RelayCommand(OnLoadFavorite);
+            DuplicateFavoriteCommand = new RelayCommand(OnDuplicateFavorite);
+            AddFavoritesToSheetCommand = new RelayCommand(OnAddFavoritesToSheet, CanAddFavoritesToSheet);
             ExportFavoritesCommand = new RelayCommand(OnExportFavorites);
             ImportFavoritesCommand = new RelayCommand(OnImportFavorites);
 

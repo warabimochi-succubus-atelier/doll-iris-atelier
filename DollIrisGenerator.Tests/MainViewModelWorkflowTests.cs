@@ -197,6 +197,76 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestDuplicatingAFavoriteInsertsARenamedCopyBelowIt()
+        {
+            _vm.CurrentIris.Name = "サファイア";
+            _vm.AddFavoriteCommand.Execute(null);
+            var original = _vm.Favorites[0];
+
+            _vm.DuplicateFavoriteCommand.Execute(original);
+            _vm.DuplicateFavoriteCommand.Execute(original);
+
+            Assert.Equal(new[] { "サファイア", "サファイア のコピー (2)", "サファイア のコピー" }, _vm.Favorites.Select(f => f.Name));
+            var copy = _vm.Favorites[2];
+            Assert.NotEqual(original.Id, copy.Id);
+            Assert.Equal("サファイア のコピー", copy.Parameters.Name);
+            Assert.Equal("サファイア", original.Parameters.Name);
+            Assert.NotSame(original.Parameters, copy.Parameters);
+            Assert.Equal(3, new FavoritesStore(FavoritesPath).LoadPersisted().Favorites.Count);
+        }
+
+        [Fact]
+        public void TestAddingSelectedFavoritesToSheetAddsRowsOrRaisesQuantityAndUpdatesTotals()
+        {
+            _vm.SheetItems.Clear();
+            Assert.Equal(0, _vm.SheetRowCount);
+            Assert.Equal(0, _vm.SheetTotalPairs);
+
+            _vm.CurrentIris.Name = "A";
+            _vm.AddFavoriteCommand.Execute(null);
+            _vm.CurrentIris.Name = "B";
+            _vm.AddFavoriteCommand.Execute(null);
+            var a = _vm.Favorites.Single(f => f.Name == "A");
+            var b = _vm.Favorites.Single(f => f.Name == "B");
+
+            // Selection order (A then B) is replaced by list order (B is on top)
+            _vm.AddFavoritesToSheetCommand.Execute(new List<object> { a, b });
+            Assert.Equal(new[] { "B", "A" }, _vm.SheetItems.Select(i => i.Parameters.Name));
+            Assert.Equal(2, _vm.SheetRowCount);
+            Assert.Equal(2, _vm.SheetTotalPairs);
+
+            // Adding A again raises its quantity instead of adding a second row
+            _vm.AddFavoritesToSheetCommand.Execute(a);
+            Assert.Equal(2, _vm.SheetRowCount);
+            Assert.Equal(2, _vm.SheetItems.Single(i => i.Parameters.Name == "A").PairCount);
+            Assert.Equal(3, _vm.SheetTotalPairs);
+            Assert.Contains("数量 +1", _vm.StatusMessage);
+
+            // Totals follow quantity edits and removals
+            _vm.SheetItems[0].PairCount = 10;
+            Assert.Equal(12, _vm.SheetTotalPairs);
+            _vm.SheetItems.RemoveAt(0);
+            Assert.Equal(1, _vm.SheetRowCount);
+            Assert.Equal(2, _vm.SheetTotalPairs);
+
+            Assert.False(_vm.AddFavoritesToSheetCommand.CanExecute(new List<object>()));
+        }
+
+        [Fact]
+        public void TestFavoritesImportAcceptsASingleDesignJsonFile()
+        {
+            _dialogs.NextSavePath = PathIn("design.json");
+            _vm.CurrentIris.Name = "単体デザイン";
+            _vm.SaveJsonCommand.Execute(null);
+
+            _dialogs.NextOpenPath = PathIn("design.json");
+            _vm.ImportFavoritesCommand.Execute(null);
+
+            Assert.Equal("単体デザイン", Assert.Single(_vm.Favorites).Name);
+            Assert.Contains("1 件", _vm.StatusMessage);
+        }
+
+        [Fact]
         public void TestFavoritesStoreToleratesMissingAndPartlyInvalidFiles()
         {
             var missing = new FavoritesStore(PathIn("missing.json")).LoadPersisted();

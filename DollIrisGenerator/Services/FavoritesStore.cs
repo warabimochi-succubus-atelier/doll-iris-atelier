@@ -150,5 +150,21 @@ namespace DollIrisGenerator.Services
             string json = SafeFileReader.ReadAllText(path);
             return JsonSerializer.Deserialize<List<FavoriteItem>>(json);
         }
+
+        /// <summary>
+        /// Reads a file chosen for import: a favorites list (*.irisfav.json), or a single design saved as JSON
+        /// (the former 「💾 JSON保存」 files), which becomes one favorite.
+        /// </summary>
+        /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>
+        public static List<FavoriteItem>? ReadImportFile(string path)
+        {
+            string json = SafeFileReader.ReadAllText(path);
+            if (json.TrimStart().StartsWith('{'))
+            {
+                var design = JsonSerializer.Deserialize<IrisParameters>(json);
+                return design == null ? null : new List<FavoriteItem> { new FavoriteItem(design) };
+            }
+            return JsonSerializer.Deserialize<List<FavoriteItem>>(json);
+        }
     }
 }
