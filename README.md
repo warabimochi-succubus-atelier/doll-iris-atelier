@@ -1,6 +1,36 @@
 # Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v1.0 Plus
 
-仕様書 `#_Automated Iris Generator for Dolls_Specification_v1_0.txt` の全基本要件、および **Section 20「将来の拡張機能」全項目** に完全対応した、Windows 11 向けのアニメ調ドールアイ用虹彩パラメトリック自動生成デスクトップアプリケーションです。
+## Overview (English)
+
+**Doll Iris Atelier** is a Windows desktop app (WPF / .NET 10) for designing anime-style irises for doll eyes — ball-jointed dolls (SD / DD / MDD), Obitsu, resin and glass-cabochon eyes — and printing them at exact physical size.
+
+- **Parametric, not AI**: every iris is drawn from geometry and a random seed. The same parameters and seed always give the same result. It works fully offline.
+- **Real millimetres**: you set the iris diameter (4–20 mm). The A4 PDF is accurate to ±0.1 mm and has a 1 cm scale on each page, so you can check the print with a ruler.
+- **Rich design controls**: color presets and gradients (linear, radial, conic), pupil shapes (round, cat slit, heart, star, gem cut), radial fibers, limbal ring, glitter, aurora and nebula layers, lens-style rings, decorative symbols, highlights, oval / tilted irises, and odd eyes. The right eye is always the mirror image of the left.
+- **Compare side by side**: split the preview into up to 9 cells, each with its own design and its own undo history.
+
+### Basic workflow
+
+The app is built around two buttons in the top toolbar:
+
+1. **Design** an iris in the settings tabs (or press ✨ *Randomize attributes* for ideas).
+2. **⭐ Add to favorites** — keeps the design. Favorites are saved automatically and stay after you restart the app. The design you are editing is *not* saved on its own.
+3. **🖨️ Add to A4 sheet** — puts the design on the print sheet. You can also select several favorites in the *History / Favorites* tab and add them all at once.
+4. **📄 Export A4 PDF** and print it at **actual size (100%)**.
+
+PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. The user interface is in Japanese. See [USER_MANUAL.md](USER_MANUAL.md) for the full manual and [SPECIFICATION.md](SPECIFICATION.md) for the specification (both in Japanese).
+
+---
+
+## 概要
+
+アニメ調のドールアイ用虹彩を、パラメータと乱数シードから自動生成し、A4 印刷用 PDF（±0.1mm 精度）・PNG・SVG に実寸で書き出す Windows 向けデスクトップアプリケーションです。詳しい仕様は [SPECIFICATION.md](SPECIFICATION.md) を参照してください。
+
+### 基本の流れ
+1. 設定タブで虹彩を作る（迷ったら **✨ 属性ランダム生成**）
+2. 気に入ったら **⭐ お気に入りに追加** で残す（編集中のデザインは自動保存されません）
+3. 印刷したいデザインを **🖨️ A4シートに追加**（お気に入りからまとめて追加することもできます）
+4. **📄 A4 PDF 出力** で書き出し、「実際のサイズ（100%）」で印刷
 
 ---
 
@@ -8,12 +38,12 @@
 
 ### 1. 楕円虹彩対応 (Support for Elliptical Irises)
 - 正円（Circle）、縦長楕円（Vertical Oval）、横長楕円（Horizontal Oval）に対応。
-- 楕円の縦横比率（0.50〜2.50）を細かく制御可能。
+- 楕円の縦横比率（0.60〜2.00）を細かく制御可能。
 - **楕円チルト（傾き角度）対応**: `-45°〜+45°` のチルト角度を指定可能。右目は自動的に鏡像チルト（対称角度）に同期します。
 
 ### 2. レンズ風パターン対応 (Lens-Style Patterns)
 - カメラレンズやフレネルレンズのような同心円状の微細屈折溝（Fresnel Rings）を合成。
-- 屈折リング数（2〜24本）、リング線幅、線色、濃度、中心屈折光（コースティクスグロー）をパラメータ調整可能。
+- 屈折リング数（2〜20本）、リング線幅、線色、濃度、中心屈折光（コースティクスグロー）をパラメータ調整可能。
 
 ### 3. オッドアイテンプレート対応 (Odd-Eye Templates)
 - 左右異色瞳（オッドアイ）のワンクリックテンプレートを搭載：
@@ -37,7 +67,7 @@
   1. **標準レイアウト (自動面付け)**: サイズと余白から最適な配置数を自動計算。
   2. **1/3 ドール向けシート (SD / DD / 虹彩 10〜12mm)**: レジン盛りやカボション作業用の余白を広く取った 4列×8行。
   3. **1/4 ドール向けシート (MDD / 虹彩 8〜10mm)**: 5列×10行の高密度配置。
-  4. **1/6 ドール向けシート (オビツ / ピュアニーモ 虹彩 5〜7mm)**: 8列×13行の大容量配置。
+  4. **1/6 ドール向けシート (オビツ / 虹彩 5〜7mm)**: 8列×13行の大容量配置。
   5. **クラフトパンチ専用グリッド (穴あけ器用)**: 市販の小型円形パンチ（虹彩 12mm まで）の挿入口に合わせた等間隔配置（4列×7行）。
   6. **カラー見本・試作用シート**: 光沢写真用紙等でのプリンター発色確認用。
 
@@ -47,9 +77,10 @@
 - 過去の任意の生成ステートをワンクリックで瞬時に復元。
 
 ### 8. お気に入り登録 (Ability to Save Favorites)
-- 気に入った虹彩デザインを「⭐ お気に入りに追加」ボタンでワンクリック保存。
-- お気に入り一覧パネルからサムネイル色・名前・日時を確認してワンクリックで復元。
-- お気に入り一覧のインポート／エクスポート（`*.irisfav.json`）に対応。
+- 気に入った虹彩デザインを「⭐ お気に入りに追加」ボタンでワンクリック保存（自動で保存され、次回起動時も残ります）。
+- お気に入り一覧パネルからベース色・名前・日時を確認してワンクリックで復元。複製・削除も可能。
+- 複数のお気に入りを選んで、まとめて A4 シートに追加可能（すでにシートにあるデザインは数量 +1）。
+- お気に入り一覧のインポート／エクスポート（`*.irisfav.json`）に対応。デザイン単体の JSON もインポート可能。
 
 ---
 
