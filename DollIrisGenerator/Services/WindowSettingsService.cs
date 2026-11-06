@@ -13,6 +13,10 @@ namespace DollIrisGenerator.Services
         public double Height { get; set; } = 880;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public WindowState WindowState { get; set; } = WindowState.Normal;
+
+        /// <summary>RGB or CMYK sliders last used in the color palette (older files without it: RGB).</summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ColorInputMode ColorInputMode { get; set; } = ColorInputMode.Rgb;
     }
 
     public static class WindowSettingsService
@@ -59,7 +63,7 @@ namespace DollIrisGenerator.Services
             return new WindowSettings();
         }
 
-        public static void SaveSettings(Window window, string? customFilePath = null)
+        public static void SaveSettings(Window window, string? customFilePath = null, ColorInputMode colorInputMode = ColorInputMode.Rgb)
         {
             string path = customFilePath ?? DefaultSettingsFilePath;
             try
@@ -70,7 +74,7 @@ namespace DollIrisGenerator.Services
                     Directory.CreateDirectory(dir);
                 }
 
-                var settings = new WindowSettings();
+                var settings = new WindowSettings { ColorInputMode = colorInputMode };
 
                 if (window.WindowState == WindowState.Maximized)
                 {
@@ -154,6 +158,11 @@ namespace DollIrisGenerator.Services
             if (settings.WindowState == WindowState.Minimized)
             {
                 settings.WindowState = WindowState.Normal;
+            }
+
+            if (!Enum.IsDefined(settings.ColorInputMode))
+            {
+                settings.ColorInputMode = ColorInputMode.Rgb;
             }
 
             return settings;

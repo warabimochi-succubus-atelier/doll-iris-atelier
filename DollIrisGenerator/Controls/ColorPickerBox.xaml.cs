@@ -54,6 +54,17 @@ namespace DollIrisGenerator.Controls
 
         private bool _isUpdating = false;
 
+        /// <summary>
+        /// RGB or CMYK sliders in the palette popup. Shared by every color box (switching in one applies to the
+        /// next popup opened) and remembered in the window settings.
+        /// </summary>
+        public static ColorInputMode PreferredInputMode { get; set; } = ColorInputMode.Rgb;
+
+        // The CMYK the user last entered, kept while it still converts to the current color, so the
+        // numbers do not jump after rounding to #RRGGBB (see CmykColor.Resolve)
+        private CmykColor? _heldCmyk;
+        private bool _suppressInputModeEvents;
+
         // Gradient editing state. Stops are kept in the order of the rows (not re-sorted while editing,
         // so dragging one stop past another does not swap rows under the mouse); the stored string is sorted.
         private bool _gradientMode;
@@ -87,6 +98,7 @@ namespace DollIrisGenerator.Controls
         {
             InitializeComponent();
             PopulatePalettes();
+            ShowInputMode(PreferredInputMode);
             LoadFromValue(SelectedColorHex);
         }
 
@@ -186,20 +198,44 @@ namespace DollIrisGenerator.Controls
                 HexTextBox.Text = hex;
                 var color = GeometryHelper.ParseHexColor(hex);
                 ColorSwatch.Background = new SolidColorBrush(color);
-
-                RSlider.Value = color.R;
-                GSlider.Value = color.G;
-                BSlider.Value = color.B;
-
-                RValueTxt.Text = color.R.ToString();
-                GValueTxt.Text = color.G.ToString();
-                BValueTxt.Text = color.B.ToString();
+                ShowCustomSliders(color);
             }
             finally
             {
                 _isUpdating = false;
             }
         }
+
+        /// <summary>RGB and CMYK sliders / values for a color (call with <see cref="_isUpdating"/> set).</summary>
+        private void ShowCustomSliders(Color color)
+        {
+            RSlider.Value = color.R;
+            GSlider.Value = color.G;
+            BSlider.Value = color.B;
+
+            RValueTxt.Text = color.R.ToString();
+            GValueTxt.Text = color.G.ToString();
+            BValueTxt.Text = color.B.ToString();
+
+            var cmyk = CmykColor.Resolve(_heldCmyk, color.R, color.G, color.B);
+            _heldCmyk = cmyk;
+            ShowCmyk(cmyk);
+        }
+
+        private void ShowCmyk(CmykColor cmyk)
+        {
+            var sliders = CmykSliders();
+            var boxes = CmykBoxes();
+            for (int i = 0; i < 4; i++)
+            {
+                sliders[i].Value = cmyk[i];
+                // Whole percents on screen; the held value keeps the fraction so RGB → CMYK → RGB is exact
+                boxes[i].Text = CmykColor.FormatPercent(cmyk[i]);
+            }
+        }
+
+        private Slider[] CmykSliders() => new[] { CSlider, MSlider, YSlider, KSlider };
+        private TextBox[] CmykBoxes() => new[] { CValueBox, MValueBox, YValueBox, KValueBox };
 
         private void OnColorPreviewClick(object sender, RoutedEventArgs e)
         {
@@ -210,7 +246,135 @@ namespace DollIrisGenerator.Controls
                 ShowGradientUi();
                 return;
             }
+            if (!PalettePopup.IsOpen) ShowInputMode(PreferredInputMode); // may have been switched in another box
             PalettePopup.IsOpen = !PalettePopup.IsOpen;
+        }
+
+        // ------------------------------------------------------------------
+        // RGB / CMYK input
+        // ------------------------------------------------------------------
+
+        private void ShowInputMode(ColorInputMode mode)
+        {
+            _suppressInputModeEvents = true;
+            try
+            {
+                RgbModeBtn.IsChecked = mode == ColorInputMode.Rgb;
+                CmykModeBtn.IsChecked = mode == ColorInputMode.Cmyk;
+            }
+            finally
+            {
+                _suppressInputModeEvents = false;
+            }
+            RgbPanel.Visibility = mode == ColorInputMode.Rgb ? Visibility.Visible : Visibility.Collapsed;
+            CmykPanel.Visibility = mode == ColorInputMode.Cmyk ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void OnInputModeChecked(object sender, RoutedEventArgs e)
+        {
+            if (_suppressInputModeEvents || CmykPanel == null || RgbPanel == null) return;
+            var mode = sender == CmykModeBtn ? ColorInputMode.Cmyk : ColorInputMode.Rgb;
+            PreferredInputMode = mode;
+            ShowInputMode(mode);
+        }
+
+        private void OnCmykSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdating || sender is not Slider slider) return;
+            SetCmykChannel(ChannelOf(slider), Math.Round(slider.Value, MidpointRounding.AwayFromZero), slider);
+        }
+
+        private void OnCmykValueBoxKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (sender is not TextBox box) return;
+            switch (e.Key)
+            {
+                case System.Windows.Input.Key.Enter:
+                    CommitCmykBox(box);
+                    box.SelectAll();
+                    e.Handled = true;
+                    break;
+                case System.Windows.Input.Key.Up:
+                case System.Windows.Input.Key.Down:
+                    int channel = ChannelOf(box);
+                    double current = CmykColor.TryParsePercent(box.Text, out double typed) ? typed : CurrentCmyk()[channel];
+                    double step = e.Key == System.Windows.Input.Key.Up ? 1 : -1;
+                    SetCmykChannel(channel, Math.Round(current, MidpointRounding.AwayFromZero) + step, null);
+                    box.SelectAll();
+                    e.Handled = true;
+                    break;
+            }
+        }
+
+        private void OnCmykValueBoxLostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox box) CommitCmykBox(box);
+        }
+
+        private void CommitCmykBox(TextBox box)
+        {
+            int channel = ChannelOf(box);
+            var current = CurrentCmyk();
+            string shown = CmykColor.FormatPercent(current[channel]);
+            // Text still as shown (e.g. "33" for a held 33.3): leaving the box must not round the color
+            if (box.Text.Trim() != shown && CmykColor.TryParsePercent(box.Text, out double percent))
+            {
+                SetCmykChannel(channel, percent, null);
+            }
+            else
+            {
+                box.Text = CmykColor.FormatPercent(current[channel]); // invalid or unchanged: show the value again
+            }
+        }
+
+        private static int ChannelOf(FrameworkElement element)
+            => int.TryParse(element.Tag as string, out int i) ? Math.Clamp(i, 0, 3) : 0;
+
+        /// <summary>The CMYK shown for the current solid color.</summary>
+        private CmykColor CurrentCmyk()
+        {
+            var color = GeometryHelper.ParseHexColor(ColorFill.Parse(SelectedColorHex).PrimaryColor);
+            return CmykColor.Resolve(_heldCmyk, color.R, color.G, color.B);
+        }
+
+        /// <summary>
+        /// One C / M / Y / K value changed: the other three are kept exactly as they are, so only the RGB
+        /// channels this one affects can change, and the CMYK numbers on screen stay as entered.
+        /// </summary>
+        private void SetCmykChannel(int channel, double percent, Slider? source)
+        {
+            if (_gradientMode) return;
+            var cmyk = CurrentCmyk().With(channel, percent);
+            _heldCmyk = cmyk;
+            var (r, g, b) = cmyk.ToRgb();
+            string newHex = cmyk.ToHex();
+
+            _isUpdating = true;
+            try
+            {
+                HexTextBox.Text = newHex;
+                SelectedColorHex = newHex;
+                ColorSwatch.Background = new SolidColorBrush(Color.FromRgb(r, g, b));
+
+                RSlider.Value = r;
+                GSlider.Value = g;
+                BSlider.Value = b;
+                RValueTxt.Text = r.ToString();
+                GValueTxt.Text = g.ToString();
+                BValueTxt.Text = b.ToString();
+
+                var sliders = CmykSliders();
+                var boxes = CmykBoxes();
+                for (int i = 0; i < 4; i++)
+                {
+                    if (sliders[i] != source) sliders[i].Value = cmyk[i];
+                    boxes[i].Text = CmykColor.FormatPercent(cmyk[i]);
+                }
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
         }
 
         private void OnHexTextChanged(object sender, TextChangedEventArgs e)
@@ -225,14 +389,7 @@ namespace DollIrisGenerator.Controls
                     SelectedColorHex = text;
                     var color = GeometryHelper.ParseHexColor(text);
                     ColorSwatch.Background = new SolidColorBrush(color);
-
-                    RSlider.Value = color.R;
-                    GSlider.Value = color.G;
-                    BSlider.Value = color.B;
-
-                    RValueTxt.Text = color.R.ToString();
-                    GValueTxt.Text = color.G.ToString();
-                    BValueTxt.Text = color.B.ToString();
+                    ShowCustomSliders(color);
                 }
                 finally
                 {
@@ -259,6 +416,10 @@ namespace DollIrisGenerator.Controls
                 HexTextBox.Text = newHex;
                 SelectedColorHex = newHex;
                 ColorSwatch.Background = new SolidColorBrush(Color.FromRgb(r, g, b));
+
+                var cmyk = CmykColor.Resolve(_heldCmyk, r, g, b);
+                _heldCmyk = cmyk;
+                ShowCmyk(cmyk);
             }
             finally
             {
