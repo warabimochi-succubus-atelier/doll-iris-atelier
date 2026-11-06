@@ -113,7 +113,7 @@
                     <Button Content="✨ 属性ランダム生成" Command="{Binding RandomizeAttributesCommand}"
                             Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
                             Padding="10,5" Margin="0,2,10,2" Cursor="Hand" FontWeight="SemiBold"
-                            ToolTip="サイズ・形状・寸法を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+                            ToolTip="サイズ・形状・寸法と、「基本・色」タブでロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
 
                     <Button Content="🖼️ PNG 600 DPI" Command="{Binding ExportPng600Command}"
                             Background="#2B3A4A" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
@@ -284,7 +284,48 @@
                                         <Button Content="✨ 属性ランダム生成 (サイズ・寸法維持)" Command="{Binding RandomizeAttributesCommand}"
                                                 Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
                                                 Padding="10,6" Margin="0,10,0,0" Cursor="Hand" FontWeight="SemiBold" HorizontalAlignment="Stretch"
-                                                ToolTip="サイズ・形状・寸法を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+                                                ToolTip="サイズ・形状・寸法と、下でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+
+                                        <!-- Randomize locks: ticked groups stay as they are (saved with the window settings) -->
+                                        <Border Background="#241B30" BorderBrush="#5E3F75" BorderThickness="1" CornerRadius="3" Padding="8,6" Margin="0,6,0,0">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,4">
+                                                    <Button Content="すべて解除" Command="{Binding ClearRandomizeLocksCommand}" DockPanel.Dock="Right"
+                                                            Padding="6,1" FontSize="10" Background="#333842" Foreground="{StaticResource TextSecondary}"
+                                                            ToolTip="すべてのロックを外す"/>
+                                                    <TextBlock Text="🔒 ランダム生成で変えない項目:" Foreground="#E1BEE7" FontSize="11" VerticalAlignment="Center"/>
+                                                </DockPanel>
+                                                <WrapPanel>
+                                                    <WrapPanel.Resources>
+                                                        <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                                                            <Setter Property="Margin" Value="0,2,10,2"/>
+                                                            <Setter Property="FontSize" Value="11"/>
+                                                        </Style>
+                                                    </WrapPanel.Resources>
+                                                    <CheckBox Content="色" IsChecked="{Binding LockColors}"
+                                                              ToolTip="すべての色 (虹彩・瞳孔・放射模様・外輪・ラメ・レンズ・オッドアイ側) と、グラデーション範囲・反射光の強さ・デザイン名をそのままにする"/>
+                                                    <CheckBox Content="シード" IsChecked="{Binding LockSeed}"
+                                                              ToolTip="乱数シード (放射模様の揺らぎやラメの散らばり方) をそのままにする"/>
+                                                    <CheckBox Content="瞳孔" IsChecked="{Binding LockPupil}"
+                                                              ToolTip="瞳孔の形・大きさ・不透明度・ぼかし・色をそのままにする"/>
+                                                    <CheckBox Content="放射模様" IsChecked="{Binding LockRays}"
+                                                              ToolTip="放射模様の本数・線幅・長さ・強度・ランダム性・内側半径・色をそのままにする"/>
+                                                    <CheckBox Content="外輪" IsChecked="{Binding LockLimbalRing}"
+                                                              ToolTip="外輪の太さ・不透明度・ぼかし・色をそのままにする"/>
+                                                    <CheckBox Content="ラメ" IsChecked="{Binding LockParticles}"
+                                                              ToolTip="ラメの数・大きさ・不透明度・分布範囲・色をそのままにする"/>
+                                                    <CheckBox Content="装飾記号" IsChecked="{Binding LockSymbols}"
+                                                              ToolTip="装飾記号の一覧をそのままにする"/>
+                                                    <CheckBox Content="ハイライト" IsChecked="{Binding LockHighlights}"
+                                                              ToolTip="ハイライトの一覧をそのままにする"/>
+                                                    <CheckBox Content="レンズ風" IsChecked="{Binding LockLens}"
+                                                              ToolTip="レンズ風パターンのオン／オフと各設定・色をそのままにする"/>
+                                                    <CheckBox Content="オッドアイ" IsChecked="{Binding LockOddEye}"
+                                                              ToolTip="オッドアイのオン／オフ、反対側の目の色、模様のずらし量をそのままにする"/>
+                                                </WrapPanel>
+                                                <TextBlock Text="{Binding RandomizeLocksSummary}" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </GroupBox>
 

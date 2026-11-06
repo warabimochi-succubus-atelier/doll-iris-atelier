@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
 {
@@ -17,6 +18,13 @@ namespace DollIrisGenerator.Services
         /// <summary>RGB or CMYK sliders last used in the color palette (older files without it: RGB).</summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ColorInputMode ColorInputMode { get; set; } = ColorInputMode.Rgb;
+
+        /// <summary>
+        /// Groups 「✨ 属性ランダム生成」 leaves unchanged, written as names ("Colors, Pupil").
+        /// Older files without it: nothing locked.
+        /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public RandomizeLocks RandomizeLocks { get; set; } = RandomizeLocks.None;
     }
 
     public static class WindowSettingsService
@@ -63,7 +71,8 @@ namespace DollIrisGenerator.Services
             return new WindowSettings();
         }
 
-        public static void SaveSettings(Window window, string? customFilePath = null, ColorInputMode colorInputMode = ColorInputMode.Rgb)
+        public static void SaveSettings(Window window, string? customFilePath = null, ColorInputMode colorInputMode = ColorInputMode.Rgb,
+            RandomizeLocks randomizeLocks = RandomizeLocks.None)
         {
             string path = customFilePath ?? DefaultSettingsFilePath;
             try
@@ -74,7 +83,11 @@ namespace DollIrisGenerator.Services
                     Directory.CreateDirectory(dir);
                 }
 
-                var settings = new WindowSettings { ColorInputMode = colorInputMode };
+                var settings = new WindowSettings
+                {
+                    ColorInputMode = colorInputMode,
+                    RandomizeLocks = RandomizeLocksInfo.Sanitize(randomizeLocks)
+                };
 
                 if (window.WindowState == WindowState.Maximized)
                 {
@@ -164,6 +177,9 @@ namespace DollIrisGenerator.Services
             {
                 settings.ColorInputMode = ColorInputMode.Rgb;
             }
+
+            // Unknown bits (hand-edited numbers) are dropped; known groups stay locked
+            settings.RandomizeLocks = RandomizeLocksInfo.Sanitize(settings.RandomizeLocks);
 
             return settings;
         }
