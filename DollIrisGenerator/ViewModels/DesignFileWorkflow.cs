@@ -187,9 +187,8 @@ namespace DollIrisGenerator.ViewModels
             return tcs.Task;
         }
 
-        /// <param name="handEditedSvg">The SVG editor's text when it was edited by hand; otherwise null.</param>
-        /// <param name="generateSvg">Produces the SVG from the current parameters when there are no hand edits.</param>
-        public void ExportSvg(IrisParameters iris, string? handEditedSvg, Func<string> generateSvg)
+        /// <param name="generateSvg">Produces the SVG from the current parameters.</param>
+        public void ExportSvg(IrisParameters iris, Func<string> generateSvg)
         {
             string? path = _dialogs.PickSaveFile(
                 "SVG ベクター画像 (*.svg)|*.svg",
@@ -199,23 +198,10 @@ namespace DollIrisGenerator.ViewModels
 
             try
             {
-                // Save exactly what the SVG editor shows when it was edited by hand
-                bool useEdited = handEditedSvg != null;
-                string svg = handEditedSvg ?? generateSvg();
-                if (useEdited && !SvgValidator.IsWellFormed(svg, out string xmlError))
-                {
-                    bool proceed = _dialogs.ConfirmWarning(
-                        $"編集した SVG に構文エラーがあります。他のソフトで開けない可能性があります。\n\n{xmlError}\n\nこのまま保存しますか？",
-                        "SVG の確認");
-                    if (!proceed) return;
-                }
-
-                File.WriteAllText(path, svg);
-                _reportStatus(useEdited
-                    ? $"手動編集した SVG を保存しました: {Path.GetFileName(path)}"
-                    : $"SVG ベクターファイルを出力しました: {Path.GetFileName(path)}");
+                File.WriteAllText(path, generateSvg());
+                _reportStatus($"SVG ベクターファイルを出力しました: {Path.GetFileName(path)}");
                 _dialogs.ShowInfo(
-                    $"SVGベクターファイルを正常に出力しました！{(useEdited ? "（SVG編集タブで手動編集した内容）" : "")}\n\nファイル: {path}\n\nAdobe Illustrator や Inkscape 等で完全にベクター編集・再加工が可能です。",
+                    $"SVGベクターファイルを正常に出力しました！\n\nファイル: {path}\n\nAdobe Illustrator や Inkscape 等で完全にベクター編集・再加工が可能です。",
                     "SVG出力完了");
             }
             catch (Exception ex)

@@ -91,23 +91,13 @@ namespace DollIrisGenerator.ViewModels
         }
 
         /// <summary>
-        /// Makes <paramref name="slot"/> the design being edited. Returns false when the switch was refused
-        /// (the user chose to keep hand-made SVG edits of the current cell).
+        /// Makes <paramref name="slot"/> the design being edited. Returns false when <paramref name="slot"/>
+        /// is not one of the compare cells.
         /// </summary>
         public bool SelectSlot(CompareSlot slot)
         {
             if (ReferenceEquals(slot, _selectedSlot)) return true;
             if (!_allSlots.Contains(slot)) return false;
-
-            if (IsSvgManuallyEdited)
-            {
-                bool discard = _dialogs.ConfirmWarning(
-                    $"枠 {_selectedSlot.Number} の SVG は手動で編集されています。\n\n" +
-                    $"枠 {slot.Number} に切り替えると、この手動編集は破棄されます。切り替えますか？",
-                    "SVG 手動編集の破棄", defaultToNo: true);
-                if (!discard) return false;
-                IsSvgManuallyEdited = false;
-            }
 
             CommitManualEdit(); // a pending slider edit stays an undo step of the cell it was made on
 

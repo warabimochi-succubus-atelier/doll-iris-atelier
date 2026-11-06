@@ -132,6 +132,15 @@
                             Background="#2B3A4A" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="10,5" Margin="0,2,8,2" Cursor="Hand" ToolTip="超高解像度 1200 DPI でPNG出力 (高精細印刷用・ファイルサイズ大)"/>
 
+                    <!-- SVG is output only (for Illustrator / Inkscape etc.); it is always generated from the current parameters -->
+                    <Button Content="💾 SVG 保存" Command="{Binding ExportSvgCommand}"
+                            Background="#005B60" Foreground="#A7FFEB" BorderBrush="{StaticResource BorderDark}"
+                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="現在のデザインを SVG ファイルとして保存 (Illustrator / Inkscape 等で編集できるベクターデータ)"/>
+
+                    <Button Content="📋 SVG コピー" Command="{Binding CopySvgCommand}"
+                            Background="#005B60" Foreground="#A7FFEB" BorderBrush="{StaticResource BorderDark}"
+                            Padding="10,5" Margin="0,2,8,2" Cursor="Hand" ToolTip="現在のデザインの SVG コードをクリップボードにコピー (他のツールに直接貼り付けできます)"/>
+
                     <Button Content="📄 A4 PDF 出力" Command="{Binding ExportPdfCommand}"
                             Background="#00695C" Foreground="#FFFFFF" BorderBrush="#00897B"
                             FontWeight="Bold" Padding="12,5" Margin="0,2,0,2" Cursor="Hand" ToolTip="高精度 ±0.1mm A4印刷用PDFを出力"/>
@@ -295,33 +304,30 @@
             <!-- RIGHT: Parameter Tabs Inspector -->
             <Border Grid.Column="2" Background="{StaticResource BgMedium}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1,0,0,0">
                 <TabControl Background="Transparent" BorderThickness="0" Margin="4">
+                    <!-- Fixed two rows: 基本 / 色 / 瞳孔・放射線 / A4印刷 / 履歴 on top, the design detail tabs below (TabRowsPanel.Row="1").
+                         The built-in TabPanel would move the selected row next to the content; this one keeps the rows in place. -->
+                    <TabControl.Template>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid KeyboardNavigation.TabNavigation="Local" SnapsToDevicePixels="True">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <controls:TabRowsPanel Grid.Row="0" IsItemsHost="True" Margin="0,0,0,2" KeyboardNavigation.TabIndex="1"/>
+                                <Border Grid.Row="1" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}" KeyboardNavigation.TabIndex="2">
+                                    <ContentPresenter ContentSource="SelectedContent" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </TabControl.Template>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 1: 基本 & 色 & プリセット -->
+                    <!-- TAB 1 (上段): 基本 (名前・サイズ・形状・シード・ランダム生成) -->
                     <!-- ======================================================== -->
-                    <TabItem Header="基本・色">
+                    <TabItem Header="基本">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
-                                <!-- Presets Group -->
-                                <GroupBox Header="カラープリセット (Section 7) &amp; 共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <StackPanel>
-                                        <TextBlock Text="プリセットを選択して配色を瞬時に適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6"/>
-                                        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
-                                        <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <!-- Preset Sharing Actions -->
-                                        <TextBlock Text="プリセット共有・管理:" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,4"/>
-                                        <WrapPanel>
-                                            <Button Content="➕ 現在の配色をプリセット登録" Command="{Binding AddCurrentAsPresetCommand}"
-                                                    Background="#1E3A5F" Foreground="#80D8FF" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
-                                            <Button Content="📤 パレット書き出し" Command="{Binding ExportPresetsCommand}"
-                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
-                                            <Button Content="📥 パレット読み込み" Command="{Binding ImportPresetsCommand}"
-                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,0,4" FontSize="11"/>
-                                        </WrapPanel>
-                                    </StackPanel>
-                                </GroupBox>
-
                                 <!-- Basic Parameters & Elliptical Settings -->
                                 <GroupBox Header="基本設定・サイズ・楕円形状 (Section 5, 6, 20)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
@@ -397,6 +403,35 @@
                                                            ToolTip="ロックは各設定枠の見出しにある「🔒 ランダム生成で変えない」で切り替えます (シードは乱数シードの下)"/>
                                             </DockPanel>
                                         </Border>
+                                    </StackPanel>
+                                </GroupBox>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 2 (上段): 色 (カラープリセット・虹彩カラー・オーロラ層・星雲) -->
+                    <!-- ======================================================== -->
+                    <TabItem Header="色">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                            <StackPanel>
+                                <GroupBox Header="カラープリセット (Section 7) &amp; 共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <StackPanel>
+                                        <TextBlock Text="プリセットを選択して配色を瞬時に適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6"/>
+                                        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
+                                        <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                                        <!-- Preset Sharing Actions -->
+                                        <TextBlock Text="プリセット共有・管理:" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,4"/>
+                                        <WrapPanel>
+                                            <Button Content="➕ 現在の配色をプリセット登録" Command="{Binding AddCurrentAsPresetCommand}"
+                                                    Background="#1E3A5F" Foreground="#80D8FF" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
+                                            <Button Content="📤 パレット書き出し" Command="{Binding ExportPresetsCommand}"
+                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
+                                            <Button Content="📥 パレット読み込み" Command="{Binding ImportPresetsCommand}"
+                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,0,4" FontSize="11"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                 </GroupBox>
 
@@ -484,7 +519,7 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 2: 瞳孔 & 放射模様 -->
+                    <!-- TAB 3 (上段): 瞳孔 & 放射模様 -->
                     <!-- ======================================================== -->
                     <TabItem Header="瞳孔・放射線">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
@@ -495,7 +530,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="瞳孔模様 (Section 9)" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockPupil}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="瞳孔の形・大きさ・不透明度・ぼかし・宝石カット・色をランダム生成で変えない"/>
+                                                      ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -524,7 +559,7 @@
 
                                         <!-- Pupil Opacity -->
                                         <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="不透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity}" Margin="0,0,0,6"/>
@@ -642,478 +677,7 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 3: 外輪 & ラメ & 記号 -->
-                    <!-- ======================================================== -->
-                    <TabItem Header="外輪・ラメ・記号">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
-                            <StackPanel>
-                                <!-- Limbal Ring -->
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="外輪 (Limbal Ring - Section 10)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLimbalRing}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="外輪の太さ・不透明度・ぼかし・色をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="リング幅 (太さ):" Foreground="{StaticResource TextPrimary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LimbalRingThickness, Converter={StaticResource DoubleToPercentConverter}}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="0.22" Value="{Binding CurrentIris.LimbalRingThickness}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="リング色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LimbalRingColor, Mode=TwoWay}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度 (アルファ):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LimbalRingOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LimbalRingOpacity}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="境界の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LimbalRingSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="0.80" Value="{Binding CurrentIris.LimbalRingSoftness}"/>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <!-- Glitter / Particles -->
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="粒子模様・ラメ (Section 9)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockParticles}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="ラメの数・大きさ・不透明度・分布範囲・光るラメ (にじみ・十字フレア)・色をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="粒子数量 (ラメ数):" Foreground="{StaticResource TextPrimary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleCount, StringFormat='{}{0} 個'}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0" Maximum="250" Value="{Binding CurrentIris.ParticleCount}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="ラメ色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.ParticleColor, Mode=TwoWay}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="粒径 (最大サイズ):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleMaxSize, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.5" Maximum="5.0" Value="{Binding CurrentIris.ParticleMaxSize}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleOpacity}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="分布範囲 (外周比率):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleRadiusRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.ParticleRadiusRatio}" Margin="0,0,0,10"/>
-
-                                        <!-- Glowing glitter (光るラメ) -->
-                                        <TextBlock Text="光るラメ (0 でにじみ・フレアなし)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
-
-                                        <DockPanel Margin="0,0,0,4" ToolTip="粒のまわりにふんわりした光をにじませます">
-                                            <TextBlock Text="光のにじみ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleGlow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleGlow}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,4" ToolTip="十字の光の筋をつける粒の割合">
-                                            <TextBlock Text="十字フレアの割合:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleFlareRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleFlareRatio}" Margin="0,0,0,8"/>
-
-                                        <DockPanel Margin="0,0,0,4" ToolTip="十字フレアの長さ (粒の大きさの何倍か)">
-                                            <TextBlock Text="フレアの長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleFlareLength, StringFormat='{}{0:F1} 倍'}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="1.0" Maximum="8.0" Value="{Binding CurrentIris.ParticleFlareLength}"/>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <!-- Decorative Symbols -->
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="装飾記号 (Section 11)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockSymbols}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="装飾記号の一覧をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <DockPanel Margin="0,0,0,8">
-                                            <TextBlock Text="装飾記号一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                            <Button Content="➕ 装飾記号追加" Command="{Binding AddSymbolCommand}"
-                                                    HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
-                                        </DockPanel>
-
-                                        <TextBlock Text="装飾記号はありません。「➕ 装飾記号追加」で追加できます。" Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding CurrentIris.Symbols.Count}" Value="0">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-
-                                        <ItemsControl ItemsSource="{Binding CurrentIris.Symbols}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
-                                                        <StackPanel>
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
-                                                            </DockPanel>
-
-                                                            <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
-                                                            <WrapPanel Margin="0,0,0,6">
-                                                                <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
-                                                                <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                                <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
-                                                                <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
-                                                                <RadioButton Content="三日月 (🌙)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
-                                                                <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
-                                                                <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
-                                                                <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
-                                                            </WrapPanel>
-
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
-                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
-                                                            </DockPanel>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.05" Maximum="0.40" Value="{Binding Size}" Margin="0,0,0,6"/>
-
-                                                            <Grid Margin="0,0,0,6">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="8"/>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <StackPanel Grid.Column="0">
-                                                                    <TextBlock Text="位置 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionX}"/>
-                                                                </StackPanel>
-                                                                <StackPanel Grid.Column="2">
-                                                                    <TextBlock Text="位置 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
-                                                                </StackPanel>
-                                                            </Grid>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4" ToolTip="星の先・ハートの先・三日月の角など、図形のとがった部分を丸めます。0% で従来どおりのとがった形です。">
-                                                                <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </GroupBox>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </TabItem>
-
-                    <!-- ======================================================== -->
-                    <!-- TAB 4: レンズ風パターン & オッドアイ (NEW!) -->
-                    <!-- ======================================================== -->
-                    <TabItem Header="レンズ風・オッドアイ">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
-                            <StackPanel>
-                                <!-- Lens-Style Optical Pattern -->
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="レンズ風パターン (Section 20)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLens}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="レンズ風パターンのオン／オフと各設定・色をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <CheckBox Content="光学レンズ・フレネル屈折リングを有効化" IsChecked="{Binding CurrentIris.LensPatternEnabled}" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="カメラレンズや同心円フレネル溝のような屈折模様を虹彩内部に合成します:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="屈折リング数:" Foreground="{StaticResource TextPrimary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingCount, StringFormat='{}{0} 本'}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="2" Maximum="20" Value="{Binding CurrentIris.LensRingCount}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="リング線色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LensRingColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="リング強度 (濃度):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRingIntensity}" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="リング線幅:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingWidth, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.3" Maximum="3.0" Value="{Binding CurrentIris.LensRingWidth}" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="中心屈折光 (コースティクス):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRefractionGlow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRefractionGlow}"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <!-- Odd-Eye Settings -->
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="オッドアイ設定・テンプレート (Section 20)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockOddEye}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="オッドアイのオン／オフ、反対側の目の色、模様のずらし量をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <CheckBox Content="オッドアイ (左右異色瞳) を有効化" IsChecked="{Binding CurrentIris.IsOddEye}" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="左目と右目で異なる瞳色・シードを設定します (サイズ・形状・位置整合性は完全同期):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <!-- Odd Eye Templates -->
-                                        <TextBlock Text="オッドアイ・テンプレート選択:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
-                                        <ComboBox ItemsSource="{Binding OddEyeTemplates}" SelectedItem="{Binding SelectedOddEyeTemplate}" DisplayMemberPath="Name" Margin="0,0,0,4"/>
-                                        <TextBlock Text="{Binding SelectedOddEyeTemplate.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <!-- Right Eye Custom Colors -->
-                                        <TextBlock Text="右目専用カラーカスタマイズ:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold" Margin="0,4,0,4"/>
-                                        
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="右目ベース色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeBaseColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="右目内周色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeInnerColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="右目外周色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeOuterColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="右目ライン色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.OddEyeRayColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
-                                        </DockPanel>
-
-                                        <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="右目反射光色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeBottomHighlightColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
-                                        </DockPanel>
-                                    </StackPanel>
-                                </GroupBox>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </TabItem>
-
-                    <!-- ======================================================== -->
-                    <!-- TAB 5: ハイライト & 左右対称 -->
-                    <!-- ======================================================== -->
-                    <TabItem Header="ハイライト・対称性">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
-                            <StackPanel>
-                                <GroupBox Header="左右対称設定 (Section 13)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <StackPanel>
-                                        <CheckBox Content="ハイライトも左右反転する (完全鏡像)"
-                                                  IsChecked="{Binding CurrentIris.MirrorHighlightsWithIris}"
-                                                  FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBlock Text="※チェックを外すと、光源位置が固定された自然なライティングになります。" Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </GroupBox>
-
-                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <GroupBox.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="ハイライト設定 (Section 12)" VerticalAlignment="Center"/>
-                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockHighlights}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="ハイライトの一覧をランダム生成で変えない"/>
-                                        </StackPanel>
-                                    </GroupBox.Header>
-                                    <StackPanel>
-                                        <DockPanel Margin="0,0,0,8">
-                                            <TextBlock Text="ハイライト一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                            <Button Content="➕ ハイライト追加" Command="{Binding AddHighlightCommand}"
-                                                    HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
-                                        </DockPanel>
-
-                                        <ItemsControl ItemsSource="{Binding CurrentIris.Highlights}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
-                                                        <StackPanel>
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <CheckBox Content="有効" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveHighlightCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
-                                                            </DockPanel>
-
-                                                            <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
-                                                            <WrapPanel Margin="0,0,0,6">
-                                                                <RadioButton Content="正円 (Circle)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                                <RadioButton Content="楕円 (Oval)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
-                                                                <RadioButton Content="4点星 (Star)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                                <RadioButton Content="菱形 (Rhombus)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
-                                                            </WrapPanel>
-
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <TextBlock Text="色:" VerticalAlignment="Center" Width="70"/>
-                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
-                                                            </DockPanel>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
-
-                                                            <Grid Margin="0,0,0,6">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="8"/>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <StackPanel Grid.Column="0">
-                                                                    <TextBlock Text="位置 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionX}"/>
-                                                                </StackPanel>
-                                                                <StackPanel Grid.Column="2">
-                                                                    <TextBlock Text="位置 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
-                                                                </StackPanel>
-                                                            </Grid>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="不透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </GroupBox>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </TabItem>
-
-                    <!-- ======================================================== -->
-                    <!-- TAB 6: SVG編集・確認モード (NEW!) -->
-                    <!-- ======================================================== -->
-                    <TabItem Header="SVG編集">
-                        <Grid Margin="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
-                                <TextBlock Text="SVG ベクターデータ編集・確認モード (Section 20)" FontWeight="Bold" FontSize="12" Margin="0,0,0,4"/>
-                                <TextBlock Text="現在のパラメータから動的に生成された W3C SVG ベクターコードです。Illustrator / Inkscape 互換のレイヤー構造を直接確認・コピーできます:" Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap"/>
-                                <DockPanel Margin="0,6,0,0">
-                                    <CheckBox Content="パラメータ変更時に自動同期" IsChecked="{Binding AutoSyncSvg}" VerticalAlignment="Center"/>
-                                    <Button Content="🔄 最新に更新" Command="{Binding RefreshSvgCommand}" HorizontalAlignment="Right" Padding="8,3" Background="#333842" Foreground="{StaticResource TextPrimary}"
-                                            ToolTip="現在のパラメータから SVG を作り直します（手動編集した内容は破棄されます）"/>
-                                </DockPanel>
-
-                                <!-- Shown while the SVG text has been edited by hand -->
-                                <Border Background="#3A3220" BorderBrush="#FFB300" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,8,0,0"
-                                        Visibility="{Binding IsSvgManuallyEdited, Converter={StaticResource BoolToVisConverter}}">
-                                    <TextBlock Foreground="#FFE082" FontSize="11" TextWrapping="Wrap"
-                                               Text="✏ 手動編集中: パラメータを変更してもこの SVG は上書きされません。「SVGファイルとして保存」と「コピー」は表示中の内容を使います。元に戻すには 🔄 最新に更新 を押してください。"/>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- SVG Source Code Editor Box -->
-                            <TextBox Grid.Row="1" Text="{Binding SvgSourceText, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True" AcceptsTab="True" TextWrapping="NoWrap"
-                                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                     FontFamily="Consolas" FontSize="11"
-                                     Background="#1A1C23" Foreground="#B0BEC5"
-                                     BorderBrush="{StaticResource BorderDark}" BorderThickness="1" Padding="8"/>
-
-                            <!-- SVG Actions Bar -->
-                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                                <Button Content="📋 クリップボードにコピー" Command="{Binding CopySvgCommand}"
-                                        Background="#1E3A5F" Foreground="#80D8FF" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"/>
-                                <Button Content="💾 SVGファイルとして保存" Command="{Binding ExportSvgCommand}"
-                                        Background="#005B60" Foreground="#A7FFEB" Padding="12,6" Cursor="Hand"/>
-                            </StackPanel>
-                        </Grid>
-                    </TabItem>
-
-                    <!-- ======================================================== -->
-                    <!-- TAB 7: A4印刷・面付け & PDFテンプレート (NEW!) -->
+                    <!-- TAB 4 (上段): A4印刷・面付け & PDFテンプレート (NEW!) -->
                     <!-- ======================================================== -->
                     <TabItem Header="A4印刷・テンプレート">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
@@ -1255,7 +819,7 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 8: 履歴 & お気に入り管理 (NEW!) -->
+                    <!-- TAB 5 (上段): 履歴 & お気に入り管理 (NEW!) -->
                     <!-- ======================================================== -->
                     <TabItem Header="履歴・お気に入り">
                         <Grid Margin="8">
@@ -1364,6 +928,440 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </Grid>
+                    </TabItem>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 6 (下段): 外輪 & ラメ -->
+                    <!-- ======================================================== -->
+                    <TabItem Header="外輪・ラメ" controls:TabRowsPanel.Row="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                            <StackPanel>
+                                <!-- Limbal Ring -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="外輪 (Limbal Ring - Section 10)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLimbalRing}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="外輪の太さ・透明度・ぼかし・色をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="リング幅 (太さ):" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalRingThickness, Converter={StaticResource DoubleToPercentConverter}}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="0.22" Value="{Binding CurrentIris.LimbalRingThickness}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="リング色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LimbalRingColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalRingOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LimbalRingOpacity}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="境界の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalRingSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="0.80" Value="{Binding CurrentIris.LimbalRingSoftness}"/>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- Glitter / Particles -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="粒子模様・ラメ (Section 9)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockParticles}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="ラメの数・大きさ・透明度・分布範囲・光るラメ (にじみ・十字フレア)・色をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="粒子数量 (ラメ数):" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleCount, StringFormat='{}{0} 個'}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="250" Value="{Binding CurrentIris.ParticleCount}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="ラメ色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.ParticleColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="粒径 (最大サイズ):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleMaxSize, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="5.0" Value="{Binding CurrentIris.ParticleMaxSize}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleOpacity}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="分布範囲 (外周比率):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleRadiusRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.ParticleRadiusRatio}" Margin="0,0,0,10"/>
+
+                                        <!-- Glowing glitter (光るラメ) -->
+                                        <TextBlock Text="光るラメ (0 でにじみ・フレアなし)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
+
+                                        <DockPanel Margin="0,0,0,4" ToolTip="粒のまわりにふんわりした光をにじませます">
+                                            <TextBlock Text="光のにじみ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleGlow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleGlow}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4" ToolTip="十字の光の筋をつける粒の割合">
+                                            <TextBlock Text="十字フレアの割合:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleFlareRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleFlareRatio}" Margin="0,0,0,8"/>
+
+                                        <DockPanel Margin="0,0,0,4" ToolTip="十字フレアの長さ (粒の大きさの何倍か)">
+                                            <TextBlock Text="フレアの長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleFlareLength, StringFormat='{}{0:F1} 倍'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="1.0" Maximum="8.0" Value="{Binding CurrentIris.ParticleFlareLength}"/>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 7 (下段): 装飾記号 (たくさん追加できるので専用タブ) -->
+                    <!-- ======================================================== -->
+                    <TabItem Header="記号" controls:TabRowsPanel.Row="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                            <StackPanel>
+                                <!-- Decorative Symbols -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="装飾記号 (Section 11)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockSymbols}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="装飾記号の一覧をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock Text="装飾記号一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Button Content="➕ 装飾記号追加" Command="{Binding AddSymbolCommand}"
+                                                    HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
+                                        </DockPanel>
+
+                                        <TextBlock Text="装飾記号はありません。「➕ 装飾記号追加」で追加できます。" Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentIris.Symbols.Count}" Value="0">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <ItemsControl ItemsSource="{Binding CurrentIris.Symbols}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
+                                                        <StackPanel>
+                                                            <DockPanel Margin="0,0,0,6">
+                                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
+                                                            </DockPanel>
+
+                                                            <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                                            <WrapPanel Margin="0,0,0,6">
+                                                                <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                                                                <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                                <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                                <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                                <RadioButton Content="三日月 (🌙)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
+                                                                <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
+                                                                <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                                <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                            </WrapPanel>
+
+                                                            <DockPanel Margin="0,0,0,6">
+                                                                <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
+                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                            </DockPanel>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.05" Maximum="0.40" Value="{Binding Size}" Margin="0,0,0,6"/>
+
+                                                            <Grid Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="8"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel Grid.Column="0">
+                                                                    <TextBlock Text="位置 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionX}"/>
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="2">
+                                                                    <TextBlock Text="位置 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
+                                                                </StackPanel>
+                                                            </Grid>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                            <DockPanel Margin="0,0,0,4" ToolTip="星の先・ハートの先・三日月の角など、図形のとがった部分を丸めます。0% で従来どおりのとがった形です。">
+                                                                <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 8 (下段): レンズ風パターン & オッドアイ (NEW!) -->
+                    <!-- ======================================================== -->
+                    <TabItem Header="レンズ風・オッドアイ" controls:TabRowsPanel.Row="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                            <StackPanel>
+                                <!-- Lens-Style Optical Pattern -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="レンズ風パターン (Section 20)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLens}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="レンズ風パターンのオン／オフと各設定・色をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <CheckBox Content="光学レンズ・フレネル屈折リングを有効化" IsChecked="{Binding CurrentIris.LensPatternEnabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <TextBlock Text="カメラレンズや同心円フレネル溝のような屈折模様を虹彩内部に合成します:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="屈折リング数:" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LensRingCount, StringFormat='{}{0} 本'}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="2" Maximum="20" Value="{Binding CurrentIris.LensRingCount}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"
+                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="リング線色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LensRingColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="リング強度 (濃度):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LensRingIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRingIntensity}" Margin="0,0,0,8"
+                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="リング線幅:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LensRingWidth, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.3" Maximum="3.0" Value="{Binding CurrentIris.LensRingWidth}" Margin="0,0,0,8"
+                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="中心屈折光 (コースティクス):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LensRefractionGlow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRefractionGlow}"
+                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- Odd-Eye Settings -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="オッドアイ設定・テンプレート (Section 20)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockOddEye}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="オッドアイのオン／オフ、反対側の目の色、模様のずらし量をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <CheckBox Content="オッドアイ (左右異色瞳) を有効化" IsChecked="{Binding CurrentIris.IsOddEye}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <TextBlock Text="左目と右目で異なる瞳色・シードを設定します (サイズ・形状・位置整合性は完全同期):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                                        <!-- Odd Eye Templates -->
+                                        <TextBlock Text="オッドアイ・テンプレート選択:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding OddEyeTemplates}" SelectedItem="{Binding SelectedOddEyeTemplate}" DisplayMemberPath="Name" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding SelectedOddEyeTemplate.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                                        <!-- Right Eye Custom Colors -->
+                                        <TextBlock Text="右目専用カラーカスタマイズ:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold" Margin="0,4,0,4"/>
+                                        
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="右目ベース色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeBaseColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="右目内周色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeInnerColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="右目外周色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeOuterColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="右目ライン色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.OddEyeRayColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
+                                        </DockPanel>
+
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="右目反射光色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeBottomHighlightColor, Mode=TwoWay}"
+                                                                    IsEnabled="{Binding CurrentIris.IsOddEye}"/>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 9 (下段): ハイライト & 左右対称 -->
+                    <!-- ======================================================== -->
+                    <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                            <StackPanel>
+                                <GroupBox Header="左右対称設定 (Section 13)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <StackPanel>
+                                        <CheckBox Content="ハイライトも左右反転する (完全鏡像)"
+                                                  IsChecked="{Binding CurrentIris.MirrorHighlightsWithIris}"
+                                                  FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBlock Text="※チェックを外すと、光源位置が固定された自然なライティングになります。" Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="ハイライト設定 (Section 12)" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockHighlights}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="ハイライトの一覧をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock Text="ハイライト一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Button Content="➕ ハイライト追加" Command="{Binding AddHighlightCommand}"
+                                                    HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
+                                        </DockPanel>
+
+                                        <ItemsControl ItemsSource="{Binding CurrentIris.Highlights}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
+                                                        <StackPanel>
+                                                            <DockPanel Margin="0,0,0,6">
+                                                                <CheckBox Content="有効" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveHighlightCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
+                                                            </DockPanel>
+
+                                                            <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
+                                                            <WrapPanel Margin="0,0,0,6">
+                                                                <RadioButton Content="正円 (Circle)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                                <RadioButton Content="楕円 (Oval)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
+                                                                <RadioButton Content="4点星 (Star)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                                <RadioButton Content="菱形 (Rhombus)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
+                                                            </WrapPanel>
+
+                                                            <DockPanel Margin="0,0,0,6">
+                                                                <TextBlock Text="色:" VerticalAlignment="Center" Width="70"/>
+                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                            </DockPanel>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
+
+                                                            <Grid Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="8"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <StackPanel Grid.Column="0">
+                                                                    <TextBlock Text="位置 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionX}"/>
+                                                                </StackPanel>
+                                                                <StackPanel Grid.Column="2">
+                                                                    <TextBlock Text="位置 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
+                                                                </StackPanel>
+                                                            </Grid>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                            <DockPanel Margin="0,0,0,4">
+                                                                <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                            </DockPanel>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
                 </TabControl>
             </Border>

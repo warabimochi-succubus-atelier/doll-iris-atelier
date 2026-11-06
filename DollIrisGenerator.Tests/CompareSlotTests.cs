@@ -188,24 +188,5 @@ namespace DollIrisGenerator.Tests
             Assert.Equal("元のデザイン", _vm.VisibleSlots[5].Iris.Name);
             Assert.NotSame(_vm.CurrentIris, _vm.VisibleSlots[5].Iris);
         }
-
-        [Fact]
-        public void TestSwitchingAwayFromHandEditedSvgAsksFirst()
-        {
-            var first = _vm.VisibleSlots[0];
-            var second = _vm.VisibleSlots[1];
-            _vm.SvgSourceText = "<svg xmlns=\"http://www.w3.org/2000/svg\"/>";
-
-            _dialogs.ConfirmAnswer = false;
-            Assert.False(_vm.SelectSlot(second));
-            Assert.Same(first, _vm.SelectedSlot);
-            Assert.True(_vm.IsSvgManuallyEdited);
-
-            _dialogs.ConfirmAnswer = true;
-            Assert.True(_vm.SelectSlot(second));
-            Assert.Same(second, _vm.SelectedSlot);
-            Assert.False(_vm.IsSvgManuallyEdited);
-            Assert.Equal(2, _dialogs.Confirmations);
-        }
     }
 }

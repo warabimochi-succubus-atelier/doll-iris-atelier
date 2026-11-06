@@ -117,37 +117,21 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestSvgExportWritesGeneratedThenHandEditedText()
+        public void TestSvgExportAlwaysWritesSvgOfCurrentParameters()
         {
-            _dialogs.NextSavePath = PathIn("generated.svg");
+            _dialogs.NextSavePath = PathIn("first.svg");
             _vm.ExportSvgCommand.Execute(null);
-            Assert.Equal(_vm.SvgSourceText, File.ReadAllText(PathIn("generated.svg")));
+            string first = File.ReadAllText(PathIn("first.svg"));
+            Assert.Equal(SvgExporter.GeneratePairSvg(_vm.CurrentIris, includePrintGuides: _vm.ShowCutLines, pairSpacingMm: _vm.SheetConfig.PairSpacingXMm), first);
+            Assert.True(SvgValidator.IsWellFormed(first, out _));
             Assert.Contains("出力しました", _vm.StatusMessage);
 
-            const string edited = "<svg xmlns=\"http://www.w3.org/2000/svg\"><!-- mine --></svg>";
-            _vm.SvgSourceText = edited;
-            _dialogs.NextSavePath = PathIn("edited.svg");
+            // A later export follows the parameters changed since
+            _vm.CurrentIris.SizeMm = 12.0;
+            _dialogs.NextSavePath = PathIn("second.svg");
             _vm.ExportSvgCommand.Execute(null);
-
-            Assert.Equal(edited, File.ReadAllText(PathIn("edited.svg")));
-            Assert.Contains("手動編集した SVG", _vm.StatusMessage);
+            Assert.NotEqual(first, File.ReadAllText(PathIn("second.svg")));
             Assert.Equal(0, _dialogs.Confirmations);
-        }
-
-        [Fact]
-        public void TestMalformedHandEditedSvgIsOnlySavedAfterConfirmation()
-        {
-            _vm.SvgSourceText = "<svg><g></svg>";
-            _dialogs.NextSavePath = PathIn("bad.svg");
-
-            _dialogs.ConfirmAnswer = false;
-            _vm.ExportSvgCommand.Execute(null);
-            Assert.False(File.Exists(PathIn("bad.svg")));
-
-            _dialogs.ConfirmAnswer = true;
-            _vm.ExportSvgCommand.Execute(null);
-            Assert.True(File.Exists(PathIn("bad.svg")));
-            Assert.Equal(2, _dialogs.Confirmations);
         }
 
         [Fact]

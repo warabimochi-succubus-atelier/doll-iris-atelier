@@ -952,38 +952,13 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestHandEditedSvgIsKeptUntilExplicitlyDiscarded()
-        {
-            var vm = new MainViewModel();
-            string generated = vm.SvgSourceText;
-
-            // Without hand edits, parameter changes regenerate the SVG
-            vm.CurrentIris.SizeMm = 18.0;
-            Assert.NotEqual(generated, vm.SvgSourceText);
-            Assert.False(vm.IsSvgManuallyEdited);
-
-            // Hand edit (what the editor TextBox binding does), then change parameters: edit must survive
-            vm.SvgSourceText = "<svg xmlns=\"http://www.w3.org/2000/svg\"><!-- mine --></svg>";
-            Assert.True(vm.IsSvgManuallyEdited);
-            vm.CurrentIris.SizeMm = 22.0;
-            vm.RandomizeSeedCommand.Execute(null);
-            Assert.Contains("<!-- mine -->", vm.SvgSourceText);
-
-            // 🔄 discards the edit and regenerates from the current parameters
-            vm.RefreshSvgCommand.Execute(null);
-            Assert.False(vm.IsSvgManuallyEdited);
-            Assert.DoesNotContain("<!-- mine -->", vm.SvgSourceText);
-            Assert.True(MainViewModel.IsWellFormedSvg(vm.SvgSourceText, out _));
-        }
-
-        [Fact]
         public void TestSvgValidationRejectsDtdEntitiesAndNonSvg()
         {
             string xxe = "<!DOCTYPE svg [<!ENTITY x SYSTEM \"file:///c:/windows/win.ini\">]><svg>&x;</svg>";
-            Assert.False(MainViewModel.IsWellFormedSvg(xxe, out _));
-            Assert.False(MainViewModel.IsWellFormedSvg("<html></html>", out _));
-            Assert.False(MainViewModel.IsWellFormedSvg("<svg><g></svg>", out _));
-            Assert.True(MainViewModel.IsWellFormedSvg("<svg xmlns=\"http://www.w3.org/2000/svg\"/>", out _));
+            Assert.False(SvgValidator.IsWellFormed(xxe, out _));
+            Assert.False(SvgValidator.IsWellFormed("<html></html>", out _));
+            Assert.False(SvgValidator.IsWellFormed("<svg><g></svg>", out _));
+            Assert.True(SvgValidator.IsWellFormed("<svg xmlns=\"http://www.w3.org/2000/svg\"/>", out _));
         }
 
         [Fact]
