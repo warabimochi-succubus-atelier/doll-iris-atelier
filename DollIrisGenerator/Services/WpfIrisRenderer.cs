@@ -25,6 +25,57 @@ namespace DollIrisGenerator.Services
         /// </summary>
         public const double MmPerStyleUnit = 25.4 / (96.0 * DefaultPreviewZoom);
 
+        /// <summary>
+        /// Brush for a color setting that may be a gradient (see <see cref="ColorFill"/>).
+        /// A solid color gives the same SolidColorBrush as before. A gradient is laid on <paramref name="box"/>
+        /// (in the drawing coordinates the element is drawn in, see <see cref="GradientMapping"/>) in absolute
+        /// coordinates, so geometry must not carry its own Transform: push the transform on the context instead.
+        /// <paramref name="opacity"/> multiplies every stop's alpha, exactly like the solid alpha.
+        /// </summary>
+        public static Brush CreateFillBrush(string? value, double opacity, Rect box, bool mirror = false, double bandInner = 0.0, double bandOuter = 1.0)
+        {
+            var fill = ColorFill.Parse(value);
+            if (!fill.IsGradient)
+            {
+                var solid = new SolidColorBrush(GeometryHelper.ParseHexColor(value, opacity));
+                solid.Freeze();
+                return solid;
+            }
+
+            if (mirror) fill = fill.MirroredX();
+            var map = GradientMapping.Create(fill, box, bandInner, bandOuter);
+            var stops = new GradientStopCollection();
+            foreach (var s in map.Stops) stops.Add(new GradientStop(GeometryHelper.ParseHexColor(s.Color, opacity), s.Offset));
+
+            GradientBrush brush = map.Kind == ColorFillKind.Radial
+                ? new RadialGradientBrush(stops)
+                {
+                    MappingMode = BrushMappingMode.Absolute,
+                    Center = map.Center,
+                    GradientOrigin = map.Center,
+                    RadiusX = map.RadiusX,
+                    RadiusY = map.RadiusY
+                }
+                : new LinearGradientBrush(stops)
+                {
+                    MappingMode = BrushMappingMode.Absolute,
+                    StartPoint = map.Start,
+                    EndPoint = map.End
+                };
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>Local box (around 0, 0) of a highlight shape, the area its gradient is laid across.</summary>
+        public static Rect HighlightBox(HighlightItem h, double radius) => h.Shape switch
+        {
+            HighlightShape.Oval => new Rect(-radius * HighlightAspect(h), -radius, 2.0 * radius * HighlightAspect(h), 2.0 * radius),
+            HighlightShape.Rhombus => new Rect(-radius * 0.65, -radius, 1.3 * radius, 2.0 * radius),
+            _ => new Rect(-radius, -radius, 2.0 * radius, 2.0 * radius)
+        };
+
+        private static double HighlightAspect(HighlightItem h) => h.AspectRatio > 0 ? h.AspectRatio : 1.0;
+
         public static void RenderIris(
             DrawingContext dc,
             Point center,
@@ -73,6 +124,10 @@ namespace DollIrisGenerator.Services
 
             // 1. Define Iris Boundary Geometry
             var boundaryGeometry = new EllipseGeometry(center, rx, ry);
+
+            // Gradients of iris-wide elements (rays, rings, glitter) are laid across the iris ellipse;
+            // the right eye sees them mirrored like everything else
+            var irisBox = GradientMapping.EllipseBox(center, rx, ry);
 
             // Push Clip to Iris Boundary
             dc.PushClip(boundaryGeometry);
@@ -124,17 +179,20 @@ namespace DollIrisGenerator.Services
             if (p.RayCount > 0 && p.RayIntensity > 0.01)
             {
                 var rayRng = new Random(effectiveSeed);
-                var rayBaseColor = GeometryHelper.ParseHexColor(effectiveRayColor, p.RayIntensity);
-                var rayPen = new Pen(new SolidColorBrush(rayBaseColor), p.RayThickness * style)
+
+                double pupilR = baseR * p.PupilSizeRatio;
+                double innerR = Math.Max(pupilR * 0.85, baseR * p.RayInnerRadiusRatio);
+                double outerR = baseR * p.RayLengthRatio;
+
+                // Radial gradient: from the rays' start to their (nominal) tips
+                var rayBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity, irisBox, isRightEye,
+                    innerR / baseR, Math.Min(0.96, p.RayLengthRatio));
+                var rayPen = new Pen(rayBrush, p.RayThickness * style)
                 {
                     StartLineCap = PenLineCap.Round,
                     EndLineCap = PenLineCap.Round
                 };
                 rayPen.Freeze();
-
-                double pupilR = baseR * p.PupilSizeRatio;
-                double innerR = Math.Max(pupilR * 0.85, baseR * p.RayInnerRadiusRatio);
-                double outerR = baseR * p.RayLengthRatio;
 
                 for (int i = 0; i < p.RayCount; i++)
                 {
@@ -170,12 +228,13 @@ namespace DollIrisGenerator.Services
             // 4. Lens-Style Optical Pattern (レンズ風パターン・フレネル屈折リング)
             if (p.LensPatternEnabled && p.LensRingIntensity > 0.01)
             {
-                var lensColor = GeometryHelper.ParseHexColor(p.LensRingColor, p.LensRingIntensity);
-                var lensPen = new Pen(new SolidColorBrush(lensColor), p.LensRingWidth * style);
-                lensPen.Freeze();
-
                 double pupilR = baseR * p.PupilSizeRatio;
                 double ringSpan = (baseR * 0.92) - pupilR;
+
+                // Radial gradient: from the innermost ring (pupil edge) to the outermost one
+                var lensBrush = CreateFillBrush(p.LensRingColor, p.LensRingIntensity, irisBox, isRightEye, p.PupilSizeRatio, 0.92);
+                var lensPen = new Pen(lensBrush, p.LensRingWidth * style);
+                lensPen.Freeze();
 
                 for (int k = 1; k <= p.LensRingCount; k++)
                 {
@@ -188,7 +247,7 @@ namespace DollIrisGenerator.Services
                     // Alternate slightly dotted or continuous optical grooves
                     if (k % 2 == 1)
                     {
-                        var dashPen = new Pen(new SolidColorBrush(lensColor), p.LensRingWidth * 0.8 * style)
+                        var dashPen = new Pen(lensBrush, p.LensRingWidth * 0.8 * style)
                         {
                             DashStyle = new DashStyle(new double[] { 4, 3 }, 0)
                         };
@@ -204,6 +263,7 @@ namespace DollIrisGenerator.Services
                 // Center Refraction Caustic Glow
                 if (p.LensRefractionGlow > 0.01)
                 {
+                    // One color only (a gradient's first color): the glow already fades out by itself
                     var glowColor = GeometryHelper.ParseHexColor(p.LensRingColor, p.LensRefractionGlow * 0.45);
                     var causticBrush = new RadialGradientBrush(glowColor, Color.FromArgb(0, 0, 0, 0));
                     dc.DrawEllipse(causticBrush, null, center, baseR * 0.55 * (rx / baseR), baseR * 0.55 * (ry / baseR));
@@ -214,15 +274,16 @@ namespace DollIrisGenerator.Services
             if (p.LimbalRingThickness > 0.005 && p.LimbalRingOpacity > 0.01)
             {
                 double ringWidth = baseR * p.LimbalRingThickness;
-                var ringColor = GeometryHelper.ParseHexColor(p.LimbalRingColor, p.LimbalRingOpacity);
-                var ringPen = new Pen(new SolidColorBrush(ringColor), ringWidth * 2.0);
+                // Radial gradient: from the ring's inner edge to the iris edge
+                double ringInner = 1.0 - p.LimbalRingThickness;
+                var ringPen = new Pen(CreateFillBrush(p.LimbalRingColor, p.LimbalRingOpacity, irisBox, isRightEye, ringInner), ringWidth * 2.0);
                 ringPen.Freeze();
                 dc.DrawGeometry(null, ringPen, boundaryGeometry);
 
                 if (p.LimbalRingSoftness > 0.05)
                 {
-                    var softColor = GeometryHelper.ParseHexColor(p.LimbalRingColor, p.LimbalRingOpacity * 0.45);
-                    var softPen = new Pen(new SolidColorBrush(softColor), ringWidth * 3.5 * p.LimbalRingSoftness);
+                    var softBrush = CreateFillBrush(p.LimbalRingColor, p.LimbalRingOpacity * 0.45, irisBox, isRightEye, ringInner);
+                    var softPen = new Pen(softBrush, ringWidth * 3.5 * p.LimbalRingSoftness);
                     softPen.Freeze();
                     dc.DrawGeometry(null, softPen, boundaryGeometry);
                 }
@@ -237,49 +298,57 @@ namespace DollIrisGenerator.Services
                 if (p.Shape == IrisShape.VerticalOval) pry *= p.AspectRatio;
                 else if (p.Shape == IrisShape.HorizontalOval) prx *= p.AspectRatio;
 
-                var pupilBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(p.PupilColor, p.PupilOpacity));
-                pupilBrush.Freeze();
-
+                // Drawn around (0, 0) with the move pushed on the context, so a gradient follows the pupil;
+                // the gradient spans the pupil's own bounding box
                 Geometry pupilGeo;
+                Rect pupilBox;
                 var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry);
                 if (pupilOutline != null)
                 {
                     // Cat slit / heart / star: shared outline (same as SVG), corners rounded as requested
-                    var shaped = pupilOutline.Rounded(p.PupilCornerRounding).ToPathGeometry();
-                    shaped.Transform = new TranslateTransform(center.X, center.Y);
-                    pupilGeo = shaped;
+                    var rounded = pupilOutline.Rounded(p.PupilCornerRounding);
+                    pupilGeo = rounded.ToPathGeometry();
+                    pupilBox = rounded.GetBounds();
                 }
                 else if (p.PupilShape == PupilShape.VerticalOval)
                 {
-                    pupilGeo = new EllipseGeometry(center, prx * 0.75, pry * 1.25);
+                    pupilGeo = new EllipseGeometry(new Point(0, 0), prx * 0.75, pry * 1.25);
+                    pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx * 0.75, pry * 1.25);
                 }
                 else
                 {
-                    pupilGeo = new EllipseGeometry(center, prx, pry);
+                    pupilGeo = new EllipseGeometry(new Point(0, 0), prx, pry);
+                    pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx, pry);
                 }
 
+                var pupilBrush = CreateFillBrush(p.PupilColor, p.PupilOpacity, pupilBox, isRightEye);
+
+                dc.PushTransform(new TranslateTransform(center.X, center.Y));
                 dc.DrawGeometry(pupilBrush, null, pupilGeo);
 
                 if (p.PupilSoftness > 0.02)
                 {
                     var softPupilPen = new Pen(
-                        new SolidColorBrush(GeometryHelper.ParseHexColor(p.PupilColor, p.PupilOpacity * 0.35)),
+                        CreateFillBrush(p.PupilColor, p.PupilOpacity * 0.35, pupilBox, isRightEye),
                         prx * p.PupilSoftness * 1.5
                     );
                     softPupilPen.Freeze();
                     dc.DrawGeometry(null, softPupilPen, pupilGeo);
                 }
+                dc.Pop();
             }
 
             // 7. Particles / Glitter (ラメ・粒子)
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
                 var particleRng = new Random(effectiveSeed + 1000);
-                var particleBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(p.ParticleColor, p.ParticleOpacity));
-                particleBrush.Freeze();
-
                 double minR = baseR * p.PupilSizeRatio * 0.95;
                 double maxR = baseR * p.ParticleRadiusRatio;
+
+                // One brush over the whole iris: each grain takes the gradient color of where it sits
+                // (radial: from the inner to the outer edge of the glitter band)
+                var particleBrush = CreateFillBrush(p.ParticleColor, p.ParticleOpacity, irisBox, isRightEye,
+                    p.PupilSizeRatio * 0.95, p.ParticleRadiusRatio);
 
                 for (int i = 0; i < p.ParticleCount; i++)
                 {
@@ -297,8 +366,8 @@ namespace DollIrisGenerator.Services
 
                     if (i % 5 == 0)
                     {
-                        var glitterGeo = GeometryHelper.CreateStar4Geometry(pSize * 1.5, 0.2);
-                        glitterGeo.Transform = new TranslateTransform(px, py);
+                        // Built in place (no geometry transform) so the iris-wide brush is not shifted
+                        var glitterGeo = ShapeOutline.Star(4, pSize * 1.5, 0.2).Offset(px, py).ToPathGeometry();
                         dc.DrawGeometry(particleBrush, null, glitterGeo);
                     }
                     else
@@ -329,11 +398,17 @@ namespace DollIrisGenerator.Services
                     double symY = center.Y + symbol.PositionY * ry;
                     double symRadius = baseR * symbol.Size;
 
-                    var symBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(symbol.Color, symbol.Opacity));
-                    symBrush.Freeze();
-
-                    // Same outline as the SVG export; rounded once and reused for every copy
+                    // Same outline as the SVG export; rounded once and reused for every copy.
+                    // The moon faces the other way in the right eye.
                     var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);
+                    if (symOutline != null && symbol.Type == SymbolType.Moon && isRightEye) symOutline = symOutline.MirroredX();
+                    if (symOutline == null) continue;
+
+                    // Each copy is drawn around (0, 0) with its rotation / position pushed on the context,
+                    // so one brush laid across the symbol's bounding box serves every copy and turns with it
+                    var symBrush = CreateFillBrush(symbol.Color, symbol.Opacity, symOutline.GetBounds(), isRightEye);
+                    Geometry symGeo = symOutline.ToPathGeometry();
+                    symGeo.Freeze();
 
                     for (int c = 0; c < symbol.Count; c++)
                     {
@@ -349,30 +424,17 @@ namespace DollIrisGenerator.Services
                             curY += symRadius * 1.4 * Math.Sin(offsetAngle);
                         }
 
-                        if (symOutline == null) continue;
-                        Geometry symGeo = symOutline.ToPathGeometry();
-
-                        if (symbol.Type == SymbolType.Moon && isRightEye)
-                        {
-                            // The moon faces the other way in the right eye
-                            var tg = new TransformGroup();
-                            tg.Children.Add(new ScaleTransform(-1, 1));
-                            tg.Children.Add(new RotateTransform(curRot));
-                            tg.Children.Add(new TranslateTransform(curX, curY));
-                            symGeo.Transform = tg;
-                            dc.DrawGeometry(symBrush, null, symGeo);
-                            continue;
-                        }
-
                         var transform = new TransformGroup();
-                        if (Math.Abs(curRot) > 0.1)
+                        // The mirrored moon always took its rotation, the other symbols from 0.1° on
+                        if (Math.Abs(curRot) > 0.1 || (symbol.Type == SymbolType.Moon && isRightEye))
                         {
                             transform.Children.Add(new RotateTransform(curRot));
                         }
                         transform.Children.Add(new TranslateTransform(curX, curY));
-                        symGeo.Transform = transform;
 
+                        dc.PushTransform(transform);
                         dc.DrawGeometry(symBrush, null, symGeo);
+                        dc.Pop();
                     }
                 }
             }
@@ -401,8 +463,8 @@ namespace DollIrisGenerator.Services
                     double hy = center.Y + h.PositionY * ry;
                     double hRadius = baseR * h.Size;
 
-                    var hBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(h.Color, h.Opacity));
-                    hBrush.Freeze();
+                    // Gradient across the highlight's own box, turning with it; mirrored with the highlight
+                    var hBrush = CreateFillBrush(h.Color, h.Opacity, HighlightBox(h, hRadius), isRightEye && p.MirrorHighlightsWithIris);
 
                     Geometry hGeo;
                     switch (h.Shape)
@@ -428,9 +490,10 @@ namespace DollIrisGenerator.Services
                         hTransform.Children.Add(new RotateTransform(rot));
                     }
                     hTransform.Children.Add(new TranslateTransform(hx, hy));
-                    hGeo.Transform = hTransform;
 
+                    dc.PushTransform(hTransform);
                     dc.DrawGeometry(hBrush, null, hGeo);
+                    dc.Pop();
                 }
             }
 

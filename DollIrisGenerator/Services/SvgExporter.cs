@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Windows;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
@@ -9,6 +10,61 @@ namespace DollIrisGenerator.Services
     public static class SvgExporter
     {
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+        /// <summary>
+        /// Paint (fill / stroke value) for a color setting that may be a gradient.
+        /// A solid color returns the sanitized hex exactly as before. A gradient writes a
+        /// <c>&lt;linearGradient&gt;</c> / <c>&lt;radialGradient&gt;</c> (userSpaceOnUse, placed by
+        /// <see cref="GradientMapping"/> like the screen renderer) into its own <c>&lt;defs&gt;</c> at the current
+        /// position and returns <c>url(#id)</c>. <paramref name="box"/> is in the user space of the element
+        /// that uses the paint (inside its transform attribute, if any).
+        /// </summary>
+        internal static string Paint(StringBuilder sb, string indent, string id, string? value, string fallbackHex,
+            Rect box, bool mirror = false, double bandInner = 0.0, double bandOuter = 1.0)
+        {
+            var fill = ColorFill.Parse(value);
+            if (!fill.IsGradient) return GeometryHelper.SanitizeColorHex(value, fallbackHex);
+
+            if (mirror) fill = fill.MirroredX();
+            var map = GradientMapping.Create(fill, box, bandInner, bandOuter);
+
+            sb.AppendLine($"{indent}<defs>");
+            if (map.Kind == ColorFillKind.Radial)
+            {
+                // Elliptical radial gradient: unit circle stretched onto the box
+                sb.AppendLine($@"{indent}  <radialGradient id=""{id}"" gradientUnits=""userSpaceOnUse"" cx=""0"" cy=""0"" r=""1"" gradientTransform=""translate({F(map.Center.X)} {F(map.Center.Y)}) scale({F(map.RadiusX, 6)} {F(map.RadiusY, 6)})"">");
+            }
+            else
+            {
+                sb.AppendLine($@"{indent}  <linearGradient id=""{id}"" gradientUnits=""userSpaceOnUse"" x1=""{F(map.Start.X)}"" y1=""{F(map.Start.Y)}"" x2=""{F(map.End.X)}"" y2=""{F(map.End.Y)}"">");
+            }
+            foreach (var s in map.Stops)
+            {
+                var (rgb, alpha) = SvgStopColor(s.Color);
+                string opacityAttr = alpha < 1.0 ? $@" stop-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine($@"{indent}    <stop offset=""{(s.Offset * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
+            }
+            sb.AppendLine(map.Kind == ColorFillKind.Radial ? $"{indent}  </radialGradient>" : $"{indent}  </linearGradient>");
+            sb.AppendLine($"{indent}</defs>");
+            return $"url(#{id})";
+        }
+
+        /// <summary>
+        /// SVG stop color for a stop's hex: "#AARRGGBB" (the app's 8-digit form, alpha first) becomes
+        /// "#RRGGBB" plus a stop-opacity, since SVG would read 8 digits as RRGGBBAA.
+        /// </summary>
+        private static (string Rgb, double Alpha) SvgStopColor(string hex)
+        {
+            string safe = GeometryHelper.SanitizeColorHex(hex, "#FFFFFF");
+            if (safe.Length == 9)
+            {
+                double a = Convert.ToByte(safe.Substring(1, 2), 16) / 255.0;
+                return ("#" + safe.Substring(3), a);
+            }
+            return (safe, 1.0);
+        }
+
+        private static string F(double v, int decimals = 3) => v.ToString("F" + decimals, Inv);
 
         public static string GenerateSingleEyeSvg(IrisParameters p, bool isRightEye, bool includePrintGuides = false)
         {
@@ -96,13 +152,13 @@ namespace DollIrisGenerator.Services
             string effectiveBaseColor = GeometryHelper.SanitizeColorHex(useOddEye ? p.OddEyeBaseColor : p.BaseColor, "#2979FF");
             string effectiveInnerColor = GeometryHelper.SanitizeColorHex(useOddEye ? p.OddEyeInnerColor : p.InnerColor, "#80D8FF");
             string effectiveOuterColor = GeometryHelper.SanitizeColorHex(useOddEye ? p.OddEyeOuterColor : p.OuterColor, "#0D47A1");
-            string effectiveRayColor = GeometryHelper.SanitizeColorHex(useOddEye ? p.OddEyeRayColor : p.RayColor, "#B3E5FC");
             string effectiveBottomColor = GeometryHelper.SanitizeColorHex(useOddEye ? p.OddEyeBottomHighlightColor : p.BottomHighlightColor, "#B3E5FC");
-            string safeLimbalColor = GeometryHelper.SanitizeColorHex(p.LimbalRingColor, "#051636");
-            string safePupilColor = GeometryHelper.SanitizeColorHex(p.PupilColor, "#060A18");
-            string safeParticleColor = GeometryHelper.SanitizeColorHex(p.ParticleColor, "#FFFFFF");
-            string safeLensColor = GeometryHelper.SanitizeColorHex(p.LensRingColor, "#FFFFFF");
+            // Colors that may be gradients go through Paint (sanitized hex, or url(#…) of a generated gradient)
+            string effectiveRayColor = useOddEye ? p.OddEyeRayColor : p.RayColor;
             int effectiveSeed = useOddEye ? (p.Seed + p.OddEyeSeedOffset) : p.Seed;
+
+            // Iris-wide gradients are laid across the iris ellipse (same as the screen renderer)
+            var irisBox = GradientMapping.EllipseBox(new Point(cx, cy), rx, ry);
 
             // Tilt rotation angle
             double tilt = p.TiltAngle;
@@ -158,11 +214,14 @@ namespace DollIrisGenerator.Services
             // Radial Rays
             if (p.RayCount > 0 && p.RayIntensity > 0.01)
             {
-                sb.AppendLine($@"      <g id=""{idPrefix}_rays"" stroke=""{effectiveRayColor}"" stroke-width=""{(p.RayThickness * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" stroke-linecap=""round"" opacity=""{p.RayIntensity.ToString("F2", Inv)}"">");
                 var rayRng = new Random(effectiveSeed);
                 double pupilR = baseR * p.PupilSizeRatio;
                 double innerR = Math.Max(pupilR * 0.85, baseR * p.RayInnerRadiusRatio);
                 double outerR = baseR * p.RayLengthRatio;
+
+                string rayPaint = Paint(sb, "      ", $"{idPrefix}_rays_fill", effectiveRayColor, "#B3E5FC", irisBox, isRightEye,
+                    innerR / baseR, Math.Min(0.96, p.RayLengthRatio));
+                sb.AppendLine($@"      <g id=""{idPrefix}_rays"" stroke=""{rayPaint}"" stroke-width=""{(p.RayThickness * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" stroke-linecap=""round"" opacity=""{p.RayIntensity.ToString("F2", Inv)}"">");
 
                 for (int i = 0; i < p.RayCount; i++)
                 {
@@ -191,7 +250,8 @@ namespace DollIrisGenerator.Services
             // Lens-Style Pattern (Fresnel Rings)
             if (p.LensPatternEnabled && p.LensRingIntensity > 0.01)
             {
-                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{safeLensColor}"" stroke-width=""{(p.LensRingWidth * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" opacity=""{p.LensRingIntensity.ToString("F2", Inv)}"" fill=""none"">");
+                string lensPaint = Paint(sb, "      ", $"{idPrefix}_lens_fill", p.LensRingColor, "#FFFFFF", irisBox, isRightEye, p.PupilSizeRatio, 0.92);
+                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{(p.LensRingWidth * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" opacity=""{p.LensRingIntensity.ToString("F2", Inv)}"" fill=""none"">");
                 double pupilR = baseR * p.PupilSizeRatio;
                 double ringSpan = (baseR * 0.92) - pupilR;
 
@@ -212,7 +272,8 @@ namespace DollIrisGenerator.Services
             if (p.LimbalRingThickness > 0.005 && p.LimbalRingOpacity > 0.01)
             {
                 double ringWidth = baseR * p.LimbalRingThickness;
-                sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""none"" stroke=""{safeLimbalColor}"" stroke-width=""{(ringWidth * 2.0).ToString("F3", Inv)}"" opacity=""{p.LimbalRingOpacity.ToString("F2", Inv)}"" />");
+                string limbalPaint = Paint(sb, "      ", $"{idPrefix}_limbal_fill", p.LimbalRingColor, "#051636", irisBox, isRightEye, 1.0 - p.LimbalRingThickness);
+                sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToString("F3", Inv)}"" cy=""{cy.ToString("F3", Inv)}"" rx=""{rx.ToString("F3", Inv)}"" ry=""{ry.ToString("F3", Inv)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 2.0).ToString("F3", Inv)}"" opacity=""{p.LimbalRingOpacity.ToString("F2", Inv)}"" />");
             }
 
             // Pupil
@@ -223,12 +284,20 @@ namespace DollIrisGenerator.Services
                 if (p.Shape == IrisShape.VerticalOval) pry *= p.AspectRatio;
                 else if (p.Shape == IrisShape.HorizontalOval) prx *= p.AspectRatio;
 
-                sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{safePupilColor}"" opacity=""{p.PupilOpacity.ToString("F2", Inv)}"">");
-                var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry);
+                // Cat slit / heart / star: same outline as the screen / PDF renderer.
+                // A gradient spans the pupil's own bounding box (as on screen).
+                var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry)?.Rounded(p.PupilCornerRounding);
+                Rect pupilBox;
+                if (pupilOutline != null) pupilBox = pupilOutline.GetBounds();
+                else if (p.PupilShape == PupilShape.VerticalOval) pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx * 0.75, pry * 1.25);
+                else pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx, pry);
+                pupilBox.Offset(cx, cy);
+
+                string pupilPaint = Paint(sb, "      ", $"{idPrefix}_pupil_fill", p.PupilColor, "#060A18", pupilBox, isRightEye);
+                sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToString("F2", Inv)}"">");
                 if (pupilOutline != null)
                 {
-                    // Cat slit / heart / star: same outline as the screen / PDF renderer
-                    sb.AppendLine($@"        <path d=""{pupilOutline.Rounded(p.PupilCornerRounding).ToSvgPathData(cx, cy)}"" />");
+                    sb.AppendLine($@"        <path d=""{pupilOutline.ToSvgPathData(cx, cy)}"" />");
                 }
                 else if (p.PupilShape == PupilShape.VerticalOval)
                 {
@@ -244,7 +313,9 @@ namespace DollIrisGenerator.Services
             // Particles / Glitter
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
-                sb.AppendLine($@"      <g id=""{idPrefix}_glitter"" fill=""{safeParticleColor}"" opacity=""{p.ParticleOpacity.ToString("F2", Inv)}"">");
+                string glitterPaint = Paint(sb, "      ", $"{idPrefix}_glitter_fill", p.ParticleColor, "#FFFFFF", irisBox, isRightEye,
+                    p.PupilSizeRatio * 0.95, p.ParticleRadiusRatio);
+                sb.AppendLine($@"      <g id=""{idPrefix}_glitter"" fill=""{glitterPaint}"" opacity=""{p.ParticleOpacity.ToString("F2", Inv)}"">");
                 var pRng = new Random(effectiveSeed + 1000);
                 double minR = baseR * p.PupilSizeRatio * 0.95;
                 double maxR = baseR * p.ParticleRadiusRatio;
@@ -274,8 +345,10 @@ namespace DollIrisGenerator.Services
             // Decorative Symbols
             if (p.Symbols != null)
             {
+                int symbolIndex = -1;
                 foreach (var symbol in p.Symbols)
                 {
+                    symbolIndex++;
                     if (!symbol.Enabled || symbol.Type == SymbolType.None || symbol.Opacity <= 0.01)
                         continue;
 
@@ -290,12 +363,16 @@ namespace DollIrisGenerator.Services
                     double symX = cx + posX * rx;
                     double symY = cy + symbol.PositionY * ry;
                     double symRadius = baseR * symbol.Size;
+                    // A gradient's first color stands in on the group; each copy then gets its own gradient
                     string safeSymColor = GeometryHelper.SanitizeColorHex(symbol.Color, "#FFFFFF");
+                    bool symGradient = ColorFill.Parse(symbol.Color).IsGradient;
 
                     sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToString("F2", Inv)}"">");
 
                     // Same outline as the screen / PDF renderer; rounded once and reused for every copy
                     var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);
+                    bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
+                    Rect symBounds = symOutline?.GetBounds(mirror) ?? Rect.Empty;
 
                     for (int c = 0; c < symbol.Count; c++)
                     {
@@ -313,9 +390,18 @@ namespace DollIrisGenerator.Services
 
                         string rotAttr = Math.Abs(curRot) > 0.1 ? $@" transform=""rotate({curRot.ToString("F1", Inv)}, {curX.ToString("F3", Inv)}, {curY.ToString("F3", Inv)})""" : "";
                         if (symOutline == null) continue;
+
+                        // The path is written at (curX, curY) and turned around it, so the gradient box moves with it
+                        string fillAttr = "";
+                        if (symGradient)
+                        {
+                            var box = symBounds;
+                            box.Offset(curX, curY);
+                            string paint = Paint(sb, "        ", $"{idPrefix}_symbol{symbolIndex}_{c}_fill", symbol.Color, "#FFFFFF", box, isRightEye);
+                            fillAttr = $@" fill=""{paint}""";
+                        }
                         // The moon faces the other way in the right eye (mirrored before the rotation, as on screen)
-                        bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
-                        sb.AppendLine($@"        <path d=""{symOutline.ToSvgPathData(curX, curY, mirror)}""{rotAttr} />");
+                        sb.AppendLine($@"        <path d=""{symOutline.ToSvgPathData(curX, curY, mirror)}""{fillAttr}{rotAttr} />");
                     }
                     sb.AppendLine("      </g>");
                 }
@@ -328,8 +414,10 @@ namespace DollIrisGenerator.Services
             if (p.Highlights != null)
             {
                 sb.AppendLine($@"    <g id=""{idPrefix}_highlights"">");
+                int highlightIndex = -1;
                 foreach (var h in p.Highlights)
                 {
+                    highlightIndex++;
                     if (!h.Enabled || h.Opacity <= 0.01 || h.Size <= 0.005)
                         continue;
 
@@ -345,7 +433,11 @@ namespace DollIrisGenerator.Services
                     double hx = cx + posX * rx;
                     double hy = cy + h.PositionY * ry;
                     double hRadius = baseR * h.Size;
-                    string safeHColor = GeometryHelper.SanitizeColorHex(h.Color, "#FFFFFF");
+                    // Gradient across the highlight's own box around (hx, hy), turned with it (as on screen)
+                    var hBox = WpfIrisRenderer.HighlightBox(h, hRadius);
+                    hBox.Offset(hx, hy);
+                    string safeHColor = Paint(sb, "      ", $"{idPrefix}_highlight{highlightIndex}_fill", h.Color, "#FFFFFF", hBox,
+                        isRightEye && p.MirrorHighlightsWithIris);
 
                     string rotAttr = Math.Abs(rot) > 0.1 ? $@" transform=""rotate({rot.ToString("F1", Inv)}, {hx.ToString("F3", Inv)}, {hy.ToString("F3", Inv)})""" : "";
 

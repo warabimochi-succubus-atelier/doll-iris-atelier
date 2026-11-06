@@ -336,7 +336,7 @@
                                         <!-- Pupil Color -->
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="瞳孔色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilColor, Mode=TwoWay}"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.PupilColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <!-- Pupil Opacity -->
@@ -375,7 +375,7 @@
                                         <!-- Ray Color -->
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="ライン色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.RayColor, Mode=TwoWay}"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.RayColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <!-- Ray Thickness -->
@@ -428,7 +428,7 @@
 
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="リング色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.LimbalRingColor, Mode=TwoWay}"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LimbalRingColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <DockPanel Margin="0,0,0,4">
@@ -456,7 +456,7 @@
 
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="ラメ色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.ParticleColor, Mode=TwoWay}"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.ParticleColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <DockPanel Margin="0,0,0,4">
@@ -526,7 +526,7 @@
 
                                                             <DockPanel Margin="0,0,0,6">
                                                                 <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
-                                                                <controls:ColorPickerBox SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
                                                             </DockPanel>
 
                                                             <DockPanel Margin="0,0,0,4">
@@ -600,7 +600,7 @@
 
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="リング線色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.LensRingColor, Mode=TwoWay}"
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LensRingColor, Mode=TwoWay}"
                                                                     IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
                                         </DockPanel>
 
@@ -661,7 +661,7 @@
 
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="右目ライン色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.OddEyeRayColor, Mode=TwoWay}"
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.OddEyeRayColor, Mode=TwoWay}"
                                                                     IsEnabled="{Binding CurrentIris.IsOddEye}"/>
                                         </DockPanel>
 
@@ -720,7 +720,7 @@
 
                                                             <DockPanel Margin="0,0,0,6">
                                                                 <TextBlock Text="色:" VerticalAlignment="Center" Width="70"/>
-                                                                <controls:ColorPickerBox SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
                                                             </DockPanel>
 
                                                             <DockPanel Margin="0,0,0,4">
