@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- Shown in the exe's file properties; keep in sync with AppInfo.VersionLabel -->
+    <Version>0.9.0</Version>
     <Product>Doll Iris Atelier</Product>
     <Title>Doll Iris Atelier</Title>
     <AssemblyTitle>Doll Iris Atelier</AssemblyTitle>
