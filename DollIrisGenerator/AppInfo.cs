@@ -8,6 +8,7 @@ namespace DollIrisGenerator
     public static class AppInfo
     {
         public const string Name = "Doll Iris Atelier";
+        // Keep in sync with <Version> in DollIrisGenerator.csproj
         public const string VersionLabel = "v0.9.0";
         public const string Author = "わらびもちサキュバス工房";
         public const string Copyright = "© 2026 わらびもちサキュバス工房";
