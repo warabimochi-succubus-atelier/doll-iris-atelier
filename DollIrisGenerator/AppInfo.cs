@@ -8,7 +8,7 @@ namespace DollIrisGenerator
     public static class AppInfo
     {
         public const string Name = "Doll Iris Atelier";
-        public const string VersionLabel = "v1.0";
+        public const string VersionLabel = "v0.9.0";
         public const string Author = "わらびもちサキュバス工房";
         public const string Copyright = "© 2026 わらびもちサキュバス工房";
         public const string License = "MIT License (ロゴとアイコンを除く)";
