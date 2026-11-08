@@ -66,28 +66,6 @@ export function download(fileName, text, mimeType) {
     setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-/** True when the share sheet can take files (phones / tablets). */
-export function canShareFiles() {
-    try {
-        const probe = new File(["{}"], "probe.json", { type: "application/json" });
-        return !!(navigator.canShare && navigator.canShare({ files: [probe] }));
-    } catch {
-        return false;
-    }
-}
-
-/** Opens the share sheet with a file. Resolves to false when the user cancelled. */
-export async function shareFile(fileName, text, mimeType) {
-    const file = new File([text], fileName, { type: mimeType });
-    try {
-        await navigator.share({ files: [file] });
-        return true;
-    } catch (e) {
-        if (e && e.name === "AbortError") return false;
-        throw e;
-    }
-}
-
 export function confirmDialog(message) {
     return window.confirm(message);
 }

@@ -94,7 +94,7 @@
 - **プレビュー**: `SvgExporter.GeneratePairSvg`（ペア内の間隔は A4 シートの既定値）の SVG を Blob URL の `<img>` として表示する（読み込んだファイルの内容がスクリプトとして動かないように。Base64 の data URI を作らずに済むよう、SVG の文字列は `[JSImport]` で直接渡す）。前の URL は次の画像を表示した後に解放する。ドラッグ中は最新の状態だけを描く。デスクトップ版の SVG とは改行コードだけが違う（Windows は CRLF、ブラウザは LF）。
 - **色**: 単色はカラーピッカーで選ぶ。グラデーションを使える項目は「単色・直線・放射・円周」を切り替えられ、グラデーションは JSON と同じ表記の文字列で編集する（7.1.1）。
 - **お気に入りの保存**: ブラウザの IndexedDB に、`favorites.json` と同じ形式の文字列 (`FavoritesStore.Serialize`) で、変更のたびに保存する。読み込めなかった場合は上書きしないよう保存を止める。起動時に `navigator.storage.persist()` で保存領域の保持を求める。削除の前には確認する（デスクトップ版と違い、元のファイルが残らないため）。
-- **受け渡し**: 「お気に入りをすべて書き出す」「今のデザインだけ書き出す」で `.irisfav.json` を作る（共有シートが使える端末では共有、それ以外はダウンロード）。読み込みは `.irisfav.json` とデザイン単体の JSON（`FavoritesStore.ParseImportText`、上限 10MB）で、一覧の末尾に追加する。
+- **受け渡し**: 「お気に入りをすべて書き出す」「今のデザインだけ書き出す」で `.irisfav.json` を作る（スマホも含めてダウンロード。iOS ではダウンロード後の「その他」から OneDrive などに渡せる。共有シートは JSON を受け付けるアプリしか出ないので使わない）。読み込みは `.irisfav.json` とデザイン単体の JSON（`FavoritesStore.ParseImportText`、上限 10MB）で、一覧の末尾に追加する。
 - **出力しないもの**: A4 PDF・PNG・SVG ファイル。印刷はデスクトップ版で行う。
 - **オフライン・通信**: Service Worker がアプリのファイルをキャッシュし、一度開けばオフラインで動く。外部への通信は行わない（アプリのファイルの取得・更新のみ）。
 - **CSP**: `index.html` の `<meta http-equiv="Content-Security-Policy">` で、読み込めるものをアプリ自身のファイルに限る（GitHub Pages ではヘッダーを設定できないため）。スクリプトは `'self'` と `'wasm-unsafe-eval'`（WebAssembly のコンパイル）だけで、インラインスクリプトは許さない（Service Worker の登録は `js/register-sw.js`）。画像は `'self'` と `blob:`（プレビュー）、`style` 属性だけ許す（グラデーションの見本）。`<meta>` の CSP はそれより後にあるものにだけ効くので、発行のたびに中身が変わるインポートマップ（インラインスクリプト）の後に置く。`frame-ancestors` は `<meta>` では効かないため、ヘッダーを設定できるサーバーではそちらで指定する。

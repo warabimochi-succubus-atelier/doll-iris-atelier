@@ -58,14 +58,6 @@
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
     [Parameter] public EventCallback<string> OnMessage { get; set; }
 
-    private bool _canShare;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try { _canShare = await Browser.CanShareFilesAsync(); }
-        catch { _canShare = false; }
-    }
-
     private static string Stamp() => DateTime.Now.ToString("yyyyMMdd-HHmm");
     private static string AllFileName() => $"お気に入り-{Stamp()}.irisfav.json";
 
@@ -84,13 +76,8 @@
         string text = FavoritesStore.Serialize(items);
         try
         {
-            // Phones: the share sheet (AirDrop, mail, cloud...). Elsewhere: an ordinary download.
-            if (_canShare)
-            {
-                bool shared = await Browser.ShareFileAsync(fileName, text, MimeType);
-                await OnMessage.InvokeAsync(shared ? $"「{fileName}」を共有しました。" : "共有を取りやめました。");
-                return;
-            }
+            // An ordinary download everywhere, phones included: iOS then offers "Open in" / "More",
+            // which lists any app (OneDrive etc.). The Web Share sheet only lists apps that accept JSON.
             await Browser.DownloadAsync(fileName, text, MimeType);
             await OnMessage.InvokeAsync($"「{fileName}」を保存しました。");
         }
