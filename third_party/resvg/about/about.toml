@@ -1,0 +1,7 @@
+# cargo-about settings for THIRD-PARTY-LICENSES.txt (see .github/workflows/build-resvg.yml)
+# For "A OR B" crates the first accepted license in this list is the one named.
+accepted = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "Zlib", "0BSD", "Unlicense"]
+targets = ["x86_64-pc-windows-msvc"]
+# Only what is linked into resvg.dll
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
