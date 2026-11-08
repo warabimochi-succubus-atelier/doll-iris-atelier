@@ -29,6 +29,7 @@ namespace DollIrisGenerator
                 if (DataContext is not MainViewModel vm) return;
                 vm.ShowFavoritesLoadProblem();
                 vm.ShowPrintSheetLoadProblem();
+                vm.ShowUserPresetsLoadProblem();
                 // A different view starts centred
                 vm.PropertyChanged += (_, args) =>
                 {

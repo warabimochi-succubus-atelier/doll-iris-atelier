@@ -345,6 +345,22 @@
                                         <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
                                         <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
 
+                                        <!-- Rename / remove: only for presets the user added (the built-in ones stay as they are) -->
+                                        <DockPanel Margin="0,0,0,6" IsEnabled="{Binding IsSelectedPresetUserMade}"
+                                                   ToolTip="名前の変更と削除は、追加したプリセットだけで使えます (内蔵プリセットは変更できません)"
+                                                   ToolTipService.ShowOnDisabled="True">
+                                            <Button Content="🗑 削除" Command="{Binding RemovePresetCommand}" DockPanel.Dock="Right"
+                                                    Background="#4A2430" Foreground="#FFCDD2" Padding="8,2" Margin="6,0,0,0" FontSize="11"
+                                                    ToolTip="選択中の追加したプリセットを一覧から削除します (今のデザインは変わりません)"/>
+                                            <Button Content="✏️ 名前を変更" Command="{Binding RenamePresetCommand}" DockPanel.Dock="Right"
+                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,2" Margin="6,0,0,0" FontSize="11"/>
+                                            <TextBox Text="{Binding PresetNameDraft, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center">
+                                                <TextBox.InputBindings>
+                                                    <KeyBinding Key="Enter" Command="{Binding RenamePresetCommand}"/>
+                                                </TextBox.InputBindings>
+                                            </TextBox>
+                                        </DockPanel>
+
                                         <!-- Preset Sharing Actions -->
                                         <TextBlock Text="プリセット共有・管理:" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,4"/>
                                         <WrapPanel>
