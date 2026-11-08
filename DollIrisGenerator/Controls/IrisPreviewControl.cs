@@ -137,10 +137,20 @@ namespace DollIrisGenerator.Controls
         private Point _lastMousePos;
         private bool _isDragging = false;
 
+        // Eyes are pictures of their SVG drawn by resvg, redrawn in the background after a change
+        private readonly PreviewEyeImages _eyes;
+
+        // Bumped on every change of a design, the sheet or its settings: the eyes' SVG is rebuilt only then
+        // (panning and zooming reuse it)
+        private long _modelVersion;
+
         public IrisPreviewControl()
         {
             ClipToBounds = true;
             Focusable = true;
+            _eyes = new PreviewEyeImages(Dispatcher, InvalidateVisual);
+            // An older picture shown while the new zoom is drawn is scaled smoothly
+            RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
 
             MouseDown += OnMouseDown;
             MouseMove += OnMouseMove;
@@ -154,6 +164,7 @@ namespace DollIrisGenerator.Controls
         private static void OnParametersChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = (IrisPreviewControl)d;
+            ctrl._modelVersion++;
             if (e.OldValue is INotifyPropertyChanged oldP) oldP.PropertyChanged -= ctrl.OnModelPropertyChanged;
             if (e.NewValue is INotifyPropertyChanged newP) newP.PropertyChanged += ctrl.OnModelPropertyChanged;
         }
@@ -161,6 +172,7 @@ namespace DollIrisGenerator.Controls
         private static void OnSheetConfigChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = (IrisPreviewControl)d;
+            ctrl._modelVersion++;
             if (e.OldValue is INotifyPropertyChanged oldCfg) oldCfg.PropertyChanged -= ctrl.OnModelPropertyChanged;
             if (e.NewValue is INotifyPropertyChanged newCfg) newCfg.PropertyChanged += ctrl.OnModelPropertyChanged;
         }
@@ -168,6 +180,7 @@ namespace DollIrisGenerator.Controls
         private static void OnSheetItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var ctrl = (IrisPreviewControl)d;
+            ctrl._modelVersion++;
             if (e.OldValue is ObservableCollection<SheetItem> oldItems)
             {
                 oldItems.CollectionChanged -= ctrl.OnSheetItemsCollectionChanged;
@@ -186,10 +199,15 @@ namespace DollIrisGenerator.Controls
                 foreach (var item in e.OldItems.OfType<INotifyPropertyChanged>()) item.PropertyChanged -= OnModelPropertyChanged;
             if (e.NewItems != null)
                 foreach (var item in e.NewItems.OfType<INotifyPropertyChanged>()) item.PropertyChanged += OnModelPropertyChanged;
+            _modelVersion++;
             InvalidateVisual();
         }
 
-        private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e) => InvalidateVisual();
+        private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            _modelVersion++;
+            InvalidateVisual();
+        }
 
         public void ResetPan()
         {
@@ -246,6 +264,24 @@ namespace DollIrisGenerator.Controls
         protected override void OnRender(DrawingContext dc)
         {
             base.OnRender(dc);
+            _eyes.BeginFrame();
+            try
+            {
+                RenderView(dc);
+            }
+            finally
+            {
+                _eyes.EndFrame();
+            }
+        }
+
+        private double PixelsPerDip => VisualTreeHelper.GetDpi(this).PixelsPerDip;
+
+        /// <summary>Eye pictures still being drawn in the background (for tests).</summary>
+        internal int EyePicturesInProgress => _eyes.BusyCount;
+
+        private void RenderView(DrawingContext dc)
+        {
 
             double w = ActualWidth;
             double h = ActualHeight;
@@ -273,7 +309,6 @@ namespace DollIrisGenerator.Controls
             // Spacing and label positions use the eye's tilted footprint (same as the exports)
             var (irisW_Mm, irisH_Mm) = SheetLayout.GetEyeFootprintMm(p);
 
-            double radiusMm = p.SizeMm / 2.0;
             // Same gap as SVG / PNG / PDF output ("ペア内左右の間隔")
             double pairSpacingPx = (SheetConfig?.PairSpacingXMm ?? 4.0) * pixelsPerMm;
 
@@ -286,29 +321,11 @@ namespace DollIrisGenerator.Controls
                     Point rightCenter = new Point(cx + halfSpanX - ((irisW_Mm * pixelsPerMm) / 2.0), cy);
 
                     // Left Eye
-                    WpfIrisRenderer.RenderIris(
-                        dc,
-                        leftCenter,
-                        radiusMm,
-                        pixelsPerMm,
-                        p,
-                        isRightEye: false,
-                        showCutLine: ShowCutLines,
-                        showCenterMark: ShowCenterMarks
-                    );
+                    _eyes.Draw(dc, p, isRight: false, leftCenter, pixelsPerMm, PixelsPerDip, ShowCutLines, ShowCenterMarks, _modelVersion);
                     if (ShowEyeLabels) DrawEyeLabel(dc, "L (左)", new Point(leftCenter.X, leftCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
 
                     // Right Eye (Mirrored)
-                    WpfIrisRenderer.RenderIris(
-                        dc,
-                        rightCenter,
-                        radiusMm,
-                        pixelsPerMm,
-                        p,
-                        isRightEye: true,
-                        showCutLine: ShowCutLines,
-                        showCenterMark: ShowCenterMarks
-                    );
+                    _eyes.Draw(dc, p, isRight: true, rightCenter, pixelsPerMm, PixelsPerDip, ShowCutLines, ShowCenterMarks, _modelVersion);
                     if (ShowEyeLabels) DrawEyeLabel(dc, "R (右・鏡像)", new Point(rightCenter.X, rightCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
                     break;
             }
@@ -365,22 +382,16 @@ namespace DollIrisGenerator.Controls
             var items = SheetItems is { Count: > 0 } ? SheetItems : new ObservableCollection<SheetItem> { new(p, 1) };
             var layout = new SheetLayout(items, cfg);
 
-            // Preview shows the first page.
-            // A sheet usually repeats the same design many times: build each distinct eye once (frozen drawing)
-            // and stamp it into every cell, instead of regenerating rays / particles for each copy.
-            var eyeCache = new Dictionary<(IrisParameters, bool), Drawing>(); // IrisParameters compares by reference
-            Drawing GetEye(IrisParameters design, bool isRight)
+            // Preview shows the first page. A sheet usually repeats the same design many times: each design's eye
+            // picture is made once (per side) and drawn in every cell; eyes outside the view are not drawn at all.
+            var view = new Rect(0, 0, ActualWidth, ActualHeight);
+            double pixelsPerDip = PixelsPerDip;
+            void DrawEye(IrisParameters design, bool isRight, Point center)
             {
-                if (eyeCache.TryGetValue((design, isRight), out var cached)) return cached;
-                var group = new DrawingGroup();
-                using (var ctx = group.Open())
-                {
-                    WpfIrisRenderer.RenderIris(ctx, new Point(0, 0), design.SizeMm / 2.0, pixelsPerMm, design,
-                        isRightEye: isRight, showCutLine: cfg.ShowCutLines, showCenterMark: cfg.ShowCenterMarks);
-                }
-                group.Freeze();
-                eyeCache[(design, isRight)] = group;
-                return group;
+                var (fw, fh) = SheetLayout.GetEyeFootprintMm(design);
+                var bounds = new Rect(center.X - fw / 2.0 * pixelsPerMm, center.Y - fh / 2.0 * pixelsPerMm, fw * pixelsPerMm, fh * pixelsPerMm);
+                if (!bounds.IntersectsWith(view)) return;
+                _eyes.Draw(dc, design, isRight, center, pixelsPerMm, pixelsPerDip, cfg.ShowCutLines, cfg.ShowCenterMarks, _modelVersion);
             }
 
             int pairsOnPage = Math.Min(layout.PairsPerPage, layout.Pairs.Count);
@@ -389,14 +400,8 @@ namespace DollIrisGenerator.Controls
                 var pair = layout.Pairs[slot];
                 var (leftX_Mm, rightX_Mm, y_Mm) = layout.GetEyeCentersMm(slot);
                 double cy_Px = sheetRect.Top + y_Mm * pixelsPerMm;
-
-                dc.PushTransform(new TranslateTransform(sheetRect.Left + leftX_Mm * pixelsPerMm, cy_Px));
-                dc.DrawDrawing(GetEye(pair, false));
-                dc.Pop();
-
-                dc.PushTransform(new TranslateTransform(sheetRect.Left + rightX_Mm * pixelsPerMm, cy_Px));
-                dc.DrawDrawing(GetEye(pair, true));
-                dc.Pop();
+                DrawEye(pair, false, new Point(sheetRect.Left + leftX_Mm * pixelsPerMm, cy_Px));
+                DrawEye(pair, true, new Point(sheetRect.Left + rightX_Mm * pixelsPerMm, cy_Px));
             }
 
             if (cfg.ShowScaleMark)
