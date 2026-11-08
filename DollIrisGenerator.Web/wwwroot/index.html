@@ -7,13 +7,29 @@
     <title>Doll Iris Atelier</title>
     <meta name="description" content="ドールアイ向けの虹彩をデザインして、デスクトップ版で印刷するためのアプリ" />
     <meta name="theme-color" content="#1e1e24" />
-    <base href="/" />
+    <!--
+      Relative, so the same files work at the site root and in a subfolder (GitHub Pages /<repository>/) without
+      editing this file after publishing: an edit would no longer match the hash in service-worker-assets.js,
+      and the Service Worker would fail to install (no offline support). The app has a single page, so every URL it
+      opens is in the app's own folder.
+    -->
+    <base href="./" />
     <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="css/app.css" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="icon" type="image/png" href="icon-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <script type="importmap"></script>
+    <!--
+      Content-Security-Policy (GitHub Pages cannot send headers, so it is a <meta>). It must stay AFTER the import map:
+      a <meta> policy only applies to what follows it, and the import map is an inline script that the build rewrites
+      (new fingerprints and hashes every publish), so it could not be allowed by a fixed hash.
+      - script-src: only this app's own files; 'wasm-unsafe-eval' lets the browser compile .NET's WebAssembly.
+      - style-src-attr: the gradient swatch of ColorInput sets style="background: ...".
+      - img-src blob:: the preview images (PreviewInterop).
+      frame-ancestors / X-Frame-Options only work as HTTP headers; set them on the server if it allows.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
 </head>
 
 <body>
@@ -31,7 +47,7 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
+    <script src="js/register-sw.js"></script>
 </body>
 
 </html>

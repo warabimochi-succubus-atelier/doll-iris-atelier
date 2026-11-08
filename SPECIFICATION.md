@@ -97,8 +97,9 @@
 - **受け渡し**: 「お気に入りをすべて書き出す」「今のデザインだけ書き出す」で `.irisfav.json` を作る（共有シートが使える端末では共有、それ以外はダウンロード）。読み込みは `.irisfav.json` とデザイン単体の JSON（`FavoritesStore.ParseImportText`、上限 10MB）で、一覧の末尾に追加する。
 - **出力しないもの**: A4 PDF・PNG・SVG ファイル。印刷はデスクトップ版で行う。
 - **オフライン・通信**: Service Worker がアプリのファイルをキャッシュし、一度開けばオフラインで動く。外部への通信は行わない（アプリのファイルの取得・更新のみ）。
+- **CSP**: `index.html` の `<meta http-equiv="Content-Security-Policy">` で、読み込めるものをアプリ自身のファイルに限る（GitHub Pages ではヘッダーを設定できないため）。スクリプトは `'self'` と `'wasm-unsafe-eval'`（WebAssembly のコンパイル）だけで、インラインスクリプトは許さない（Service Worker の登録は `js/register-sw.js`）。画像は `'self'` と `blob:`（プレビュー）、`style` 属性だけ許す（グラデーションの見本）。`<meta>` の CSP はそれより後にあるものにだけ効くので、発行のたびに中身が変わるインポートマップ（インラインスクリプト）の後に置く。`frame-ancestors` は `<meta>` では効かないため、ヘッダーを設定できるサーバーではそちらで指定する。
 - **AOT**: `dotnet publish` では .NET のコードを WebAssembly に事前コンパイルする（`RunAOTCompilation`。wasm-tools ワークロードが必要）。プレビューの再描画は約 1.6 倍、星雲の計算は約 4 倍速く、ダウンロードは約 2.3 倍になる。`dotnet build` / `dotnet run` はインタープリターのまま（ワークロード不要）。AOT とインタープリターで SVG は同じになる。
-- **配信**: `dotnet publish` の `wwwroot` を静的ファイルとして HTTPS で配信する。Service Worker はキャッシュの基準を登録されたスコープから決めるので、サブフォルダーでも `index.html` の `<base href>` を合わせれば動く。
+- **配信**: `dotnet publish` の `wwwroot` を静的ファイルとして HTTPS で配信する。`index.html` の `<base href>` は相対 (`./`) なので、ルートでもサブフォルダーでも同じファイルのまま動く（ページは 1 つだけなので、開く URL はいつもアプリのフォルダーにある）。Service Worker はキャッシュの基準を登録されたスコープから決める。発行後にファイルを書き換えると `service-worker-assets.js` のハッシュと合わなくなり、Service Worker のインストールが失敗する（オフラインで使えない）ため、書き換えずに配信する。
 
 ---
 

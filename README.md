@@ -167,7 +167,9 @@ dotnet publish .\DollIrisGenerator.Web --configuration Release --output .\dist\w
 ```
 発行には数分かかります。プレビューの再描画は AOT なしの約 1.6 倍（星雲の計算は約 4 倍）速くなり、代わりにダウンロードは約 2.3 倍（Brotli 圧縮で約 2.1 MB → 約 4.9 MB）になります。
 
-`dist\web\wwwroot` の中身を静的ファイルとして HTTPS で公開します。サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）に置く場合は、`index.html` の `<base href="/" />` をそのフォルダー（例: `/doll-iris-atelier/`）に書き換えてください。GitHub Pages では、公開するフォルダーのルートに空の `.nojekyll` ファイルも置いてください（置かないと Jekyll が `_` で始まる `_framework` フォルダーを公開から外し、アプリが起動しません）。
+`dist\web\wwwroot` の中身を、そのまま静的ファイルとして HTTPS で公開します。サイトのルートでも、サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）でも、ファイルを書き換えずに動きます。発行後にファイルを書き換えないでください（Service Worker が `service-worker-assets.js` に記録されたハッシュと照合するため、書き換えるとオフラインで使えなくなります）。GitHub Pages では、公開するフォルダーのルートに空の `.nojekyll` ファイルも置いてください（置かないと Jekyll が `_` で始まる `_framework` フォルダーを公開から外し、アプリが起動しません）。
+
+`index.html` には、アプリ自身のファイル以外を読み込ませない CSP（Content-Security-Policy）を `<meta>` で入れてあります。ヘッダーを設定できるサーバーで公開する場合は、他のサイトに埋め込まれないよう `Content-Security-Policy: frame-ancestors 'none'` も付けてください（`<meta>` では効きません）。
 
 ---
 
