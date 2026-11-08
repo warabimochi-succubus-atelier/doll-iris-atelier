@@ -611,10 +611,10 @@
 
                                         <!-- Pupil Opacity -->
                                         <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity}" Margin="0,0,0,6"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,6"/>
 
                                         <!-- Pupil Softness -->
                                         <DockPanel Margin="0,0,0,4">
@@ -1015,10 +1015,10 @@
                                         </DockPanel>
 
                                         <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LimbalRingOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalRingOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LimbalRingOpacity}" Margin="0,0,0,8"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LimbalRingOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,8"/>
 
                                         <DockPanel Margin="0,0,0,4">
                                             <TextBlock Text="境界の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1056,10 +1056,10 @@
                                         <Slider Minimum="0.5" Maximum="5.0" Value="{Binding CurrentIris.ParticleMaxSize}" Margin="0,0,0,8"/>
 
                                         <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.ParticleOpacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleOpacity}" Margin="0,0,0,8"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.ParticleOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,8"/>
 
                                         <DockPanel Margin="0,0,0,4">
                                             <TextBlock Text="分布範囲 (外周比率):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1198,10 +1198,10 @@
                                                             <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
 
                                                             <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                             </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
@@ -1413,10 +1413,10 @@
                                                             <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
 
                                                             <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                             </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity}"/>
+                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
