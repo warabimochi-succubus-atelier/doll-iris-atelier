@@ -44,6 +44,8 @@ jobs:
           New-Item -ItemType Directory -Force $out | Out-Null
           Copy-Item resvg/target/release/resvg.dll $out
           Copy-Item resvg/LICENSE-APACHE, resvg/LICENSE-MIT out
+          # Crates linked into the DLL with their licenses (for NOTICE.md)
+          cargo +stable tree --manifest-path resvg/Cargo.toml -p resvg-capi --no-default-features --features raster-images -e normal --prefix none --format "{p} | {l}" | Sort-Object -Unique | Set-Content -Encoding utf8 out/DEPENDENCIES.txt
           $commit = git -C resvg rev-parse HEAD
           $hash = (Get-FileHash "$out/resvg.dll" -Algorithm SHA256).Hash.ToLowerInvariant()
           $rustc = rustc +stable --version
