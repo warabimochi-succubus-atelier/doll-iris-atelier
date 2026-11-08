@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.11.0
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.12.0
 
 ## Overview (English)
 
@@ -127,10 +127,10 @@ dotnet build .\DollIrisGenerator --configuration Release
 ### リリース（GitHub Actions）
 `DollIrisGenerator.csproj` と `DollIrisGenerator.Web.csproj` の `<Version>` を上げて `main` に入れたら、そのコミットにバージョンのタグを付けて push します。
 ```powershell
-git tag v0.11.0
-git push origin v0.11.0
+git tag v0.12.0
+git push origin v0.12.0
 ```
-`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.11.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
+`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.12.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
 
 ### 配布用ファイルの作成（手元で作る場合）
 .NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに LICENSE・NOTICE.md・README.md・USER_MANUAL.md を加えて配布します。
