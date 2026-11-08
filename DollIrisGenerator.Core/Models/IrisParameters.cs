@@ -90,6 +90,9 @@ namespace DollIrisGenerator.Models
         private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
         private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
         private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
+        private LayerBlend _highlightBlend = LayerBlend.Normal;
+        private LayerBlend _glitterBlend = LayerBlend.Normal;
+        private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
         private double _lightStrength = 0.0;
@@ -406,6 +409,27 @@ namespace DollIrisGenerator.Models
         {
             get => _fiberNoiseScale;
             set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>
+        public LayerBlend AuroraBlend
+        {
+            get => _auroraBlend;
+            set { _auroraBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>ラメの重ね方: How the glitter (and its glow) is laid over the iris. Unknown numbers from a file become Normal.</summary>
+        public LayerBlend GlitterBlend
+        {
+            get => _glitterBlend;
+            set { _glitterBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>ハイライトの重ね方: How the highlights are laid over the eye. Unknown numbers from a file become Normal.</summary>
+        public LayerBlend HighlightBlend
+        {
+            get => _highlightBlend;
+            set { _highlightBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         public double PupilCornerRounding

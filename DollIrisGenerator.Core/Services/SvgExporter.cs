@@ -230,6 +230,19 @@ namespace DollIrisGenerator.Services
             return sb.ToString();
         }
 
+        /// <summary>
+        /// The style attribute for a layer's 重ね方 (CSS / SVG mix-blend-mode), or nothing for Normal, so designs that
+        /// keep the default export exactly as before.
+        /// </summary>
+        internal static string BlendStyle(LayerBlend blend) => blend switch
+        {
+            LayerBlend.Screen => @" style=""mix-blend-mode:screen""",
+            LayerBlend.ColorDodge => @" style=""mix-blend-mode:color-dodge""",
+            LayerBlend.Overlay => @" style=""mix-blend-mode:overlay""",
+            LayerBlend.SoftLight => @" style=""mix-blend-mode:soft-light""",
+            _ => ""
+        };
+
         /// <summary>Blur of the pupil's edge at 輪郭の柔らかさ 1, as a fraction of the pupil's radius (max setting 0.3 → 0.15).</summary>
         public const double PupilBlurPerSoftness = 0.5;
 
@@ -448,7 +461,7 @@ namespace DollIrisGenerator.Services
             if (p.AuroraOpacity > 0.01)
             {
                 string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
-                sb.AppendLine($@"      <ellipse id=""{idPrefix}_aurora"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}"" />");
+                sb.AppendLine($@"      <ellipse id=""{idPrefix}_aurora"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}""{BlendStyle(p.AuroraBlend)} />");
             }
             if (p.NebulaOpacity > 0.01)
             {
@@ -656,6 +669,10 @@ namespace DollIrisGenerator.Services
                 double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
                 var grains = IrisPatterns.Grains(p, new Point(cx, cy), rx, ry, baseR, effectiveSeed, isRightEye, IrisStyle.MmPerStyleUnit, 0.5);
 
+                // 重ね方: the glow and the grains are blended onto the iris together (among themselves they stack normally)
+                bool glitterBlended = p.GlitterBlend != LayerBlend.Normal;
+                if (glitterBlended) sb.AppendLine($@"      <g id=""{idPrefix}_glitter_layer""{BlendStyle(p.GlitterBlend)}>");
+
                 // Glow (光のにじみ): a blurred, brightened copy of the grains (stars stay star-shaped, gradient colors
                 // stay where they are) under the sharp grains. The copy points at the glitter drawn just below.
                 if (p.ParticleGlow > 0.01 && grains.Count > 0)
@@ -693,6 +710,7 @@ namespace DollIrisGenerator.Services
                     }
                 }
                 CloseSharedPaintGroup(sb, $"{idPrefix}_glitter", glitterPaint, p.ParticleColor, p.ParticleOpacity, irisBox);
+                if (glitterBlended) sb.AppendLine("      </g>");
             }
 
             // Decorative Symbols
@@ -766,7 +784,7 @@ namespace DollIrisGenerator.Services
             // Highlights (Drawn on top without clipping)
             if (p.Highlights != null)
             {
-                sb.AppendLine($@"    <g id=""{idPrefix}_highlights"">");
+                sb.AppendLine($@"    <g id=""{idPrefix}_highlights""{BlendStyle(p.HighlightBlend)}>");
                 int highlightIndex = -1;
                 foreach (var h in p.Highlights)
                 {

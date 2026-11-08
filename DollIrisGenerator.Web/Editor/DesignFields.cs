@@ -49,6 +49,8 @@ public static class DesignFields
         new HeadingField<IrisParameters>("オーロラ層", "虹彩全体に重ねる色。「円周」のグラデーションにすると、中心の周りで色が移り変わるオーロラ風になります"),
         new ColorField<IrisParameters>("オーロラ層の色", p => p.AuroraColor, (p, v) => p.AuroraColor = v, AllowGradient: true),
         new SliderField<IrisParameters>("オーロラ層の強さ", p => p.AuroraOpacity, (p, v) => p.AuroraOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new ChoiceField<IrisParameters>("オーロラ層の重ね方", p => p.AuroraBlend, (p, v) => p.AuroraBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }, "スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
         new HeadingField<IrisParameters>("星雲", "虹彩に重ねる雲のような模様。グラデーションにすると、場所ごとに雲の色が変わります (銀河・星雲風)"),
         new ColorField<IrisParameters>("星雲の色", p => p.NebulaColor, (p, v) => p.NebulaColor = v, AllowGradient: true),
         new SliderField<IrisParameters>("星雲の強さ", p => p.NebulaOpacity, (p, v) => p.NebulaOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
@@ -112,6 +114,8 @@ public static class DesignFields
         new SliderField<IrisParameters>("光のにじみ", p => p.ParticleGlow, (p, v) => p.ParticleGlow = v, 0, 1, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("十字フレアの割合", p => p.ParticleFlareRatio, (p, v) => p.ParticleFlareRatio = v, 0, 1, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("フレアの長さ", p => p.ParticleFlareLength, (p, v) => p.ParticleFlareLength = v, 1, 8, 0.1, Fmt.F1),
+        new ChoiceField<IrisParameters>("ラメの重ね方", p => p.GlitterBlend, (p, v) => p.GlitterBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }, "スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
     };
 
     public static readonly IReadOnlyList<Field<IrisParameters>> Lens = new Field<IrisParameters>[]
@@ -142,6 +146,9 @@ public static class DesignFields
         new HeadingField<IrisParameters>("左右対称設定"),
         new ToggleField<IrisParameters>("ハイライトも左右反転する (完全鏡像)", p => p.MirrorHighlightsWithIris, (p, v) => p.MirrorHighlightsWithIris = v,
             "オフにすると、光源位置が固定された自然なライティングになります"),
+        new ChoiceField<IrisParameters>("ハイライトの重ね方", p => p.HighlightBlend, (p, v) => p.HighlightBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "すべてのハイライトの重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光"),
     };
 
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> Symbol = new Field<DecorativeSymbolItem>[]
