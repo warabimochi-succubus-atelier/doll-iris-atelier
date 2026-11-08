@@ -38,6 +38,34 @@ jobs:
           rustup toolchain install stable --profile minimal
           cargo +stable build --release --locked -p resvg-capi --no-default-features --features raster-images
 
+      # about.toml / about.hbs for the license file live in this repository
+      - uses: actions/checkout@v7
+        with:
+          path: app
+          sparse-checkout: third_party/resvg/about
+
+      # Full license texts (with each crate's copyright lines) of everything linked into the DLL.
+      # Prebuilt cargo-about, checked against its published SHA-256.
+      - name: Third-party licenses
+        env:
+          ABOUT_VERSION: 0.9.2
+        run: |
+          $name = "cargo-about-$env:ABOUT_VERSION-x86_64-pc-windows-msvc.tar.gz"
+          $base = "https://github.com/EmbarkStudios/cargo-about/releases/download/$env:ABOUT_VERSION"
+          Invoke-WebRequest "$base/$name" -OutFile $name
+          Invoke-WebRequest "$base/$name.sha256" -OutFile "$name.sha256"
+          $expected = ((Get-Content "$name.sha256" -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
+          $actual = (Get-FileHash $name -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "cargo-about checksum mismatch: $actual (expected $expected)" }
+          New-Item -ItemType Directory -Force tools | Out-Null
+          tar -xzf $name -C tools
+          $about = (Get-ChildItem tools -Recurse -Filter cargo-about.exe | Select-Object -First 1).FullName
+          New-Item -ItemType Directory -Force out | Out-Null
+          & $about generate --manifest-path resvg/crates/c-api/Cargo.toml --no-default-features --features raster-images `
+            --locked --fail -c app/third_party/resvg/about/about.toml -o out/THIRD-PARTY-LICENSES.txt app/third_party/resvg/about/about.hbs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content out/THIRD-PARTY-LICENSES.txt -TotalCount 40
+
       - name: Collect
         run: |
           $out = "out/win-x64"
