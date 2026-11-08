@@ -17,7 +17,7 @@ public static class AppInfo
     public const string ManualUrl = RepositoryUrl + "/blob/main/USER_MANUAL.md";
     public const string LicenseUrl = RepositoryUrl + "/blob/main/LICENSE";
 
-    /// <summary>"v0.11.0", from &lt;Version&gt; in the project file (the part before any "+commit").</summary>
+    /// <summary>"v0.12.0", from &lt;Version&gt; in the project file (the part before any "+commit").</summary>
     public static readonly string VersionLabel = "v" + (typeof(AppInfo).Assembly
         .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
         .OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion
