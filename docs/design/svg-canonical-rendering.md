@@ -1,7 +1,7 @@
 # 設計: SVG を描画の正本にする
 
 - 作成日: 2026-11-08
-- 状態: 手順 1（resvg の組み込み）・手順 2（見た目をそろえる）・手順 3（PNG・PDF の切り替え）・手順 4（プレビューの切り替え）済み
+- 状態: 手順 1（resvg の組み込み）・手順 2（見た目をそろえる）・手順 3（PNG・PDF の切り替え）・手順 4（プレビューの切り替え）・手順 5（WPF の描画の削除）済み
 - 前提: 使用者は作者 1 人のため、保存ファイルの見た目や出力の互換は守らなくてよい
 
 ## 1. 目的
@@ -132,7 +132,10 @@ WPF に残すのは、虹彩の外側のものだけにする。用紙・余白�
    - 1 枚の長い辺は 4096 ピクセルまで。A4 シートでは画面に見えない目を描かない。
    - 印刷補助マークは、画面でも SVG の見た目になった（中心の白い丸はなくなった）。
    - 確認: `IrisPreviewControlTests`（最初の表示・裏からの更新・最新の状態だけを描くこと・A4 シート）と、アプリを起動しての画面写真。
-5. **WPF の描画を削除する**: `WpfIrisRenderer` を消す。ほかの場所で使っているものは移す。プレビュー倍率の定数は `IrisPreviewControl` へ、色見本の円周グラデ（`CreateConicBrush`、`ColorPickerBox` が使用）は `WpfGeometry` へ。`WpfIrisRenderer` を使っているテスト（`ColorGradientTests`、`CompareSlotTests`、`GemNebulaPresetTests`、`IrisGeneratorTests`、`SampleLooksTests`、`ShapeOutlineTests`）は、SVG の内容を確かめるか resvg の画素を確かめる形に書き直す。
+5. **WPF の描画を削除する**（済み）: `WpfIrisRenderer` を消す。ほかの場所で使っているものは移す。プレビュー倍率の定数は `IrisPreviewControl` へ、色見本の円周グラデ（`CreateConicBrush`、`ColorPickerBox` が使用）は `WpfGeometry` へ。`WpfIrisRenderer` を使っているテスト（`ColorGradientTests`、`CompareSlotTests`、`GemNebulaPresetTests`、`IrisGeneratorTests`、`SampleLooksTests`、`ShapeOutlineTests`）は、SVG の内容を確かめるか resvg の画素を確かめる形に書き直す。
+   - 結果: プレビュー倍率の定数は `IrisPreviewControl`（`DefaultPairZoom` など）へ、色見本の円周グラデ（`CreateConicBrush`）は使っている `ColorPickerBox` の中へ移した（`WpfGeometry` ではなく、ただ 1 つの使い手のそばに置いた）。スタイル単位はコアの `IrisStyle.MmPerStyleUnit` を直接使う。
+   - `SvgWpfParityTests` を消した。`ColorGradientTests` の画素のテストは、`RasterExporter`（SVG + resvg）で描く形に書き直した（内容は同じ: グラデーションの向き・回転・反転・帯）。WPF のブラシだけを確かめていたテスト（単色のブラシ）は、ブラシごと消した。
+   - 消した行数: `WpfIrisRenderer.cs` 642 行、`SvgWpfParityTests.cs` 約 150 行。
 6. **仕様書を更新する**: `SPECIFICATION.md` の 2.3（構成）、7.1.1（描画実装）、16（プレビュー）、17（SVG 出力）、19（ラスタライズ）。
 7. **新しい表現を足す**（ここからが本来の目的）。それぞれ 1 つのパラメータとして足す。
    - 放射グラデの焦点（光の入る向き）

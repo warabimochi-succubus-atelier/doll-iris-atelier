@@ -104,6 +104,18 @@ namespace DollIrisGenerator.Controls
             set => SetValue(SheetConfigProperty, value);
         }
 
+        /// <summary>
+        /// Pair view zoom the app opens at (and "リセット" returns to). 360% shows the default 10 mm iris
+        /// about 136 DIP across, the same on-screen size the old 20 mm default had at 180%.
+        /// </summary>
+        public const double DefaultPairZoom = IrisStyle.ReferenceZoom;
+
+        /// <summary>Starting zoom of the A4 sheet view: actual size (100%), so the whole sheet is easier to take in.</summary>
+        public const double DefaultSheetZoom = 1.0;
+
+        public const double MinZoom = 0.2;
+        public const double MaxZoom = 16.0;
+
         // Standard screen pixel per mm at 96 DPI
         public const double ScreenDipsPerMm = 96.0 / 25.4; // ~3.7795 DIP/mm
 
@@ -125,12 +137,12 @@ namespace DollIrisGenerator.Controls
                 widestMm = Math.Max(widestMm, 2 * wMm + pairSpacingMm);
                 tallestMm = Math.Max(tallestMm, hMm);
             }
-            if (widestMm <= 0 || tallestMm <= 0) return WpfIrisRenderer.DefaultPreviewZoom;
+            if (widestMm <= 0 || tallestMm <= 0) return DefaultPairZoom;
 
             double usableW = Math.Max(1, viewWidth - 2 * FitMarginX);
             double usableH = Math.Max(1, viewHeight - 2 * FitMarginY);
             double zoom = Math.Min(usableW / (widestMm * ScreenDipsPerMm), usableH / (tallestMm * ScreenDipsPerMm));
-            return Math.Clamp(zoom, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom);
+            return Math.Clamp(zoom, MinZoom, MaxZoom);
         }
 
         private Point _panOffset = new Point(0, 0);
@@ -257,7 +269,7 @@ namespace DollIrisGenerator.Controls
         {
             double factor = e.Delta > 0 ? 1.15 : 0.85;
             // Two-way bound: keeps the toolbar zoom buttons and status bar in sync (same range as MainViewModel)
-            ZoomScale = Math.Clamp(ZoomScale * factor, WpfIrisRenderer.MinPreviewZoom, WpfIrisRenderer.MaxPreviewZoom);
+            ZoomScale = Math.Clamp(ZoomScale * factor, MinZoom, MaxZoom);
             InvalidateVisual();
         }
 

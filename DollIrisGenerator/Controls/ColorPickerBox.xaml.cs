@@ -540,11 +540,56 @@ namespace DollIrisGenerator.Controls
         {
             if (!fill.IsGradient) return new SolidColorBrush(WpfGeometry.ParseHexColor(fill.PrimaryColor));
             var map = GradientMapping.Create(fill, new DollIrisGenerator.Core.Geometry.Rect(0, 0, 1, 1));
-            if (map.Kind == ColorFillKind.Conic) return WpfIrisRenderer.CreateConicBrush(map, 1.0, BrushMappingMode.RelativeToBoundingBox);
+            if (map.Kind == ColorFillKind.Conic) return CreateConicBrush(map, 1.0, BrushMappingMode.RelativeToBoundingBox);
             var stops = new GradientStopCollection(map.Stops.Select(s => new GradientStop(WpfGeometry.ParseHexColor(s.Color), s.Offset)));
             return map.Kind == ColorFillKind.Radial
                 ? new RadialGradientBrush(stops) { Center = map.Center.ToWpf(), GradientOrigin = map.Center.ToWpf(), RadiusX = map.RadiusX, RadiusY = map.RadiusY }
                 : new LinearGradientBrush(stops) { StartPoint = map.Start.ToWpf(), EndPoint = map.End.ToWpf() };
+        }
+
+        /// <summary>
+        /// Brush for a conic (円周) gradient: WPF has no such gradient brush, so it is a DrawingBrush of thin wedges
+        /// around the center (<see cref="GradientMapping.ConicWedges"/>, the same wedges the SVG export writes).
+        /// The wedges are drawn aliased so no hairline seams show between them; they are only 2° wide, so their
+        /// edges are not visible either. <paramref name="units"/> is Absolute for the iris (map in drawing
+        /// coordinates) and RelativeToBoundingBox for a swatch (map on the unit box). The eyes themselves are drawn
+        /// from their SVG (a pattern of the same wedges); this brush is only for the color box's swatch.
+        /// </summary>
+        internal static Brush CreateConicBrush(GradientMapping map, double opacity, BrushMappingMode units)
+        {
+            var area = map.ConicArea().ToWpf();
+            // Long enough to reach every corner of the area from the center
+            double reach = Math.Sqrt(area.Width * area.Width + area.Height * area.Height);
+            var group = new DrawingGroup { ClipGeometry = new RectangleGeometry(area) };
+            RenderOptions.SetEdgeMode(group, EdgeMode.Aliased);
+            var c = map.Center;
+            foreach (var (from, to, color) in map.ConicWedges())
+            {
+                var geo = new StreamGeometry();
+                using (var ctx = geo.Open())
+                {
+                    ctx.BeginFigure(c.ToWpf(), true, true);
+                    ctx.LineTo(IrisStyle.PolarPoint(c, reach, from).ToWpf(), false, false);
+                    ctx.LineTo(IrisStyle.PolarPoint(c, reach, to).ToWpf(), false, false);
+                }
+                geo.Freeze();
+                var wedgeBrush = new SolidColorBrush(WpfGeometry.ParseHexColor(color, opacity));
+                wedgeBrush.Freeze();
+                group.Children.Add(new GeometryDrawing(wedgeBrush, null, geo));
+            }
+            group.Freeze();
+
+            var brush = new DrawingBrush(group)
+            {
+                Viewbox = area,
+                ViewboxUnits = BrushMappingMode.Absolute,
+                Viewport = area,
+                ViewportUnits = units,
+                Stretch = Stretch.Fill,
+                TileMode = TileMode.None
+            };
+            brush.Freeze();
+            return brush;
         }
 
         private void OnKindChanged(object sender, SelectionChangedEventArgs e)

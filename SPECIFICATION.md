@@ -75,12 +75,12 @@
 | プロジェクト | ターゲット | 内容 |
 |---|---|---|
 | `DollIrisGenerator.Core` | `net10.0`（WPF なし） | デザインモデル (`IrisParameters`・プリセット・JSON)、ランダム生成、輪郭・模様・グラデーション配置の計算 (`ShapeOutline` / `IrisPatterns` / `GradientMapping`)、SVG 出力、星雲テクスチャ、お気に入り・A4 シートの保存形式 |
-| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、WPF 描画 (`WpfIrisRenderer`、画面プレビュー)、SVG のラスタライズ (`ResvgRasterizer`、resvg)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
+| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、プレビュー (`IrisPreviewControl`・`PreviewEyeImages`)、SVG のラスタライズ (`ResvgRasterizer`、resvg)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
 | `DollIrisGenerator.Web` | `net10.0`（Blazor WebAssembly） | ブラウザ版 (PWA)。デザインの編集とお気に入りのみ（2.4） |
 | `DollIrisGenerator.Tests` | `net10.0-windows` | xUnit テスト |
 
 - コアは WPF に依存しないため、Windows 以外（ブラウザ版など）からも同じ計算を使える。同じパラメータとシードからは、どこで計算しても同じ輪郭・模様・SVG になる（3. の 2）。
-- **描画の正本は SVG**（[設計書](docs/design/svg-canonical-rendering.md)）。画面プレビュー（16.4）・PNG・A4 PDF の目は、`SvgExporter` が作る SVG を resvg (`third_party/resvg`、P/Invoke の `ResvgRasterizer`) で画像にしたもの。`WpfIrisRenderer` は、SVG と比べるテスト (`SvgWpfParityTests`) の比較元として残っている（設計書の手順 5 で削除）。起動時に resvg を 1 回呼び、使えなければ警告を出す（「resvg.dll を読み込めません」。目のプレビューと PNG・PDF の書き出しができない）。
+- **描画の正本は SVG**（[設計書](docs/design/svg-canonical-rendering.md)）。画面プレビュー（16.4）・PNG・A4 PDF の目は、`SvgExporter` が作る SVG を resvg (`third_party/resvg`、P/Invoke の `ResvgRasterizer`) で画像にしたもの。虹彩を WPF で描く実装はない（`WpfIrisRenderer` は削除した）。WPF で描くのは、用紙・ラベル・目盛り・背景などの虹彩の外側と、色見本だけ。起動時に resvg を 1 回呼び、使えなければ警告を出す（「resvg.dll を読み込めません」。目のプレビューと PNG・PDF の書き出しができない）。
 - コアの座標型 (`DollIrisGenerator.Core.Geometry` の `Point` / `Vector` / `Rect`) は、WPF の同名の型と同じ順序で計算し、ビット単位で同じ結果を返す（`CoreGeometryTests`）。WPF 側との変換は `WpfGeometry` の `ToWpf()` / `ToCore()` で行う。
 - 線幅などの「スタイル単位」の実寸 (`IrisStyle.MmPerStyleUnit`) やハイライトの範囲など、画面と SVG で共有する描画の決まりは `IrisStyle` に置く。
 - SVG の数値は `FixedFormat.ToFixed`（`ToString("F3")` と同じ文字列を速く作る。`FixedFormatTests`）で書く。ブラウザ版 (WebAssembly) では `ToString` が 1 回数十マイクロ秒かかり、プレビュー 1 枚に 1 秒近くかかっていたため。

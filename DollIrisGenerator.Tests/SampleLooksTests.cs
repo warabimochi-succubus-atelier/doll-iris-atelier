@@ -299,7 +299,7 @@ namespace DollIrisGenerator.Tests
             var p = Plain();
             p.RayFineLayer = 0.5;
             string svg = SvgExporter.GeneratePairSvg(p);
-            double main = p.RayThickness * WpfIrisRenderer.MmPerStyleUnit;
+            double main = p.RayThickness * IrisStyle.MmPerStyleUnit;
             Assert.Contains($"<g id=\"left_eye_fine_rays\" stroke=\"{p.RayColor}\" stroke-width=\"{(main * IrisPatterns.FineRayWidthFactor).ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}\"", svg);
         }
 

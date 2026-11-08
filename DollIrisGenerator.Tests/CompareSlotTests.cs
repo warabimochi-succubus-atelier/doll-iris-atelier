@@ -102,8 +102,8 @@ namespace DollIrisGenerator.Tests
         public void TestFitZoomStaysInThePreviewZoomRange()
         {
             var design = new IrisParameters();
-            Assert.Equal(WpfIrisRenderer.MinPreviewZoom, IrisPreviewControl.FitPairZoom(new[] { design }, 4.0, 10, 10));
-            Assert.Equal(WpfIrisRenderer.MaxPreviewZoom, IrisPreviewControl.FitPairZoom(new[] { design }, 4.0, 100000, 100000));
+            Assert.Equal(IrisPreviewControl.MinZoom, IrisPreviewControl.FitPairZoom(new[] { design }, 4.0, 10, 10));
+            Assert.Equal(IrisPreviewControl.MaxZoom, IrisPreviewControl.FitPairZoom(new[] { design }, 4.0, 100000, 100000));
         }
 
         [Fact]
