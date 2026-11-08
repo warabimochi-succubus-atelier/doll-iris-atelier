@@ -81,7 +81,8 @@ jobs:
           if ($LASTEXITCODE -eq 0) {
             gh release upload $env:TAG "dist/$env:PACKAGE.zip" --clobber
           } else {
-            $pre = if ($env:TAG.StartsWith('v0.')) { @('--prerelease') } else { @() }
+            # @(...) keeps it an array: a one-item if result becomes a plain string, and @pre would then splat it char by char
+            $pre = @(if ($env:TAG.StartsWith('v0.')) { '--prerelease' })
             gh release create $env:TAG "dist/$env:PACKAGE.zip" --title $env:TAG --generate-notes --verify-tag @pre
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
