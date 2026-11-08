@@ -85,6 +85,49 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>
+        /// Opens a group of many shapes sharing one paint (close it with <see cref="CloseSharedPaintGroup"/>).
+        /// A conic (円周) paint is a pattern, which renderers draw again for every shape filled with it
+        /// (hundreds of rays took resvg about 1 ms each at print size). Then the shapes are drawn white into a mask
+        /// over one rectangle in that paint instead: the same picture, with the pattern drawn once.
+        /// <paramref name="paintAttr"/> is "fill" or "stroke"; <paramref name="attrs"/> are further group attributes.
+        /// </summary>
+        private static void OpenSharedPaintGroup(StringBuilder sb, string id, string paintAttr, string paint, string? colorValue,
+            string attrs, Rect area)
+        {
+            if (!IsConic(colorValue))
+            {
+                sb.AppendLine($@"      <g id=""{id}"" {paintAttr}=""{paint}""{attrs}>");
+                return;
+            }
+            var (x, y, w, h) = MaskArea(area);
+            sb.AppendLine($@"      <mask id=""{id}_mask"" maskUnits=""userSpaceOnUse"" x=""{F(x)}"" y=""{F(y)}"" width=""{F(w)}"" height=""{F(h)}"">");
+            sb.AppendLine($@"      <g {paintAttr}=""#FFFFFF""{attrs}>");
+        }
+
+        /// <summary>Closes <see cref="OpenSharedPaintGroup"/>; <paramref name="opacity"/> is the group's opacity.</summary>
+        private static void CloseSharedPaintGroup(StringBuilder sb, string id, string paint, string? colorValue, double opacity, Rect area)
+        {
+            sb.AppendLine("      </g>");
+            if (!IsConic(colorValue)) return;
+            var (x, y, w, h) = MaskArea(area);
+            sb.AppendLine("      </mask>");
+            sb.AppendLine($@"      <rect id=""{id}"" x=""{F(x)}"" y=""{F(y)}"" width=""{F(w)}"" height=""{F(h)}"" fill=""{paint}"" mask=""url(#{id}_mask)"" opacity=""{opacity.ToFixed(2)}"" />");
+        }
+
+        /// <summary>The group's opacity attribute, or nothing when it goes on the masked rectangle instead.</summary>
+        private static string OpacityUnlessMasked(string? colorValue, double opacity) =>
+            IsConic(colorValue) ? "" : $@" opacity=""{opacity.ToFixed(2)}""";
+
+        private static bool IsConic(string? colorValue) => ColorFill.Parse(colorValue) is { IsGradient: true, Kind: ColorFillKind.Conic };
+
+        /// <summary>The iris box with a margin for strokes and flares reaching past the iris (clipped to it anyway).</summary>
+        private static (double X, double Y, double W, double H) MaskArea(Rect r)
+        {
+            double m = Math.Max(r.Width, r.Height) * 0.1;
+            return (r.X - m, r.Y - m, r.Width + 2 * m, r.Height + 2 * m);
+        }
+
+        /// <summary>
         /// SVG stop color for a stop's hex: "#AARRGGBB" (the app's 8-digit form, alpha first) becomes
         /// "#RRGGBB" plus a stop-opacity, since SVG would read 8 digits as RRGGBBAA.
         /// </summary>
@@ -265,12 +308,12 @@ namespace DollIrisGenerator.Services
                 var center = new Point(cx, cy);
 
                 string rayPaint = Paint(sb, "      ", $"{idPrefix}_rays_fill", effectiveRayColor, "#B3E5FC", irisBox, isRightEye, bandInner, bandOuter);
-                AppendRays(sb, $"{idPrefix}_rays", IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayPaint, p.RayIntensity,
+                AppendRays(sb, $"{idPrefix}_rays", IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayPaint, effectiveRayColor, irisBox, p.RayIntensity,
                     p, center, rx, ry, baseR, isRightEye);
 
                 if (p.RayFineLayer > 0.01)
                 {
-                    AppendRays(sb, $"{idPrefix}_fine_rays", IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), rayPaint,
+                    AppendRays(sb, $"{idPrefix}_fine_rays", IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), rayPaint, effectiveRayColor, irisBox,
                         p.RayIntensity * p.RayFineLayer, p, center, rx, ry, baseR, isRightEye);
                 }
             }
@@ -284,7 +327,8 @@ namespace DollIrisGenerator.Services
                 // (WPF's dash units and default dash cap)
                 double dotStroke = ringStroke * 0.8;
                 string dotAttr = $@" stroke-width=""{F(dotStroke)}"" stroke-dasharray=""{F(dotStroke * 4.0)},{F(dotStroke * 3.0)}"" stroke-linecap=""square""";
-                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{F(ringStroke)}"" opacity=""{p.LensRingIntensity.ToFixed(2)}"" fill=""none"">");
+                OpenSharedPaintGroup(sb, $"{idPrefix}_lens_rings", "stroke", lensPaint, p.LensRingColor,
+                    $@" stroke-width=""{F(ringStroke)}""{OpacityUnlessMasked(p.LensRingColor, p.LensRingIntensity)} fill=""none""", irisBox);
                 double pupilR = baseR * p.PupilSizeRatio;
                 double ringSpan = (baseR * 0.92) - pupilR;
 
@@ -298,7 +342,7 @@ namespace DollIrisGenerator.Services
                     string dashAttr = (k % 2 == 1) ? dotAttr : "";
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{ringRx.ToFixed(3)}"" ry=""{ringRy.ToFixed(3)}""{dashAttr} />");
                 }
-                sb.AppendLine("      </g>");
+                CloseSharedPaintGroup(sb, $"{idPrefix}_lens_rings", lensPaint, p.LensRingColor, p.LensRingIntensity, irisBox);
 
                 // Center refraction glow (中心屈折光): one color (a gradient's first), fading out to the edge
                 if (p.LensRefractionGlow > 0.01)
@@ -437,7 +481,8 @@ namespace DollIrisGenerator.Services
                 }
 
                 string glitterPaint = Paint(sb, "      ", $"{idPrefix}_glitter_fill", p.ParticleColor, "#FFFFFF", irisBox, isRightEye, bandInner, bandOuter);
-                sb.AppendLine($@"      <g id=""{idPrefix}_glitter"" fill=""{glitterPaint}"" opacity=""{p.ParticleOpacity.ToFixed(2)}"">");
+                OpenSharedPaintGroup(sb, $"{idPrefix}_glitter", "fill", glitterPaint, p.ParticleColor,
+                    OpacityUnlessMasked(p.ParticleColor, p.ParticleOpacity), irisBox);
                 foreach (var g in grains)
                 {
                     if (g.IsStar)
@@ -458,7 +503,7 @@ namespace DollIrisGenerator.Services
                         AppendPath(sb, "        <path d=\"", IrisPatterns.Flare(g.Size, p.ParticleFlareLength), g.Position.X, g.Position.Y, "\" />");
                     }
                 }
-                sb.AppendLine("      </g>");
+                CloseSharedPaintGroup(sb, $"{idPrefix}_glitter", glitterPaint, p.ParticleColor, p.ParticleOpacity, irisBox);
             }
 
             // Decorative Symbols
@@ -601,7 +646,7 @@ namespace DollIrisGenerator.Services
         /// otherwise each ray's fiber outline (the same outline the screen renderer fills).
         /// </summary>
         private static void AppendRays(StringBuilder sb, string id, System.Collections.Generic.IEnumerable<RaySpec> rays, string paint,
-            double opacity, IrisParameters p, Point center, double rx, double ry, double baseR, bool isRightEye)
+            string? colorValue, Rect area, double opacity, IrisParameters p, Point center, double rx, double ry, double baseR, bool isRightEye)
         {
             double width = p.RayThickness * IrisStyle.MmPerStyleUnit;
             if (!p.HasFiberRays)
@@ -609,7 +654,8 @@ namespace DollIrisGenerator.Services
                 // Without 太さのばらつき all rays of a group share one width (the fine rays a thinner one)
                 double groupFactor = 1.0;
                 foreach (var r in rays) { groupFactor = r.WidthFactor; break; }
-                sb.AppendLine($@"      <g id=""{id}"" stroke=""{paint}"" stroke-width=""{(width * groupFactor).ToFixed(3)}"" stroke-linecap=""round"" opacity=""{opacity.ToFixed(2)}"">");
+                OpenSharedPaintGroup(sb, id, "stroke", paint, colorValue,
+                    $@" stroke-width=""{(width * groupFactor).ToFixed(3)}"" stroke-linecap=""round""" + OpacityUnlessMasked(colorValue, opacity), area);
                 foreach (var ray in rays)
                 {
                     var a = IrisPatterns.OnIris(center, rx, ry, baseR, ray.InnerR, ray.Angle);
@@ -617,17 +663,17 @@ namespace DollIrisGenerator.Services
                     string widthAttr = Math.Abs(ray.WidthFactor - groupFactor) > 1e-9 ? $@" stroke-width=""{(width * ray.WidthFactor).ToFixed(3)}""" : "";
                     sb.AppendLine($@"        <line x1=""{a.X.ToFixed(3)}"" y1=""{a.Y.ToFixed(3)}"" x2=""{b.X.ToFixed(3)}"" y2=""{b.Y.ToFixed(3)}""{widthAttr} />");
                 }
-                sb.AppendLine("      </g>");
+                CloseSharedPaintGroup(sb, id, paint, colorValue, opacity, area);
                 return;
             }
 
-            sb.AppendLine($@"      <g id=""{id}"" fill=""{paint}"" opacity=""{opacity.ToFixed(2)}"">");
+            OpenSharedPaintGroup(sb, id, "fill", paint, colorValue, OpacityUnlessMasked(colorValue, opacity), area);
             foreach (var ray in rays)
             {
                 var outline = IrisPatterns.FiberOutline(center, rx, ry, baseR, ray, width * ray.WidthFactor, p.RayTaper, p.RayCurve, isRightEye);
                 AppendPath(sb, "        <path d=\"", outline, 0, 0, "\" />");
             }
-            sb.AppendLine("      </g>");
+            CloseSharedPaintGroup(sb, id, paint, colorValue, opacity, area);
         }
 
         /// <summary>
