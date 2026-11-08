@@ -188,20 +188,6 @@ namespace DollIrisGenerator.Services
             return grains;
         }
 
-        /// <summary>Radius of the soft halo around a grain of <paramref name="size"/> at the given 光のにじみ.</summary>
-        public static double HaloRadius(double size, double glow) => size * (0.9 + 2.4 * glow);
-
-        /// <summary>
-        /// Halo stops (offset, alpha factor): bright next to the grain, fading out to nothing. The alpha factor
-        /// multiplies the grain color's own alpha and the glitter opacity.
-        /// </summary>
-        public static (double Offset, double Alpha)[] HaloStops(double glow) => new[]
-        {
-            (0.0, 0.85 * glow),
-            (0.45, 0.30 * glow),
-            (1.0, 0.0)
-        };
-
         private const int FacetSeedOffset = 5000;
 
         /// <summary>Strongest facet alpha (at 宝石カット 100 % and a facet's full shade).</summary>

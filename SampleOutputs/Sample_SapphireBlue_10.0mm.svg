@@ -158,96 +158,42 @@
         <path d="M 9.793,7.790 L 9.905,7.796 L 10.017,7.804 L 10.130,7.814 L 10.242,7.827 L 10.354,7.843 L 10.467,7.861 L 10.579,7.882 L 10.691,7.905 L 10.803,7.931 L 10.914,7.959 L 11.026,7.990 L 11.137,8.024 L 11.248,8.060 L 11.358,8.098 L 11.362,8.099 L 11.366,8.097 L 11.369,8.094 L 11.369,8.089 L 11.367,8.086 L 11.364,8.083 L 11.254,8.041 L 11.144,8.002 L 11.033,7.966 L 10.922,7.931 L 10.811,7.900 L 10.699,7.871 L 10.587,7.844 L 10.474,7.820 L 10.362,7.799 L 10.249,7.780 L 10.136,7.763 L 10.022,7.750 L 9.909,7.738 L 9.796,7.730 L 9.781,7.733 L 9.769,7.743 L 9.764,7.758 L 9.767,7.773 L 9.778,7.785 Z" />
         <path d="M 9.943,7.945 L 9.979,7.964 L 10.015,7.984 L 10.051,8.005 L 10.087,8.027 L 10.123,8.050 L 10.158,8.073 L 10.193,8.098 L 10.228,8.123 L 10.262,8.149 L 10.297,8.176 L 10.331,8.203 L 10.364,8.232 L 10.398,8.261 L 10.431,8.291 L 10.435,8.294 L 10.440,8.294 L 10.444,8.291 L 10.447,8.287 L 10.447,8.282 L 10.444,8.278 L 10.414,8.245 L 10.383,8.212 L 10.351,8.181 L 10.319,8.150 L 10.287,8.120 L 10.254,8.091 L 10.221,8.062 L 10.187,8.034 L 10.153,8.007 L 10.119,7.981 L 10.084,7.955 L 10.050,7.930 L 10.014,7.906 L 9.979,7.883 L 9.961,7.878 L 9.943,7.883 L 9.930,7.896 L 9.925,7.914 L 9.930,7.931 Z" />
       </g>
-      <ellipse id="left_eye_limbal_ring" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#06173F" stroke-width="0.800" opacity="0.95" />
-      <ellipse id="left_eye_limbal_soft" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#06173F" stroke-width="0.280" opacity="0.427" />
-      <g id="left_eye_pupil" fill="#071030" opacity="1.00">
+      <defs>
+        <radialGradient id="left_eye_limbal_mask_grad">
+          <stop offset="0.8840" stop-color="#FFFFFF" stop-opacity="0.0000" />
+          <stop offset="0.8912" stop-color="#FFFFFF" stop-opacity="0.0228" />
+          <stop offset="0.8984" stop-color="#FFFFFF" stop-opacity="0.0668" />
+          <stop offset="0.9056" stop-color="#FFFFFF" stop-opacity="0.1587" />
+          <stop offset="0.9128" stop-color="#FFFFFF" stop-opacity="0.3085" />
+          <stop offset="0.9200" stop-color="#FFFFFF" stop-opacity="0.5000" />
+          <stop offset="0.9272" stop-color="#FFFFFF" stop-opacity="0.6915" />
+          <stop offset="0.9344" stop-color="#FFFFFF" stop-opacity="0.8413" />
+          <stop offset="0.9416" stop-color="#FFFFFF" stop-opacity="0.9332" />
+          <stop offset="0.9488" stop-color="#FFFFFF" stop-opacity="0.9772" />
+          <stop offset="0.9560" stop-color="#FFFFFF" stop-opacity="1.0000" />
+        </radialGradient>
+        <mask id="left_eye_limbal_mask">
+          <ellipse cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#left_eye_limbal_mask_grad)" />
+        </mask>
+      </defs>
+      <ellipse id="left_eye_limbal_ring" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="#06173F" opacity="0.95" mask="url(#left_eye_limbal_mask)" />
+      <defs>
+        <filter id="left_eye_pupil_blur" filterUnits="userSpaceOnUse" x="6.208" y="6.208" width="3.584" height="3.584">
+          <feGaussianBlur stdDeviation="0.0640" />
+        </filter>
+      </defs>
+      <g id="left_eye_pupil" fill="#071030" opacity="1.00" filter="url(#left_eye_pupil_blur)">
         <ellipse cx="8.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
-      <ellipse id="left_eye_pupil_soft" cx="8.000" cy="8.000" rx="1.600" ry="1.600" fill="none" stroke="#071030" stroke-width="0.192" opacity="0.350" />
       <defs>
-        <radialGradient id="left_eye_halo0">
-          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.506" />
-          <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.179" />
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
-        </radialGradient>
+        <filter id="left_eye_glitter_glow_filter" filterUnits="userSpaceOnUse" x="1.925" y="1.925" width="12.149" height="12.149">
+          <feGaussianBlur stdDeviation="0.1908" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.50" />
+          </feComponentTransfer>
+        </filter>
       </defs>
-      <g id="left_eye_glitter_glow">
-        <circle cx="5.266" cy="8.193" r="0.392" fill="url(#left_eye_halo0)" />
-        <circle cx="7.194" cy="11.802" r="0.382" fill="url(#left_eye_halo0)" />
-        <circle cx="6.181" cy="8.992" r="0.449" fill="url(#left_eye_halo0)" />
-        <circle cx="10.093" cy="7.474" r="0.217" fill="url(#left_eye_halo0)" />
-        <circle cx="7.482" cy="11.132" r="0.218" fill="url(#left_eye_halo0)" />
-        <circle cx="5.955" cy="7.276" r="0.425" fill="url(#left_eye_halo0)" />
-        <circle cx="4.473" cy="6.507" r="0.448" fill="url(#left_eye_halo0)" />
-        <circle cx="5.595" cy="10.770" r="0.204" fill="url(#left_eye_halo0)" />
-        <circle cx="8.982" cy="5.193" r="0.322" fill="url(#left_eye_halo0)" />
-        <circle cx="6.142" cy="6.477" r="0.350" fill="url(#left_eye_halo0)" />
-        <circle cx="5.289" cy="5.537" r="0.360" fill="url(#left_eye_halo0)" />
-        <circle cx="5.366" cy="9.211" r="0.218" fill="url(#left_eye_halo0)" />
-        <circle cx="10.379" cy="7.741" r="0.375" fill="url(#left_eye_halo0)" />
-        <circle cx="6.129" cy="9.228" r="0.263" fill="url(#left_eye_halo0)" />
-        <circle cx="5.587" cy="8.834" r="0.421" fill="url(#left_eye_halo0)" />
-        <circle cx="4.771" cy="5.926" r="0.327" fill="url(#left_eye_halo0)" />
-        <circle cx="11.642" cy="8.497" r="0.408" fill="url(#left_eye_halo0)" />
-        <circle cx="8.725" cy="10.187" r="0.249" fill="url(#left_eye_halo0)" />
-        <circle cx="6.477" cy="6.462" r="0.223" fill="url(#left_eye_halo0)" />
-        <circle cx="5.787" cy="10.420" r="0.317" fill="url(#left_eye_halo0)" />
-        <circle cx="9.396" cy="6.452" r="0.405" fill="url(#left_eye_halo0)" />
-        <circle cx="6.089" cy="9.521" r="0.281" fill="url(#left_eye_halo0)" />
-        <circle cx="10.039" cy="9.709" r="0.414" fill="url(#left_eye_halo0)" />
-        <circle cx="11.371" cy="5.856" r="0.341" fill="url(#left_eye_halo0)" />
-        <circle cx="6.755" cy="6.457" r="0.231" fill="url(#left_eye_halo0)" />
-        <circle cx="4.908" cy="9.013" r="0.433" fill="url(#left_eye_halo0)" />
-        <circle cx="6.856" cy="6.394" r="0.246" fill="url(#left_eye_halo0)" />
-        <circle cx="4.067" cy="8.335" r="0.346" fill="url(#left_eye_halo0)" />
-        <circle cx="4.698" cy="6.977" r="0.301" fill="url(#left_eye_halo0)" />
-        <circle cx="7.268" cy="10.449" r="0.403" fill="url(#left_eye_halo0)" />
-        <circle cx="5.524" cy="4.909" r="0.353" fill="url(#left_eye_halo0)" />
-        <circle cx="9.912" cy="8.783" r="0.333" fill="url(#left_eye_halo0)" />
-        <circle cx="10.566" cy="8.738" r="0.204" fill="url(#left_eye_halo0)" />
-        <circle cx="5.207" cy="8.449" r="0.317" fill="url(#left_eye_halo0)" />
-        <circle cx="10.206" cy="5.694" r="0.219" fill="url(#left_eye_halo0)" />
-        <circle cx="9.471" cy="9.562" r="0.338" fill="url(#left_eye_halo0)" />
-        <circle cx="6.434" cy="7.373" r="0.236" fill="url(#left_eye_halo0)" />
-        <circle cx="5.993" cy="7.654" r="0.380" fill="url(#left_eye_halo0)" />
-        <circle cx="8.017" cy="10.182" r="0.291" fill="url(#left_eye_halo0)" />
-        <circle cx="6.255" cy="6.878" r="0.414" fill="url(#left_eye_halo0)" />
-        <circle cx="11.681" cy="8.999" r="0.406" fill="url(#left_eye_halo0)" />
-        <circle cx="9.610" cy="8.143" r="0.261" fill="url(#left_eye_halo0)" />
-        <circle cx="11.805" cy="7.182" r="0.344" fill="url(#left_eye_halo0)" />
-        <circle cx="8.280" cy="11.034" r="0.297" fill="url(#left_eye_halo0)" />
-        <circle cx="5.931" cy="4.981" r="0.237" fill="url(#left_eye_halo0)" />
-        <circle cx="6.870" cy="11.140" r="0.353" fill="url(#left_eye_halo0)" />
-        <circle cx="5.344" cy="7.513" r="0.301" fill="url(#left_eye_halo0)" />
-        <circle cx="5.842" cy="10.951" r="0.385" fill="url(#left_eye_halo0)" />
-        <circle cx="8.491" cy="4.958" r="0.220" fill="url(#left_eye_halo0)" />
-        <circle cx="11.587" cy="6.914" r="0.405" fill="url(#left_eye_halo0)" />
-        <circle cx="8.118" cy="9.914" r="0.310" fill="url(#left_eye_halo0)" />
-        <circle cx="6.372" cy="6.775" r="0.304" fill="url(#left_eye_halo0)" />
-        <circle cx="5.903" cy="5.624" r="0.417" fill="url(#left_eye_halo0)" />
-        <circle cx="6.976" cy="11.466" r="0.233" fill="url(#left_eye_halo0)" />
-        <circle cx="4.236" cy="9.174" r="0.276" fill="url(#left_eye_halo0)" />
-        <circle cx="6.060" cy="10.832" r="0.421" fill="url(#left_eye_halo0)" />
-        <circle cx="5.207" cy="7.392" r="0.440" fill="url(#left_eye_halo0)" />
-        <circle cx="7.950" cy="4.582" r="0.206" fill="url(#left_eye_halo0)" />
-        <circle cx="10.374" cy="9.008" r="0.373" fill="url(#left_eye_halo0)" />
-        <circle cx="6.554" cy="8.924" r="0.253" fill="url(#left_eye_halo0)" />
-        <circle cx="9.772" cy="8.678" r="0.193" fill="url(#left_eye_halo0)" />
-        <circle cx="4.713" cy="8.952" r="0.454" fill="url(#left_eye_halo0)" />
-        <circle cx="5.797" cy="4.807" r="0.203" fill="url(#left_eye_halo0)" />
-        <circle cx="11.065" cy="9.391" r="0.367" fill="url(#left_eye_halo0)" />
-        <circle cx="5.697" cy="5.500" r="0.252" fill="url(#left_eye_halo0)" />
-        <circle cx="9.606" cy="6.569" r="0.428" fill="url(#left_eye_halo0)" />
-        <circle cx="9.598" cy="6.028" r="0.304" fill="url(#left_eye_halo0)" />
-        <circle cx="6.659" cy="9.644" r="0.301" fill="url(#left_eye_halo0)" />
-        <circle cx="5.095" cy="10.253" r="0.320" fill="url(#left_eye_halo0)" />
-        <circle cx="8.491" cy="5.558" r="0.333" fill="url(#left_eye_halo0)" />
-        <circle cx="5.120" cy="6.274" r="0.249" fill="url(#left_eye_halo0)" />
-        <circle cx="6.918" cy="5.144" r="0.253" fill="url(#left_eye_halo0)" />
-        <circle cx="8.470" cy="9.834" r="0.454" fill="url(#left_eye_halo0)" />
-        <circle cx="8.992" cy="5.882" r="0.373" fill="url(#left_eye_halo0)" />
-        <circle cx="8.996" cy="4.586" r="0.313" fill="url(#left_eye_halo0)" />
-      </g>
+      <use id="left_eye_glitter_glow" href="#left_eye_glitter" filter="url(#left_eye_glitter_glow_filter)" opacity="0.700" />
       <g id="left_eye_glitter" fill="#FFFFFF" opacity="0.85">
         <polygon points="5.266,7.965 5.307,8.153 5.494,8.193 5.307,8.233 5.266,8.421 5.226,8.233 5.039,8.193 5.226,8.153 " />
         <circle cx="7.194" cy="11.802" r="0.074" />
@@ -501,96 +447,42 @@
         <path d="M 20.204,7.730 L 20.091,7.738 L 19.978,7.750 L 19.864,7.763 L 19.751,7.780 L 19.638,7.799 L 19.526,7.820 L 19.413,7.844 L 19.301,7.871 L 19.189,7.900 L 19.078,7.931 L 18.967,7.966 L 18.856,8.002 L 18.746,8.041 L 18.636,8.083 L 18.633,8.086 L 18.631,8.089 L 18.631,8.094 L 18.634,8.097 L 18.638,8.099 L 18.642,8.098 L 18.752,8.060 L 18.863,8.024 L 18.974,7.990 L 19.086,7.959 L 19.197,7.931 L 19.309,7.905 L 19.421,7.882 L 19.533,7.861 L 19.646,7.843 L 19.758,7.827 L 19.870,7.814 L 19.983,7.804 L 20.095,7.796 L 20.207,7.790 L 20.222,7.785 L 20.233,7.773 L 20.236,7.758 L 20.231,7.743 L 20.219,7.733 Z" />
         <path d="M 20.021,7.883 L 19.986,7.906 L 19.950,7.930 L 19.916,7.955 L 19.881,7.981 L 19.847,8.007 L 19.813,8.034 L 19.779,8.062 L 19.746,8.091 L 19.713,8.120 L 19.681,8.150 L 19.649,8.181 L 19.617,8.212 L 19.586,8.245 L 19.556,8.278 L 19.553,8.282 L 19.553,8.287 L 19.556,8.291 L 19.560,8.294 L 19.565,8.294 L 19.569,8.291 L 19.602,8.261 L 19.636,8.232 L 19.669,8.203 L 19.703,8.176 L 19.738,8.149 L 19.772,8.123 L 19.807,8.098 L 19.842,8.073 L 19.877,8.050 L 19.913,8.027 L 19.949,8.005 L 19.985,7.984 L 20.021,7.964 L 20.057,7.945 L 20.070,7.931 L 20.075,7.914 L 20.070,7.896 L 20.057,7.883 L 20.039,7.878 Z" />
       </g>
-      <ellipse id="right_eye_limbal_ring" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#06173F" stroke-width="0.800" opacity="0.95" />
-      <ellipse id="right_eye_limbal_soft" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#06173F" stroke-width="0.280" opacity="0.427" />
-      <g id="right_eye_pupil" fill="#071030" opacity="1.00">
+      <defs>
+        <radialGradient id="right_eye_limbal_mask_grad">
+          <stop offset="0.8840" stop-color="#FFFFFF" stop-opacity="0.0000" />
+          <stop offset="0.8912" stop-color="#FFFFFF" stop-opacity="0.0228" />
+          <stop offset="0.8984" stop-color="#FFFFFF" stop-opacity="0.0668" />
+          <stop offset="0.9056" stop-color="#FFFFFF" stop-opacity="0.1587" />
+          <stop offset="0.9128" stop-color="#FFFFFF" stop-opacity="0.3085" />
+          <stop offset="0.9200" stop-color="#FFFFFF" stop-opacity="0.5000" />
+          <stop offset="0.9272" stop-color="#FFFFFF" stop-opacity="0.6915" />
+          <stop offset="0.9344" stop-color="#FFFFFF" stop-opacity="0.8413" />
+          <stop offset="0.9416" stop-color="#FFFFFF" stop-opacity="0.9332" />
+          <stop offset="0.9488" stop-color="#FFFFFF" stop-opacity="0.9772" />
+          <stop offset="0.9560" stop-color="#FFFFFF" stop-opacity="1.0000" />
+        </radialGradient>
+        <mask id="right_eye_limbal_mask">
+          <ellipse cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#right_eye_limbal_mask_grad)" />
+        </mask>
+      </defs>
+      <ellipse id="right_eye_limbal_ring" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="#06173F" opacity="0.95" mask="url(#right_eye_limbal_mask)" />
+      <defs>
+        <filter id="right_eye_pupil_blur" filterUnits="userSpaceOnUse" x="20.208" y="6.208" width="3.584" height="3.584">
+          <feGaussianBlur stdDeviation="0.0640" />
+        </filter>
+      </defs>
+      <g id="right_eye_pupil" fill="#071030" opacity="1.00" filter="url(#right_eye_pupil_blur)">
         <ellipse cx="22.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
-      <ellipse id="right_eye_pupil_soft" cx="22.000" cy="8.000" rx="1.600" ry="1.600" fill="none" stroke="#071030" stroke-width="0.192" opacity="0.350" />
       <defs>
-        <radialGradient id="right_eye_halo0">
-          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.506" />
-          <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.179" />
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
-        </radialGradient>
+        <filter id="right_eye_glitter_glow_filter" filterUnits="userSpaceOnUse" x="15.925" y="1.925" width="12.149" height="12.149">
+          <feGaussianBlur stdDeviation="0.1908" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.50" />
+          </feComponentTransfer>
+        </filter>
       </defs>
-      <g id="right_eye_glitter_glow">
-        <circle cx="24.734" cy="8.193" r="0.392" fill="url(#right_eye_halo0)" />
-        <circle cx="22.806" cy="11.802" r="0.382" fill="url(#right_eye_halo0)" />
-        <circle cx="23.819" cy="8.992" r="0.449" fill="url(#right_eye_halo0)" />
-        <circle cx="19.907" cy="7.474" r="0.217" fill="url(#right_eye_halo0)" />
-        <circle cx="22.518" cy="11.132" r="0.218" fill="url(#right_eye_halo0)" />
-        <circle cx="24.045" cy="7.276" r="0.425" fill="url(#right_eye_halo0)" />
-        <circle cx="25.527" cy="6.507" r="0.448" fill="url(#right_eye_halo0)" />
-        <circle cx="24.405" cy="10.770" r="0.204" fill="url(#right_eye_halo0)" />
-        <circle cx="21.018" cy="5.193" r="0.322" fill="url(#right_eye_halo0)" />
-        <circle cx="23.858" cy="6.477" r="0.350" fill="url(#right_eye_halo0)" />
-        <circle cx="24.711" cy="5.537" r="0.360" fill="url(#right_eye_halo0)" />
-        <circle cx="24.634" cy="9.211" r="0.218" fill="url(#right_eye_halo0)" />
-        <circle cx="19.621" cy="7.741" r="0.375" fill="url(#right_eye_halo0)" />
-        <circle cx="23.871" cy="9.228" r="0.263" fill="url(#right_eye_halo0)" />
-        <circle cx="24.413" cy="8.834" r="0.421" fill="url(#right_eye_halo0)" />
-        <circle cx="25.229" cy="5.926" r="0.327" fill="url(#right_eye_halo0)" />
-        <circle cx="18.358" cy="8.497" r="0.408" fill="url(#right_eye_halo0)" />
-        <circle cx="21.275" cy="10.187" r="0.249" fill="url(#right_eye_halo0)" />
-        <circle cx="23.523" cy="6.462" r="0.223" fill="url(#right_eye_halo0)" />
-        <circle cx="24.213" cy="10.420" r="0.317" fill="url(#right_eye_halo0)" />
-        <circle cx="20.604" cy="6.452" r="0.405" fill="url(#right_eye_halo0)" />
-        <circle cx="23.911" cy="9.521" r="0.281" fill="url(#right_eye_halo0)" />
-        <circle cx="19.961" cy="9.709" r="0.414" fill="url(#right_eye_halo0)" />
-        <circle cx="18.629" cy="5.856" r="0.341" fill="url(#right_eye_halo0)" />
-        <circle cx="23.245" cy="6.457" r="0.231" fill="url(#right_eye_halo0)" />
-        <circle cx="25.092" cy="9.013" r="0.433" fill="url(#right_eye_halo0)" />
-        <circle cx="23.144" cy="6.394" r="0.246" fill="url(#right_eye_halo0)" />
-        <circle cx="25.933" cy="8.335" r="0.346" fill="url(#right_eye_halo0)" />
-        <circle cx="25.302" cy="6.977" r="0.301" fill="url(#right_eye_halo0)" />
-        <circle cx="22.732" cy="10.449" r="0.403" fill="url(#right_eye_halo0)" />
-        <circle cx="24.476" cy="4.909" r="0.353" fill="url(#right_eye_halo0)" />
-        <circle cx="20.088" cy="8.783" r="0.333" fill="url(#right_eye_halo0)" />
-        <circle cx="19.434" cy="8.738" r="0.204" fill="url(#right_eye_halo0)" />
-        <circle cx="24.793" cy="8.449" r="0.317" fill="url(#right_eye_halo0)" />
-        <circle cx="19.794" cy="5.694" r="0.219" fill="url(#right_eye_halo0)" />
-        <circle cx="20.529" cy="9.562" r="0.338" fill="url(#right_eye_halo0)" />
-        <circle cx="23.566" cy="7.373" r="0.236" fill="url(#right_eye_halo0)" />
-        <circle cx="24.007" cy="7.654" r="0.380" fill="url(#right_eye_halo0)" />
-        <circle cx="21.983" cy="10.182" r="0.291" fill="url(#right_eye_halo0)" />
-        <circle cx="23.745" cy="6.878" r="0.414" fill="url(#right_eye_halo0)" />
-        <circle cx="18.319" cy="8.999" r="0.406" fill="url(#right_eye_halo0)" />
-        <circle cx="20.390" cy="8.143" r="0.261" fill="url(#right_eye_halo0)" />
-        <circle cx="18.195" cy="7.182" r="0.344" fill="url(#right_eye_halo0)" />
-        <circle cx="21.720" cy="11.034" r="0.297" fill="url(#right_eye_halo0)" />
-        <circle cx="24.069" cy="4.981" r="0.237" fill="url(#right_eye_halo0)" />
-        <circle cx="23.130" cy="11.140" r="0.353" fill="url(#right_eye_halo0)" />
-        <circle cx="24.656" cy="7.513" r="0.301" fill="url(#right_eye_halo0)" />
-        <circle cx="24.158" cy="10.951" r="0.385" fill="url(#right_eye_halo0)" />
-        <circle cx="21.509" cy="4.958" r="0.220" fill="url(#right_eye_halo0)" />
-        <circle cx="18.413" cy="6.914" r="0.405" fill="url(#right_eye_halo0)" />
-        <circle cx="21.882" cy="9.914" r="0.310" fill="url(#right_eye_halo0)" />
-        <circle cx="23.628" cy="6.775" r="0.304" fill="url(#right_eye_halo0)" />
-        <circle cx="24.097" cy="5.624" r="0.417" fill="url(#right_eye_halo0)" />
-        <circle cx="23.024" cy="11.466" r="0.233" fill="url(#right_eye_halo0)" />
-        <circle cx="25.764" cy="9.174" r="0.276" fill="url(#right_eye_halo0)" />
-        <circle cx="23.940" cy="10.832" r="0.421" fill="url(#right_eye_halo0)" />
-        <circle cx="24.793" cy="7.392" r="0.440" fill="url(#right_eye_halo0)" />
-        <circle cx="22.050" cy="4.582" r="0.206" fill="url(#right_eye_halo0)" />
-        <circle cx="19.626" cy="9.008" r="0.373" fill="url(#right_eye_halo0)" />
-        <circle cx="23.446" cy="8.924" r="0.253" fill="url(#right_eye_halo0)" />
-        <circle cx="20.228" cy="8.678" r="0.193" fill="url(#right_eye_halo0)" />
-        <circle cx="25.287" cy="8.952" r="0.454" fill="url(#right_eye_halo0)" />
-        <circle cx="24.203" cy="4.807" r="0.203" fill="url(#right_eye_halo0)" />
-        <circle cx="18.935" cy="9.391" r="0.367" fill="url(#right_eye_halo0)" />
-        <circle cx="24.303" cy="5.500" r="0.252" fill="url(#right_eye_halo0)" />
-        <circle cx="20.394" cy="6.569" r="0.428" fill="url(#right_eye_halo0)" />
-        <circle cx="20.402" cy="6.028" r="0.304" fill="url(#right_eye_halo0)" />
-        <circle cx="23.341" cy="9.644" r="0.301" fill="url(#right_eye_halo0)" />
-        <circle cx="24.905" cy="10.253" r="0.320" fill="url(#right_eye_halo0)" />
-        <circle cx="21.509" cy="5.558" r="0.333" fill="url(#right_eye_halo0)" />
-        <circle cx="24.880" cy="6.274" r="0.249" fill="url(#right_eye_halo0)" />
-        <circle cx="23.082" cy="5.144" r="0.253" fill="url(#right_eye_halo0)" />
-        <circle cx="21.530" cy="9.834" r="0.454" fill="url(#right_eye_halo0)" />
-        <circle cx="21.008" cy="5.882" r="0.373" fill="url(#right_eye_halo0)" />
-        <circle cx="21.004" cy="4.586" r="0.313" fill="url(#right_eye_halo0)" />
-      </g>
+      <use id="right_eye_glitter_glow" href="#right_eye_glitter" filter="url(#right_eye_glitter_glow_filter)" opacity="0.700" />
       <g id="right_eye_glitter" fill="#FFFFFF" opacity="0.85">
         <polygon points="24.734,7.965 24.774,8.153 24.961,8.193 24.774,8.233 24.734,8.421 24.693,8.233 24.506,8.193 24.693,8.153 " />
         <circle cx="22.806" cy="11.802" r="0.074" />

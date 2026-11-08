@@ -187,7 +187,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(4, Regex.Matches(svg, "=\"url\\(#eye_left_(rays|glitter|lens)_fill\\)\"").Count);
 
             var plain = SvgExporter.GenerateSingleEyeSvg(new IrisParameters { RayColor = "#B3E5FC" }, false);
-            Assert.DoesNotContain("<mask", plain);
+            Assert.DoesNotContain("_rays_mask", plain);
             Assert.Contains("<g id=\"eye_left_rays\" fill=\"#B3E5FC\" opacity=", plain);
         }
 
@@ -229,7 +229,7 @@ namespace DollIrisGenerator.Tests
             string svg = SvgExporter.GeneratePairSvg(p);
             Assert.Contains("<g id=\"left_eye_rays\" fill=", svg);
             Assert.Contains("<g id=\"left_eye_fine_rays\" fill=", svg);
-            Assert.Contains("<g id=\"left_eye_glitter_glow\">", svg);
+            Assert.Contains("<use id=\"left_eye_glitter_glow\" href=\"#left_eye_glitter\"", svg);
         }
 
         [Fact]
@@ -318,28 +318,37 @@ namespace DollIrisGenerator.Tests
             Assert.InRange(flares, b.Count / 4, b.Count * 3 / 4);
         }
 
+        /// <summary>
+        /// 光のにじみ: a blurred, brightened copy of the glitter (a use of the glitter group) under the sharp grains.
+        /// </summary>
         [Fact]
-        public void TestGlowingGlitterExportsHalosAndFlares()
+        public void TestGlowingGlitterExportsAGlowAndFlares()
         {
             var p = new IrisParameters { ParticleGlow = 0.6, ParticleFlareRatio = 1.0 };
             string svg = SvgExporter.GeneratePairSvg(p);
             Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
-            Assert.Contains("<g id=\"left_eye_glitter_glow\">", svg);
-            Assert.Contains("<radialGradient id=\"left_eye_halo0\">", svg);
-            // A solid glitter color needs one halo gradient only
-            Assert.DoesNotContain("left_eye_halo1\"", svg);
-            int halos = svg.Split("<g id=\"left_eye_glitter_glow\">")[1].Split("</g>")[0].Split("<circle ").Length - 1;
-            Assert.Equal(p.ParticleCount, halos);
+            Assert.Contains("<use id=\"left_eye_glitter_glow\" href=\"#left_eye_glitter\" filter=\"url(#left_eye_glitter_glow_filter)\" opacity=\"0.600\"", svg);
+            Assert.Contains("<filter id=\"left_eye_glitter_glow_filter\" filterUnits=\"userSpaceOnUse\"", svg);
+            Assert.Contains("<feFuncA type=\"linear\" slope=\"2.50\" />", svg);
+            // Under the sharp grains
+            Assert.True(svg.IndexOf("left_eye_glitter_glow\"", StringComparison.Ordinal) < svg.IndexOf("<g id=\"left_eye_glitter\"", StringComparison.Ordinal));
             int flares = svg.Split("<g id=\"left_eye_glitter\"")[1].Split("</g>")[0].Split("<path ").Length - 1;
             Assert.Equal(p.ParticleCount, flares);
+
+            // A stronger glow spreads wider
+            double Blur(double glow) => double.Parse(Regex.Match(SvgExporter.GeneratePairSvg(new IrisParameters { ParticleGlow = glow }),
+                "left_eye_glitter_glow_filter\"[^>]*>\\s*<feGaussianBlur stdDeviation=\"([\\d.]+)\"").Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+            Assert.True(Blur(1.0) > Blur(0.2));
         }
 
+        /// <summary>The glow is a copy of the glitter, so a gradient glitter color glows in its own colors.</summary>
         [Fact]
-        public void TestHalosFollowAGradientGlitterColor()
+        public void TestGlowFollowsAGradientGlitterColor()
         {
             var p = new IrisParameters { ParticleGlow = 0.6, ParticleColor = "linear-gradient(0deg, #FF0000 0%, #0000FF 100%)" };
             string svg = SvgExporter.GeneratePairSvg(p);
-            Assert.Contains("left_eye_halo1\"", svg); // grains across the iris take different colors
+            Assert.Contains("href=\"#left_eye_glitter\"", svg);
+            Assert.Contains("<g id=\"left_eye_glitter\" fill=\"url(#left_eye_glitter_fill)\"", svg);
         }
 
         [Fact]

@@ -26,29 +26,6 @@ namespace DollIrisGenerator.Services
         /// </summary>
         public const double MmPerStyleUnit = 25.4 / (96.0 * ReferenceZoom);
 
-        /// <summary>
-        /// Color ("#AARRGGBB" or plain hex) a glitter grain has where it sits: the solid color, or the iris-wide
-        /// gradient's color at that point (placed exactly like the grains' brush).
-        /// </summary>
-        internal static Func<Point, string> GrainColorSampler(string? value, Rect irisBox, bool mirror, double bandInner, double bandOuter)
-        {
-            var fill = ColorFill.Parse(value);
-            if (!fill.IsGradient)
-            {
-                string solid = GeometryHelper.SanitizeColorHex(value, "#FFFFFF");
-                return _ => solid;
-            }
-            if (mirror) fill = fill.MirroredX();
-            var map = GradientMapping.Create(fill, irisBox, bandInner, bandOuter);
-            // Same text as map.ColorAt, with the stop colors read once for all the grains
-            var argbAt = map.ArgbSampler();
-            return pt =>
-            {
-                var c = argbAt(pt);
-                return ColorFill.FormatArgb(c.A, c.R, c.G, c.B);
-            };
-        }
-
         internal static Point PolarPoint(Point c, double r, double degrees)
         {
             double rad = degrees * Math.PI / 180.0;

@@ -405,7 +405,7 @@ namespace DollIrisGenerator.Tests
         {
             string svg = SvgExporter.GeneratePairSvg(new IrisParameters());
             Assert.DoesNotContain("_fill", svg);
-            Assert.DoesNotContain("userSpaceOnUse", svg);
+            Assert.DoesNotContain("gradientUnits=\"userSpaceOnUse\"", svg);
         }
 
         [Fact]
