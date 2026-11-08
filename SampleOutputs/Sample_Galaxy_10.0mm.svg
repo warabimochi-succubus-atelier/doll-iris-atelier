@@ -155,6 +155,12 @@
         <ellipse cx="8.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
       <defs>
+        <clipPath id="left_eye_pupil_core_clip">
+          <ellipse cx="8.000" cy="8.000" rx="1.600" ry="1.600" transform="translate(8.000 8.000) scale(0.90000) translate(-8.000 -8.000)" />
+        </clipPath>
+      </defs>
+      <rect id="left_eye_pupil_core" x="6.400" y="6.400" width="3.200" height="3.200" fill="#05020F" opacity="1.00" clip-path="url(#left_eye_pupil_core_clip)" />
+      <defs>
         <filter id="left_eye_glitter_glow_filter" filterUnits="userSpaceOnUse" x="1.906" y="1.906" width="12.189" height="12.189">
           <feGaussianBlur stdDeviation="0.2034" />
           <feComponentTransfer>
@@ -521,6 +527,12 @@
       <g id="right_eye_pupil" fill="#05020F" opacity="1.00" filter="url(#right_eye_pupil_blur)">
         <ellipse cx="22.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
+      <defs>
+        <clipPath id="right_eye_pupil_core_clip">
+          <ellipse cx="22.000" cy="8.000" rx="1.600" ry="1.600" transform="translate(22.000 8.000) scale(0.90000) translate(-22.000 -8.000)" />
+        </clipPath>
+      </defs>
+      <rect id="right_eye_pupil_core" x="20.400" y="6.400" width="3.200" height="3.200" fill="#05020F" opacity="1.00" clip-path="url(#right_eye_pupil_core_clip)" />
       <defs>
         <filter id="right_eye_glitter_glow_filter" filterUnits="userSpaceOnUse" x="15.906" y="1.906" width="12.189" height="12.189">
           <feGaussianBlur stdDeviation="0.2034" />

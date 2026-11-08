@@ -233,6 +233,9 @@ namespace DollIrisGenerator.Services
         /// <summary>Blur of the pupil's edge at 輪郭の柔らかさ 1, as a fraction of the pupil's radius (max setting 0.3 → 0.15).</summary>
         public const double PupilBlurPerSoftness = 0.5;
 
+        /// <summary>How far inside the outline (in blur deviations) the blurred pupil's sharp core starts.</summary>
+        public const double PupilCoreInset = 2.5;
+
         /// <summary>Softness (one Gaussian deviation) of the limbal ring's inner edge at 境界の柔らかさ 1, as a fraction of the ring's width.</summary>
         public const double LimbalBlurPerSoftness = 0.9;
 
@@ -574,10 +577,12 @@ namespace DollIrisGenerator.Services
 
                 // Soft edge (輪郭の柔らかさ): the pupil's fill blurred (the gem-cut facets stay sharp, clipped to the outline)
                 string pupilBlur = "";
+                double pupilSigma = 0.0;
                 if (p.PupilSoftness > 0.02)
                 {
                     string blurId = $"{idPrefix}_pupil_blur";
-                    AppendBlurFilter(sb, blurId, Math.Max(prx, pry) * p.PupilSoftness * PupilBlurPerSoftness, pupilBox, 0.0);
+                    pupilSigma = Math.Max(prx, pry) * p.PupilSoftness * PupilBlurPerSoftness;
+                    AppendBlurFilter(sb, blurId, pupilSigma, pupilBox, 0.0);
                     pupilBlur = $@" filter=""url(#{blurId})""";
                 }
                 sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}""{pupilBlur}>");
@@ -594,6 +599,30 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{prx.ToFixed(3)}"" ry=""{pry.ToFixed(3)}"" />");
                 }
                 sb.AppendLine("      </g>");
+
+                // Sharp core over the blurred pupil: the same pupil, cut to its outline shrunk inward by 2.5 deviations.
+                // A small blur (a few pixels) is computed approximately and can leave the inside of the blurred pupil
+                // a little see-through; the core fills it, while the soft edge stays as the blur drew it.
+                if (pupilSigma > 0)
+                {
+                    double core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / Math.Min(prx, pry));
+                    if (core > 0.05)
+                    {
+                        string coreClip = $"{idPrefix}_pupil_core_clip";
+                        string coreTransform = $@" transform=""translate({F(cx)} {F(cy)}) scale({F(core, 5)}) translate({F(-cx)} {F(-cy)})""";
+                        sb.AppendLine("      <defs>");
+                        sb.AppendLine($@"        <clipPath id=""{coreClip}"">");
+                        if (pupilOutline != null)
+                            AppendPath(sb, "          <path d=\"", pupilOutline, cx, cy, $"\"{coreTransform} />");
+                        else if (p.PupilShape == PupilShape.VerticalOval)
+                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}""{coreTransform} />");
+                        else
+                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}""{coreTransform} />");
+                        sb.AppendLine("        </clipPath>");
+                        sb.AppendLine("      </defs>");
+                        sb.AppendLine($@"      <rect id=""{idPrefix}_pupil_core"" x=""{F(pupilBox.X)}"" y=""{F(pupilBox.Y)}"" width=""{F(pupilBox.Width)}"" height=""{F(pupilBox.Height)}"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"" clip-path=""url(#{coreClip})"" />");
+                    }
+                }
 
                 // Gem-cut facets (宝石カット), clipped to the same pupil outline
                 if (p.PupilFacetIntensity > 0.01)
