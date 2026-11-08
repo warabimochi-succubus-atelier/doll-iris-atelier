@@ -11,10 +11,11 @@ on:
         description: resvg tag (https://github.com/linebender/resvg/releases)
         default: v0.49.0
         required: true
-  # Also runs when this file changes on a branch, so a new version can be built before it is on main
+  # Also runs when this file or the license settings change on a branch, so a new version can be built before it is on main
   push:
     paths:
       - .github/workflows/build-resvg.yml
+      - third_party/resvg/about/**
 
 permissions:
   contents: read
