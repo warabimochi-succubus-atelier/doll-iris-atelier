@@ -1,0 +1,106 @@
+@typeparam T
+@using System.Globalization
+@using DollIrisGenerator.Web.Editor
+@using DollIrisGenerator.Web.Services
+
+@* The controls of one settings group. Every change goes through the session so it redraws and can be undone. *@
+
+@foreach (var field in Fields)
+{
+    switch (field)
+    {
+        case HeadingField<T> h:
+            <h3 class="field-heading" title="@h.Hint">@h.Label</h3>
+            @if (h.Hint != null)
+            {
+                <p class="field-hint">@h.Hint</p>
+            }
+            break;
+
+        case SliderField<T> s:
+            {
+                double value = s.Get(Target);
+                <label class="field" title="@s.Hint">
+                    <span class="field-row">
+                        <span class="field-label">@s.Label</span>
+                        <span class="field-value">@s.Format(value)</span>
+                    </span>
+                    <input type="range" min="@Num(s.Min)" max="@Num(s.Max)" step="@Num(s.Step)" value="@Num(value)"
+                           @oninput="e => OnSlider(s, e)" @onchange="_ => Session.CommitEdit()" />
+                </label>
+            }
+            break;
+
+        case ColorField<T> c:
+            <ColorInput Label="@c.Label" Hint="@c.Hint" AllowGradient="c.AllowGradient" Value="@c.Get(Target)"
+                        OnPreview="v => Preview(() => c.Set(Target, v))" OnCommit="() => Session.CommitEdit()" />
+            break;
+
+        case ToggleField<T> t:
+            <label class="field field-toggle" title="@t.Hint">
+                <input type="checkbox" checked="@t.Get(Target)" @onchange="e => Change(() => t.Set(Target, e.Value is true))" />
+                <span>@t.Label</span>
+            </label>
+            @if (t.Hint != null)
+            {
+                <p class="field-hint">@t.Hint</p>
+            }
+            break;
+
+        case TextField<T> x:
+            <label class="field" title="@x.Hint">
+                <span class="field-label">@x.Label</span>
+                <input type="text" value="@x.Get(Target)" maxlength="100"
+                       @oninput="e => Preview(() => x.Set(Target, e.Value?.ToString() ?? string.Empty))"
+                       @onchange="_ => Session.CommitEdit()" />
+            </label>
+            break;
+
+        case ChoiceField<T> ch:
+            {
+                var current = ch.Get(Target);
+                <div class="field" title="@ch.Hint">
+                    <span class="field-label">@ch.Label</span>
+                    <div class="choices" role="radiogroup" aria-label="@ch.Label">
+                        @foreach (var (label, value) in ch.Options)
+                        {
+                            bool selected = Equals(current, value);
+                            <button type="button" role="radio" aria-checked="@(selected ? "true" : "false")"
+                                    class="choice @(selected ? "selected" : "")"
+                                    @onclick="() => Change(() => ch.Set(Target, value))">@label</button>
+                        }
+                    </div>
+                </div>
+            }
+            break;
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public T Target { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<Field<T>> Fields { get; set; } = Array.Empty<Field<T>>();
+    [CascadingParameter] public DesignSession Session { get; set; } = default!;
+
+    private static string Num(double v) => v.ToString("R", CultureInfo.InvariantCulture);
+
+    private void OnSlider(SliderField<T> s, ChangeEventArgs e)
+    {
+        if (!double.TryParse(e.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double v)) return;
+        Preview(() => s.Set(Target, v));
+    }
+
+    /// <summary>A change in the middle of a gesture (drag, typing): redraw, undo step on commit.</summary>
+    private void Preview(Action set)
+    {
+        Session.BeginEdit();
+        set();
+        Session.Touch();
+    }
+
+    /// <summary>A one-shot change (button, check box): its own undo step.</summary>
+    private void Change(Action set)
+    {
+        Preview(set);
+        Session.CommitEdit();
+    }
+}

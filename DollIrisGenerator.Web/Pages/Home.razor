@@ -1,0 +1,244 @@
+﻿@page "/"
+@using DollIrisGenerator.Models
+@using DollIrisGenerator.Services
+@using DollIrisGenerator.Web.Components
+@using DollIrisGenerator.Web.Editor
+@using DollIrisGenerator.Web.Services
+@implements IDisposable
+@inject DesignSession Session
+@inject FavoritesRepository Favorites
+@inject BrowserApi Browser
+
+<PageTitle>Doll Iris Atelier</PageTitle>
+
+<CascadingValue Value="Session" IsFixed="true">
+    <div class="app">
+        <header class="toolbar">
+            <h1 class="app-title">Doll Iris Atelier</h1>
+            <div class="toolbar-buttons">
+                <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す">↩<span class="label"> 元に戻す</span></button>
+                <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す">↪<span class="label"> やり直す</span></button>
+                <button type="button" @onclick="NewDesign" title="起動時と同じ初期状態のデザインにする (元に戻せます)">🆕<span class="label"> 新しいデザイン</span></button>
+                <button type="button" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る">✨<span class="label"> ランダム生成</span></button>
+                <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す">⭐<span class="label"> お気に入りに追加</span></button>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <div class="preview-pane">
+                <IrisPreview Design="Session.Current" Version="Session.Version" />
+                <p class="preview-caption">@Session.Current.Name ・ 虹彩 @Fmt.Mm(Session.Current.SizeMm) ・ シード @Session.Current.Seed</p>
+            </div>
+
+            <div class="settings-pane">
+                <nav class="tabs" role="tablist" aria-label="設定">
+                    @foreach (var tab in Tabs)
+                    {
+                        <button type="button" role="tab" aria-selected="@(_tab == tab ? "true" : "false")"
+                                class="tab @(_tab == tab ? "selected" : "")" @onclick="() => _tab = tab">@tab</button>
+                    }
+                </nav>
+
+                <div class="tab-body" role="tabpanel" aria-label="@_tab">
+                    @switch (_tab)
+                    {
+                        case "基本":
+                            <h3 class="field-heading">虹彩プリセット</h3>
+                            <div class="field">
+                                <select @onchange="ApplyPreset" aria-label="虹彩プリセット">
+                                    <option value="">プリセットを選んで適用…</option>
+                                    @for (int i = 0; i < ColorPresets.All.Count; i++)
+                                    {
+                                        <option value="@i">@ColorPresets.All[i].Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <h3 class="field-heading">基本設定・サイズ・楕円形状</h3>
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Basic" />
+                            <div class="field">
+                                <span class="field-label">乱数シード</span>
+                                <div class="seed-row">
+                                    <input type="number" min="0" value="@Session.Current.Seed" aria-label="乱数シード" @onchange="SetSeed" />
+                                    <button type="button" @onclick="RandomSeed">🎲 変更</button>
+                                </div>
+                            </div>
+                            break;
+                        case "色":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Colors" />
+                            break;
+                        case "瞳孔・放射線":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.PupilAndRays" />
+                            break;
+                        case "外輪・ラメ":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.RingAndGlitter" />
+                            break;
+                        case "記号":
+                            <div class="list-header">
+                                <h3 class="field-heading">装飾記号 (@Session.Current.Symbols.Count)</h3>
+                                <button type="button" @onclick="AddSymbol" disabled="@(Session.Current.Symbols.Count >= IrisParameters.MaxNestedItems)">➕ 装飾記号追加</button>
+                            </div>
+                            @if (Session.Current.Symbols.Count == 0)
+                            {
+                                <p class="field-hint">装飾記号はありません。「➕ 装飾記号追加」で追加できます。</p>
+                            }
+                            @foreach (var symbol in Session.Current.Symbols)
+                            {
+                                <div class="item-card" @key="symbol.Id">
+                                    <button type="button" class="danger remove" @onclick="() => RemoveSymbol(symbol)">✕ 削除</button>
+                                    <FieldList T="DecorativeSymbolItem" Target="symbol" Fields="DesignFields.Symbol" />
+                                </div>
+                            }
+                            break;
+                        case "レンズ・オッドアイ":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.OddEye" />
+                            <div class="field">
+                                <span class="field-label">オッドアイ・テンプレート</span>
+                                <select @onchange="ApplyOddEyeTemplate" aria-label="オッドアイ・テンプレート">
+                                    <option value="">テンプレートを選んで適用…</option>
+                                    @for (int i = 0; i < OddEyeTemplate.Presets.Count; i++)
+                                    {
+                                        <option value="@i">@OddEyeTemplate.Presets[i].Name</option>
+                                    }
+                                </select>
+                            </div>
+                            break;
+                        case "ハイライト":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
+                            <div class="list-header">
+                                <h3 class="field-heading">ハイライト (@Session.Current.Highlights.Count)</h3>
+                                <button type="button" @onclick="AddHighlight" disabled="@(Session.Current.Highlights.Count >= IrisParameters.MaxNestedItems)">➕ ハイライト追加</button>
+                            </div>
+                            @foreach (var highlight in Session.Current.Highlights)
+                            {
+                                <div class="item-card" @key="highlight.Id">
+                                    <button type="button" class="danger remove" @onclick="() => RemoveHighlight(highlight)">✕ 削除</button>
+                                    <FieldList T="HighlightItem" Target="highlight" Fields="DesignFields.Highlight" />
+                                </div>
+                            }
+                            break;
+                        case "お気に入り":
+                            <FavoritesPanel OnMessage="ShowMessage" />
+                            break;
+                    }
+                </div>
+            </div>
+        </main>
+
+        <footer class="status" role="status" aria-live="polite">@_message</footer>
+    </div>
+</CascadingValue>
+
+@code {
+    private static readonly string[] Tabs = { "基本", "色", "瞳孔・放射線", "外輪・ラメ", "記号", "レンズ・オッドアイ", "ハイライト", "お気に入り" };
+
+    private string _tab = Tabs[0];
+    private string _message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += OnSessionChanged;
+        Favorites.Changed += OnSessionChanged;
+
+        string? problem = await Favorites.LoadAsync();
+        if (problem != null) _message = problem;
+        try { await Browser.RequestPersistenceAsync(); }
+        catch { /* best effort */ }
+    }
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    private void ShowMessage(string message) => _message = message;
+
+    private void Done(string status)
+    {
+        Session.Status = status;
+        _message = status;
+    }
+
+    private void NewDesign()
+    {
+        Session.Replace(new IrisParameters(), "新しいデザインにしました (元に戻せます)。");
+        _message = Session.Status;
+    }
+
+    private void Randomize()
+    {
+        Session.Apply("", p =>
+        {
+            // Size and dimensions stay, as in the desktop app
+            double size = p.SizeMm, aspect = p.AspectRatio, tilt = p.TiltAngle;
+            var shape = p.Shape;
+            IrisRandomizer.RandomizeAttributes(p);
+            p.SizeMm = size; p.Shape = shape; p.AspectRatio = aspect; p.TiltAngle = tilt;
+        });
+        Done($"サイズ ({Session.Current.SizeMm:F1}mm) と寸法を保持したまま属性をランダム生成しました: {Session.Current.Name}");
+    }
+
+    private async Task AddFavorite()
+    {
+        Favorites.Items.Insert(0, new FavoriteItem(Session.Current));
+        string? error = await Favorites.SaveAsync();
+        _message = error ?? $"「{Session.Current.Name}」をお気に入りに追加しました (計 {Favorites.Items.Count} 件)。";
+    }
+
+    private void ApplyPreset(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int i) || i < 0 || i >= ColorPresets.All.Count) return;
+        var preset = ColorPresets.All[i];
+        Session.Apply("", p => ColorPresets.ApplyPreset(p, preset));
+        Done($"プリセット「{preset.Name}」を適用しました。");
+    }
+
+    private void ApplyOddEyeTemplate(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int i) || i < 0 || i >= OddEyeTemplate.Presets.Count) return;
+        var template = OddEyeTemplate.Presets[i];
+        Session.Apply("", p => DesignFields.ApplyOddEyeTemplate(p, template));
+        Done($"オッドアイテンプレート「{template.Name}」を適用しました。");
+    }
+
+    private void SetSeed(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int seed) || seed < 0) return;
+        Session.Apply("", p => p.Seed = seed);
+        Done($"乱数シードを {seed} にしました。");
+    }
+
+    private void RandomSeed()
+    {
+        int seed = Random.Shared.Next(1, 999999);
+        Session.Apply("", p => p.Seed = seed);
+        Done($"乱数シードを変更しました: {seed}");
+    }
+
+    private void AddSymbol()
+    {
+        Session.Apply("", p => p.Symbols.Add(DesignFields.NewSymbol()));
+        Done("装飾記号を追加しました。");
+    }
+
+    private void RemoveSymbol(DecorativeSymbolItem item)
+    {
+        Session.Apply("", p => p.Symbols.Remove(item));
+        Done("装飾記号を削除しました (元に戻せます)。");
+    }
+
+    private void AddHighlight()
+    {
+        Session.Apply("", p => p.Highlights.Add(DesignFields.NewHighlight()));
+        Done("ハイライトを追加しました。");
+    }
+
+    private void RemoveHighlight(HighlightItem item)
+    {
+        Session.Apply("", p => p.Highlights.Remove(item));
+        Done("ハイライトを削除しました (元に戻せます)。");
+    }
+
+    public void Dispose()
+    {
+        Session.Changed -= OnSessionChanged;
+        Favorites.Changed -= OnSessionChanged;
+    }
+}

@@ -138,10 +138,17 @@ namespace DollIrisGenerator.Services
         /// during the write can't leave a truncated file behind.
         /// </summary>
         /// <exception cref="Exception">Any write failure; the caller reports it to the user.</exception>
-        public static void WriteToFile(string path, IEnumerable<FavoriteItem> favorites)
+        public static void WriteToFile(string path, IEnumerable<FavoriteItem> favorites) =>
+            AtomicFileWriter.WriteAllText(path, Serialize(favorites));
+
+        /// <summary>
+        /// The text of a favorites file (favorites.json / *.irisfav.json). The browser app stores and exports the
+        /// same text, so its files open in the desktop app and the other way round.
+        /// </summary>
+        public static string Serialize(IEnumerable<FavoriteItem> favorites)
         {
             var opt = new JsonSerializerOptions { WriteIndented = true };
-            AtomicFileWriter.WriteAllText(path, JsonSerializer.Serialize(favorites, opt));
+            return JsonSerializer.Serialize(favorites, opt);
         }
 
         /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>
@@ -162,8 +169,18 @@ namespace DollIrisGenerator.Services
         /// <exception cref="Exception">Any read or parse failure; the caller decides how to report it.</exception>
         public static List<FavoriteItem>? ReadImportFile(string path, out string? singleDesignJson)
         {
+            return ParseImportText(SafeFileReader.ReadAllText(path), out singleDesignJson);
+        }
+
+        /// <summary>
+        /// Reads the text of a file chosen for import (see <see cref="ReadImportFile(string)"/>): a favorites list,
+        /// or a single design, which becomes one favorite.
+        /// </summary>
+        /// <param name="singleDesignJson">The text when it held a single design, otherwise null.</param>
+        /// <exception cref="Exception">Any parse failure; the caller decides how to report it.</exception>
+        public static List<FavoriteItem>? ParseImportText(string json, out string? singleDesignJson)
+        {
             singleDesignJson = null;
-            string json = SafeFileReader.ReadAllText(path);
             if (json.TrimStart().StartsWith('{'))
             {
                 singleDesignJson = json;

@@ -1,0 +1,168 @@
+@using DollIrisGenerator.Models
+@using DollIrisGenerator.Services
+@using DollIrisGenerator.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject FavoritesRepository Favorites
+@inject BrowserApi Browser
+
+@*
+    Favorites, and moving designs to / from the desktop app. The files are *.irisfav.json in the desktop app's own
+    format: its 「📥 インポート」 reads them as they are, and its 「📤 エクスポート」 files open here.
+*@
+
+<section class="panel-section">
+    <h3 class="field-heading">デスクトップ版との受け渡し</h3>
+    <p class="field-hint">
+        書き出した <code>.irisfav.json</code> を PC に送り、デスクトップ版の「履歴・お気に入り」タブの「📥 インポート」で読み込むと、
+        A4 PDF で印刷できます。デスクトップ版で書き出したファイルもここで読み込めます。
+    </p>
+    <div class="button-row">
+        <button type="button" @onclick="() => Export(Favorites.Items, AllFileName())" disabled="@(Favorites.Items.Count == 0)">📤 お気に入りをすべて書き出す</button>
+        <button type="button" @onclick="ExportCurrent">📤 今のデザインだけ書き出す</button>
+        <label class="button-like">
+            📥 ファイルを読み込む
+            <InputFile OnChange="Import" accept=".json,application/json" class="visually-hidden" />
+        </label>
+    </div>
+</section>
+
+<section class="panel-section">
+    <h3 class="field-heading">お気に入り (@Favorites.Items.Count 件)</h3>
+    @if (Favorites.Items.Count == 0)
+    {
+        <p class="field-hint">まだありません。上部の「⭐ お気に入りに追加」で、今のデザインを残せます。</p>
+    }
+    <ul class="favorites">
+        @foreach (var item in Favorites.Items)
+        {
+            <li @key="item.Id" class="favorite">
+                <IrisPreview Design="item.Parameters" SingleEye="true" Class="thumb" />
+                <div class="favorite-text">
+                    <strong>@item.Name</strong>
+                    <span class="field-hint">@item.Note</span>
+                    <span class="field-hint">@item.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                </div>
+                <div class="favorite-actions">
+                    <button type="button" @onclick="() => Restore(item)" title="このお気に入りを編集中のデザインとして読み込む (元に戻せます)">復元</button>
+                    <button type="button" @onclick="() => Duplicate(item)">複製</button>
+                    <button type="button" class="danger" @onclick="() => Remove(item)" aria-label="@($"{item.Name} を削除")">✕</button>
+                </div>
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    private const string MimeType = "application/json";
+
+    [CascadingParameter] public DesignSession Session { get; set; } = default!;
+    [Parameter] public EventCallback<string> OnMessage { get; set; }
+
+    private bool _canShare;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _canShare = await Browser.CanShareFilesAsync(); }
+        catch { _canShare = false; }
+    }
+
+    private static string Stamp() => DateTime.Now.ToString("yyyyMMdd-HHmm");
+    private static string AllFileName() => $"お気に入り-{Stamp()}.irisfav.json";
+
+    private static string SafeFileName(string name)
+    {
+        var invalid = System.IO.Path.GetInvalidFileNameChars().Concat(new[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' }).ToHashSet();
+        string cleaned = new string(name.Where(c => !invalid.Contains(c) && !char.IsControl(c)).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "虹彩デザイン" : cleaned.Length > 40 ? cleaned[..40] : cleaned;
+    }
+
+    private Task ExportCurrent() =>
+        Export(new[] { new FavoriteItem(Session.Current) }, $"{SafeFileName(Session.Current.Name)}-{Stamp()}.irisfav.json");
+
+    private async Task Export(IEnumerable<FavoriteItem> items, string fileName)
+    {
+        string text = FavoritesStore.Serialize(items);
+        try
+        {
+            // Phones: the share sheet (AirDrop, mail, cloud...). Elsewhere: an ordinary download.
+            if (_canShare)
+            {
+                bool shared = await Browser.ShareFileAsync(fileName, text, MimeType);
+                await OnMessage.InvokeAsync(shared ? $"「{fileName}」を共有しました。" : "共有を取りやめました。");
+                return;
+            }
+            await Browser.DownloadAsync(fileName, text, MimeType);
+            await OnMessage.InvokeAsync($"「{fileName}」を保存しました。");
+        }
+        catch (Exception ex)
+        {
+            await OnMessage.InvokeAsync($"書き出せませんでした: {ex.Message}");
+        }
+    }
+
+    private async Task Import(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > FavoritesRepository.MaxImportBytes)
+        {
+            await OnMessage.InvokeAsync($"ファイルが大きすぎます ({file.Size / 1024 / 1024} MB)。上限は {FavoritesRepository.MaxImportBytes / 1024 / 1024} MB です。");
+            return;
+        }
+
+        List<FavoriteItem>? loaded;
+        try
+        {
+            using var reader = new System.IO.StreamReader(file.OpenReadStream(FavoritesRepository.MaxImportBytes));
+            string text = await reader.ReadToEndAsync();
+            loaded = FavoritesStore.ParseImportText(text, out _);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            await OnMessage.InvokeAsync($"「{file.Name}」を読み込めませんでした。お気に入りファイル (.irisfav.json) かデザインの JSON ファイルを選んでください。");
+            return;
+        }
+        catch (Exception ex)
+        {
+            await OnMessage.InvokeAsync($"「{file.Name}」を読み込めませんでした: {ex.Message}");
+            return;
+        }
+
+        // Added at the end of the list, as the desktop app does
+        int added = 0;
+        foreach (var fav in loaded ?? new List<FavoriteItem>())
+        {
+            if (fav?.Parameters == null) continue;
+            Favorites.Items.Add(fav);
+            added++;
+        }
+        string? error = await Favorites.SaveAsync();
+        await OnMessage.InvokeAsync(error ?? $"「{file.Name}」から {added} 件を読み込みました。");
+    }
+
+    private Task Restore(FavoriteItem item)
+    {
+        Session.Replace(item.Parameters.Clone(), $"お気に入り「{item.Name}」を読み込みました。");
+        return OnMessage.InvokeAsync(Session.Status);
+    }
+
+    private async Task Duplicate(FavoriteItem source)
+    {
+        string newName = Favorites.MakeCopyName(source.Name);
+        var parameters = source.Parameters.Clone();
+        parameters.Name = newName;
+        var copy = new FavoriteItem(parameters, source.Note) { Name = newName };
+        int index = Favorites.Items.IndexOf(source);
+        Favorites.Items.Insert(index < 0 ? 0 : index + 1, copy);
+        string? error = await Favorites.SaveAsync();
+        await OnMessage.InvokeAsync(error ?? $"「{source.Name}」を「{newName}」として複製しました。");
+    }
+
+    private async Task Remove(FavoriteItem item)
+    {
+        // Unlike the desktop app there is no file left behind to recover from, so ask first
+        if (!await Browser.ConfirmAsync($"お気に入り「{item.Name}」を削除しますか？\nこの操作は元に戻せません。")) return;
+        Favorites.Items.Remove(item);
+        string? error = await Favorites.SaveAsync();
+        await OnMessage.InvokeAsync(error ?? "お気に入りから削除しました。");
+    }
+}

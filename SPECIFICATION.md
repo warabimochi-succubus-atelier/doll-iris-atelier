@@ -76,11 +76,26 @@
 |---|---|---|
 | `DollIrisGenerator.Core` | `net10.0`（WPF なし） | デザインモデル (`IrisParameters`・プリセット・JSON)、ランダム生成、輪郭・模様・グラデーション配置の計算 (`ShapeOutline` / `IrisPatterns` / `GradientMapping`)、SVG 出力、星雲テクスチャ、お気に入り・A4 シートの保存形式 |
 | `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、WPF 描画 (`WpfIrisRenderer`)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
+| `DollIrisGenerator.Web` | `net10.0`（Blazor WebAssembly） | ブラウザ版 (PWA)。デザインの編集とお気に入りのみ（2.4） |
 | `DollIrisGenerator.Tests` | `net10.0-windows` | xUnit テスト |
 
 - コアは WPF に依存しないため、Windows 以外（ブラウザ版など）からも同じ計算を使える。同じパラメータとシードからは、どこで計算しても同じ輪郭・模様・SVG になる（3. の 2）。
 - コアの座標型 (`DollIrisGenerator.Core.Geometry` の `Point` / `Vector` / `Rect`) は、WPF の同名の型と同じ順序で計算し、ビット単位で同じ結果を返す（`CoreGeometryTests`）。WPF 側との変換は `WpfGeometry` の `ToWpf()` / `ToCore()` で行う。
 - 線幅などの「スタイル単位」の実寸 (`IrisStyle.MmPerStyleUnit`) やハイライトの範囲など、画面と SVG で共有する描画の決まりは `IrisStyle` に置く。
+- SVG の数値は `FixedFormat.ToFixed`（`ToString("F3")` と同じ文字列を速く作る。`FixedFormatTests`）で書く。ブラウザ版 (WebAssembly) では `ToString` が 1 回数十マイクロ秒かかり、プレビュー 1 枚に 1 秒近くかかっていたため。
+- 星雲の右目の画像は左目の画像の左右反転として作る（ピクセル中心の座標が 2 進で正確に左右対称になるため、計算し直した場合と同じ値）。グラデーションの色は `ColorFill.StopSampler` で、ストップの色を 1 回だけ読んでから各ピクセルの補間をする。
+
+### 2.4 ブラウザ版 (PWA)
+スマホ・タブレットでデザインし、デスクトップ版で印刷するための版。
+
+- **機能**: 設定タブ（デスクトップ版と同じ項目・範囲。A4 印刷・生成履歴タブはない）、虹彩プリセット・オッドアイテンプレートの適用、属性ランダム生成（サイズ・形状・縦横比・傾きは保持。ロックはない）、乱数シード、🆕 新しいデザイン、元に戻す／やり直す（最大 40 回。スライダーは 1 回のドラッグを 1 件として記録）、お気に入り（追加・復元・複製・削除）。
+- **プレビュー**: `SvgExporter.GeneratePairSvg`（ペア内の間隔は A4 シートの既定値）の SVG を `<img>` として表示する（読み込んだファイルの内容がスクリプトとして動かないように）。ドラッグ中は最新の状態だけを描く。デスクトップ版の SVG とは改行コードだけが違う（Windows は CRLF、ブラウザは LF）。
+- **色**: 単色はカラーピッカーで選ぶ。グラデーションを使える項目は「単色・直線・放射・円周」を切り替えられ、グラデーションは JSON と同じ表記の文字列で編集する（7.1.1）。
+- **お気に入りの保存**: ブラウザの IndexedDB に、`favorites.json` と同じ形式の文字列 (`FavoritesStore.Serialize`) で、変更のたびに保存する。読み込めなかった場合は上書きしないよう保存を止める。起動時に `navigator.storage.persist()` で保存領域の保持を求める。削除の前には確認する（デスクトップ版と違い、元のファイルが残らないため）。
+- **受け渡し**: 「お気に入りをすべて書き出す」「今のデザインだけ書き出す」で `.irisfav.json` を作る（共有シートが使える端末では共有、それ以外はダウンロード）。読み込みは `.irisfav.json` とデザイン単体の JSON（`FavoritesStore.ParseImportText`、上限 10MB）で、一覧の末尾に追加する。
+- **出力しないもの**: A4 PDF・PNG・SVG ファイル。印刷はデスクトップ版で行う。
+- **オフライン・通信**: Service Worker がアプリのファイルをキャッシュし、一度開けばオフラインで動く。外部への通信は行わない（アプリのファイルの取得・更新のみ）。
+- **配信**: `dotnet publish` の `wwwroot` を静的ファイルとして HTTPS で配信する。Service Worker はキャッシュの基準を登録されたスコープから決めるので、サブフォルダーでも `index.html` の `<base href>` を合わせれば動く。
 
 ---
 

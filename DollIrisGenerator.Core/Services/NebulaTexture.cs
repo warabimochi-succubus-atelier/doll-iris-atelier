@@ -46,7 +46,10 @@ namespace DollIrisGenerator.Services
                 if (Cache.TryGetValue(key, out var hit)) return hit;
             }
 
-            var pixels = Generate(p, seed, mirror);
+            // The right eye's image is exactly the left one flipped: its pixel centers sample -u, which is exactly
+            // the u of the left image's opposite column (with a power-of-two Resolution these values are exact in
+            // binary), so it is flipped instead of computed again
+            var pixels = mirror ? FlipHorizontally(Rgba(p, seed, false)) : Generate(p, seed);
             lock (CacheLock)
             {
                 if (!Cache.ContainsKey(key))
@@ -68,7 +71,22 @@ namespace DollIrisGenerator.Services
 
         private static string F(double v) => v.ToString("R", CultureInfo.InvariantCulture);
 
-        private static byte[] Generate(IrisParameters p, int seed, bool mirror)
+        private static byte[] FlipHorizontally(byte[] source)
+        {
+            int n = Resolution;
+            var px = new byte[source.Length];
+            for (int y = 0; y < n; y++)
+            {
+                int row = y * n * 4;
+                for (int x = 0; x < n; x++)
+                {
+                    Buffer.BlockCopy(source, row + (n - 1 - x) * 4, px, row + x * 4, 4);
+                }
+            }
+            return px;
+        }
+
+        private static byte[] Generate(IrisParameters p, int seed)
         {
             int n = Resolution;
             var px = new byte[n * n * 4];
@@ -76,8 +94,8 @@ namespace DollIrisGenerator.Services
 
             // Color: solid, or the gradient placed across the unit iris box (same placement as the other iris-wide colors)
             var fill = ColorFill.Parse(p.NebulaColor);
-            GradientMapping? map = fill.IsGradient ? GradientMapping.Create(fill, new Rect(-1, -1, 2, 2)) : null;
-            var solid = Argb(GeometryHelper.SanitizeColorHex(p.NebulaColor, "#B388FF"));
+            var colorAt = fill.IsGradient ? GradientMapping.Create(fill, new Rect(-1, -1, 2, 2)).ArgbSampler() : null;
+            (int A, int R, int G, int B) solid = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.NebulaColor, "#B388FF"));
 
             double freq = 2.2 * p.NebulaScale;
             // Density moves the threshold: more density → clouds start at lower noise values
@@ -90,9 +108,7 @@ namespace DollIrisGenerator.Services
                 double v = (y + 0.5) / n * 2.0 - 1.0;
                 for (int x = 0; x < n; x++)
                 {
-                    // The right eye is the mirror image: sample the left eye's pattern at -u
-                    double u0 = (x + 0.5) / n * 2.0 - 1.0;
-                    double u = mirror ? -u0 : u0;
+                    double u = (x + 0.5) / n * 2.0 - 1.0;
                     double r = Math.Sqrt(u * u + v * v);
 
                     // Swirl: turn each point round the center, more the further out it is (a spiral)
@@ -108,11 +124,11 @@ namespace DollIrisGenerator.Services
                     // Fade toward the very edge so the clouds do not paint over the limbal ring as a hard band
                     t *= 1.0 - SmoothStep(0.88, 1.0, r);
 
-                    var c = map is { } m ? Argb(m.ColorAt(new Point(u, v))) : solid;
+                    var c = colorAt != null ? colorAt(new Point(u, v)) : solid;
                     int i = (y * n + x) * 4;
-                    px[i] = c.R;
-                    px[i + 1] = c.G;
-                    px[i + 2] = c.B;
+                    px[i] = (byte)c.R;
+                    px[i + 1] = (byte)c.G;
+                    px[i + 2] = (byte)c.B;
                     px[i + 3] = (byte)Math.Clamp((int)Math.Round(c.A * t), 0, 255);
                 }
             }
@@ -164,8 +180,6 @@ namespace DollIrisGenerator.Services
                 return (h & 0xFFFFFF) / 16777215.0;
             }
         }
-
-        private static (byte A, byte R, byte G, byte B) Argb(string hex) => GeometryHelper.ParseHexArgb(hex);
     }
 
     /// <summary>Minimal PNG writer for 8-bit RGBA images (zlib from the framework, no WPF needed).</summary>

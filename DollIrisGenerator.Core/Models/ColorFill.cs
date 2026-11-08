@@ -190,27 +190,55 @@ namespace DollIrisGenerator.Models
         /// </summary>
         public static string ColorAt(IReadOnlyList<ColorStop> stops, double t)
         {
-            if (stops == null || stops.Count == 0) return "#FFFFFFFF";
-            if (!double.IsFinite(t)) t = 0.0;
-            if (t <= stops[0].Offset) return ToArgbHex(stops[0].Color);
-            for (int i = 1; i < stops.Count; i++)
-            {
-                if (t > stops[i].Offset) continue;
-                var a = ToArgb(stops[i - 1].Color);
-                var b = ToArgb(stops[i].Color);
-                double span = stops[i].Offset - stops[i - 1].Offset;
-                double f = span <= 1e-9 ? 1.0 : (t - stops[i - 1].Offset) / span;
-                return $"#{Mix(a.A, b.A, f):X2}{Mix(a.R, b.R, f):X2}{Mix(a.G, b.G, f):X2}{Mix(a.B, b.B, f):X2}";
-            }
-            return ToArgbHex(stops[^1].Color);
-
-            static int Mix(int x, int y, double f) => (int)Math.Round(x + (y - x) * f);
+            var c = ArgbAt(stops, t);
+            return $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
         }
 
-        private static string ToArgbHex(string color)
+        /// <summary>The channels of <see cref="ColorAt"/> (same values).</summary>
+        public static (int A, int R, int G, int B) ArgbAt(IReadOnlyList<ColorStop> stops, double t) =>
+            new StopSampler(stops).ArgbAt(t);
+
+        /// <summary>
+        /// <see cref="ColorAt"/> for many positions along the same stops: the stop colors are read once, so each
+        /// position costs only the interpolation (the nebula colors every pixel this way).
+        /// </summary>
+        public sealed class StopSampler
         {
-            var c = ToArgb(color);
-            return $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+            private readonly double[] _offsets;
+            private readonly (int A, int R, int G, int B)[] _colors;
+
+            public StopSampler(IReadOnlyList<ColorStop> stops)
+            {
+                int n = stops?.Count ?? 0;
+                _offsets = new double[n];
+                _colors = new (int, int, int, int)[n];
+                for (int i = 0; i < n; i++)
+                {
+                    _offsets[i] = stops![i].Offset;
+                    _colors[i] = ToArgb(stops[i].Color);
+                }
+            }
+
+            /// <summary>Same values as <see cref="ColorFill.ColorAt"/> at <paramref name="t"/>.</summary>
+            public (int A, int R, int G, int B) ArgbAt(double t)
+            {
+                int n = _offsets.Length;
+                if (n == 0) return (255, 255, 255, 255);
+                if (!double.IsFinite(t)) t = 0.0;
+                if (t <= _offsets[0]) return _colors[0];
+                for (int i = 1; i < n; i++)
+                {
+                    if (t > _offsets[i]) continue;
+                    var a = _colors[i - 1];
+                    var b = _colors[i];
+                    double span = _offsets[i] - _offsets[i - 1];
+                    double f = span <= 1e-9 ? 1.0 : (t - _offsets[i - 1]) / span;
+                    return (Mix(a.A, b.A, f), Mix(a.R, b.R, f), Mix(a.G, b.G, f), Mix(a.B, b.B, f));
+                }
+                return _colors[n - 1];
+            }
+
+            private static int Mix(int x, int y, double f) => (int)Math.Round(x + (y - x) * f);
         }
 
         /// <summary>ARGB of a hex color ("#RGB", "#RRGGBB" or the app's "#AARRGGBB"); invalid input gives opaque white.</summary>

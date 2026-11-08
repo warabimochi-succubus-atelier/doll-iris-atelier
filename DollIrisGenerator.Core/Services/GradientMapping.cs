@@ -92,6 +92,16 @@ namespace DollIrisGenerator.Services
         public string ColorAt(Point p) => ColorFill.ColorAt(Stops, OffsetAt(p));
 
         /// <summary>
+        /// <see cref="ColorAt"/> as channels (same values), for coloring many points: the stop colors are read once.
+        /// </summary>
+        public Func<Point, (int A, int R, int G, int B)> ArgbSampler()
+        {
+            var sampler = new ColorFill.StopSampler(Stops);
+            var map = this;
+            return p => sampler.ArgbAt(map.OffsetAt(p));
+        }
+
+        /// <summary>
         /// Wedges a conic gradient is drawn with: for each, its start / end angle (degrees, as <see cref="StartAngle"/>)
         /// and its color, taken at the middle of the wedge.
         /// </summary>
