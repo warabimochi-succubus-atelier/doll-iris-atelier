@@ -333,11 +333,32 @@
                     </TabControl.Template>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 1 (上段): 基本 (名前・サイズ・形状・シード・ランダム生成) -->
+                    <!-- TAB 1 (上段): 基本 (虹彩プリセット・名前・サイズ・形状・シード・ランダム生成) -->
                     <!-- ======================================================== -->
                     <TabItem Header="基本">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
+                                <!-- Iris presets: colors plus pupil, rays, sparkles, layers and symbol, so they sit here rather than in 色 -->
+                                <GroupBox Header="虹彩プリセット (Section 7) &amp; 共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <StackPanel>
+                                        <TextBlock Text="プリセットを選んで、色・瞳孔・放射ライン・ラメ・ハイライトなどをまとめて適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
+                                        <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                                        <!-- Preset Sharing Actions -->
+                                        <TextBlock Text="プリセット共有・管理:" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,4"/>
+                                        <WrapPanel>
+                                            <Button Content="➕ 現在のデザインをプリセット登録" Command="{Binding AddCurrentAsPresetCommand}"
+                                                    Background="#1E3A5F" Foreground="#80D8FF" Padding="8,4" Margin="0,0,6,4" FontSize="11"
+                                                    ToolTip="色・瞳孔・放射ライン・ラメ・外輪・オーロラ層・星雲・ハイライト・装飾記号・レンズ風をプリセットにします。サイズ・形状・傾き・シード・オッドアイは含みません"/>
+                                            <Button Content="📤 プリセット書き出し" Command="{Binding ExportPresetsCommand}"
+                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
+                                            <Button Content="📥 プリセット読み込み" Command="{Binding ImportPresetsCommand}"
+                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,0,4" FontSize="11"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <!-- Basic Parameters & Elliptical Settings -->
                                 <GroupBox Header="基本設定・サイズ・楕円形状 (Section 5, 6, 20)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
@@ -421,30 +442,11 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 2 (上段): 色 (カラープリセット・虹彩カラー・オーロラ層・星雲) -->
+                    <!-- TAB 2 (上段): 色 (虹彩カラー・オーロラ層・星雲) -->
                     <!-- ======================================================== -->
                     <TabItem Header="色">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
-                                <GroupBox Header="カラープリセット (Section 7) &amp; 共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <StackPanel>
-                                        <TextBlock Text="プリセットを選択して配色を瞬時に適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6"/>
-                                        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
-                                        <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <!-- Preset Sharing Actions -->
-                                        <TextBlock Text="プリセット共有・管理:" Foreground="{StaticResource TextMuted}" FontSize="10" Margin="0,4,0,4"/>
-                                        <WrapPanel>
-                                            <Button Content="➕ 現在の配色をプリセット登録" Command="{Binding AddCurrentAsPresetCommand}"
-                                                    Background="#1E3A5F" Foreground="#80D8FF" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
-                                            <Button Content="📤 パレット書き出し" Command="{Binding ExportPresetsCommand}"
-                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
-                                            <Button Content="📥 パレット読み込み" Command="{Binding ImportPresetsCommand}"
-                                                    Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,0,4" FontSize="11"/>
-                                        </WrapPanel>
-                                    </StackPanel>
-                                </GroupBox>
-
                                 <!-- Color Settings -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>

@@ -11,46 +11,29 @@ namespace DollIrisGenerator.ViewModels
     {
         private void OnAddCurrentAsPreset()
         {
-            var customPreset = new PresetDefinition
-            {
-                Name = $"カスタム: {CurrentIris.Name}",
-                Description = $"ユーザー作成 ({CurrentIris.SizeMm:F1}mm / {CurrentIris.BaseColor})",
-                BaseColor = CurrentIris.BaseColor,
-                InnerColor = CurrentIris.InnerColor,
-                OuterColor = CurrentIris.OuterColor,
-                BottomHighlightColor = CurrentIris.BottomHighlightColor,
-                LimbalRingColor = CurrentIris.LimbalRingColor,
-                PupilColor = CurrentIris.PupilColor,
-                RayColor = CurrentIris.RayColor,
-                ParticleColor = CurrentIris.ParticleColor,
-                PupilShape = CurrentIris.PupilShape,
-                InnerGradientRadius = CurrentIris.InnerGradientRadius,
-                OuterGradientRadius = CurrentIris.OuterGradientRadius,
-                // The color layers belong to the palette too (applying a preset always sets them)
-                AuroraColor = CurrentIris.AuroraColor,
-                AuroraOpacity = CurrentIris.AuroraOpacity,
-                NebulaColor = CurrentIris.NebulaColor,
-                NebulaOpacity = CurrentIris.NebulaOpacity,
-                PupilFacetIntensity = CurrentIris.PupilFacetIntensity
-            };
+            // Same settings as a built-in preset holds (colors, pupil, rays, sparkles, layers, symbol)
+            var customPreset = ColorPresets.FromDesign(
+                CurrentIris,
+                $"カスタム: {CurrentIris.Name}",
+                $"ユーザー作成 ({CurrentIris.SizeMm:F1}mm / {CurrentIris.BaseColor})");
 
             Presets.Add(customPreset);
             SelectedPreset = customPreset;
-            StatusMessage = $"現在のカラーパレットを新規プリセット「{customPreset.Name}」として追加しました。";
+            StatusMessage = $"現在のデザインを虹彩プリセット「{customPreset.Name}」として追加しました。";
         }
 
         private void OnExportPresets()
         {
             string? path = _dialogs.PickSaveFile(
-                "虹彩カラーパレット (*.irispalette.json)|*.irispalette.json|JSON ファイル (*.json)|*.json",
-                "MyDollIris_ColorPalettes.irispalette.json",
-                "カラープリセットパレットを書き出し");
+                "虹彩プリセット (*.irispalette.json)|*.irispalette.json|JSON ファイル (*.json)|*.json",
+                "MyDollIris_Presets.irispalette.json",
+                "虹彩プリセットを書き出し");
             if (path == null) return;
 
             try
             {
                 ColorPresets.ExportPalettesToFile(path, Presets);
-                StatusMessage = $"カラーパレットをエクスポートしました: {Path.GetFileName(path)}";
+                StatusMessage = $"虹彩プリセットを書き出しました: {Path.GetFileName(path)}";
             }
             catch (Exception ex)
             {
@@ -61,8 +44,8 @@ namespace DollIrisGenerator.ViewModels
         private void OnImportPresets()
         {
             string? path = _dialogs.PickOpenFile(
-                "虹彩カラーパレット (*.irispalette.json)|*.irispalette.json|JSON ファイル (*.json)|*.json",
-                "カラープリセットパレットを読み込み");
+                "虹彩プリセット (*.irispalette.json)|*.irispalette.json|JSON ファイル (*.json)|*.json",
+                "虹彩プリセットを読み込み");
             if (path == null) return;
 
             try
@@ -79,7 +62,7 @@ namespace DollIrisGenerator.ViewModels
                             addedCount++;
                         }
                     }
-                    StatusMessage = $"カラーパレットから {addedCount} 件のプリセットを読み込みました。";
+                    StatusMessage = $"ファイルから {addedCount} 件の虹彩プリセットを読み込みました。";
                 }
             }
             catch (Exception ex)
