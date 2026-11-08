@@ -1,0 +1,58 @@
+name: Build resvg
+
+# Builds resvg's C API (resvg.dll, win-x64) from a fixed upstream tag.
+# The app rasterizes its SVG with it; the DLL is committed under third_party/resvg (see its README.md).
+# Run it by hand, download the "resvg-win-x64" artifact and replace the files in third_party/resvg/win-x64.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: resvg tag (https://github.com/linebender/resvg/releases)
+        default: v0.49.0
+        required: true
+  # Also runs when this file changes on a branch, so a new version can be built before it is on main
+  push:
+    paths:
+      - .github/workflows/build-resvg.yml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ inputs.tag || 'v0.49.0' }}
+      # No dependency on the Visual C++ runtime DLLs
+      RUSTFLAGS: -C target-feature=+crt-static
+    steps:
+      - name: Check out resvg
+        run: git clone --depth 1 --branch "$env:TAG" https://github.com/linebender/resvg.git resvg
+
+      # Text, fonts and SVGZ are not used (labels are drawn by WPF); raster-images keeps embedded PNGs (nebula)
+      - name: Build
+        working-directory: resvg
+        run: |
+          rustup toolchain install stable --profile minimal
+          cargo +stable build --release --locked -p resvg-capi --no-default-features --features raster-images
+
+      - name: Collect
+        run: |
+          $out = "out/win-x64"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Copy-Item resvg/target/release/resvg.dll $out
+          Copy-Item resvg/LICENSE-APACHE, resvg/LICENSE-MIT out
+          $commit = git -C resvg rev-parse HEAD
+          $hash = (Get-FileHash "$out/resvg.dll" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $rustc = rustc +stable --version
+          "tag: $env:TAG`ncommit: $commit`nsha256 (win-x64/resvg.dll): $hash`nfeatures: raster-images (no text / system-fonts / svgz), crt-static`nrustc: $rustc" | Set-Content -Encoding utf8 out/VERSION.txt
+          Get-Content out/VERSION.txt
+          Get-ChildItem -Recurse out | Format-Table FullName, Length
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: resvg-win-x64
+          path: out/
+          if-no-files-found: error

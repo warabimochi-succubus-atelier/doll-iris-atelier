@@ -21,6 +21,11 @@
     <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
   </ItemGroup>
 
+  <!-- SVG rasterizer (resvg C API, see third_party/resvg/README.md); bundled into the single-file exe on publish -->
+  <ItemGroup>
+    <None Include="..\third_party\resvg\win-x64\resvg.dll" Link="resvg.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <Resource Include="IrisGenerationApp.png" />
     <Resource Include="app.ico" />
