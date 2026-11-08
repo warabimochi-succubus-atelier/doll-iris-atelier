@@ -1,5 +1,5 @@
 tag: v0.49.0
 commit: 66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba
-sha256 (win-x64/resvg.dll): a3de65a7261b4ad28a05a1c30750dbf3e3e29d5d68b8407e53753f229c6885a1
+sha256 (win-x64/resvg.dll): 4e636b7d571f721f9ab43fc335fdf78abba04096a2eb0faa40aab3d733c53e67
 features: raster-images (no text / system-fonts / svgz), crt-static
 rustc: rustc 1.99.1 (58cf8f9c3 2026-10-13)

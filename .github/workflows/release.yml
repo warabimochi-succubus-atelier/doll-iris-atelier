@@ -69,7 +69,7 @@ jobs:
           Copy-Item LICENSE, NOTICE.md, README.md, USER_MANUAL.md "dist/$env:PACKAGE"
           # Licenses of resvg (inside the exe) and the libraries it contains, as NOTICE.md refers to them
           New-Item -ItemType Directory -Force "dist/$env:PACKAGE/third_party/resvg" | Out-Null
-          Copy-Item third_party/resvg/LICENSE-MIT, third_party/resvg/LICENSE-APACHE, third_party/resvg/DEPENDENCIES.txt "dist/$env:PACKAGE/third_party/resvg"
+          Copy-Item third_party/resvg/LICENSE-MIT, third_party/resvg/LICENSE-APACHE, third_party/resvg/DEPENDENCIES.txt, third_party/resvg/THIRD-PARTY-LICENSES.txt "dist/$env:PACKAGE/third_party/resvg"
           Get-ChildItem "dist/$env:PACKAGE" | Format-Table Name, Length
           Compress-Archive -Path "dist/$env:PACKAGE" -DestinationPath "dist/$env:PACKAGE.zip"
 
