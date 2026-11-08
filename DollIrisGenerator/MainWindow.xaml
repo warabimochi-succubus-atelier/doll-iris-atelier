@@ -576,6 +576,18 @@
                                             <TextBlock Text="星雲の渦巻き:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.NebulaSwirl}" Minimum="-1.0" Maximum="1.0"/>
                                         </DockPanel>
+
+                                        <!-- Fiber noise (繊維ノイズ) -->
+                                        <DockPanel Margin="0,8,0,4" ToolTip="虹彩に、瞳孔から外へ伸びる細かい繊維のゆらぎを重ねます (明るい繊維と暗い繊維)。0 でオフ">
+                                            <TextBlock Text="繊維ノイズ:" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.FiberNoise, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.FiberNoise}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="上げるほど繊維が細かく、密になります">
+                                            <TextBlock Text="繊維の細かさ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.FiberNoiseScale, StringFormat='{}{0:F2}'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.FiberNoiseScale}" Minimum="0.5" Maximum="2.0"/>
+                                        </DockPanel>
                                     </StackPanel>
                                 </GroupBox>
                             </StackPanel>

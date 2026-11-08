@@ -57,6 +57,10 @@ public static class DesignFields
             IrisParameters.MinNebulaScale, IrisParameters.MaxNebulaScale, 0.01, Fmt.F2),
         new SliderField<IrisParameters>("星雲の渦巻き", p => p.NebulaSwirl, (p, v) => p.NebulaSwirl = v, -1, 1, 0.01, Fmt.Percent,
             "マイナスで逆回り (右目は自動で鏡像)"),
+        new HeadingField<IrisParameters>("繊維ノイズ", "瞳孔から外へ伸びる細かい繊維のゆらぎ (明るい繊維と暗い繊維) を重ねます"),
+        new SliderField<IrisParameters>("繊維ノイズ", p => p.FiberNoise, (p, v) => p.FiberNoise = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new SliderField<IrisParameters>("繊維の細かさ", p => p.FiberNoiseScale, (p, v) => p.FiberNoiseScale = v, 0.5, 2, 0.01, Fmt.F2,
+            "上げるほど繊維が細かく、密になります"),
     };
 
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays = new Field<IrisParameters>[]

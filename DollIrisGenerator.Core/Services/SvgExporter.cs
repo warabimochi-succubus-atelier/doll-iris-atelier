@@ -230,6 +230,62 @@ namespace DollIrisGenerator.Services
             return sb.ToString();
         }
 
+        /// <summary>Number of radial strips the fiber noise is made of.</summary>
+        public const int FiberStripCount = 40;
+
+        /// <summary>
+        /// 繊維ノイズ: fine fibers over the iris body. SVG has no polar noise, so the iris is covered by
+        /// <see cref="FiberStripCount"/> strips from the center outward, each filled with feTurbulence stretched
+        /// along the strip (long along the radius, fine across it) and turned to its angle; neighbouring strips
+        /// overlap a little so no gaps show at the rim. The noise is gray around 50%, blended with overlay so it both
+        /// lightens and darkens the colors under it, and faded out near the pupil and at the rim by a mask.
+        /// 細かさ multiplies the frequencies. Each strip has its own seed (from the design's seed, so the odd eye
+        /// differs); the right eye is the mirror image.
+        /// </summary>
+        private static void AppendFiberNoise(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            double baseR, IrisParameters p, bool isRightEye, int seed)
+        {
+            string id = $"{idPrefix}_fibers";
+            int n = FiberStripCount;
+            // Strips are drawn on a unit-radius circle round (0, 0), then placed and stretched onto the iris ellipse
+            double halfWidth = Math.PI / n * 1.15;           // half of each strip's width at the rim, with overlap
+            double along = 1.75 * p.FiberNoiseScale;         // noise cycles along a strip (radius 1)
+            double across = 30.0 * p.FiberNoiseScale;        // and across it
+            double inner = Math.Max(0.0, p.PupilSizeRatio * 0.9);
+            double full = Math.Min(0.95, p.PupilSizeRatio + 0.15);
+
+            sb.AppendLine("      <defs>");
+            for (int i = 0; i < n; i++)
+            {
+                int stripSeed = Math.Abs((seed * 31 + i * 7919) % 100000);
+                sb.AppendLine($@"        <filter id=""{id}_f{i}"" x=""0"" y=""0"" width=""1"" height=""1"" color-interpolation-filters=""sRGB"">");
+                sb.AppendLine($@"          <feTurbulence type=""fractalNoise"" baseFrequency=""{F(along)} {F(across)}"" numOctaves=""3"" seed=""{stripSeed}"" />");
+                sb.AppendLine($@"          <feColorMatrix type=""matrix"" values=""2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1"" />");
+                sb.AppendLine("        </filter>");
+            }
+            sb.AppendLine($@"        <radialGradient id=""{id}_fade"" cx=""0"" cy=""0"" r=""1"" gradientUnits=""userSpaceOnUse"">");
+            sb.AppendLine($@"          <stop offset=""{F(inner)}"" stop-color=""#FFFFFF"" stop-opacity=""0"" />");
+            sb.AppendLine($@"          <stop offset=""{F(full)}"" stop-color=""#FFFFFF"" />");
+            sb.AppendLine($@"          <stop offset=""0.9"" stop-color=""#FFFFFF"" stop-opacity=""0.7"" />");
+            sb.AppendLine($@"          <stop offset=""1"" stop-color=""#FFFFFF"" stop-opacity=""0"" />");
+            sb.AppendLine("        </radialGradient>");
+            sb.AppendLine($@"        <mask id=""{id}_mask"" maskUnits=""userSpaceOnUse"" x=""-1.1"" y=""-1.1"" width=""2.2"" height=""2.2"">");
+            sb.AppendLine($@"          <circle cx=""0"" cy=""0"" r=""1"" fill=""url(#{id}_fade)"" />");
+            sb.AppendLine("        </mask>");
+            sb.AppendLine("      </defs>");
+
+            string mirror = isRightEye ? "-" : "";
+            sb.AppendLine($@"      <g id=""{id}"" transform=""translate({F(cx)} {F(cy)}) scale({mirror}{F(rx, 6)} {F(ry, 6)})"" style=""mix-blend-mode:overlay"" opacity=""{F(p.FiberNoise * 0.8)}"">");
+            sb.AppendLine($@"        <g mask=""url(#{id}_mask)"">");
+            for (int i = 0; i < n; i++)
+            {
+                double angle = 360.0 * i / n;
+                sb.AppendLine($@"          <rect x=""0"" y=""{F(-halfWidth, 5)}"" width=""1"" height=""{F(halfWidth * 2.0, 5)}"" filter=""url(#{id}_f{i})"" transform=""rotate({F(angle)})"" />");
+            }
+            sb.AppendLine("        </g>");
+            sb.AppendLine("      </g>");
+        }
+
         /// <summary>Farthest the light moves the base gradient's focal point, as a fraction of the iris box.</summary>
         public const double MaxLightShift = 0.4;
 
@@ -334,6 +390,10 @@ namespace DollIrisGenerator.Services
                 // The same cloud pixels the screen / PDF renderer draws, embedded as a PNG over the iris box
                 string png = NebulaTexture.PngBase64(p, effectiveSeed, isRightEye);
                 sb.AppendLine($@"      <image id=""{idPrefix}_nebula"" x=""{F(irisBox.X)}"" y=""{F(irisBox.Y)}"" width=""{F(irisBox.Width)}"" height=""{F(irisBox.Height)}"" preserveAspectRatio=""none"" opacity=""{p.NebulaOpacity.ToFixed(2)}"" href=""data:image/png;base64,{png}"" />");
+            }
+            if (p.FiberNoise > 0.005)
+            {
+                AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
             }
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_upper_shadow"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)

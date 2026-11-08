@@ -87,6 +87,8 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
+        public double? FiberNoiseScale { get; set; }
+        public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
 
@@ -314,6 +316,8 @@ namespace DollIrisGenerator.Models
 
             // Detail settings
             target.LimbalRingThickness = preset.LimbalRingThickness ?? d.LimbalRingThickness;
+            target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
+            target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
             target.LimbalRingOpacity = preset.LimbalRingOpacity ?? d.LimbalRingOpacity;
@@ -439,6 +443,8 @@ namespace DollIrisGenerator.Models
                 ParticleFlareRatio = design.ParticleFlareRatio,
 
                 LimbalRingThickness = design.LimbalRingThickness,
+                FiberNoiseScale = design.FiberNoiseScale,
+                FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,
                 LimbalRingOpacity = design.LimbalRingOpacity,
