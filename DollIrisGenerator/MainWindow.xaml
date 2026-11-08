@@ -533,6 +533,18 @@
                                             <Slider Value="{Binding CurrentIris.BottomHighlightIntensity}" Minimum="0.0" Maximum="1.0"/>
                                         </DockPanel>
 
+                                        <!-- Light direction (光の入る向き) -->
+                                        <DockPanel Margin="0,8,0,4" ToolTip="虹彩のいちばん明るいところ (内周色) を、光の来る向きへずらします。強さ 0 でオフ。右目は「ハイライトも左右反転する」がオンのとき反転します">
+                                            <TextBlock Text="光の強さ:" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.LightStrength, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.LightStrength}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="光の来る向き (画面上で 0° = 右、90° = 下、270° = 上)">
+                                            <TextBlock Text="光の向き:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.LightAngle, StringFormat='{}{0:F0}°'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.LightAngle}" Minimum="0" Maximum="360" SmallChange="1" LargeChange="15"/>
+                                        </DockPanel>
+
                                         <!-- Aurora layer (オーロラ層) -->
                                         <DockPanel Margin="0,8,0,4" ToolTip="虹彩全体に重ねる色。グラデーションの「円周」にすると、中心の周りで色が移り変わるオーロラ風になります">
                                             <TextBlock Text="オーロラ層の色:" VerticalAlignment="Center" Width="120"/>

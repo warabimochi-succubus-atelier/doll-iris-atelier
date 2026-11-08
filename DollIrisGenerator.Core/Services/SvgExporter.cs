@@ -230,6 +230,28 @@ namespace DollIrisGenerator.Services
             return sb.ToString();
         }
 
+        /// <summary>Farthest the light moves the base gradient's focal point, as a fraction of the iris box.</summary>
+        public const double MaxLightShift = 0.4;
+
+        /// <summary>
+        /// 光の入る向き: the base gradient's focal point (where the inner color is brightest) moved from its center
+        /// toward the light, by 光の強さ × <see cref="MaxLightShift"/> of the iris box (staying inside the gradient's
+        /// 55% circle). The angle is on screen: the iris's tilt is taken back out, since the gradient turns with the
+        /// iris. The right eye mirrors it when the highlights are mirrored (the highlights are the light's reflection).
+        /// Nothing when the strength is 0, so such designs export exactly as before.
+        /// </summary>
+        private static string LightFocus(IrisParameters p, bool isRightEye, double tilt)
+        {
+            if (p.LightStrength < 0.005) return "";
+            double angle = p.LightAngle;
+            if (isRightEye && p.MirrorHighlightsWithIris) angle = 180.0 - angle;
+            double rad = (angle - tilt) * Math.PI / 180.0;
+            double shift = p.LightStrength * MaxLightShift;
+            double fx = 0.5 + Math.Cos(rad) * shift;
+            double fy = 0.42 + Math.Sin(rad) * shift;
+            return $@" fx=""{(fx * 100.0).ToString("0.###", Inv)}%"" fy=""{(fy * 100.0).ToString("0.###", Inv)}%""";
+        }
+
         private static void AppendIrisSvg(
             StringBuilder sb,
             string idPrefix,
@@ -274,7 +296,7 @@ namespace DollIrisGenerator.Services
             sb.AppendLine("    </clipPath>");
 
             // Base Radial Gradient
-            sb.AppendLine($@"    <radialGradient id=""{radGradId}"" cx=""50%"" cy=""42%"" r=""55%"">");
+            sb.AppendLine($@"    <radialGradient id=""{radGradId}"" cx=""50%"" cy=""42%"" r=""55%""{LightFocus(p, isRightEye, tilt)}>");
             sb.AppendLine($@"      <stop offset=""0%"" stop-color=""{effectiveInnerColor}"" />");
             sb.AppendLine($@"      <stop offset=""{(p.InnerGradientRadius * 40.0).ToFixed(1)}%"" stop-color=""{effectiveInnerColor}"" />");
             sb.AppendLine($@"      <stop offset=""{(p.InnerGradientRadius * 100.0).ToFixed(1)}%"" stop-color=""{effectiveBaseColor}"" />");

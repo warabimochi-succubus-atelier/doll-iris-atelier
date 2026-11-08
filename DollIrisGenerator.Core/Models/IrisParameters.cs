@@ -90,6 +90,8 @@ namespace DollIrisGenerator.Models
         private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
         private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
         private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
+        private double _lightStrength = 0.0;
+        private double _lightAngle = 270.0;
 
         // Radial Pattern (放射状ライン / 放射模様)
         private int _rayCount = 48;
@@ -374,6 +376,20 @@ namespace DollIrisGenerator.Models
         {
             get => _nebulaSwirl;
             set { _nebulaSwirl = ClampFinite(value, -1.0, 1.0, 0.4); OnPropertyChanged(); }
+        }
+
+        /// <summary>光の向き: the direction the light comes from, in degrees on screen (0 = right, 90 = down, 270 = up). Mirrored in the right eye when the highlights are.</summary>
+        public double LightAngle
+        {
+            get => _lightAngle;
+            set { _lightAngle = ClampFinite(value, 0.0, 360.0, 270.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>光の強さ: how far the brightest point of the base gradient moves toward the light (0 = centered, off).</summary>
+        public double LightStrength
+        {
+            get => _lightStrength;
+            set { _lightStrength = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
         public double PupilCornerRounding
