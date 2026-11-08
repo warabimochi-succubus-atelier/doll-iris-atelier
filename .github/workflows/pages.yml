@@ -1,0 +1,67 @@
+name: Deploy browser version
+
+# Publishes the browser version (PWA, DollIrisGenerator.Web) to GitHub Pages whenever main changes.
+# One-time setup: Settings > Pages > Build and deployment > Source = "GitHub Actions".
+# The published files are deployed unchanged (index.html uses <base href="./">, so they work in the
+# /<repository>/ subfolder; an edit would break the Service Worker's hash check).
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write    # deploy to Pages
+  id-token: write # deploy-pages proves where the deployment comes from
+
+# One deployment at a time; a deployment in progress is never cancelled halfway
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # WebAssembly publishes on Linux too, faster than on Windows
+    timeout-minutes: 30 # the AOT publish takes several minutes
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # dotnet publish compiles the .NET code ahead of time (RunAOTCompilation), which needs this workload
+      - name: Install wasm-tools
+        run: dotnet workload install wasm-tools
+
+      - name: Publish
+        run: dotnet publish DollIrisGenerator.Web --configuration Release --output publish
+
+      # Deployed through Actions, so Jekyll never runs and no .nojekyll is needed for _framework
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: publish/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

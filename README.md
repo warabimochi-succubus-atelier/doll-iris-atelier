@@ -124,20 +124,21 @@ dotnet build .\DollIrisGenerator --configuration Release
 
 デザインの計算と SVG 出力は WPF に依存しない `DollIrisGenerator.Core`（`net10.0`）にまとめてあり、アプリはそれを参照します（構成は [SPECIFICATION.md](SPECIFICATION.md) の 2.3）。
 
-### 配布用ファイルの作成
-.NET のインストールが不要な形式です。出力された `dist\DollIrisAtelier` フォルダーごと配布します。
+### リリース（GitHub Actions）
+`DollIrisGenerator.csproj` と `DollIrisGenerator.Web.csproj` の `<Version>` を上げて `main` に入れたら、そのコミットにバージョンのタグを付けて push します。
 ```powershell
-dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --self-contained true --output .\dist\DollIrisAtelier
+git tag v0.11.0
+git push origin v0.11.0
+```
+`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.11.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
+
+### 配布用ファイルの作成（手元で作る場合）
+.NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに LICENSE・NOTICE.md・README.md・USER_MANUAL.md を加えて配布します。
+```powershell
+dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none --output .\dist\DollIrisAtelier
 ```
 
 配布先に .NET 10 デスクトップランタイムがある場合は、`--self-contained false` でサイズを小さくできます。
-
-### バージョンの記録
-配布したコミットにはタグを付けると、どの時点のものか後から分かります。
-```powershell
-git tag v0.10.0
-git push origin v0.10.0
-```
 
 ---
 
@@ -157,7 +158,10 @@ dotnet run --project .\DollIrisGenerator.Web
 ```
 表示された URL（既定は http://localhost:5062）をブラウザで開きます。
 
-### 配布用ファイルの作成
+### GitHub Pages での公開（GitHub Actions）
+`main` が更新されるたびに、`.github/workflows/pages.yml` が発行して GitHub Pages（`https://<ユーザー>.github.io/<リポジトリ>/`）に公開します。最初に一度だけ、リポジトリの Settings → Pages → Build and deployment の Source を「GitHub Actions」にしてください。Actions タブの「Deploy browser version」から手動でも実行できます。開いている端末には、次に開いたときに Service Worker が新しい版を取り込みます。
+
+### 配布用ファイルの作成（手元で作る場合）
 発行では .NET のコードを WebAssembly に事前コンパイル（AOT）します。初回だけ wasm-tools ワークロードを入れてください（`dotnet build` / `dotnet run` には不要です）。
 ```powershell
 dotnet workload install wasm-tools
@@ -167,7 +171,7 @@ dotnet publish .\DollIrisGenerator.Web --configuration Release --output .\dist\w
 ```
 発行には数分かかります。プレビューの再描画は AOT なしの約 1.6 倍（星雲の計算は約 4 倍）速くなり、代わりにダウンロードは約 2.3 倍（Brotli 圧縮で約 2.1 MB → 約 4.9 MB）になります。
 
-`dist\web\wwwroot` の中身を、そのまま静的ファイルとして HTTPS で公開します。サイトのルートでも、サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）でも、ファイルを書き換えずに動きます。発行後にファイルを書き換えないでください（Service Worker が `service-worker-assets.js` に記録されたハッシュと照合するため、書き換えるとオフラインで使えなくなります）。GitHub Pages では、公開するフォルダーのルートに空の `.nojekyll` ファイルも置いてください（置かないと Jekyll が `_` で始まる `_framework` フォルダーを公開から外し、アプリが起動しません）。
+`dist\web\wwwroot` の中身を、そのまま静的ファイルとして HTTPS で公開します。サイトのルートでも、サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）でも、ファイルを書き換えずに動きます。発行後にファイルを書き換えないでください（Service Worker が `service-worker-assets.js` に記録されたハッシュと照合するため、書き換えるとオフラインで使えなくなります）。GitHub Actions を使わずにブランチから GitHub Pages に公開する場合は、公開するフォルダーのルートに空の `.nojekyll` ファイルも置いてください（置かないと Jekyll が `_` で始まる `_framework` フォルダーを公開から外し、アプリが起動しません）。
 
 `index.html` には、アプリ自身のファイル以外を読み込ませない CSP（Content-Security-Policy）を `<meta>` で入れてあります。ヘッダーを設定できるサーバーで公開する場合は、他のサイトに埋め込まれないよう `Content-Security-Policy: frame-ancestors 'none'` も付けてください（`<meta>` では効きません）。
 

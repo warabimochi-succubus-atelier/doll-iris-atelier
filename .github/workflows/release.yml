@@ -1,0 +1,87 @@
+name: Release desktop version
+
+# Pushing a tag such as v0.11.0 builds the desktop app (WPF) and attaches
+# DollIrisAtelier-<tag>-win-x64.zip to a GitHub Release of that tag:
+#   git tag v0.11.0
+#   git push origin v0.11.0
+# The tag must match <Version> in DollIrisGenerator.csproj.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # create the release and upload the zip
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest # WPF only builds on Windows
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      TAG: ${{ github.ref_name }}
+      PACKAGE: DollIrisAtelier-${{ github.ref_name }}-win-x64
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # The app shows <Version> in its title and バージョン情報, so a mismatched tag would ship a wrong label
+      - name: Check the tag matches <Version>
+        run: |
+          [xml]$project = Get-Content DollIrisGenerator/DollIrisGenerator.csproj
+          $version = ($project.Project.PropertyGroup.Version | Where-Object { $_ }) -join ''
+          if ("v$version" -ne $env:TAG) {
+            Write-Error "タグ $env:TAG と DollIrisGenerator.csproj の <Version> ($version) が一致しません。"
+            exit 1
+          }
+
+      - name: Test
+        run: dotnet test DollIrisGenerator.Tests --configuration Release
+
+      # One self-contained exe (no .NET install needed), with the native WPF libraries inside it
+      - name: Publish
+        run: >
+          dotnet publish DollIrisGenerator --configuration Release --runtime win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none
+          --output "dist/$env:PACKAGE"
+
+      # Same layout as the earlier releases: a folder with the exe and the documents
+      - name: Zip
+        run: |
+          Copy-Item LICENSE, NOTICE.md, README.md, USER_MANUAL.md "dist/$env:PACKAGE"
+          Get-ChildItem "dist/$env:PACKAGE" | Format-Table Name, Length
+          Compress-Archive -Path "dist/$env:PACKAGE" -DestinationPath "dist/$env:PACKAGE.zip"
+
+      # 0.x versions are pre-releases, like v0.9.0 and v0.10.0. Re-running replaces the zip of an existing release.
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # "release not found" is an expected answer here, not a failure of the step
+          $PSNativeCommandUseErrorActionPreference = $false
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG "dist/$env:PACKAGE.zip" --clobber
+          } else {
+            $pre = if ($env:TAG.StartsWith('v0.')) { @('--prerelease') } else { @() }
+            gh release create $env:TAG "dist/$env:PACKAGE.zip" --title $env:TAG --generate-notes --verify-tag @pre
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
