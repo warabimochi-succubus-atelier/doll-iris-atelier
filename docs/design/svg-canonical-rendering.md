@@ -1,7 +1,7 @@
 # 設計: SVG を描画の正本にする
 
 - 作成日: 2026-11-08
-- 状態: 提案（未着手）
+- 状態: 手順 1（resvg の組み込み）済み
 - 前提: 使用者は作者 1 人のため、保存ファイルの見た目や出力の互換は守らなくてよい
 
 ## 1. 目的
@@ -32,6 +32,22 @@ resvg 0.49.0 のコマンドライン版で、25 種のプリセットを 1 片�
 - 速さ（起動の約 90ms を除く）: 今の SVG で 1 片目 5〜170ms。WPF は 20〜90ms。繊維ノイズを足すと 1 枚あたり約 +140ms。
 - 放射グラデの焦点、`feTurbulence` と `mask` と `overlay` を組み合わせた繊維ノイズ、`screen` ブレンドのオーロラは、resvg で意図どおりに描けた。
 
+### 2.1 resvg.dll を組み込んだ後の計測（手順 1、2026-11-08）
+
+アプリと同じプロセスで呼んだ値。9 回の中央値。
+
+| 描画 | 時間 |
+|---|---|
+| ペアのプレビュー（倍率 360%）、画面の倍率 100% / 150% / 200% | 中央値 11 / 17 / 24 ms（150% で 613×327 ピクセル） |
+| 同上、「特殊: オーロラ」 | 187 / 267 / 379 ms（下記の理由） |
+| 片目 1200 DPI（567 ピクセル） | 24 ms（WPF は 19 ms） |
+| 片目に繊維ノイズ（`feTurbulence`）を足したとき | プレビュー（204 ピクセル）29 ms、1200 DPI 166 ms |
+| ペアの SVG を作る時間 | 1〜9 ms |
+
+- ほとんどのプリセットは、ドラッグ中に描き直しても十分に速い。
+- **「オーロラ」が遅い理由**: 放射ラインを円周グラデ（`<pattern>`）で塗っている。この塗りを数百本のライン 1 本ずつに使っているため、resvg がパターンを毎回描き直している。ラインを白いマスクにして、パターンで塗った四角形を 1 回だけ描く形にすると、片目 1200 DPI で約 270ms が約 70ms になった（試作で確認）。手順 2 で `SvgExporter` をこの形に直す。ラメなど、ほかの要素に円周グラデを使う場合も同じ。
+- 繊維ノイズはプレビューで約 30ms かかる。ドラッグ中だけ解像度を下げる対策（6 章）は、手順 7 で実際に使うときに決める。
+
 ## 3. 全体の構成
 
 ```
@@ -53,10 +69,11 @@ WPF に残すのは、虹彩の外側のものだけにする。用紙・余白�
 ### 3.1 resvg の組み込み
 
 - **使うもの**: resvg の C API（`crates/c-api`）をビルドした `resvg.dll`（win-x64）。公式リリースにはコマンドライン版しかないため、自前でビルドする。
-- **入手方法**: 手動で実行する GitHub Actions のワークフロー `build-resvg.yml` を用意する。windows-latest の上で、タグを固定して `cargo build --release -p resvg-capi`（パッケージ名は着手時に確認）を実行する。できた DLL は次の場所にコミットする。手元に Rust を入れなくて済む。
+- **入手方法**: GitHub Actions のワークフロー `build-resvg.yml`（手動実行、またはこのファイルを変えて push したときに動く）。windows-latest の上で、タグを固定して `cargo build --release -p resvg-capi` を実行する。できた DLL は次の場所にコミットする。手元に Rust を入れなくて済む。
   - `third_party/resvg/win-x64/resvg.dll`
   - `third_party/resvg/LICENSE-*`（resvg のライセンスは Apache-2.0 / MIT。`NOTICE.md` に追記する）
-  - `third_party/resvg/VERSION`（タグと DLL の SHA-256）
+  - `third_party/resvg/VERSION.txt`（タグ・コミット・DLL の SHA-256）
+  - `third_party/resvg/DEPENDENCIES.txt`（DLL に入るクレートとライセンスの一覧。リリースの zip にも入れる）
 - **配布**: アプリの csproj で `resvg.dll` を出力先へコピーする。リリースは今の `PublishSingleFile` と `IncludeNativeLibrariesForSelfExtract` で exe に同梱する。テストのプロジェクトはアプリを参照しているので、同じ DLL が届く。
 - **ラッパー** `DollIrisGenerator/Services/ResvgRasterizer.cs`:
   - 呼ぶ関数: `resvg_options_create`、`resvg_parse_tree_from_data`、`resvg_render`（変換行列で mm → ピクセルの拡大と平行移動を渡す）、`resvg_tree_destroy`、`resvg_options_destroy`
