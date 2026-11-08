@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.10.0
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.11.0
 
 ## Overview (English)
 
@@ -142,7 +142,7 @@ dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --s
 
 ---
 
-## 📱 ブラウザ版 (PWA・試作)
+## 📱 ブラウザ版 (PWA)
 
 スマホやタブレットのブラウザで虹彩をデザインし、デスクトップ版で印刷するための版です（`DollIrisGenerator.Web`、Blazor WebAssembly）。
 デザインの計算はデスクトップ版と同じ `DollIrisGenerator.Core` を使うので、同じパラメータからは同じ模様になります。
