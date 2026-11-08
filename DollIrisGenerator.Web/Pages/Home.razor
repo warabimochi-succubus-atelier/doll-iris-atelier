@@ -14,13 +14,22 @@
 <CascadingValue Value="Session" IsFixed="true">
     <div class="app">
         <header class="toolbar">
-            <h1 class="app-title">Doll Iris Atelier</h1>
+            <div class="app-brand">
+                <img class="app-icon" src="icon-192.png" alt="" width="36" height="36" />
+                <div class="app-brand-text">
+                    <h1 class="app-title">@AppInfo.Name</h1>
+                    <span class="app-version">@AppInfo.VersionLabel</span>
+                </div>
+            </div>
             <div class="toolbar-buttons">
                 <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す">↩<span class="label"> 元に戻す</span></button>
                 <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す">↪<span class="label"> やり直す</span></button>
-                <button type="button" @onclick="NewDesign" title="起動時と同じ初期状態のデザインにする (元に戻せます)">🆕<span class="label"> 新しいデザイン</span></button>
-                <button type="button" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る">✨<span class="label"> ランダム生成</span></button>
+                <button type="button" class="has-short" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る" aria-label="ランダム生成">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><g class="pips"><circle cx="8.3" cy="8.3" r="1.5"/><circle cx="15.7" cy="8.3" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8.3" cy="15.7" r="1.5"/><circle cx="15.7" cy="15.7" r="1.5"/></g></svg>
+                    <span class="label"> ランダム生成</span><span class="short">ランダム</span>
+                </button>
                 <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す">⭐<span class="label"> お気に入りに追加</span></button>
+                <AboutDialog />
             </div>
         </header>
 
@@ -154,12 +163,6 @@
     {
         Session.Status = status;
         _message = status;
-    }
-
-    private void NewDesign()
-    {
-        Session.Replace(new IrisParameters(), "新しいデザインにしました (元に戻せます)。");
-        _message = Session.Status;
     }
 
     private void Randomize()

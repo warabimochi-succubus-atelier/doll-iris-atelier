@@ -7,6 +7,8 @@
 - `assets/source/IrisGenerationApp_original.png`
 - `DollIrisGenerator/AuthorLogo.png`（作者ロゴ）
 - `assets/source/AuthorLogo_original.webp`
+- `DollIrisGenerator.Web/wwwroot/icon-192.png`、`DollIrisGenerator.Web/wwwroot/icon-512.png`（ブラウザ版のアイコン）
+- `DollIrisGenerator.Web/wwwroot/author-logo.jpg`（ブラウザ版の作者ロゴ）
 
 これらの著作権は、わらびもちサキュバス工房に帰属します。
 

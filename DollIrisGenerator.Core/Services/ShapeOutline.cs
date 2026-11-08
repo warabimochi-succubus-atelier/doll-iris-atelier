@@ -359,22 +359,41 @@ namespace DollIrisGenerator.Services
         /// SVG path data ("M … L … C … Z") of this outline moved to (<paramref name="offsetX"/>, <paramref name="offsetY"/>),
         /// optionally mirrored left-right first (right eye moon).
         /// </summary>
-        public string ToSvgPathData(double offsetX, double offsetY, bool mirrorX = false)
+        public string ToSvgPathData(double offsetX, double offsetY, bool mirrorX = false) =>
+            AppendSvgPathData(new StringBuilder(), offsetX, offsetY, mirrorX).ToString();
+
+        /// <summary>
+        /// Appends <see cref="ToSvgPathData"/>'s text to <paramref name="sb"/>. The SVG exporter writes its many ray
+        /// outlines this way: no string per number or per path, which matters in the browser app.
+        /// </summary>
+        public StringBuilder AppendSvgPathData(StringBuilder sb, double offsetX, double offsetY, bool mirrorX = false)
         {
             double sx = mirrorX ? -1.0 : 1.0;
-            string P(Point p) => $"{(offsetX + sx * p.X).ToFixed(3)},{(offsetY + p.Y).ToFixed(3)}";
+            void P(Point p) => sb.AppendFixed(offsetX + sx * p.X, 3).Append(',').AppendFixed(offsetY + p.Y, 3);
 
-            var sb = new StringBuilder();
-            sb.Append("M ").Append(P(Start));
+            sb.Append("M ");
+            P(Start);
             for (int i = 0; i < Segments.Count; i++)
             {
                 var seg = Segments[i];
                 if (i == Segments.Count - 1 && seg.IsLine) break; // closed by Z
-                if (seg.IsLine) sb.Append(" L ").Append(P(seg.End));
-                else sb.Append(" C ").Append(P(seg.C1)).Append(' ').Append(P(seg.C2)).Append(' ').Append(P(seg.End));
+                if (seg.IsLine)
+                {
+                    sb.Append(" L ");
+                    P(seg.End);
+                }
+                else
+                {
+                    sb.Append(" C ");
+                    P(seg.C1);
+                    sb.Append(' ');
+                    P(seg.C2);
+                    sb.Append(' ');
+                    P(seg.End);
+                }
             }
             sb.Append(" Z");
-            return sb.ToString();
+            return sb;
         }
 
         /// <summary>Points along the outline (each curve sampled <paramref name="samplesPerSegment"/> times), for tests and hit checks.</summary>

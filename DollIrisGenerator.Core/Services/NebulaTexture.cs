@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 
@@ -68,6 +69,19 @@ namespace DollIrisGenerator.Services
 
         /// <summary>The same pixels as a PNG file (for the SVG export).</summary>
         public static byte[] Png(IrisParameters p, int seed, bool mirror) => PngEncoder.Encode(Resolution, Resolution, Rgba(p, seed, mirror));
+
+        // Base64 PNG of each cached pixel array; it goes away with the array when that leaves the cache
+        private static readonly ConditionalWeakTable<byte[], string> PngBase64Cache = new();
+
+        /// <summary>
+        /// <see cref="Png"/> as Base64 (what the SVG embeds). While the pixels stay cached the encoded text is reused,
+        /// so moving a highlight does not encode the same PNG again (slow in the browser app).
+        /// </summary>
+        public static string PngBase64(IrisParameters p, int seed, bool mirror)
+        {
+            var pixels = Rgba(p, seed, mirror);
+            return PngBase64Cache.GetValue(pixels, px => Convert.ToBase64String(PngEncoder.Encode(Resolution, Resolution, px)));
+        }
 
         private static string F(double v) => v.ToString("R", CultureInfo.InvariantCulture);
 

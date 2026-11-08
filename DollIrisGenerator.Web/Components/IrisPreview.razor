@@ -1,16 +1,19 @@
 @using DollIrisGenerator.Models
 @using DollIrisGenerator.Services
+@using DollIrisGenerator.Web.Services
+@implements IDisposable
 
 @*
     The left / right pair, drawn from the same SVG the desktop app exports (DollIrisGenerator.Core), so what is
     seen here is what the desktop app prints. Shown as an image: SVG inside <img> never runs scripts, whatever
-    a hand-edited file contains.
+    a hand-edited file contains. The image is a blob: URL (PreviewInterop); each one is released once the next
+    is on screen.
 *@
 
 <figure class="preview @Class">
-    @if (_dataUri != null)
+    @if (_url != null)
     {
-        <img src="@_dataUri" alt="@Alt" draggable="false" />
+        <img src="@_url" alt="@Alt" draggable="false" />
     }
     else if (_error != null)
     {
@@ -29,7 +32,8 @@
 
     [Parameter] public string? Class { get; set; }
 
-    private string? _dataUri;
+    private string? _url;
+    private string? _previousUrl;
     private string? _error;
     private IrisParameters? _drawnDesign;
     private int _drawnVersion = -1;
@@ -45,7 +49,7 @@
         _drawnVersion = Version;
 
         // First picture right away; later ones through the loop below
-        if (_dataUri == null && _error == null)
+        if (_url == null && _error == null)
         {
             Draw();
             return;
@@ -86,14 +90,37 @@
             string svg = SingleEye
                 ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: false)
                 : SvgExporter.GeneratePairSvg(Design, includePrintGuides: false, pairSpacingMm: PairSpacingMm);
-            _dataUri = "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
+            Show(PreviewInterop.SvgUrl(svg));
             _error = null;
         }
         catch (Exception ex)
         {
-            _dataUri = null;
+            Show(null);
             _error = ex.Message;
         }
+    }
+
+    /// <summary>Shows <paramref name="url"/>; the one shown so far is released after the next render.</summary>
+    private void Show(string? url)
+    {
+        if (_previousUrl != null) PreviewInterop.Revoke(_previousUrl);
+        _previousUrl = _url;
+        _url = url;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        // The new image is in the page now, so the old URL is no longer needed
+        if (_previousUrl == null) return;
+        PreviewInterop.Revoke(_previousUrl);
+        _previousUrl = null;
+    }
+
+    public void Dispose()
+    {
+        if (_previousUrl != null) PreviewInterop.Revoke(_previousUrl);
+        if (_url != null) PreviewInterop.Revoke(_url);
+        _previousUrl = _url = null;
     }
 
     /// <summary>Gap between the eyes: the desktop app's default 「ペア内左右の間隔」.</summary>

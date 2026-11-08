@@ -108,10 +108,13 @@ namespace DollIrisGenerator.Services
         public IEnumerable<(double From, double To, string Color)> ConicWedges()
         {
             double step = 360.0 / ConicSegments;
+            // The stop colors are read once for all the wedges (same colors as ColorFill.ColorAt)
+            var sampler = new ColorFill.StopSampler(Stops);
             for (int i = 0; i < ConicSegments; i++)
             {
                 double t = (i + 0.5) / ConicSegments;
-                yield return (StartAngle + i * step, StartAngle + (i + 1) * step, ColorFill.ColorAt(Stops, t));
+                var c = sampler.ArgbAt(t);
+                yield return (StartAngle + i * step, StartAngle + (i + 1) * step, ColorFill.FormatArgb(c.A, c.R, c.G, c.B));
             }
         }
 

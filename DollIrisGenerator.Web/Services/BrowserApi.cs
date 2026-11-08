@@ -2,7 +2,7 @@ using Microsoft.JSInterop;
 
 namespace DollIrisGenerator.Web.Services;
 
-/// <summary>The browser features the app uses (wwwroot/js/atelier.js): IndexedDB, file save / share, confirm.</summary>
+/// <summary>The browser features the app uses (wwwroot/js/atelier.js): IndexedDB, file save / share, confirm, modal dialogs.</summary>
 public sealed class BrowserApi : IAsyncDisposable
 {
     private readonly Lazy<Task<IJSObjectReference>> _module;
@@ -30,6 +30,9 @@ public sealed class BrowserApi : IAsyncDisposable
         await (await Module).InvokeAsync<bool>("shareFile", fileName, text, mimeType);
 
     public async Task<bool> ConfirmAsync(string message) => await (await Module).InvokeAsync<bool>("confirmDialog", message);
+
+    /// <summary>Opens the &lt;dialog&gt; with this id as a modal.</summary>
+    public async Task ShowDialogAsync(string id) => await (await Module).InvokeVoidAsync("showDialog", id);
 
     public async ValueTask DisposeAsync()
     {

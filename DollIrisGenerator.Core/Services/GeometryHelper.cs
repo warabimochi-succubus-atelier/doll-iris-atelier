@@ -8,16 +8,13 @@ namespace DollIrisGenerator.Services
     /// </summary>
     public static class GeometryHelper
     {
-        private static readonly System.Text.RegularExpressions.Regex HexColorRegex =
-            new(@"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$", System.Text.RegularExpressions.RegexOptions.Compiled);
-
         public static string SanitizeColorHex(string? hex, string defaultHex = "#000000")
         {
             if (string.IsNullOrWhiteSpace(hex)) return defaultHex;
             // A gradient where one color is needed (e.g. a hand-edited file): use its first color
             if (Models.ColorFill.Parse(hex) is { IsGradient: true } fill) hex = fill.PrimaryColor;
             hex = hex.Trim();
-            if (HexColorRegex.IsMatch(hex))
+            if (Models.ColorFill.IsHexColor(hex))
             {
                 return hex;
             }

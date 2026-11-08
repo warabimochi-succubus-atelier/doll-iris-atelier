@@ -48,7 +48,6 @@ namespace DollIrisGenerator.Models
         public const double ConicDefaultAngle = 270.0;
 
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
-        private static readonly Regex HexRegex = new(@"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$", RegexOptions.Compiled);
         private static readonly Regex GradientRegex = new(@"^\s*(linear|radial|conic)-gradient\s*\((.*)\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
         private static readonly Regex AngleRegex = new(@"^\s*(from\s+)?([-+]?\d+(?:\.\d+)?)\s*deg\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex StopRegex = new(@"^\s*(#[0-9a-fA-F]+)\s*(?:([-+]?\d+(?:\.\d+)?)\s*%)?\s*$", RegexOptions.Compiled);
@@ -109,6 +108,9 @@ namespace DollIrisGenerator.Models
         public static ColorFill Parse(string? value)
         {
             if (string.IsNullOrWhiteSpace(value) || value.Length > MaxParseLength) return Solid(value);
+            // Plain colors (nearly every call) never match the gradient pattern, which needs a "("; skipping the
+            // regex for them keeps the browser app fast
+            if (value.IndexOf('(') < 0) return Solid(value);
 
             var m = GradientRegex.Match(value);
             if (!m.Success) return Solid(value);
@@ -191,7 +193,23 @@ namespace DollIrisGenerator.Models
         public static string ColorAt(IReadOnlyList<ColorStop> stops, double t)
         {
             var c = ArgbAt(stops, t);
-            return $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+            return FormatArgb(c.A, c.R, c.G, c.B);
+        }
+
+        /// <summary>"#AARRGGBB" in upper case, the same text as <c>$"#{a:X2}{r:X2}{g:X2}{b:X2}"</c>.</summary>
+        public static string FormatArgb(int a, int r, int g, int b)
+        {
+            if ((uint)a > 255 || (uint)r > 255 || (uint)g > 255 || (uint)b > 255)
+                return $"#{a:X2}{r:X2}{g:X2}{b:X2}";
+            return string.Create(9, (a, r, g, b), static (span, c) =>
+            {
+                const string Hex = "0123456789ABCDEF";
+                span[0] = '#';
+                span[1] = Hex[c.a >> 4]; span[2] = Hex[c.a & 15];
+                span[3] = Hex[c.r >> 4]; span[4] = Hex[c.r & 15];
+                span[5] = Hex[c.g >> 4]; span[6] = Hex[c.g & 15];
+                span[7] = Hex[c.b >> 4]; span[8] = Hex[c.b & 15];
+            });
         }
 
         /// <summary>The channels of <see cref="ColorAt"/> (same values).</summary>
@@ -288,7 +306,19 @@ namespace DollIrisGenerator.Models
             return (Convert.ToInt32(h.Substring(0, 2), 16), Convert.ToInt32(h.Substring(2, 2), 16), Convert.ToInt32(h.Substring(4, 2), 16));
         }
 
-        public static bool IsHexColor(string? value) => value != null && HexRegex.IsMatch(value.Trim());
+        /// <summary>"#" and 3, 6 or 8 hex digits, ignoring surrounding white space.</summary>
+        public static bool IsHexColor(string? value)
+        {
+            if (value == null) return false;
+            var s = value.AsSpan().Trim();
+            if (s.Length != 4 && s.Length != 7 && s.Length != 9) return false;
+            if (s[0] != '#') return false;
+            for (int i = 1; i < s.Length; i++)
+            {
+                if (!char.IsAsciiHexDigit(s[i])) return false;
+            }
+            return true;
+        }
 
         public static bool IsGradientString(string? value) => Parse(value).IsGradient;
 

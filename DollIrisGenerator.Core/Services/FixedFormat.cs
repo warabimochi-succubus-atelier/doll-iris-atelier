@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text;
 
 namespace DollIrisGenerator.Services
 {
@@ -20,22 +21,42 @@ namespace DollIrisGenerator.Services
         /// <summary>Same text as <c>value.ToString("F" + decimals, CultureInfo.InvariantCulture)</c>.</summary>
         public static string ToFixed(this double value, int decimals)
         {
-            if ((uint)decimals >= (uint)Pow10.Length) return value.ToString("F" + decimals, CultureInfo.InvariantCulture);
-            if (!double.IsFinite(value)) return Slow(value, decimals);
+            Span<char> buffer = stackalloc char[24];
+            return TryFormat(value, decimals, buffer, out int start) ? new string(buffer[start..]) : Slow(value, decimals);
+        }
+
+        /// <summary>
+        /// Appends <see cref="ToFixed"/>'s text to <paramref name="sb"/> without making a string first
+        /// (SVG path data is written this way, a few numbers at a time).
+        /// </summary>
+        public static StringBuilder AppendFixed(this StringBuilder sb, double value, int decimals)
+        {
+            Span<char> buffer = stackalloc char[24];
+            return TryFormat(value, decimals, buffer, out int start) ? sb.Append(buffer[start..]) : sb.Append(Slow(value, decimals));
+        }
+
+        /// <summary>
+        /// Writes the text right-aligned into <paramref name="buffer"/> (24 chars) and returns where it starts;
+        /// false when the framework has to format it.
+        /// </summary>
+        private static bool TryFormat(double value, int decimals, Span<char> buffer, out int start)
+        {
+            start = buffer.Length;
+            if ((uint)decimals >= (uint)Pow10.Length) return false;
+            if (!double.IsFinite(value)) return false;
 
             double scaled = Math.Abs(value) * Pow10[decimals];
             // Below 1e9 the product is off by at most ~6e-8, far less than the margin around a tie below
-            if (scaled >= 1e9) return Slow(value, decimals);
+            if (scaled >= 1e9) return false;
 
             double whole = Math.Floor(scaled);
             double fraction = scaled - whole; // exact
-            if (Math.Abs(fraction - 0.5) < 1e-6) return Slow(value, decimals);
+            if (Math.Abs(fraction - 0.5) < 1e-6) return false;
             long units = (long)whole + (fraction > 0.5 ? 1 : 0);
 
             // .NET writes the sign of negative values (also -0 and values that round to 0): "-0.000"
             bool negative = double.IsNegative(value);
 
-            Span<char> buffer = stackalloc char[24];
             int pos = buffer.Length;
             for (int i = 0; i < decimals; i++)
             {
@@ -49,9 +70,13 @@ namespace DollIrisGenerator.Services
                 units /= 10;
             } while (units > 0);
             if (negative) buffer[--pos] = '-';
-            return new string(buffer[pos..]);
+            start = pos;
+            return true;
         }
 
-        private static string Slow(double value, int decimals) => value.ToString(Formats[decimals], CultureInfo.InvariantCulture);
+        private static string Slow(double value, int decimals) =>
+            (uint)decimals < (uint)Formats.Length
+                ? value.ToString(Formats[decimals], CultureInfo.InvariantCulture)
+                : value.ToString("F" + decimals, CultureInfo.InvariantCulture);
     }
 }
