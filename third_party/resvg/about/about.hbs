@@ -6,16 +6,16 @@ This file is made by cargo-about in .github/workflows/build-resvg.yml.
 
 Overview:
 {{#each overview}}
-- {{name}}: {{count}}
+- {{{name}}}: {{count}}
 {{/each}}
 
 {{#each licenses}}
 --------------------------------------------------------------------------------
-{{name}} ({{id}})
+{{{name}}} ({{id}})
 
 Used by:
 {{#each used_by}}
-- {{crate.name}} {{crate.version}}{{#if crate.repository}} ({{crate.repository}}){{/if}}
+- {{{crate.name}}} {{{crate.version}}}{{#if crate.repository}} ({{{crate.repository}}}){{/if}}
 {{/each}}
 
 {{{text}}}
