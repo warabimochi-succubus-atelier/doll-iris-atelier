@@ -362,7 +362,7 @@ namespace DollIrisGenerator.Services
         public string ToSvgPathData(double offsetX, double offsetY, bool mirrorX = false)
         {
             double sx = mirrorX ? -1.0 : 1.0;
-            string P(Point p) => $"{(offsetX + sx * p.X).ToString("F3", Inv)},{(offsetY + p.Y).ToString("F3", Inv)}";
+            string P(Point p) => $"{(offsetX + sx * p.X).ToFixed(3)},{(offsetY + p.Y).ToFixed(3)}";
 
             var sb = new StringBuilder();
             sb.Append("M ").Append(P(Start));

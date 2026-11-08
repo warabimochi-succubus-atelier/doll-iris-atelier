@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!--
+    Browser version (PWA) of Doll Iris Atelier: design irises on a phone or tablet and take them to the desktop app
+    (as *.irisfav.json) for A4 PDF printing. All design math comes from DollIrisGenerator.Core, so a design looks
+    the same here as in the desktop app. Works offline once loaded; nothing is sent anywhere.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- The design JSON is read and written by reflection (same format as the desktop app) -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- Only the invariant culture is needed (numbers in SVG / JSON); keeps the download small -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.14" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
+    <!-- Keep every model property, so trimming never drops a field from the saved / exported JSON -->
+    <TrimmerRootAssembly Include="DollIrisGenerator.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+</Project>

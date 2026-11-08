@@ -1,0 +1,101 @@
+@using DollIrisGenerator.Models
+@using DollIrisGenerator.Services
+
+@*
+    The left / right pair, drawn from the same SVG the desktop app exports (DollIrisGenerator.Core), so what is
+    seen here is what the desktop app prints. Shown as an image: SVG inside <img> never runs scripts, whatever
+    a hand-edited file contains.
+*@
+
+<figure class="preview @Class">
+    @if (_dataUri != null)
+    {
+        <img src="@_dataUri" alt="@Alt" draggable="false" />
+    }
+    else if (_error != null)
+    {
+        <figcaption class="field-error">プレビューを描けませんでした: @_error</figcaption>
+    }
+</figure>
+
+@code {
+    [Parameter, EditorRequired] public IrisParameters Design { get; set; } = default!;
+
+    /// <summary>Changes whenever <see cref="Design"/> may have changed (it is edited in place).</summary>
+    [Parameter] public int Version { get; set; }
+
+    /// <summary>Left eye only (thumbnails) instead of the pair.</summary>
+    [Parameter] public bool SingleEye { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    private string? _dataUri;
+    private string? _error;
+    private IrisParameters? _drawnDesign;
+    private int _drawnVersion = -1;
+    private bool _dirty;
+    private bool _drawing;
+
+    private string Alt => SingleEye ? $"{Design.Name} (左目)" : $"{Design.Name} の左右ペア";
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_drawnDesign, Design) && _drawnVersion == Version) return;
+        _drawnDesign = Design;
+        _drawnVersion = Version;
+
+        // First picture right away; later ones through the loop below
+        if (_dataUri == null && _error == null)
+        {
+            Draw();
+            return;
+        }
+        _dirty = true;
+        if (!_drawing) _ = DrawLatestAsync();
+    }
+
+    /// <summary>
+    /// While a slider is dragged the design changes faster than it can be drawn. Each pass first lets the browser
+    /// deliver the input already waiting, then draws only the newest state, so the preview keeps up instead of
+    /// replaying every step.
+    /// </summary>
+    private async Task DrawLatestAsync()
+    {
+        _drawing = true;
+        try
+        {
+            while (_dirty)
+            {
+                _dirty = false;
+                await Task.Delay(1);
+                if (_dirty) continue;
+                Draw();
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            _drawing = false;
+        }
+    }
+
+    private void Draw()
+    {
+        try
+        {
+            string svg = SingleEye
+                ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: false)
+                : SvgExporter.GeneratePairSvg(Design, includePrintGuides: false, pairSpacingMm: PairSpacingMm);
+            _dataUri = "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _dataUri = null;
+            _error = ex.Message;
+        }
+    }
+
+    /// <summary>Gap between the eyes: the desktop app's default 「ペア内左右の間隔」.</summary>
+    private static double PairSpacingMm => new PrintSheetConfig().PairSpacingXMm;
+}

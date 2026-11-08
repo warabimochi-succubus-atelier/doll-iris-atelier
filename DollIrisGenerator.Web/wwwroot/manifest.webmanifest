@@ -1,0 +1,25 @@
+{
+  "name": "Doll Iris Atelier",
+  "short_name": "Iris Atelier",
+  "description": "ドールアイ向けの虹彩をデザインして、デスクトップ版で印刷するためのアプリ",
+  "lang": "ja",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e1e24",
+  "theme_color": "#1e1e24",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}

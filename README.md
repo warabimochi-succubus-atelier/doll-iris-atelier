@@ -141,6 +141,30 @@ git push origin v0.10.0
 
 ---
 
+## 📱 ブラウザ版 (PWA・試作)
+
+スマホやタブレットのブラウザで虹彩をデザインし、デスクトップ版で印刷するための版です（`DollIrisGenerator.Web`、Blazor WebAssembly）。
+デザインの計算はデスクトップ版と同じ `DollIrisGenerator.Core` を使うので、同じパラメータからは同じ模様になります。
+
+- **できること**: パラメータ編集とプレビュー、虹彩プリセット・オッドアイテンプレート、ランダム生成、元に戻す／やり直す、お気に入り（ブラウザ内に保存）
+- **デスクトップ版への受け渡し**: 「お気に入り」タブで `.irisfav.json` を書き出し、デスクトップ版の「履歴・お気に入り」タブの「📥 インポート」で読み込みます。デスクトップ版で書き出したファイルもブラウザ版で読み込めます
+- **できないこと**: A4 PDF・PNG・SVG の出力（印刷はデスクトップ版で行います）
+- 一度開けばオフラインでも動きます。外部への通信はしません（アプリ自身の更新の確認だけ）。お気に入りはこの端末のブラウザにだけ保存されるので、残したいものは書き出しておいてください
+
+### ローカルで起動
+```powershell
+dotnet run --project .\DollIrisGenerator.Web
+```
+表示された URL（既定は http://localhost:5062）をブラウザで開きます。
+
+### 配布用ファイルの作成
+```powershell
+dotnet publish .\DollIrisGenerator.Web --configuration Release --output .\dist\web
+```
+`dist\web\wwwroot` の中身を静的ファイルとして HTTPS で公開します。サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）に置く場合は、`index.html` の `<base href="/" />` をそのフォルダー（例: `/doll-iris-atelier/`）に書き換えてください。
+
+---
+
 ## 📄 ライセンス
 
 [MIT License](LICENSE) のもとで公開しています。ただし、ロゴとアイコンは対象外です。詳しくは [NOTICE.md](NOTICE.md) を参照してください。

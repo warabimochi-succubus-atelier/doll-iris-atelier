@@ -45,3 +45,7 @@ jobs:
 
       - name: Test
         run: dotnet test DollIrisGenerator.Tests --configuration Release --no-build
+
+      # The browser version (PWA) is not referenced by the tests; build it so it keeps compiling
+      - name: Build browser version
+        run: dotnet build DollIrisGenerator.Web --configuration Release

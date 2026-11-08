@@ -1,0 +1,141 @@
+@using DollIrisGenerator.Models
+
+@*
+    A color setting. The swatch picks a solid color; settings that allow it can switch to a gradient
+    (直線 / 放射 / 円周, built from the current color like the desktop app's picker) and the gradient text
+    (CSS-like, same as in the saved JSON) can be edited by hand.
+*@
+
+<div class="field color-field" title="@Hint">
+    <span class="field-label">@Label</span>
+    <div class="color-row">
+        @if (_fill.IsGradient)
+        {
+            <span class="swatch" style="background: @SwatchCss" title="グラデーション"></span>
+        }
+        <input type="color" value="@PickerHex" aria-label="@(_fill.IsGradient ? $"{Label} (最初の色)" : Label)"
+               title="@(_fill.IsGradient ? "グラデーションの最初の色" : null)"
+               @oninput="e => OnPick(e.Value?.ToString())" @onchange="_ => OnCommit.InvokeAsync()" />
+        @if (!_fill.IsGradient)
+        {
+            <span class="color-code">@PickerHex.ToUpperInvariant()</span>
+        }
+        @if (AllowGradient)
+        {
+            <div class="choices small" role="radiogroup" aria-label="@($"{Label}の種類")">
+                @foreach (var (label, kind) in Kinds)
+                {
+                    bool selected = _fill.Kind == kind;
+                    <button type="button" role="radio" aria-checked="@(selected ? "true" : "false")"
+                            class="choice @(selected ? "selected" : "")" @onclick="() => SetKind(kind)">@label</button>
+                }
+            </div>
+        }
+    </div>
+    @if (_fill.IsGradient)
+    {
+        <input type="text" class="gradient-text" value="@Value" spellcheck="false" aria-label="@($"{Label} (グラデーション)")"
+               @onchange="e => OnText(e.Value?.ToString())" />
+        @if (_textError)
+        {
+            <p class="field-error">グラデーションとして読めませんでした。例: linear-gradient(90deg, #FFFFFF 0%, #2979FF 100%)</p>
+        }
+    }
+</div>
+
+@code {
+    private static readonly (string, ColorFillKind)[] Kinds =
+    {
+        ("単色", ColorFillKind.Solid), ("直線", ColorFillKind.Linear), ("放射", ColorFillKind.Radial), ("円周", ColorFillKind.Conic)
+    };
+
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public bool AllowGradient { get; set; }
+    [Parameter, EditorRequired] public string Value { get; set; } = "#FFFFFF";
+
+    /// <summary>The value while the user is still choosing (redraws).</summary>
+    [Parameter] public EventCallback<string> OnPreview { get; set; }
+
+    /// <summary>The choice is final (one undo step).</summary>
+    [Parameter] public EventCallback OnCommit { get; set; }
+
+    private ColorFill _fill = ColorFill.Solid("#FFFFFF");
+    private bool _textError;
+
+    protected override void OnParametersSet()
+    {
+        _fill = ColorFill.Parse(Value);
+    }
+
+    /// <summary>The color picker only takes "#rrggbb": the first color, without alpha.</summary>
+    private string PickerHex
+    {
+        get
+        {
+            string hex = _fill.PrimaryColor.Trim().TrimStart('#');
+            if (hex.Length == 8) hex = hex[2..];
+            if (hex.Length == 3) hex = string.Concat(hex.Select(ch => new string(ch, 2)));
+            return hex.Length == 6 ? "#" + hex.ToLowerInvariant() : "#ffffff";
+        }
+    }
+
+    /// <summary>
+    /// The fill as a CSS background, laid out like on the iris: the app measures angles from the right
+    /// (90° = down) and CSS from the top, so 90° is added; a radial gradient reaches the box edges.
+    /// Built only from parsed hex colors and numbers, so it is safe as a style value.
+    /// </summary>
+    private string SwatchCss
+    {
+        get
+        {
+            if (!_fill.IsGradient) return PickerHex;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string stops = string.Join(", ", _fill.Stops.Select(s => $"{CssColor(s.Color)} {(s.Offset * 100).ToString("0.##", inv)}%"));
+            string angle = ((_fill.Angle + 90.0) % 360.0).ToString("0.##", inv);
+            return _fill.Kind switch
+            {
+                ColorFillKind.Linear => $"linear-gradient({angle}deg, {stops})",
+                ColorFillKind.Conic => $"conic-gradient(from {angle}deg, {stops})",
+                _ => $"radial-gradient(closest-side, {stops})"
+            };
+        }
+    }
+
+    // "#AARRGGBB" (the app's order) is "#RRGGBBAA" in CSS
+    private static string CssColor(string hex)
+    {
+        string h = hex.Trim().TrimStart('#');
+        return h.Length == 8 ? $"#{h[2..]}{h[..2]}" : $"#{h}";
+    }
+
+    private async Task OnPick(string? hex)
+    {
+        if (!ColorFill.IsHexColor(hex)) return;
+        string color = hex!.ToUpperInvariant();
+        // On a gradient the picker recolors its first stop, keeping the rest
+        string value = _fill.IsGradient
+            ? ColorFill.Create(_fill.Kind, _fill.Angle, _fill.Stops.Select((s, i) => i == 0 ? s with { Color = color } : s)).ToString()
+            : color;
+        await OnPreview.InvokeAsync(value);
+    }
+
+    private async Task SetKind(ColorFillKind kind)
+    {
+        if (kind == _fill.Kind) return;
+        string value = kind == ColorFillKind.Solid
+            ? _fill.PrimaryColor
+            : ColorFill.DefaultGradientFrom(_fill.PrimaryColor, kind).ToString();
+        await OnPreview.InvokeAsync(value);
+        await OnCommit.InvokeAsync();
+    }
+
+    private async Task OnText(string? text)
+    {
+        var parsed = ColorFill.Parse(text);
+        _textError = !parsed.IsGradient && !ColorFill.IsHexColor(text);
+        if (_textError) return;
+        await OnPreview.InvokeAsync(parsed.ToString());
+        await OnCommit.InvokeAsync();
+    }
+}
