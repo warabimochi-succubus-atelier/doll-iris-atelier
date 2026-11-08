@@ -8,6 +8,8 @@
         <ResourceDictionary>
             <conv:EnumToBooleanConverter x:Key="EnumToBoolConverter"/>
             <conv:DoubleToPercentageConverter x:Key="DoubleToPercentConverter"/>
+            <conv:OpacityToTransparencyConverter x:Key="OpacityToTransparencyConverter"/>
+            <conv:TransparencyPercentConverter x:Key="TransparencyPercentConverter"/>
             <conv:SizeMatchesConverter x:Key="SizeMatchesConverter"/>
             <conv:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
             <conv:InverseBooleanConverter x:Key="InverseBoolConverter"/>

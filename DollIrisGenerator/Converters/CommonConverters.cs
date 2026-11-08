@@ -41,6 +41,30 @@ namespace DollIrisGenerator.Converters
     }
 
     /// <summary>
+    /// 「透明度」 sliders: the design keeps an opacity (1 = opaque), the slider shows 1 − opacity so that raising it
+    /// makes the element clearer (0% opaque, 100% invisible), like the browser version. Writes back 1 − value,
+    /// rounded to 4 decimals (the same as the browser version). Use with DoubleToPercentageConverter-style labels
+    /// through <see cref="TransparencyPercentConverter"/>.
+    /// </summary>
+    public class OpacityToTransparencyConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            value is double opacity ? 1.0 - opacity : 0.0;
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            value is double transparency ? Math.Round(1.0 - transparency, 4) : Binding.DoNothing;
+    }
+
+    /// <summary>The 「透明度」 label: an opacity shown as its transparency in percent (opacity 0.85 → "15%").</summary>
+    public class TransparencyPercentConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            value is double opacity ? $"{(1.0 - opacity) * 100.0:F0}%" : "0%";
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
+    }
+
+    /// <summary>
     /// Quick-size radio buttons: checked when the size equals the parameter (e.g. "18.0"); checking one sets that size.
     /// The parameter is parsed with the invariant culture so "18.0" means 18 mm on every Windows locale.
     /// </summary>
