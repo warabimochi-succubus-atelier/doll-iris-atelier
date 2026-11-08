@@ -91,3 +91,19 @@ export async function shareFile(fileName, text, mimeType) {
 export function confirmDialog(message) {
     return window.confirm(message);
 }
+
+/** Opens a <dialog> as a modal (Esc closes it); a tap on the dimmed backdrop closes it too. */
+export function showDialog(id) {
+    const dialog = document.getElementById(id);
+    if (!dialog || dialog.open) return;
+    if (!dialog.dataset.backdropClose) {
+        dialog.dataset.backdropClose = "1";
+        dialog.addEventListener("click", e => {
+            if (e.target !== dialog) return;
+            const r = dialog.getBoundingClientRect();
+            const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+            if (!inside) dialog.close();
+        });
+    }
+    dialog.showModal();
+}
