@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
@@ -164,6 +165,30 @@ namespace DollIrisGenerator.Tests
             Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
             foreach (var id in new[] { "rays_fill", "glitter_fill", "limbal_fill", "pupil_fill", "highlight0_fill" })
                 Assert.Contains($"<pattern id=\"left_eye_{id}\"", svg);
+        }
+
+        /// <summary>
+        /// Rays, glitter and lens rings with a conic color: the shapes go white into a mask over one rectangle in the
+        /// pattern, so renderers draw the pattern once instead of once per shape. Other colors keep the plain group.
+        /// </summary>
+        [Fact]
+        public void TestConicOnManyShapesIsDrawnOnceThroughAMask()
+        {
+            var p = new IrisParameters { RayColor = Aurora, ParticleColor = Aurora, LensRingColor = Aurora, LensPatternEnabled = true };
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye: false);
+            Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
+
+            foreach (var (id, fill) in new[] { ("rays", "rays_fill"), ("fine_rays", "rays_fill"), ("glitter", "glitter_fill"), ("lens_rings", "lens_fill") })
+            {
+                Assert.Contains($"<mask id=\"eye_left_{id}_mask\" maskUnits=\"userSpaceOnUse\"", svg);
+                Assert.Matches($"<rect id=\"eye_left_{id}\" [^>]*fill=\"url\\(#eye_left_{fill}\\)\" mask=\"url\\(#eye_left_{id}_mask\\)\" opacity=", svg);
+            }
+            // Only the masked rectangles (and nothing inside the masks) use the patterns
+            Assert.Equal(4, Regex.Matches(svg, "=\"url\\(#eye_left_(rays|glitter|lens)_fill\\)\"").Count);
+
+            var plain = SvgExporter.GenerateSingleEyeSvg(new IrisParameters { RayColor = "#B3E5FC" }, false);
+            Assert.DoesNotContain("<mask", plain);
+            Assert.Contains("<g id=\"eye_left_rays\" fill=\"#B3E5FC\" opacity=", plain);
         }
 
         [Fact]

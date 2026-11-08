@@ -159,9 +159,11 @@
         <path d="M 9.645,7.955 L 9.718,7.970 L 9.791,7.986 L 9.864,8.004 L 9.937,8.024 L 10.009,8.046 L 10.081,8.069 L 10.153,8.094 L 10.225,8.120 L 10.297,8.148 L 10.368,8.178 L 10.439,8.210 L 10.509,8.243 L 10.579,8.278 L 10.649,8.314 L 10.653,8.315 L 10.657,8.314 L 10.659,8.311 L 10.660,8.307 L 10.659,8.303 L 10.656,8.300 L 10.588,8.261 L 10.519,8.223 L 10.450,8.187 L 10.380,8.153 L 10.309,8.120 L 10.238,8.089 L 10.167,8.059 L 10.095,8.031 L 10.023,8.004 L 9.950,7.980 L 9.877,7.957 L 9.804,7.935 L 9.731,7.916 L 9.658,7.897 L 9.642,7.898 L 9.629,7.906 L 9.622,7.920 L 9.623,7.935 L 9.631,7.948 Z" />
       </g>
       <ellipse id="left_eye_limbal_ring" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#3B0018" stroke-width="0.800" opacity="0.95" />
+      <ellipse id="left_eye_limbal_soft" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#3B0018" stroke-width="0.280" opacity="0.427" />
       <g id="left_eye_pupil" fill="#1F000C" opacity="1.00">
         <ellipse cx="8.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
+      <ellipse id="left_eye_pupil_soft" cx="8.000" cy="8.000" rx="1.600" ry="1.600" fill="none" stroke="#1F000C" stroke-width="0.192" opacity="0.350" />
       <defs>
         <radialGradient id="left_eye_halo0">
           <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.506" />
@@ -508,9 +510,11 @@
         <path d="M 20.342,7.897 L 20.269,7.916 L 20.196,7.935 L 20.123,7.957 L 20.050,7.980 L 19.977,8.004 L 19.905,8.031 L 19.833,8.059 L 19.762,8.089 L 19.691,8.120 L 19.620,8.153 L 19.550,8.187 L 19.481,8.223 L 19.412,8.261 L 19.344,8.300 L 19.341,8.303 L 19.340,8.307 L 19.341,8.311 L 19.343,8.314 L 19.347,8.315 L 19.351,8.314 L 19.421,8.278 L 19.491,8.243 L 19.561,8.210 L 19.632,8.178 L 19.703,8.148 L 19.775,8.120 L 19.847,8.094 L 19.919,8.069 L 19.991,8.046 L 20.063,8.024 L 20.136,8.004 L 20.209,7.986 L 20.282,7.970 L 20.355,7.955 L 20.369,7.948 L 20.377,7.935 L 20.378,7.920 L 20.371,7.906 L 20.358,7.898 Z" />
       </g>
       <ellipse id="right_eye_limbal_ring" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#3B0018" stroke-width="0.800" opacity="0.95" />
+      <ellipse id="right_eye_limbal_soft" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#3B0018" stroke-width="0.280" opacity="0.427" />
       <g id="right_eye_pupil" fill="#1F000C" opacity="1.00">
         <ellipse cx="22.000" cy="8.000" rx="1.600" ry="1.600" />
       </g>
+      <ellipse id="right_eye_pupil_soft" cx="22.000" cy="8.000" rx="1.600" ry="1.600" fill="none" stroke="#1F000C" stroke-width="0.192" opacity="0.350" />
       <defs>
         <radialGradient id="right_eye_halo0">
           <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.506" />
