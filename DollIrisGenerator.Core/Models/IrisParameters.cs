@@ -90,6 +90,8 @@ namespace DollIrisGenerator.Models
         private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
         private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
         private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
+        private double _fiberNoiseScale = 1.0;
+        private double _fiberNoise = 0.0;
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -390,6 +392,20 @@ namespace DollIrisGenerator.Models
         {
             get => _lightStrength;
             set { _lightStrength = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>繊維ノイズ: strength of the fine fibrous noise laid over the iris (feTurbulence in the SVG). 0 = off.</summary>
+        public double FiberNoise
+        {
+            get => _fiberNoise;
+            set { _fiberNoise = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>繊維ノイズの細かさ: higher values give thinner, denser fibers.</summary>
+        public double FiberNoiseScale
+        {
+            get => _fiberNoiseScale;
+            set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
         }
 
         public double PupilCornerRounding
