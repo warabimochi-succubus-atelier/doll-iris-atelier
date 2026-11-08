@@ -1,15 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using DollIrisGenerator.Services;
 
 namespace DollIrisGenerator.Models
 {
-    public class PresetDefinition
+    public class PresetDefinition : INotifyPropertyChanged
     {
-        public string Name { get; set; } = "";
+        private string _name = "";
+
+        /// <summary>Shown in the preset list; a renamed preset updates there at once.</summary>
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name == value) return;
+                _name = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public string Description { get; set; } = "";
         public string BaseColor { get; set; } = "#2979FF";
         public string InnerColor { get; set; } = "#80D8FF";
@@ -93,7 +109,8 @@ namespace DollIrisGenerator.Models
 
     public static class ColorPresets
     {
-        public static ObservableCollection<PresetDefinition> All { get; } = new()
+        /// <summary>The built-in presets. The list the user sees (with the presets they added) is MainViewModel.Presets.</summary>
+        public static IReadOnlyList<PresetDefinition> All { get; } = new List<PresetDefinition>
         {
             // ---------------- ベーシックカラー ----------------
             // The first one is the preset selected at start-up

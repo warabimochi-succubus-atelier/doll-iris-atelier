@@ -49,6 +49,12 @@ namespace DollIrisGenerator.ViewModels
         private readonly FavoritesStore _favoritesStore;
         private string? _favoritesLoadProblem;
 
+        // Iris presets: the built-in ones, then the ones the user added (saved to user-presets.json)
+        private readonly ObservableCollection<PresetDefinition> _presets = new(ColorPresets.All);
+        private readonly UserPresetStore? _userPresetStore;
+        private string? _userPresetsLoadProblem;
+        private string _presetNameDraft = "";
+
         // A4 print sheet persistence (saved on exit, restored on start)
         private readonly PrintSheetStore? _printSheetStore;
         private string? _printSheetLoadProblem;
@@ -78,7 +84,7 @@ namespace DollIrisGenerator.ViewModels
             }
         }
 
-        public ObservableCollection<PresetDefinition> Presets => ColorPresets.All;
+        public ObservableCollection<PresetDefinition> Presets => _presets;
 
         public PresetDefinition? SelectedPreset
         {
@@ -87,6 +93,7 @@ namespace DollIrisGenerator.ViewModels
             {
                 _selectedPreset = value;
                 OnPropertyChanged();
+                OnSelectedPresetChanged();
                 if (value != null)
                 {
                     PushUndo();
@@ -308,6 +315,8 @@ namespace DollIrisGenerator.ViewModels
 
         // New Feature Commands
         public ICommand AddCurrentAsPresetCommand { get; }
+        public ICommand RenamePresetCommand { get; }
+        public ICommand RemovePresetCommand { get; }
         public ICommand ExportPresetsCommand { get; }
         public ICommand ImportPresetsCommand { get; }
         public ICommand CopySvgCommand { get; }
@@ -323,16 +332,19 @@ namespace DollIrisGenerator.ViewModels
         public ICommand ExportFavoritesCommand { get; }
         public ICommand ImportFavoritesCommand { get; }
 
-        public MainViewModel() : this(new WpfDialogService(), new FavoritesStore(), new PrintSheetStore())
+        public MainViewModel() : this(new WpfDialogService(), new FavoritesStore(), new PrintSheetStore(), new UserPresetStore())
         {
         }
 
         /// <param name="printSheetStore">Saves and restores the A4 print sheet. Null keeps the sheet in memory only.</param>
-        public MainViewModel(IDialogService dialogs, FavoritesStore favoritesStore, PrintSheetStore? printSheetStore = null)
+        /// <param name="userPresetStore">Saves and restores the presets the user added. Null keeps them in memory only.</param>
+        public MainViewModel(IDialogService dialogs, FavoritesStore favoritesStore, PrintSheetStore? printSheetStore = null,
+            UserPresetStore? userPresetStore = null)
         {
             _dialogs = dialogs;
             _favoritesStore = favoritesStore;
             _printSheetStore = printSheetStore;
+            _userPresetStore = userPresetStore;
             _files = new DesignFileWorkflow(dialogs, status => StatusMessage = status);
 
             _currentIris = new IrisParameters();
@@ -343,8 +355,12 @@ namespace DollIrisGenerator.ViewModels
             _sheetConfig = new PrintSheetConfig();
             InitializeCompareSlots();
 
+            // The presets the user added last time, after the built-in ones
+            LoadUserPresets();
+
             // Default preset
             _selectedPreset = Presets[0];
+            _presetNameDraft = _selectedPreset.Name;
             _selectedPdfTemplate = PdfTemplates[0];
 
             HookSheetItems();
@@ -401,6 +417,8 @@ namespace DollIrisGenerator.ViewModels
 
             // Setup extension commands
             AddCurrentAsPresetCommand = new RelayCommand(OnAddCurrentAsPreset);
+            RenamePresetCommand = new RelayCommand(OnRenamePreset, () => IsSelectedPresetUserMade);
+            RemovePresetCommand = new RelayCommand(OnRemovePreset, () => IsSelectedPresetUserMade);
             ExportPresetsCommand = new RelayCommand(OnExportPresets);
             ImportPresetsCommand = new RelayCommand(OnImportPresets);
             CopySvgCommand = new RelayCommand(OnCopySvg);

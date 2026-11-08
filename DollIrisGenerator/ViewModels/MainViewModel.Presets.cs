@@ -9,17 +9,122 @@ namespace DollIrisGenerator.ViewModels
     // Presets and favorites: add / import / export, and local persistence of the favorites list
     public partial class MainViewModel
     {
+        // ---------------- Presets the user added ----------------
+
+        /// <summary>True for a preset the user added (registered or imported); the built-in ones cannot be renamed or removed.</summary>
+        public bool IsSelectedPresetUserMade => _selectedPreset != null && IsUserPreset(_selectedPreset);
+
+        private static bool IsUserPreset(PresetDefinition preset) => !ColorPresets.All.Contains(preset);
+
+        /// <summary>The name in the rename box; it follows the selected preset.</summary>
+        public string PresetNameDraft
+        {
+            get => _presetNameDraft;
+            set { _presetNameDraft = value ?? ""; OnPropertyChanged(); }
+        }
+
+        private void OnSelectedPresetChanged()
+        {
+            PresetNameDraft = _selectedPreset?.Name ?? "";
+            OnPropertyChanged(nameof(IsSelectedPresetUserMade));
+        }
+
+        private void LoadUserPresets()
+        {
+            if (_userPresetStore == null) return;
+            var loaded = _userPresetStore.Load();
+            foreach (var preset in loaded.Presets)
+            {
+                if (!_presets.Any(x => x.Name == preset.Name)) _presets.Add(preset);
+            }
+            _userPresetsLoadProblem = loaded.Problem;
+        }
+
+        /// <summary>Saves the presets the user added. Call after every change to them.</summary>
+        private void SaveUserPresets()
+        {
+            if (_userPresetStore == null) return;
+            if (!_userPresetStore.TrySave(_presets.Where(IsUserPreset), out string error))
+            {
+                _dialogs.ShowWarning(
+                    $"追加した虹彩プリセットを保存できませんでした。このまま終了すると、今回の変更は失われます。\n\n理由: {error}",
+                    "虹彩プリセットの保存");
+            }
+        }
+
+        /// <summary>Tells the user if the saved presets could not be read. Call once the main window is showing.</summary>
+        public void ShowUserPresetsLoadProblem()
+        {
+            if (_userPresetsLoadProblem == null) return;
+            string problem = _userPresetsLoadProblem;
+            _userPresetsLoadProblem = null;
+            _dialogs.ShowWarning(problem, "虹彩プリセットの読み込み");
+        }
+
+        /// <summary>「name」, or 「name (2)」, 「name (3)」… when another preset already has that name.</summary>
+        private string MakeUniquePresetName(string name)
+        {
+            if (!_presets.Any(p => p.Name == name)) return name;
+            for (int n = 2; ; n++)
+            {
+                string candidate = $"{name} ({n})";
+                if (!_presets.Any(p => p.Name == candidate)) return candidate;
+            }
+        }
+
         private void OnAddCurrentAsPreset()
         {
-            // Same settings as a built-in preset holds (colors, pupil, rays, sparkles, layers, symbol)
+            // Everything about the design's look except size, shape, tilt, seed, name and odd-eye
             var customPreset = ColorPresets.FromDesign(
                 CurrentIris,
-                $"カスタム: {CurrentIris.Name}",
+                MakeUniquePresetName($"カスタム: {CurrentIris.Name}"),
                 $"ユーザー作成 ({CurrentIris.SizeMm:F1}mm / {CurrentIris.BaseColor})");
 
             Presets.Add(customPreset);
+            SaveUserPresets();
             SelectedPreset = customPreset;
             StatusMessage = $"現在のデザインを虹彩プリセット「{customPreset.Name}」として追加しました。";
+        }
+
+        private void OnRenamePreset()
+        {
+            var preset = _selectedPreset;
+            if (preset == null || !IsUserPreset(preset)) return;
+
+            string newName = PresetNameDraft.Trim();
+            if (newName.Length == 0)
+            {
+                StatusMessage = "プリセットの名前を入力してください。";
+                return;
+            }
+            if (newName == preset.Name) return;
+            if (_presets.Any(p => p != preset && p.Name == newName))
+            {
+                _dialogs.ShowWarning($"「{newName}」という名前のプリセットはすでにあります。別の名前にしてください。", "名前の変更");
+                return;
+            }
+
+            string oldName = preset.Name;
+            preset.Name = newName;
+            PresetNameDraft = newName;
+            SaveUserPresets();
+            StatusMessage = $"プリセット「{oldName}」の名前を「{newName}」に変更しました。";
+        }
+
+        private void OnRemovePreset()
+        {
+            var preset = _selectedPreset;
+            if (preset == null || !IsUserPreset(preset)) return;
+            if (!_dialogs.ConfirmWarning($"プリセット「{preset.Name}」を削除しますか？\n\n今のデザインは変わりません。", "プリセットの削除", defaultToNo: true))
+                return;
+
+            // Leave the selection empty without applying another preset to the design
+            _selectedPreset = null;
+            OnPropertyChanged(nameof(SelectedPreset));
+            OnSelectedPresetChanged();
+            Presets.Remove(preset);
+            SaveUserPresets();
+            StatusMessage = $"プリセット「{preset.Name}」を削除しました。";
         }
 
         private void OnExportPresets()
@@ -62,6 +167,7 @@ namespace DollIrisGenerator.ViewModels
                             addedCount++;
                         }
                     }
+                    if (addedCount > 0) SaveUserPresets();
                     StatusMessage = $"ファイルから {addedCount} 件の虹彩プリセットを読み込みました。";
                 }
             }
