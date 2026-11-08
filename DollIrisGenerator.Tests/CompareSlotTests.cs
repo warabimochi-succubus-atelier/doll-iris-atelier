@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using DollIrisGenerator.Controls;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
@@ -171,6 +173,26 @@ namespace DollIrisGenerator.Tests
 
             Assert.Same(_vm.CurrentIris, third.Iris);
             Assert.NotSame(_vm.CurrentIris, _vm.VisibleSlots[0].Iris);
+        }
+
+        [Fact]
+        public void TestNewDesignIsTheStartUpDesignWhateverPresetIsShown()
+        {
+            // Highlights / symbols get a fresh random Id each time, so compare without the Ids
+            static string WithoutIds(IrisParameters p) =>
+                Regex.Replace(JsonSerializer.Serialize(p), "\"Id\":\"[0-9a-f]+\"", "\"Id\":\"\"");
+            string startUp = WithoutIds(new IrisParameters());
+
+            _vm.SelectedPreset = _vm.Presets[3]; // applies a preset; the combo keeps showing it
+            _vm.CurrentIris.SizeMm = 14.0;
+            _vm.NewDesignCommand.Execute(null);
+
+            Assert.Equal(startUp, WithoutIds(_vm.CurrentIris));
+            Assert.Contains("枠 1", _vm.StatusMessage);
+            Assert.Contains("元に戻す", _vm.StatusMessage);
+
+            _vm.UndoCommand.Execute(null);
+            Assert.Equal(14.0, _vm.CurrentIris.SizeMm, 6);
         }
 
         [Fact]

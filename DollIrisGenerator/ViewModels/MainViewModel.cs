@@ -42,6 +42,7 @@ namespace DollIrisGenerator.ViewModels
         private IrisParameters _undoBaseline;
         private bool _manualEditPending = false;
         private bool _suppressManualEditTracking = false; // set while a command applies its own changes
+        private readonly List<string?> _manualEditProperties = new(); // what the pending manual edit changed, for its history title
 
         // Favorites Management
         private ObservableCollection<FavoriteItem> _favorites = new();
@@ -454,17 +455,19 @@ namespace DollIrisGenerator.ViewModels
             OnPropertyChanged(nameof(CurrentIris));
             if (!_isInternalStateChange && !_suppressManualEditTracking)
             {
-                TrackManualEdit();
+                TrackManualEdit(e.PropertyName);
             }
         }
 
-        private void TrackManualEdit()
+        private void TrackManualEdit(string? propertyName)
         {
             if (!_manualEditPending)
             {
                 AddUndoSnapshot(_undoBaseline);
                 _manualEditPending = true;
+                _manualEditProperties.Clear();
             }
+            _manualEditProperties.Add(propertyName);
             // Restart the pause timer: a whole slider drag becomes a single undo step
             _manualEditTimer.Stop();
             _manualEditTimer.Start();
@@ -475,7 +478,10 @@ namespace DollIrisGenerator.ViewModels
             if (!_manualEditPending) return;
             _manualEditTimer.Stop();
             _manualEditPending = false;
-            RecordHistory("パラメータ調整");
+            string action = ManualEditDescriber.Describe(_manualEditProperties);
+            _manualEditProperties.Clear();
+            // Adjusting the same setting of the same cell again (several drags, typing a name) updates its one entry
+            RecordHistory(action, mergeKey: $"{_selectedSlot.Number}|{action}");
         }
 
         private void ResetManualEditTracking()
@@ -550,10 +556,21 @@ namespace DollIrisGenerator.ViewModels
             }
         }
 
-        private void RecordHistory(string action)
+        /// <param name="mergeKey">
+        /// When the newest entry has the same key, it is replaced instead of adding another one
+        /// (undo still steps through every edit; only the timeline is kept short).
+        /// </param>
+        private void RecordHistory(string action, string? mergeKey = null)
         {
-            var item = new HistoryItem(CurrentIris, action);
-            _historyItems.Insert(0, item);
+            var item = new HistoryItem(CurrentIris, action) { MergeKey = mergeKey };
+            if (mergeKey != null && _historyItems.Count > 0 && _historyItems[0].MergeKey == mergeKey)
+            {
+                _historyItems[0] = item;
+            }
+            else
+            {
+                _historyItems.Insert(0, item);
+            }
             if (_historyItems.Count > 50) _historyItems.RemoveAt(_historyItems.Count - 1);
 
             // This state is now the starting point for the next manual edit
@@ -609,17 +626,17 @@ namespace DollIrisGenerator.ViewModels
             }
         }
 
+        /// <summary>
+        /// 「🆕 新しいデザイン」: replaces the selected cell's design with the start-up design (the app's defaults).
+        /// It does not depend on the preset shown in the 基本 tab, so the result is always the same.
+        /// </summary>
         private void OnNewDesign()
         {
             PushUndo();
-            var p = new IrisParameters();
-            if (SelectedPreset != null)
-            {
-                ColorPresets.ApplyPreset(p, SelectedPreset);
-            }
-            CurrentIris = p;
-            RecordHistory("新規デザイン作成");
-            StatusMessage = "新規虹彩デザインを作成しました。";
+            CurrentIris = new IrisParameters();
+            RecordHistory("新しいデザイン");
+            string where = IsCompareSplit ? $"枠 {_selectedSlot.Number} のデザインを" : "デザインを";
+            StatusMessage = $"{where}起動時と同じ初期状態にしました。前のデザインは ↩ 元に戻す (Ctrl+Z) で戻せます。";
         }
 
         private void OnRandomizeSeed()
@@ -636,7 +653,7 @@ namespace DollIrisGenerator.ViewModels
             if (locks == RandomizeLocks.All)
             {
                 // Nothing would change, so do not add an empty undo step
-                StatusMessage = "すべての属性がロックされているため、ランダム生成で変わる項目がありません。「基本・色」タブでロックを外してください。";
+                StatusMessage = "すべての属性がロックされているため、ランダム生成で変わる項目がありません。「基本」タブの「すべて解除」か、各設定枠の「🔒 ランダム生成で変えない」でロックを外してください。";
                 return;
             }
 

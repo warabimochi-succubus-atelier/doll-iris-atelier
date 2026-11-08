@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Windows.Input;
 using DollIrisGenerator.Models;
 
@@ -14,6 +15,8 @@ namespace DollIrisGenerator.ViewModels
 
         // Every cell created so far. Lowering the split count only hides cells, so raising it again brings them back.
         private readonly List<CompareSlot> _allSlots = new();
+        // Each cell's design as it was when the cell was created, to tell whether closing the app would lose anything
+        private readonly Dictionary<CompareSlot, string> _slotStartJson = new();
         private readonly ObservableCollection<CompareSlot> _visibleSlots = new();
         private CompareSlot _selectedSlot = null!; // set in InitializeCompareSlots (constructor)
         private int _compareCount;
@@ -53,7 +56,7 @@ namespace DollIrisGenerator.ViewModels
                 while (_allSlots.Count < count)
                 {
                     // A new cell starts as a copy of the selected design, ready to branch off and compare
-                    _allSlots.Add(new CompareSlot(_allSlots.Count, CurrentIris.Clone()));
+                    AddSlot(new CompareSlot(_allSlots.Count, CurrentIris.Clone()));
                 }
                 _visibleSlots.Clear();
                 for (int i = 0; i < count; i++) _visibleSlots.Add(_allSlots[i]);
@@ -82,7 +85,7 @@ namespace DollIrisGenerator.ViewModels
         private void InitializeCompareSlots()
         {
             var first = new CompareSlot(0, _currentIris) { IsSelected = true };
-            _allSlots.Add(first);
+            AddSlot(first);
             _selectedSlot = first;
             _undoStack = first.UndoStack;
             _redoStack = first.RedoStack;
@@ -114,6 +117,27 @@ namespace DollIrisGenerator.ViewModels
             CommandManager.InvalidateRequerySuggested(); // undo / redo buttons follow the new cell's history
             StatusMessage = $"枠 {slot.Number}「{slot.Iris.Name}」を選択しました。設定タブでこのデザインを編集できます。";
             return true;
+        }
+
+        private void AddSlot(CompareSlot slot)
+        {
+            _allSlots.Add(slot);
+            _slotStartJson[slot] = JsonSerializer.Serialize(slot.Iris);
+        }
+
+        /// <summary>
+        /// True when some cell holds a design that would be lost on exit: it was changed since the cell was
+        /// created and is not saved as a favorite either. Designs are not saved automatically, so only then
+        /// is it worth asking before closing.
+        /// </summary>
+        public bool HasUnsavedDesigns()
+        {
+            var favoriteJson = Favorites.Select(f => JsonSerializer.Serialize(f.Parameters)).ToHashSet();
+            return _allSlots.Any(slot =>
+            {
+                string json = JsonSerializer.Serialize(slot.Iris);
+                return json != _slotStartJson[slot] && !favoriteJson.Contains(json);
+            });
         }
 
         private void ClearAllUndoHistory()

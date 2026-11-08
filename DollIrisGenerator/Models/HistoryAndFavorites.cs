@@ -12,6 +12,9 @@ namespace DollIrisGenerator.Models
         public string Details { get; set; } = "";
         public IrisParameters Snapshot { get; set; }
 
+        /// <summary>Consecutive entries with the same non-null key are kept as one (the newest state).</summary>
+        public string? MergeKey { get; init; }
+
         public HistoryItem(IrisParameters parameters, string actionDescription = "変更")
         {
             Snapshot = parameters.Clone();

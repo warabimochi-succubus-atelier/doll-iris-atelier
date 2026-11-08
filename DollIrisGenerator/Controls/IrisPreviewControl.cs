@@ -47,6 +47,17 @@ namespace DollIrisGenerator.Controls
             DependencyProperty.Register(nameof(ShowCenterMarks), typeof(bool), typeof(IrisPreviewControl),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
+        // 「L (左)」「R (右・鏡像)」 under the pair. Off in the split preview, where every small cell would repeat them.
+        public static readonly DependencyProperty ShowEyeLabelsProperty =
+            DependencyProperty.Register(nameof(ShowEyeLabels), typeof(bool), typeof(IrisPreviewControl),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool ShowEyeLabels
+        {
+            get => (bool)GetValue(ShowEyeLabelsProperty);
+            set => SetValue(ShowEyeLabelsProperty, value);
+        }
+
         public static readonly DependencyProperty SheetConfigProperty =
             DependencyProperty.Register(nameof(SheetConfig), typeof(PrintSheetConfig), typeof(IrisPreviewControl),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnSheetConfigChanged));
@@ -285,7 +296,7 @@ namespace DollIrisGenerator.Controls
                         showCutLine: ShowCutLines,
                         showCenterMark: ShowCenterMarks
                     );
-                    DrawEyeLabel(dc, "L (左)", new Point(leftCenter.X, leftCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
+                    if (ShowEyeLabels) DrawEyeLabel(dc, "L (左)", new Point(leftCenter.X, leftCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
 
                     // Right Eye (Mirrored)
                     WpfIrisRenderer.RenderIris(
@@ -298,7 +309,7 @@ namespace DollIrisGenerator.Controls
                         showCutLine: ShowCutLines,
                         showCenterMark: ShowCenterMarks
                     );
-                    DrawEyeLabel(dc, "R (右・鏡像)", new Point(rightCenter.X, rightCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
+                    if (ShowEyeLabels) DrawEyeLabel(dc, "R (右・鏡像)", new Point(rightCenter.X, rightCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
                     break;
             }
         }
