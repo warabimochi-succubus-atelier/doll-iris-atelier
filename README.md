@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.9.0
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.10.0
 
 ## Overview (English)
 
@@ -133,8 +133,8 @@ dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --s
 ### バージョンの記録
 配布したコミットにはタグを付けると、どの時点のものか後から分かります。
 ```powershell
-git tag v0.9.0
-git push origin v0.9.0
+git tag v0.10.0
+git push origin v0.10.0
 ```
 
 ---
