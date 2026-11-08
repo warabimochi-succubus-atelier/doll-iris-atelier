@@ -90,16 +90,38 @@ input[type=text], input[type=number], select {
     background: var(--panel);
     border-bottom: 1px solid var(--border);
 }
-.app-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* App icon, then the name in bold with the version under it */
+.app-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.app-icon { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.app-brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.app-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-version { font-size: 0.8rem; color: var(--text-muted); }
 .toolbar-buttons { display: flex; gap: 6px; flex: 0 0 auto; }
 @media (max-width: 420px) {
-    .app-title { font-size: 0.9rem; }
-    .toolbar-buttons { gap: 4px; }
+    .toolbar { gap: 6px; }
+    .app-brand { gap: 5px; }
+    .app-icon { width: 28px; height: 28px; border-radius: 7px; }
+    .app-title { font-size: 0.82rem; }
+    .app-version { font-size: 0.7rem; }
+    .toolbar-buttons { gap: 3px; }
     .toolbar-buttons button { min-width: 40px; padding: 6px 8px; justify-content: center; }
 }
 /* Phones: icons only; the full label is in the title / aria */
 .toolbar-buttons .label { display: none; }
 @media (min-width: 860px) { .toolbar-buttons .label { display: inline; } }
+/* Line icons (new design, randomize) drawn in the button's text color */
+.toolbar-buttons .icon {
+    width: 20px; height: 20px; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.toolbar-buttons .icon .pips { fill: currentColor; stroke: none; }
+/* Phones: a short caption under those icons so they read without the tooltip */
+.toolbar-buttons .short { display: none; }
+@media (max-width: 859.98px) {
+    .toolbar-buttons button.has-short { flex-direction: column; gap: 1px; padding-top: 3px; padding-bottom: 3px; }
+    .toolbar-buttons .short { display: block; font-size: 10px; line-height: 1; }
+    .toolbar-buttons .has-short .icon { width: 18px; height: 18px; }
+}
 
 .workspace { flex: 1; display: flex; flex-direction: column; }
 

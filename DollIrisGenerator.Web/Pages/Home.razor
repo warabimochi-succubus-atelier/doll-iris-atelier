@@ -14,12 +14,24 @@
 <CascadingValue Value="Session" IsFixed="true">
     <div class="app">
         <header class="toolbar">
-            <h1 class="app-title">Doll Iris Atelier</h1>
+            <div class="app-brand">
+                <img class="app-icon" src="icon-192.png" alt="" width="36" height="36" />
+                <div class="app-brand-text">
+                    <h1 class="app-title">Doll Iris Atelier</h1>
+                    <span class="app-version">@VersionLabel</span>
+                </div>
+            </div>
             <div class="toolbar-buttons">
                 <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す">↩<span class="label"> 元に戻す</span></button>
                 <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す">↪<span class="label"> やり直す</span></button>
-                <button type="button" @onclick="NewDesign" title="起動時と同じ初期状態のデザインにする (元に戻せます)">🆕<span class="label"> 新しいデザイン</span></button>
-                <button type="button" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る">✨<span class="label"> ランダム生成</span></button>
+                <button type="button" class="has-short" @onclick="NewDesign" title="起動時と同じ初期状態のデザインにする (元に戻せます)" aria-label="新しいデザイン">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3H6.5a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8.5z"/><path d="M13.5 3v5.5H19"/><path d="M12 11.5v6M9 14.5h6"/></svg>
+                    <span class="label"> 新しいデザイン</span><span class="short">新規</span>
+                </button>
+                <button type="button" class="has-short" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る" aria-label="ランダム生成">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><g class="pips"><circle cx="8.3" cy="8.3" r="1.5"/><circle cx="15.7" cy="8.3" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8.3" cy="15.7" r="1.5"/><circle cx="15.7" cy="15.7" r="1.5"/></g></svg>
+                    <span class="label"> ランダム生成</span><span class="short">ランダム</span>
+                </button>
                 <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す">⭐<span class="label"> お気に入りに追加</span></button>
             </div>
         </header>
@@ -130,6 +142,12 @@
 </CascadingValue>
 
 @code {
+    /// <summary>"v0.10.0", from &lt;Version&gt; in the project file (the part before any "+commit").</summary>
+    private static readonly string VersionLabel = "v" + (typeof(Home).Assembly
+        .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+        .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion
+        .Split('+')[0] ?? "?");
+
     private static readonly string[] Tabs = { "基本", "色", "瞳孔・放射線", "外輪・ラメ", "記号", "レンズ・オッドアイ", "ハイライト", "お気に入り" };
 
     private string _tab = Tabs[0];

@@ -15,6 +15,8 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- Only the invariant culture is needed (numbers in SVG / JSON); keeps the download small -->
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Shown under the app name in the header; keep the same as <Version> in DollIrisGenerator.csproj -->
+    <Version>0.10.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

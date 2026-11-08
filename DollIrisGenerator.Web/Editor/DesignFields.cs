@@ -10,6 +10,14 @@ public static class DesignFields
 {
     private static int Int(double v) => (int)Math.Round(v);
 
+    /// <summary>
+    /// 「透明度」スライダー。デザインが持つ値は不透明度 (1 で不透明) なので、スライダーには 1 − 不透明度 を出し、
+    /// % を上げるほど透ける (0% で不透明、100% で見えない) ようにする。
+    /// </summary>
+    private static SliderField<T> Transparency<T>(Func<T, double> getOpacity, Action<T, double> setOpacity) =>
+        new("透明度", t => 1.0 - getOpacity(t), (t, v) => setOpacity(t, Math.Round(1.0 - v, 4)), 0, 1, 0.01, Fmt.Percent,
+            "上げるほど透けます (0% で不透明、100% で見えない)");
+
     public static readonly IReadOnlyList<Field<IrisParameters>> Basic = new Field<IrisParameters>[]
     {
         new TextField<IrisParameters>("デザイン名", p => p.Name, (p, v) => p.Name = v),
@@ -57,7 +65,7 @@ public static class DesignFields
         }),
         new SliderField<IrisParameters>("瞳孔サイズ (直径比率)", p => p.PupilSizeRatio, (p, v) => p.PupilSizeRatio = v, 0.10, 0.60, 0.01, Fmt.Percent),
         new ColorField<IrisParameters>("瞳孔色", p => p.PupilColor, (p, v) => p.PupilColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("透明度", p => p.PupilOpacity, (p, v) => p.PupilOpacity = v, 0, 1, 0.01, Fmt.Percent),
+        Transparency<IrisParameters>(p => p.PupilOpacity, (p, v) => p.PupilOpacity = v),
         new SliderField<IrisParameters>("輪郭の柔らかさ (ぼかし)", p => p.PupilSoftness, (p, v) => p.PupilSoftness = v, 0, 0.30, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("角の丸み (猫目・ハート・星)", p => p.PupilCornerRounding, (p, v) => p.PupilCornerRounding = v, 0, 1, 0.01, Fmt.Percent,
             "とがった角を丸めます。正円・縦長楕円には影響しません"),
@@ -84,13 +92,13 @@ public static class DesignFields
         new HeadingField<IrisParameters>("外輪"),
         new SliderField<IrisParameters>("リング幅 (太さ)", p => p.LimbalRingThickness, (p, v) => p.LimbalRingThickness = v, 0, 0.22, 0.005, Fmt.Percent),
         new ColorField<IrisParameters>("リング色", p => p.LimbalRingColor, (p, v) => p.LimbalRingColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("透明度", p => p.LimbalRingOpacity, (p, v) => p.LimbalRingOpacity = v, 0, 1, 0.01, Fmt.Percent),
+        Transparency<IrisParameters>(p => p.LimbalRingOpacity, (p, v) => p.LimbalRingOpacity = v),
         new SliderField<IrisParameters>("境界の柔らかさ (ぼかし)", p => p.LimbalRingSoftness, (p, v) => p.LimbalRingSoftness = v, 0, 0.80, 0.01, Fmt.Percent),
         new HeadingField<IrisParameters>("粒子模様・ラメ"),
         new SliderField<IrisParameters>("粒子数量 (ラメ数)", p => p.ParticleCount, (p, v) => p.ParticleCount = Int(v), 0, 250, 5, v => Fmt.Count(v, "個")),
         new ColorField<IrisParameters>("ラメ色", p => p.ParticleColor, (p, v) => p.ParticleColor = v, AllowGradient: true),
         new SliderField<IrisParameters>("粒径 (最大サイズ)", p => p.ParticleMaxSize, (p, v) => p.ParticleMaxSize = v, 0.5, 5.0, 0.1, Fmt.F1),
-        new SliderField<IrisParameters>("透明度", p => p.ParticleOpacity, (p, v) => p.ParticleOpacity = v, 0, 1, 0.01, Fmt.Percent),
+        Transparency<IrisParameters>(p => p.ParticleOpacity, (p, v) => p.ParticleOpacity = v),
         new SliderField<IrisParameters>("分布範囲 (外周比率)", p => p.ParticleRadiusRatio, (p, v) => p.ParticleRadiusRatio = v, 0.30, 0.95, 0.01, Fmt.Percent),
         new HeadingField<IrisParameters>("光るラメ (0 でにじみ・フレアなし)"),
         new SliderField<IrisParameters>("光のにじみ", p => p.ParticleGlow, (p, v) => p.ParticleGlow = v, 0, 1, 0.01, Fmt.Percent),
@@ -143,7 +151,7 @@ public static class DesignFields
         new SliderField<DecorativeSymbolItem>("位置 Y (縦)", s => s.PositionY, (s, v) => s.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<DecorativeSymbolItem>("回転角度", s => s.Rotation, (s, v) => s.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<DecorativeSymbolItem>("角の丸み", s => s.CornerRounding, (s, v) => s.CornerRounding = v, 0, 1, 0.01, Fmt.Percent),
-        new SliderField<DecorativeSymbolItem>("透明度", s => s.Opacity, (s, v) => s.Opacity = v, 0, 1, 0.01, Fmt.Percent),
+        Transparency<DecorativeSymbolItem>(s => s.Opacity, (s, v) => s.Opacity = v),
     };
 
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]
@@ -159,7 +167,7 @@ public static class DesignFields
         new SliderField<HighlightItem>("位置 Y (縦)", h => h.PositionY, (h, v) => h.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<HighlightItem>("楕円 縦横比", h => h.AspectRatio, (h, v) => h.AspectRatio = v, 0.3, 2.5, 0.01, Fmt.F2),
         new SliderField<HighlightItem>("回転角度", h => h.Rotation, (h, v) => h.Rotation = v, -180, 180, 1, Fmt.Deg),
-        new SliderField<HighlightItem>("透明度", h => h.Opacity, (h, v) => h.Opacity = v, 0, 1, 0.01, Fmt.Percent),
+        Transparency<HighlightItem>(h => h.Opacity, (h, v) => h.Opacity = v),
     };
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
