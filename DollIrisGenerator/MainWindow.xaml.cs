@@ -56,11 +56,20 @@ namespace DollIrisGenerator
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            // The design being edited is not saved automatically (only favorites and the A4 sheet are), so confirm first
+            // The design being edited is not saved automatically (only favorites and the A4 sheet are), so confirm first —
+            // but only when closing would actually lose something: a changed design that is not a favorite, or a running PDF export
             bool exporting = DataContext is MainViewModel { IsExportingPdf: true };
+            bool unsaved = DataContext is MainViewModel model && model.HasUnsavedDesigns();
+            if (!exporting && !unsaved)
+            {
+                CloseWithoutAsking(e);
+                return;
+            }
+
             string message = exporting
                 ? "PDF を出力中です。今終了すると PDF は正しく保存されません。\n\nそれでも Doll Iris Atelier を終了しますか？"
-                : "Doll Iris Atelier を終了しますか？\n\n編集中のデザインは自動保存されません。残したい場合は「⭐ お気に入りに追加」で保存してください。\n" +
+                : "Doll Iris Atelier を終了しますか？\n\nお気に入りに保存していないデザインの変更があります (分割表示のほかの枠を含みます)。" +
+                  "デザインは自動保存されないため、残したい場合は「⭐ お気に入りに追加」で保存してください。\n" +
                   "（A4印刷シートの中身と設定は保存され、次回起動時に復元されます）";
             var answer = MessageBox.Show(this, message, "終了の確認",
                 MessageBoxButton.YesNo, exporting ? MessageBoxImage.Warning : MessageBoxImage.Question, MessageBoxResult.No);
@@ -70,6 +79,12 @@ namespace DollIrisGenerator
                 return;
             }
 
+            CloseWithoutAsking(e);
+        }
+
+        /// <summary>Saves the A4 sheet and the window settings, then lets the window close (or cancels it when the sheet could not be saved).</summary>
+        private void CloseWithoutAsking(CancelEventArgs e)
+        {
             if (DataContext is MainViewModel vm && !vm.SavePrintSheetBeforeExit())
             {
                 e.Cancel = true;
@@ -122,7 +137,8 @@ namespace DollIrisGenerator
 
             vm.PairZoomScale = fit;
             ResetAllPans();
-            vm.StatusMessage = $"アイが枠に収まる拡大率 ({vm.PairZoomScale * 100:F0}%) にしました。";
+            // Only for the button: the automatic shrink (start-up, more cells) must not overwrite the last message
+            if (!shrinkOnly) vm.StatusMessage = $"アイが枠に収まる拡大率 ({vm.PairZoomScale * 100:F0}%) にしました。";
         }
 
         // Clicking anywhere in a cell of the split preview makes that cell's design the one being edited.

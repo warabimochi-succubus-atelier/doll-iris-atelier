@@ -29,12 +29,20 @@
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
-        <!-- One row of the A4 sheet list; shared by the 「A4印刷・テンプレート」 tab and the 「履歴・お気に入り」 tab -->
+        <!-- Thin vertical line between the button groups of the top toolbar -->
+        <Style x:Key="ToolbarSeparator" TargetType="Border">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="6,2,10,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{StaticResource BorderDark}"/>
+        </Style>
+
+        <!-- One row of the A4 sheet list; shared by the 「A4印刷・テンプレート」 tab and the 「履歴・お気に入り」 tab.
+             No fixed width: the row follows the panel, so the ✕ button stays visible however narrow the panel gets
+             (the lists use StretchingListBox, which turns off horizontal scrolling). -->
         <DataTemplate x:Key="SheetItemTemplate">
-            <DockPanel Width="400">
-                <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" Width="140" TextTrimming="CharacterEllipsis"
-                           ToolTip="{Binding Parameters.Name}"/>
-                <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"/>
+            <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                     <TextBlock Text="数量:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding PairCount, UpdateSourceTrigger=PropertyChanged}" Width="45" TextAlignment="Center" Margin="0,0,8,0"/>
@@ -42,8 +50,18 @@
                             CommandParameter="{Binding}" ToolTip="この行をシートから削除"
                             Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"/>
                 </StackPanel>
+                <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"
+                           DockPanel.Dock="Right"/>
+                <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Parameters.Name}"/>
             </DockPanel>
         </DataTemplate>
+
+        <!-- List whose rows are as wide as the list: no horizontal scroll bar, long names are trimmed instead -->
+        <Style x:Key="StretchingListBox" TargetType="ListBox">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
 
         <!-- 「計 N 行 / 数量合計 M セット」 for the A4 sheet list -->
         <Style x:Key="SheetTotalsText" TargetType="TextBlock">
@@ -97,16 +115,30 @@
                     </Border>
                 </StackPanel>
 
-                <!-- History Undo/Redo & Quick Actions -->
+                <!-- Toolbar: edit history | make a design | keep it | export | about. Thin separators mark the groups.
+                     (乱数シードの変更 is in the 基本 tab, next to the seed.) -->
                 <!-- WrapPanel: buttons move to a second row instead of being cut off in a narrow window -->
                 <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="↩ デザインを元に戻す" Command="{Binding UndoCommand}"
+                    <Button Content="↩ 元に戻す" Command="{Binding UndoCommand}"
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="8,5" Margin="0,2,4,2" ToolTip="デザイン (色・形・模様・ハイライトなど) の変更を1つ前に戻す (Ctrl+Z)。A4シートの配置・余白・間隔は対象外です"/>
 
-                    <Button Content="↪ デザインをやり直す" Command="{Binding RedoCommand}"
+                    <Button Content="↪ やり直す" Command="{Binding RedoCommand}"
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
-                            Padding="8,5" Margin="0,2,8,2" ToolTip="元に戻したデザインの変更をやり直す (Ctrl+Y)。A4シートの配置・余白・間隔は対象外です"/>
+                            Padding="8,5" Margin="0,2,0,2" ToolTip="元に戻したデザインの変更をやり直す (Ctrl+Y)。A4シートの配置・余白・間隔は対象外です"/>
+
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
+
+                    <Button Content="🆕 新しいデザイン" Command="{Binding NewDesignCommand}"
+                            Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
+                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="選択中の枠のデザインを、起動時と同じ初期状態 (虹彩 10mm・正円・標準の配色) に置き換えます。デザインは増えません。前のデザインは ↩ 元に戻す (Ctrl+Z) で戻せます"/>
+
+                    <Button Content="✨ 属性ランダム生成" Command="{Binding RandomizeAttributesCommand}"
+                            Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
+                            Padding="10,5" Margin="0,2,0,2" Cursor="Hand" FontWeight="SemiBold"
+                            ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
 
                     <Button Content="⭐ お気に入りに追加" Command="{Binding AddFavoriteCommand}"
                             Background="#45381A" Foreground="#FFE082" BorderBrush="#FFB300"
@@ -114,20 +146,9 @@
 
                     <Button Content="🖨️ A4シートに追加" Command="{Binding AddCurrentToSheetCommand}"
                             Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="現在のデザインをA4印刷シートの配置アイテムに1行追加"/>
+                            Padding="10,5" Margin="0,2,0,2" Cursor="Hand" ToolTip="現在のデザインをA4印刷シートの配置アイテムに1行追加"/>
 
-                    <Button Content="新規作成" Command="{Binding NewDesignCommand}"
-                            Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="新しい虹彩パラメータを作成"/>
-
-                    <Button Content="🎲 乱数シード更新" Command="{Binding RandomizeSeedCommand}"
-                            Background="#333842" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"
-                            Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="シード値をランダム生成して模様を変位"/>
-
-                    <Button Content="✨ 属性ランダム生成" Command="{Binding RandomizeAttributesCommand}"
-                            Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
-                            Padding="10,5" Margin="0,2,10,2" Cursor="Hand" FontWeight="SemiBold"
-                            ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
 
                     <Button Content="🖼️ PNG 600 DPI" Command="{Binding ExportPng600Command}"
                             Background="#2B3A4A" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
@@ -148,7 +169,9 @@
 
                     <Button Content="📄 A4 PDF 出力" Command="{Binding ExportPdfCommand}"
                             Background="#00695C" Foreground="#FFFFFF" BorderBrush="#00897B"
-                            FontWeight="Bold" Padding="12,5" Margin="0,2,10,2" Cursor="Hand" ToolTip="高精度 ±0.1mm A4印刷用PDFを出力"/>
+                            FontWeight="Bold" Padding="12,5" Margin="0,2,0,2" Cursor="Hand" ToolTip="高精度 ±0.1mm A4印刷用PDFを出力"/>
+
+                    <Border Style="{StaticResource ToolbarSeparator}"/>
 
                     <Button Content="ⓘ" Click="OnAboutClick" FontSize="14"
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
@@ -181,9 +204,9 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,12,2">
                             <TextBlock Text="表示モード:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
                             
-                            <RadioButton Content="左右ペア (Pair)" Margin="0,0,12,0"
+                            <RadioButton Content="左右ペア" Margin="0,0,12,0"
                                          IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pair}"/>
-                            <RadioButton Content="A4シート (Sheet)" Margin="0,0,16,0"
+                            <RadioButton Content="A4シート" Margin="0,0,16,0"
                                          IsChecked="{Binding PreviewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=A4Sheet}"/>
                         </StackPanel>
 
@@ -279,6 +302,7 @@
                                 <Grid>
                                     <controls:IrisPreviewControl Parameters="{Binding Iris}"
                                                                  PreviewMode="Pair"
+                                                                 ShowEyeLabels="{Binding DataContext.IsCompareSplit, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource InverseBoolConverter}}"
                                                                  ZoomScale="{Binding DataContext.PairZoomScale, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  ShowCutLines="{Binding DataContext.ShowCutLines, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  ShowCenterMarks="{Binding DataContext.ShowCenterMarks, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
@@ -339,16 +363,16 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
                                 <!-- Iris presets: colors plus pupil, rays, sparkles, layers and symbol, so they sit here rather than in 色 -->
-                                <GroupBox Header="虹彩プリセット (Section 7) &amp; 共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <GroupBox Header="虹彩プリセット・共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <TextBlock Text="プリセットを選んで、色・瞳孔・放射ライン・ラメ・ハイライトなどをまとめて適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
                                         <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Margin="0,0,0,6"/>
                                         <TextBlock Text="{Binding SelectedPreset.Description}" Foreground="#80D8FF" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
 
-                                        <!-- Rename / remove: only for presets the user added (the built-in ones stay as they are) -->
-                                        <DockPanel Margin="0,0,0,6" IsEnabled="{Binding IsSelectedPresetUserMade}"
-                                                   ToolTip="名前の変更と削除は、追加したプリセットだけで使えます (内蔵プリセットは変更できません)"
-                                                   ToolTipService.ShowOnDisabled="True">
+                                        <!-- Rename / remove: shown only for presets the user added (the built-in ones stay as they are),
+                                             instead of a greyed-out row that is in view most of the time -->
+                                        <DockPanel Margin="0,0,0,6"
+                                                   Visibility="{Binding IsSelectedPresetUserMade, Converter={StaticResource BoolToVisConverter}}">
                                             <Button Content="🗑 削除" Command="{Binding RemovePresetCommand}" DockPanel.Dock="Right"
                                                     Background="#4A2430" Foreground="#FFCDD2" Padding="8,2" Margin="6,0,0,0" FontSize="11"
                                                     ToolTip="選択中の追加したプリセットを一覧から削除します (今のデザインは変わりません)"/>
@@ -376,7 +400,7 @@
                                 </GroupBox>
 
                                 <!-- Basic Parameters & Elliptical Settings -->
-                                <GroupBox Header="基本設定・サイズ・楕円形状 (Section 5, 6, 20)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <GroupBox Header="基本設定・サイズ・楕円形状" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <!-- Design Name -->
                                         <TextBlock Text="デザイン名:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,2"/>
@@ -404,9 +428,9 @@
                                         <!-- Shape -->
                                         <TextBlock Text="虹彩形状 (正円・楕円対応):" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <RadioButton Content="正円 (Circle)" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                            <RadioButton Content="縦長楕円 (Vertical)" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=VerticalOval}"/>
-                                            <RadioButton Content="横長楕円 (Horizontal)" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=HorizontalOval}"/>
+                                            <RadioButton Content="正円" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                            <RadioButton Content="縦長楕円" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=VerticalOval}"/>
+                                            <RadioButton Content="横長楕円" Margin="0,0,12,0" IsChecked="{Binding CurrentIris.Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=HorizontalOval}"/>
                                         </StackPanel>
 
                                         <!-- Aspect Ratio for Oval -->
@@ -425,7 +449,7 @@
 
                                         <!-- Seed -->
                                         <DockPanel Margin="0,4,0,0">
-                                            <TextBlock Text="乱数シード (Section 4.2):" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="乱数シード:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                             <Button Content="🎲 変更" Command="{Binding RandomizeSeedCommand}" DockPanel.Dock="Right" Padding="8,2" Margin="6,0,0,0" Background="#333842" Foreground="#80D8FF"/>
                                             <TextBox Text="{Binding CurrentIris.Seed, UpdateSourceTrigger=PropertyChanged}" Width="100" HorizontalAlignment="Right"/>
                                         </DockPanel>
@@ -467,7 +491,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="虹彩カラー設定 (Section 7)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="虹彩カラー設定" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない (すべての色)" IsChecked="{Binding LockColors}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・オーロラ層・星雲・デザイン名をランダム生成で変えない"/>
                                         </StackPanel>
@@ -556,7 +580,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="瞳孔模様 (Section 9)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="瞳孔模様" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockPupil}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色をランダム生成で変えない"/>
                                         </StackPanel>
@@ -565,11 +589,11 @@
                                         <!-- Pupil Shape -->
                                         <TextBlock Text="瞳孔形状:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
                                         <WrapPanel Margin="0,0,0,8">
-                                            <RadioButton Content="正円 (Round)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
+                                            <RadioButton Content="正円" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
                                             <RadioButton Content="縦長楕円" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=VerticalOval}"/>
                                             <RadioButton Content="猫目スリット" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                             <RadioButton Content="ハート型" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
-                                            <RadioButton Content="星型 (Star)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star}"/>
+                                            <RadioButton Content="星型" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star}"/>
                                         </WrapPanel>
 
                                         <!-- Pupil Size -->
@@ -625,7 +649,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="放射模様 (Section 8)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="放射模様" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockRays}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="放射模様の本数・線幅・長さ・強度・ランダム性・内側半径・繊維の質感・色をランダム生成で変えない"/>
                                         </StackPanel>
@@ -710,8 +734,8 @@
                     <TabItem Header="A4印刷・テンプレート">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
-                                <!-- PDF Template Selection (Section 20) -->
-                                <GroupBox Header="PDFテンプレート選択 (Section 20)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <!-- PDF Template Selection -->
+                                <GroupBox Header="PDFテンプレート選択" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <TextBlock Text="ドールサイズや用途に合わせた専用レイアウトを適用:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,4"/>
                                         <ComboBox ItemsSource="{Binding PdfTemplates}" SelectedItem="{Binding SelectedPdfTemplate}" DisplayMemberPath="Name" Margin="0,0,0,4"/>
@@ -724,7 +748,7 @@
                                 </GroupBox>
 
                                 <!-- Sheet Item Management -->
-                                <GroupBox Header="A4シート配置アイテム管理 (Section 15)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <GroupBox Header="A4シート配置アイテム管理" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <WrapPanel Margin="0,0,0,8">
                                             <Button Content="➕ 現在のデザインをシートに追加" Command="{Binding AddCurrentToSheetCommand}"
@@ -737,13 +761,14 @@
 
                                         <!-- Tall list (about 14 rows): the settings below can be reached by scrolling -->
                                         <ListBox ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
+                                                 Style="{StaticResource StretchingListBox}" controls:ScrollChaining.IsEnabled="True"
                                                  Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Height="380" Margin="0,0,0,4"/>
                                         <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right" Margin="0,0,4,4"/>
                                     </StackPanel>
                                 </GroupBox>
 
                                 <!-- Grid Imposition Settings -->
-                                <GroupBox Header="面付け・レイアウト設定 (Section 15)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <GroupBox Header="面付け・レイアウト設定" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <CheckBox Content="配置数をサイズと余白から自動計算する" IsChecked="{Binding SheetConfig.AutoCalculateGrid}" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
@@ -754,13 +779,13 @@
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0">
-                                                <TextBlock Text="手動列数 (Columns):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                <TextBlock Text="手動列数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                 <Slider Minimum="1" Maximum="12" Value="{Binding SheetConfig.ManualColumns}" TickFrequency="1" IsSnapToTickEnabled="True"
                                                         IsEnabled="{Binding SheetConfig.AutoCalculateGrid, Converter={StaticResource InverseBoolConverter}}"/>
                                                 <TextBlock Text="{Binding SheetConfig.ManualColumns, StringFormat='{}{0} 列'}" FontSize="11" HorizontalAlignment="Right" Foreground="#80D8FF"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
-                                                <TextBlock Text="手動行数 (Rows):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                <TextBlock Text="手動行数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                 <Slider Minimum="1" Maximum="20" Value="{Binding SheetConfig.ManualRows}" TickFrequency="1" IsSnapToTickEnabled="True"
                                                         IsEnabled="{Binding SheetConfig.AutoCalculateGrid, Converter={StaticResource InverseBoolConverter}}"/>
                                                 <TextBlock Text="{Binding SheetConfig.ManualRows, StringFormat='{}{0} 行'}" FontSize="11" HorizontalAlignment="Right" Foreground="#80D8FF"/>
@@ -826,7 +851,7 @@
                                 </GroupBox>
 
                                 <!-- Print Guides Group -->
-                                <GroupBox Header="印刷補助マーク (Section 15)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,14" Padding="8">
+                                <GroupBox Header="印刷補助マーク" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,14" Padding="8">
                                     <StackPanel>
                                         <CheckBox Content="✂ カットライン印刷 (円形切り抜き用破線)" IsChecked="{Binding SheetConfig.ShowCutLines}" Margin="0,0,0,4"/>
                                         <CheckBox Content="➕ センターマーク印刷 (レジン盛り・カボション芯出し用十字)" IsChecked="{Binding SheetConfig.ShowCenterMarks}" Margin="0,0,0,4"/>
@@ -863,7 +888,7 @@
 
                             <!-- Favorites Header (add new favorites with 「⭐ お気に入りに追加」 in the top toolbar) -->
                             <DockPanel Grid.Row="0" Margin="0,0,0,4">
-                                <TextBlock Text="⭐ お気に入り登録リスト (Section 20)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="⭐ お気に入り登録リスト" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="📥 インポート" Command="{Binding ImportFavoritesCommand}" Padding="6,2" Margin="0,0,4,0" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"
                                             ToolTip="お気に入りファイル (*.irisfav.json) またはデザイン単体の JSON ファイルを読み込んで一覧に追加"/>
@@ -887,12 +912,13 @@
 
                             <!-- Favorites List -->
                             <ListBox x:Name="FavoritesList" Grid.Row="2" ItemsSource="{Binding Favorites}" SelectedItem="{Binding SelectedFavorite}"
-                                     SelectionMode="Extended"
+                                     SelectionMode="Extended" Style="{StaticResource StretchingListBox}"
                                      Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <!-- Transparent background so a double-click anywhere on the row restores it -->
-                                        <DockPanel Width="440" Margin="2" Background="Transparent">
+                                        <!-- Transparent background so a double-click anywhere on the row restores it.
+                                             Buttons and date are docked right first, so they stay visible and the name takes what is left. -->
+                                        <DockPanel Margin="2" Background="Transparent">
                                             <DockPanel.InputBindings>
                                                 <MouseBinding Gesture="LeftDoubleClick"
                                                               Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -903,12 +929,7 @@
                                                     <SolidColorBrush Color="{Binding Parameters.BaseColor}"/>
                                                 </Border.Background>
                                             </Border>
-                                            <StackPanel Width="196" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"/>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                                                 <Button Content="復元" Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0" Background="#1E3A5F" Foreground="#80D8FF" FontSize="10"
                                                         ToolTip="このお気に入りを現在のデザインとして読み込み (行のダブルクリックでも同じ)"/>
@@ -919,6 +940,12 @@
                                                         CommandParameter="{Binding}" Padding="6,3" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="10"
                                                         ToolTip="このお気に入りを削除"/>
                                             </StackPanel>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"
+                                                       DockPanel.Dock="Right"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -926,31 +953,33 @@
 
                             <!-- A4 Sheet Items (same list as the 「A4印刷・テンプレート」 tab), to see what was added -->
                             <DockPanel Grid.Row="3" Margin="0,0,0,4">
-                                <TextBlock Text="🖨️ A4シート配置アイテム (Section 15)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="🖨️ A4シート配置アイテム" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                 <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right"/>
                             </DockPanel>
                             <ListBox Grid.Row="4" ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
-                                     Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10"/>
+                                     Style="{StaticResource StretchingListBox}" Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10"/>
 
                             <!-- History Header -->
                             <DockPanel Grid.Row="5" Margin="0,0,0,4">
-                                <TextBlock Text="⏪ 生成履歴タイムライン (Section 20)" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="⏪ 生成履歴タイムライン" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                 <Button Content="履歴クリア" Command="{Binding ClearHistoryCommand}" HorizontalAlignment="Right" Padding="6,2" Background="#333842" Foreground="{StaticResource TextSecondary}" FontSize="10"/>
                             </DockPanel>
 
                             <!-- History List -->
-                            <ListBox Grid.Row="6" ItemsSource="{Binding HistoryItems}"
+                            <ListBox Grid.Row="6" ItemsSource="{Binding HistoryItems}" Style="{StaticResource StretchingListBox}"
                                      Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <DockPanel Width="440" Margin="2">
-                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Width="60"/>
-                                            <StackPanel Width="270" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11"/>
-                                                <TextBlock Text="{Binding Details}" Foreground="{StaticResource TextMuted}" FontSize="9"/>
-                                            </StackPanel>
+                                        <DockPanel Margin="2">
                                             <Button Content="この状態に戻す" Command="{Binding DataContext.RestoreHistoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="8,3" Background="#333842" Foreground="#80D8FF" FontSize="10"/>
+                                                    CommandParameter="{Binding}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                    Padding="8,3" Background="#333842" Foreground="#80D8FF" FontSize="10"/>
+                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Width="60"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Details}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Details}"/>
+                                            </StackPanel>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -968,7 +997,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="外輪 (Limbal Ring - Section 10)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="外輪" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLimbalRing}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="外輪の太さ・透明度・ぼかし・色をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1003,7 +1032,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="粒子模様・ラメ (Section 9)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="粒子模様・ラメ" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockParticles}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="ラメの数・大きさ・透明度・分布範囲・光るラメ (にじみ・十字フレア)・色をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1074,7 +1103,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="装飾記号 (Section 11)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="装飾記号" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockSymbols}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="装飾記号の一覧をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1194,7 +1223,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="レンズ風パターン (Section 20)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="レンズ風パターン" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLens}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="レンズ風パターンのオン／オフと各設定・色をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1243,7 +1272,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="オッドアイ設定・テンプレート (Section 20)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="オッドアイ設定・テンプレート" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockOddEye}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="オッドアイのオン／オフ、反対側の目の色、模様のずらし量をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1301,7 +1330,7 @@
                     <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
                             <StackPanel>
-                                <GroupBox Header="左右対称設定 (Section 13)" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                <GroupBox Header="左右対称設定" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>
                                         <CheckBox Content="ハイライトも左右反転する (完全鏡像)"
                                                   IsChecked="{Binding CurrentIris.MirrorHighlightsWithIris}"
@@ -1313,7 +1342,7 @@
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="ハイライト設定 (Section 12)" VerticalAlignment="Center"/>
+                                            <TextBlock Text="ハイライト設定" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockHighlights}" Style="{StaticResource RandomizeLockCheckBox}"
                                                       ToolTip="ハイライトの一覧をランダム生成で変えない"/>
                                         </StackPanel>
@@ -1338,10 +1367,10 @@
 
                                                             <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
                                                             <WrapPanel Margin="0,0,0,6">
-                                                                <RadioButton Content="正円 (Circle)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                                <RadioButton Content="楕円 (Oval)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
-                                                                <RadioButton Content="4点星 (Star)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                                <RadioButton Content="菱形 (Rhombus)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
+                                                                <RadioButton Content="正円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                                <RadioButton Content="楕円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
+                                                                <RadioButton Content="4点星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                                <RadioButton Content="菱形" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
                                                             </WrapPanel>
 
                                                             <DockPanel Margin="0,0,0,6">

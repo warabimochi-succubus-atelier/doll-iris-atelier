@@ -87,6 +87,18 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestSuccessfulExportReportsInStatusBarWithoutDialog()
+        {
+            _dialogs.NextSavePath = PathIn("pair.svg");
+            _vm.ExportSvgCommand.Execute(null);
+
+            Assert.True(File.Exists(PathIn("pair.svg")));
+            Assert.Contains("pair.svg", _vm.StatusMessage);
+            Assert.Empty(_dialogs.Infos); // no modal "done" box to click away after every export
+            Assert.Empty(_dialogs.Errors);
+        }
+
+        [Fact]
         public void TestImportingBrokenJsonReportsErrorAndKeepsFavorites()
         {
             File.WriteAllText(PathIn("broken.json"), "{ not json");
