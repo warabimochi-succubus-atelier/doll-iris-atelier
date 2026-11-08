@@ -32,6 +32,8 @@ namespace DollIrisGenerator.ViewModels
             [nameof(IrisParameters.NebulaDensity)] = "星雲の量",
             [nameof(IrisParameters.NebulaScale)] = "星雲の細かさ",
             [nameof(IrisParameters.NebulaSwirl)] = "星雲の渦巻き",
+            [nameof(IrisParameters.LightStrength)] = "光の強さ",
+            [nameof(IrisParameters.LightAngle)] = "光の向き",
             [nameof(IrisParameters.LimbalRingThickness)] = "外輪の幅",
             [nameof(IrisParameters.LimbalRingColor)] = "外輪の色",
             [nameof(IrisParameters.LimbalRingOpacity)] = "外輪の透明度",

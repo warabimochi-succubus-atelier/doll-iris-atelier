@@ -87,6 +87,8 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
+        public double? LightStrength { get; set; }
+        public double? LightAngle { get; set; }
 
         // Highlights: null = the app's default highlights
         public List<HighlightItem>? Highlights { get; set; }
@@ -312,6 +314,8 @@ namespace DollIrisGenerator.Models
 
             // Detail settings
             target.LimbalRingThickness = preset.LimbalRingThickness ?? d.LimbalRingThickness;
+            target.LightStrength = preset.LightStrength ?? d.LightStrength;
+            target.LightAngle = preset.LightAngle ?? d.LightAngle;
             target.LimbalRingOpacity = preset.LimbalRingOpacity ?? d.LimbalRingOpacity;
             target.LimbalRingSoftness = preset.LimbalRingSoftness ?? d.LimbalRingSoftness;
             target.PupilOpacity = preset.PupilOpacity ?? d.PupilOpacity;
@@ -435,6 +439,8 @@ namespace DollIrisGenerator.Models
                 ParticleFlareRatio = design.ParticleFlareRatio,
 
                 LimbalRingThickness = design.LimbalRingThickness,
+                LightStrength = design.LightStrength,
+                LightAngle = design.LightAngle,
                 LimbalRingOpacity = design.LimbalRingOpacity,
                 LimbalRingSoftness = design.LimbalRingSoftness,
                 PupilOpacity = design.PupilOpacity,
