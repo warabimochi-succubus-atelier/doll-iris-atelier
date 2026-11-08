@@ -102,10 +102,8 @@ namespace DollIrisGenerator.ViewModels
                 // 1200 DPI rendering is slow: run it off the UI thread so the window stays responsive.
                 // WPF rendering needs an STA thread, so use a dedicated one instead of the thread pool.
                 await RunOnStaThreadAsync(() => PdfExporter.ExportA4SheetToPdf(path, itemsToPrint, configSnapshot));
-                _reportStatus($"高精度 A4 PDF を出力しました (実寸100%印刷推奨): {Path.GetFileName(path)}");
-                _dialogs.ShowInfo(
-                    $"A4印刷用PDFを正常に出力しました！\n\nファイル: {path}\n\n※印刷時はプリンター設定で「実際のサイズ (100%)」を選択して印刷してください。",
-                    "PDF出力完了");
+                // Status bar only: no "done" box to click away after every export
+                _reportStatus($"A4 PDF を出力しました: {Path.GetFileName(path)} — 印刷時はプリンター設定で「実際のサイズ (100%)」を選んでください。");
             }
             catch (Exception ex)
             {
@@ -155,9 +153,6 @@ namespace DollIrisGenerator.ViewModels
             {
                 File.WriteAllText(path, generateSvg());
                 _reportStatus($"SVG ベクターファイルを出力しました: {Path.GetFileName(path)}");
-                _dialogs.ShowInfo(
-                    $"SVGベクターファイルを正常に出力しました！\n\nファイル: {path}\n\nAdobe Illustrator や Inkscape 等で完全にベクター編集・再加工が可能です。",
-                    "SVG出力完了");
             }
             catch (Exception ex)
             {
@@ -183,10 +178,7 @@ namespace DollIrisGenerator.ViewModels
                     showCenterMarks: showCenterMarks
                 );
                 RasterExporter.SaveBitmapToPng(bmp, path);
-                _reportStatus($"{dpi:F0} DPI 高解像度 PNG を出力しました: {Path.GetFileName(path)}");
-                _dialogs.ShowInfo(
-                    $"{dpi:F0} DPI の超高解像度PNG画像を出力しました！\n\nファイル: {path}\nサイズ: {bmp.PixelWidth} × {bmp.PixelHeight} ピクセル",
-                    "PNG出力完了");
+                _reportStatus($"{dpi:F0} DPI 高解像度 PNG を出力しました: {Path.GetFileName(path)} ({bmp.PixelWidth} × {bmp.PixelHeight} ピクセル)");
             }
             catch (Exception ex)
             {

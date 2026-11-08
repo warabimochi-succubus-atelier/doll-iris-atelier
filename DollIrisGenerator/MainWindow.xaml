@@ -29,12 +29,11 @@
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
-        <!-- One row of the A4 sheet list; shared by the 「A4印刷・テンプレート」 tab and the 「履歴・お気に入り」 tab -->
+        <!-- One row of the A4 sheet list; shared by the 「A4印刷・テンプレート」 tab and the 「履歴・お気に入り」 tab.
+             No fixed width: the row follows the panel, so the ✕ button stays visible however narrow the panel gets
+             (the lists use StretchingListBox, which turns off horizontal scrolling). -->
         <DataTemplate x:Key="SheetItemTemplate">
-            <DockPanel Width="400">
-                <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" Width="140" TextTrimming="CharacterEllipsis"
-                           ToolTip="{Binding Parameters.Name}"/>
-                <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"/>
+            <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                     <TextBlock Text="数量:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox Text="{Binding PairCount, UpdateSourceTrigger=PropertyChanged}" Width="45" TextAlignment="Center" Margin="0,0,8,0"/>
@@ -42,8 +41,18 @@
                             CommandParameter="{Binding}" ToolTip="この行をシートから削除"
                             Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"/>
                 </StackPanel>
+                <TextBlock Text="{Binding Parameters.SizeMm, StringFormat='{}{0:F1}mm'}" Foreground="#80D8FF" VerticalAlignment="Center" Width="60"
+                           DockPanel.Dock="Right"/>
+                <TextBlock Text="{Binding Parameters.Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Parameters.Name}"/>
             </DockPanel>
         </DataTemplate>
+
+        <!-- List whose rows are as wide as the list: no horizontal scroll bar, long names are trimmed instead -->
+        <Style x:Key="StretchingListBox" TargetType="ListBox">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
 
         <!-- 「計 N 行 / 数量合計 M セット」 for the A4 sheet list -->
         <Style x:Key="SheetTotalsText" TargetType="TextBlock">
@@ -737,6 +746,7 @@
 
                                         <!-- Tall list (about 14 rows): the settings below can be reached by scrolling -->
                                         <ListBox ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
+                                                 Style="{StaticResource StretchingListBox}" controls:ScrollChaining.IsEnabled="True"
                                                  Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Height="380" Margin="0,0,0,4"/>
                                         <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right" Margin="0,0,4,4"/>
                                     </StackPanel>
@@ -887,12 +897,13 @@
 
                             <!-- Favorites List -->
                             <ListBox x:Name="FavoritesList" Grid.Row="2" ItemsSource="{Binding Favorites}" SelectedItem="{Binding SelectedFavorite}"
-                                     SelectionMode="Extended"
+                                     SelectionMode="Extended" Style="{StaticResource StretchingListBox}"
                                      Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <!-- Transparent background so a double-click anywhere on the row restores it -->
-                                        <DockPanel Width="440" Margin="2" Background="Transparent">
+                                        <!-- Transparent background so a double-click anywhere on the row restores it.
+                                             Buttons and date are docked right first, so they stay visible and the name takes what is left. -->
+                                        <DockPanel Margin="2" Background="Transparent">
                                             <DockPanel.InputBindings>
                                                 <MouseBinding Gesture="LeftDoubleClick"
                                                               Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -903,12 +914,7 @@
                                                     <SolidColorBrush Color="{Binding Parameters.BaseColor}"/>
                                                 </Border.Background>
                                             </Border>
-                                            <StackPanel Width="196" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"/>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                                                 <Button Content="復元" Command="{Binding DataContext.LoadFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0" Background="#1E3A5F" Foreground="#80D8FF" FontSize="10"
                                                         ToolTip="このお気に入りを現在のデザインとして読み込み (行のダブルクリックでも同じ)"/>
@@ -918,6 +924,12 @@
                                                 <Button Content="✕" Command="{Binding DataContext.RemoveFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}" Padding="6,3" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="10"
                                                         ToolTip="このお気に入りを削除"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"
+                                                       DockPanel.Dock="Right"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                                <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </DockPanel>
                                     </DataTemplate>
@@ -930,7 +942,7 @@
                                 <TextBlock Style="{StaticResource SheetTotalsText}" HorizontalAlignment="Right"/>
                             </DockPanel>
                             <ListBox Grid.Row="4" ItemsSource="{Binding SheetItems}" SelectedItem="{Binding SelectedSheetItem}" ItemTemplate="{StaticResource SheetItemTemplate}"
-                                     Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10"/>
+                                     Style="{StaticResource StretchingListBox}" Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10"/>
 
                             <!-- History Header -->
                             <DockPanel Grid.Row="5" Margin="0,0,0,4">
@@ -939,18 +951,20 @@
                             </DockPanel>
 
                             <!-- History List -->
-                            <ListBox Grid.Row="6" ItemsSource="{Binding HistoryItems}"
+                            <ListBox Grid.Row="6" ItemsSource="{Binding HistoryItems}" Style="{StaticResource StretchingListBox}"
                                      Background="{StaticResource BgInput}" BorderBrush="{StaticResource BorderDark}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <DockPanel Width="440" Margin="2">
-                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Width="60"/>
-                                            <StackPanel Width="270" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11"/>
-                                                <TextBlock Text="{Binding Details}" Foreground="{StaticResource TextMuted}" FontSize="9"/>
-                                            </StackPanel>
+                                        <DockPanel Margin="2">
                                             <Button Content="この状態に戻す" Command="{Binding DataContext.RestoreHistoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="8,3" Background="#333842" Foreground="#80D8FF" FontSize="10"/>
+                                                    CommandParameter="{Binding}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                    Padding="8,3" Background="#333842" Foreground="#80D8FF" FontSize="10"/>
+                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss}'}" Foreground="{StaticResource TextMuted}" FontSize="10" VerticalAlignment="Center" Width="60"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Details}" Foreground="{StaticResource TextMuted}" FontSize="9" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Details}"/>
+                                            </StackPanel>
                                         </DockPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
