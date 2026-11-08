@@ -1185,7 +1185,7 @@ namespace DollIrisGenerator.Tests
 
             // リセット goes back to each view's own starting zoom
             vm.ZoomResetCommand.Execute(null);
-            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, vm.PairZoomScale, 9);
+            Assert.Equal(IrisPreviewControl.DefaultPairZoom, vm.PairZoomScale, 9);
             vm.PreviewMode = PreviewMode.A4Sheet;
             vm.ZoomResetCommand.Execute(null);
             Assert.Equal(1.0, vm.SheetZoomScale, 9);
@@ -1195,13 +1195,13 @@ namespace DollIrisGenerator.Tests
         public void TestLineWidthsUseTheSameMillimetreUnitEverywhere()
         {
             // 1 style unit = 1 screen DIP at the default 360% zoom
-            Assert.Equal(25.4 / (96.0 * 3.6), WpfIrisRenderer.MmPerStyleUnit, 9);
-            Assert.Equal(WpfIrisRenderer.DefaultPreviewZoom, new MainViewModel().ZoomScale, 9);
+            Assert.Equal(25.4 / (96.0 * 3.6), IrisStyle.MmPerStyleUnit, 9);
+            Assert.Equal(IrisPreviewControl.DefaultPairZoom, new MainViewModel().ZoomScale, 9);
 
             // Plain lines (the fiber look, on by default, draws filled outlines instead of strokes)
             var p = new IrisParameters { RayThickness = 1.2, RayTaper = 0, RayWidthVariation = 0, RayCurve = 0 };
             string svg = SvgExporter.GeneratePairSvg(p);
-            string expectedWidth = (1.2 * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+            string expectedWidth = (1.2 * IrisStyle.MmPerStyleUnit).ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
             Assert.Contains($"_rays\" stroke=\"{p.RayColor}\" stroke-width=\"{expectedWidth}\"", svg); // plain mm (viewBox units), no "mm" suffix
             Assert.DoesNotContain("mm\" stroke-linecap", svg);
         }

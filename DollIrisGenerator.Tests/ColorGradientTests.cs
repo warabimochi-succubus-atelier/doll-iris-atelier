@@ -303,16 +303,15 @@ namespace DollIrisGenerator.Tests
             return p;
         }
 
+        /// <summary>
+        /// The eye as printed (its SVG drawn by resvg): an 18 mm iris at 10 px / mm on a transparent (black) 200 px
+        /// canvas, centered at (100, 100), so the iris radius is 90 px.
+        /// </summary>
         private static Func<int, int, Color> Render(IrisParameters p, bool rightEye)
         {
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, 200, 200));
-                WpfIrisRenderer.RenderIris(dc, new Point(100, 100), 9.0, 10.0, p, rightEye);
-            }
-            var bmp = new RenderTargetBitmap(200, 200, 96, 96, PixelFormats.Pbgra32);
-            bmp.Render(visual);
+            p.SizeMm = 18.0;
+            var bmp = RasterExporter.RenderSingleToBitmap(p, rightEye, dpi: 254.0, whiteBackground: false); // 18 + 2 × 1 mm
+            Assert.Equal(200, bmp.PixelWidth);
             var px = new byte[200 * 200 * 4];
             bmp.CopyPixels(px, 200 * 4, 0);
             return (x, y) =>
@@ -394,17 +393,6 @@ namespace DollIrisGenerator.Tests
                 var img = Render(p, rightEye: false);
                 AssertRedDominant(img(100 - 30, 100));
                 AssertBlueDominant(img(100 + 30, 100));
-            });
-        }
-
-        [Fact]
-        public void TestSolidColorsRenderExactlyAsSolidBrushes()
-        {
-            RunOnSta(() =>
-            {
-                var brush = WpfIrisRenderer.CreateFillBrush("#336699", 0.5, new Rect(0, 0, 10, 10));
-                var solid = Assert.IsType<SolidColorBrush>(brush);
-                Assert.Equal(WpfGeometry.ParseHexColor("#336699", 0.5), solid.Color);
             });
         }
 
