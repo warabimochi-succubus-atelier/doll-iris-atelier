@@ -9,69 +9,33 @@ namespace DollIrisGenerator.Services
 {
     public static class RasterExporter
     {
-        public static RenderTargetBitmap RenderPairToBitmap(
+        // PNG and PDF images are pictures of the exported SVG, drawn by resvg (docs/design/svg-canonical-rendering.md).
+        // The SVG is laid out in mm at its real size; the bitmap is that size rounded up to whole pixels.
+
+        /// <summary>Padding around the pair in the PNG export (mm).</summary>
+        public const double PairPaddingMm = 2.0;
+
+        /// <summary>Padding around one eye in the PDF images (mm); PdfExporter places the image by it.</summary>
+        public const double SingleEyePaddingMm = 1.0;
+
+        /// <summary>The left and right eye (transparent background), as exported to PNG.</summary>
+        public static BitmapSource RenderPairToBitmap(
             IrisParameters p,
             double dpi = 1200.0,
             double pairSpacingMm = 4.0,
             bool showCutLines = true,
             bool showCenterMarks = true)
         {
-            // Drawing coordinates are WPF DIPs (1/96 inch); RenderTargetBitmap scales them to the target DPI.
-            // (Drawing in pixel units here would be scaled a second time and land off-canvas.)
-            double pixelsPerMm = dpi / 25.4;
-            double dipPerMm = 96.0 / 25.4;
-
-            // Canvas holds the eye's real footprint (bigger than its size when an oval is tilted)
             var (widthMm, heightMm) = SheetLayout.GetEyeFootprintMm(p);
+            double totalWidthMm = (widthMm * 2.0) + pairSpacingMm + (PairPaddingMm * 2.0);
+            double totalHeightMm = heightMm + (PairPaddingMm * 2.0);
 
-            double paddingMm = 2.0;
-            double totalWidthMm = (widthMm * 2.0) + pairSpacingMm + (paddingMm * 2.0);
-            double totalHeightMm = heightMm + (paddingMm * 2.0);
-
-            int pixelWidth = (int)Math.Ceiling(totalWidthMm * pixelsPerMm);
-            int pixelHeight = (int)Math.Ceiling(totalHeightMm * pixelsPerMm);
-
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, pixelWidth * 96.0 / dpi, pixelHeight * 96.0 / dpi));
-
-                double rxMm = widthMm / 2.0;
-                double cyPx = (totalHeightMm / 2.0) * dipPerMm;
-
-                // Left Eye
-                double leftCxPx = (paddingMm + rxMm) * dipPerMm;
-                WpfIrisRenderer.RenderIris(
-                    dc,
-                    new Point(leftCxPx, cyPx),
-                    p.SizeMm / 2.0,
-                    dipPerMm,
-                    p,
-                    isRightEye: false,
-                    showCutLine: showCutLines,
-                    showCenterMark: showCenterMarks
-                );
-
-                // Right Eye
-                double rightCxPx = (paddingMm + rxMm + rxMm + pairSpacingMm + rxMm) * dipPerMm;
-                WpfIrisRenderer.RenderIris(
-                    dc,
-                    new Point(rightCxPx, cyPx),
-                    p.SizeMm / 2.0,
-                    dipPerMm,
-                    p,
-                    isRightEye: true,
-                    showCutLine: showCutLines,
-                    showCenterMark: showCenterMarks
-                );
-            }
-
-            var rtb = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi, dpi, PixelFormats.Pbgra32);
-            rtb.Render(visual);
-            return rtb;
+            string svg = SvgExporter.GeneratePairSvg(p, showCutLines, showCenterMarks, pairSpacingMm, PairPaddingMm);
+            return Rasterize(svg, totalWidthMm, totalHeightMm, dpi, background: null);
         }
 
-        public static RenderTargetBitmap RenderSingleToBitmap(
+        /// <summary>One eye on its tilted footprint plus <see cref="SingleEyePaddingMm"/> each side (for the PDF).</summary>
+        public static BitmapSource RenderSingleToBitmap(
             IrisParameters p,
             bool isRightEye,
             double dpi = 1200.0,
@@ -79,51 +43,20 @@ namespace DollIrisGenerator.Services
             bool showCenterMarks = false,
             bool whiteBackground = true)
         {
-            // Drawing coordinates are WPF DIPs (1/96 inch); RenderTargetBitmap scales them to the target DPI.
-            // (Drawing in pixel units here would be scaled a second time and land off-canvas.)
-            double pixelsPerMm = dpi / 25.4;
-            double dipPerMm = 96.0 / 25.4;
-
-            // Canvas holds the eye's real footprint (bigger than its size when an oval is tilted)
             var (widthMm, heightMm) = SheetLayout.GetEyeFootprintMm(p);
+            double totalWidthMm = widthMm + (SingleEyePaddingMm * 2.0);
+            double totalHeightMm = heightMm + (SingleEyePaddingMm * 2.0);
 
-            double paddingMm = 1.0;
-            double totalWidthMm = widthMm + (paddingMm * 2.0);
-            double totalHeightMm = heightMm + (paddingMm * 2.0);
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye, showCutLines, showCenterMarks, SingleEyePaddingMm);
+            return Rasterize(svg, totalWidthMm, totalHeightMm, dpi, whiteBackground ? Colors.White : null);
+        }
 
-            int pixelWidth = (int)Math.Ceiling(totalWidthMm * pixelsPerMm);
-            int pixelHeight = (int)Math.Ceiling(totalHeightMm * pixelsPerMm);
-
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                if (whiteBackground)
-                {
-                    dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, pixelWidth * 96.0 / dpi, pixelHeight * 96.0 / dpi));
-                }
-                else
-                {
-                    dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, pixelWidth * 96.0 / dpi, pixelHeight * 96.0 / dpi));
-                }
-
-                double cxPx = (totalWidthMm / 2.0) * dipPerMm;
-                double cyPx = (totalHeightMm / 2.0) * dipPerMm;
-
-                WpfIrisRenderer.RenderIris(
-                    dc,
-                    new Point(cxPx, cyPx),
-                    p.SizeMm / 2.0,
-                    dipPerMm,
-                    p,
-                    isRightEye: isRightEye,
-                    showCutLine: showCutLines,
-                    showCenterMark: showCenterMarks
-                );
-            }
-
-            var rtb = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi, dpi, PixelFormats.Pbgra32);
-            rtb.Render(visual);
-            return rtb;
+        private static BitmapSource Rasterize(string svg, double widthMm, double heightMm, double dpi, Color? background)
+        {
+            double pixelsPerMm = dpi / 25.4;
+            int pixelWidth = (int)Math.Ceiling(widthMm * pixelsPerMm);
+            int pixelHeight = (int)Math.Ceiling(heightMm * pixelsPerMm);
+            return ResvgRasterizer.RenderAtDpi(svg, dpi, pixelWidth, pixelHeight, background);
         }
 
         public static void SaveBitmapToPng(BitmapSource bitmap, string filePath)

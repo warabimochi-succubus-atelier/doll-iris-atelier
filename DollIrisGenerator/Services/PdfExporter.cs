@@ -16,6 +16,9 @@ namespace DollIrisGenerator.Services
 
         public static double MmToPt(double mm) => mm * PtPerMm;
 
+        /// <summary>Resolution of the embedded eye images.</summary>
+        private const double EyeImageDpi = 1200.0;
+
         public static void ExportA4SheetToPdf(
             string filePath,
             IReadOnlyList<SheetItem> items,
@@ -106,7 +109,7 @@ namespace DollIrisGenerator.Services
                         string cacheKeyLeft = "L_" + designKey;
                         if (!imageCache.TryGetValue(cacheKeyLeft, out var leftImg))
                         {
-                            var bmp = RasterExporter.RenderSingleToBitmap(curP, isRightEye: false, dpi: 1200.0, showCutLines: false, showCenterMarks: false);
+                            var bmp = RasterExporter.RenderSingleToBitmap(curP, isRightEye: false, dpi: EyeImageDpi, showCutLines: false, showCenterMarks: false);
                             byte[] jpegBytes = RasterExporter.SaveBitmapToJpegBytes(bmp, 98);
                             int objId = writer.WriteImageObject(bmp.PixelWidth, bmp.PixelHeight, jpegBytes);
                             leftImg = (objId, bmp.PixelWidth, bmp.PixelHeight);
@@ -117,7 +120,7 @@ namespace DollIrisGenerator.Services
                         string cacheKeyRight = "R_" + designKey;
                         if (!imageCache.TryGetValue(cacheKeyRight, out var rightImg))
                         {
-                            var bmp = RasterExporter.RenderSingleToBitmap(curP, isRightEye: true, dpi: 1200.0, showCutLines: false, showCenterMarks: false);
+                            var bmp = RasterExporter.RenderSingleToBitmap(curP, isRightEye: true, dpi: EyeImageDpi, showCutLines: false, showCenterMarks: false);
                             byte[] jpegBytes = RasterExporter.SaveBitmapToJpegBytes(bmp, 98);
                             int objId = writer.WriteImageObject(bmp.PixelWidth, bmp.PixelHeight, jpegBytes);
                             rightImg = (objId, bmp.PixelWidth, bmp.PixelHeight);
@@ -130,18 +133,23 @@ namespace DollIrisGenerator.Services
                         pageImages[leftResName] = leftImg.ObjId;
                         pageImages[rightResName] = rightImg.ObjId;
 
-                        // RenderSingleToBitmap draws the eye's tilted footprint plus 1.0mm padding on each side
+                        // RenderSingleToBitmap draws the eye's tilted footprint plus its padding on each side, at its
+                        // real size from the image's top-left corner; the image is that size rounded up to whole pixels
+                        // and is placed at its own size (not stretched over the rounding).
                         var (footW_Mm, footH_Mm) = SheetLayout.GetEyeFootprintMm(curP);
-                        double imgTotalW_Mm = footW_Mm + 2.0;
-                        double imgTotalH_Mm = footH_Mm + 2.0;
+                        double imgTotalW_Mm = footW_Mm + RasterExporter.SingleEyePaddingMm * 2.0;
+                        double imgTotalH_Mm = footH_Mm + RasterExporter.SingleEyePaddingMm * 2.0;
+                        double imgW_Mm = leftImg.W * 25.4 / EyeImageDpi;
+                        double imgH_Mm = leftImg.H * 25.4 / EyeImageDpi;
 
+                        // PDF y grows upwards: the image's top edge is half the canvas above the eye center
                         double imgLeftX_Pt = MmToPt(leftCx_Mm - imgTotalW_Mm / 2.0);
-                        double imgLeftY_Pt = MmToPt(leftCy_Mm - imgTotalH_Mm / 2.0);
+                        double imgLeftY_Pt = MmToPt(leftCy_Mm + imgTotalH_Mm / 2.0 - imgH_Mm);
                         double imgRightX_Pt = MmToPt(rightCx_Mm - imgTotalW_Mm / 2.0);
-                        double imgRightY_Pt = MmToPt(rightCy_Mm - imgTotalH_Mm / 2.0);
+                        double imgRightY_Pt = MmToPt(rightCy_Mm + imgTotalH_Mm / 2.0 - imgH_Mm);
 
-                        double imgW_Pt = MmToPt(imgTotalW_Mm);
-                        double imgH_Pt = MmToPt(imgTotalH_Mm);
+                        double imgW_Pt = MmToPt(imgW_Mm);
+                        double imgH_Pt = MmToPt(imgH_Mm);
 
                         // Draw Left Image (cm = current transformation matrix)
                         pageContentSb.AppendLine("q");

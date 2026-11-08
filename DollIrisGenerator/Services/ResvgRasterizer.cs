@@ -18,6 +18,26 @@ namespace DollIrisGenerator.Services
         private const string Lib = "resvg";
 
         /// <summary>
+        /// Whether resvg.dll loads and draws (checked once at startup). <paramref name="error"/> says why not.
+        /// </summary>
+        public static bool TryCheck(out string? error)
+        {
+            try
+            {
+                var px = RenderToBgra("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"><rect width=\"1\" height=\"1\" fill=\"#FF0000\" /></svg>", 1, 1);
+                if (px[2] != 255 || px[3] != 255) throw new InvalidOperationException("unexpected pixels");
+                error = null;
+                return true;
+            }
+            catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException
+                                           or ResvgException or InvalidOperationException)
+            {
+                error = $"{ex.GetType().Name}: {ex.Message}";
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Renders the whole SVG stretched to <paramref name="widthPx"/> × <paramref name="heightPx"/>
         /// (the SVG's width / height, e.g. in mm, map onto the full bitmap), over <paramref name="background"/>
         /// (transparent when null). Returns a frozen Pbgra32 bitmap at <paramref name="dpi"/>.
@@ -34,7 +54,26 @@ namespace DollIrisGenerator.Services
         /// Same as <see cref="Render"/>, as premultiplied BGRA bytes (row after row, 4 bytes a pixel):
         /// the layout of <see cref="PixelFormats.Pbgra32"/>.
         /// </summary>
-        public static byte[] RenderToBgra(string svg, int widthPx, int heightPx, Color? background = null)
+        public static byte[] RenderToBgra(string svg, int widthPx, int heightPx, Color? background = null) =>
+            RenderToBgra(svg, widthPx, heightPx, background, scale: null);
+
+        /// <summary>
+        /// Renders the SVG at its real size (its width / height in mm, in, px…) at <paramref name="dpi"/>, from the
+        /// top-left corner, onto a <paramref name="widthPx"/> × <paramref name="heightPx"/> bitmap: geometry lands
+        /// exactly where its mm say, whatever the bitmap's rounding. Returns a frozen Pbgra32 bitmap at that DPI.
+        /// </summary>
+        public static BitmapSource RenderAtDpi(string svg, double dpi, int widthPx, int heightPx, Color? background = null)
+        {
+            if (dpi <= 0) throw new ArgumentOutOfRangeException(nameof(dpi), "The DPI must be positive.");
+            // resvg sizes the SVG in CSS pixels (96 per inch)
+            byte[] bgra = RenderToBgra(svg, widthPx, heightPx, background, scale: dpi / 96.0);
+            var bmp = BitmapSource.Create(widthPx, heightPx, dpi, dpi, PixelFormats.Pbgra32, null, bgra, widthPx * 4);
+            bmp.Freeze();
+            return bmp;
+        }
+
+        /// <summary>Stretches the SVG over the bitmap (<paramref name="scale"/> null) or scales it uniformly.</summary>
+        private static byte[] RenderToBgra(string svg, int widthPx, int heightPx, Color? background, double? scale)
         {
             ArgumentNullException.ThrowIfNull(svg);
             if (widthPx <= 0 || heightPx <= 0) throw new ArgumentOutOfRangeException(nameof(widthPx), "The bitmap size must be positive.");
@@ -56,8 +95,8 @@ namespace DollIrisGenerator.Services
 
                 var transform = new ResvgTransform
                 {
-                    A = widthPx / size.Width,
-                    D = heightPx / size.Height,
+                    A = scale is double s ? (float)s : widthPx / size.Width,
+                    D = scale is double t ? (float)t : heightPx / size.Height,
                 };
                 resvg_render(tree, transform, (uint)widthPx, (uint)heightPx, pixels);
 

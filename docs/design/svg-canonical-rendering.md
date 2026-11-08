@@ -1,7 +1,7 @@
 # 設計: SVG を描画の正本にする
 
 - 作成日: 2026-11-08
-- 状態: 手順 1（resvg の組み込み）・手順 2（見た目をそろえる）済み
+- 状態: 手順 1（resvg の組み込み）・手順 2（見た目をそろえる）・手順 3（PNG・PDF の切り替え）済み
 - 前提: 使用者は作者 1 人のため、保存ファイルの見た目や出力の互換は守らなくてよい
 
 ## 1. 目的
@@ -116,7 +116,12 @@ WPF に残すのは、虹彩の外側のものだけにする。用紙・余白�
 
 1. **resvg の組み込み**: `build-resvg.yml`、`third_party/resvg`、`ResvgRasterizer`、`NOTICE.md`。テスト: 単純な SVG を描くと、指定した大きさで期待した色になる。プレビューの大きさ（片目 136 DIP × 画面倍率）で何ミリ秒かかるかもここで測る（6 章のリスク）。
 2. **見た目を揃える**: 4 章。`SvgExporter` だけを直し、WPF と resvg の比較テストで確かめる。
-3. **出力を切り替える**: PNG と PDF を `ResvgRasterizer` で描く。`RasterExporter.RenderSingleToBitmap` と `RenderPairToBitmap` の中身を差し替えるだけで、呼び出し側（`PdfExporter`、`DesignFileWorkflow`）は変えない。PDF に埋め込む画像の形式（JPEG 98 のままにするか、ノイズの多い表現のために Flate 圧縮にするか）は、ファイルの大きさを見て決める。
+3. **出力を切り替える**（済み）: PNG と PDF を `ResvgRasterizer` で描く。`RasterExporter.RenderSingleToBitmap` と `RenderPairToBitmap` の中身を差し替えるだけで、呼び出し側（`PdfExporter`、`DesignFileWorkflow`）は変えない。PDF に埋め込む画像の形式（JPEG 98 のままにするか、ノイズの多い表現のために Flate 圧縮にするか）は、ファイルの大きさを見て決める。
+   - 結果: `SvgExporter` に余白とカットライン・センターマークを別々に指定できる版を足し、`RasterExporter` はその SVG を `ResvgRasterizer.RenderAtDpi`（実寸どおりに左上から描く）で画像にする。書き出す SVG の中身は変わらない。
+   - PDF の目の画像は、切り上げたピクセル数どおりの大きさで置く（これまでは 1 ピクセル未満だけ引き伸ばしていた）。
+   - 埋め込みは JPEG 98 のまま。ノイズの多い表現（手順 7）を入れるときに、Flate 圧縮と大きさを比べて決め直す。
+   - 起動時に resvg を 1 回呼んで確かめる。リリースと同じ単一 exe で読み込めること、DLL がないと警告が出ることを確認した。
+   - 印刷補助マークは SVG の見た目（0.15mm の灰色の 2mm 破線、十字）にそろえた。画面のプレビューは手順 4 までは WPF の見た目（細い点線・中心の白丸）のまま。
 4. **プレビューを切り替える**（`IrisPreviewControl`）:
    - ペア表示: 今の倍率・画面の DPI でペアの SVG を描いた画像を 1 枚持つ。パン（移動）だけなら描き直さない。
    - 倍率を変えたとき: すぐに今の画像を拡大縮小して表示し、描き直しが終わったら差し替える。

@@ -144,7 +144,20 @@ namespace DollIrisGenerator.Services
 
         private static string F(double v, int decimals = 3) => v.ToFixed(decimals);
 
-        public static string GenerateSingleEyeSvg(IrisParameters p, bool isRightEye, bool includePrintGuides = false)
+        /// <summary>Default padding around one eye in the exported SVG (mm).</summary>
+        public const double SingleEyePaddingMm = 2.0;
+
+        /// <summary>Default padding around the pair in the exported SVG (mm).</summary>
+        public const double PairPaddingMm = 3.0;
+
+        public static string GenerateSingleEyeSvg(IrisParameters p, bool isRightEye, bool includePrintGuides = false) =>
+            GenerateSingleEyeSvg(p, isRightEye, includePrintGuides, includePrintGuides, SingleEyePaddingMm);
+
+        /// <summary>
+        /// One eye on a canvas of its tilted footprint plus <paramref name="paddingMm"/> on each side, the eye centered.
+        /// The canvas is the exact size in mm (also used to rasterize: PNG / PDF images, see RasterExporter).
+        /// </summary>
+        public static string GenerateSingleEyeSvg(IrisParameters p, bool isRightEye, bool cutLine, bool centerMark, double paddingMm)
         {
             double sizeMm = p.SizeMm;
             double widthMm = sizeMm;
@@ -155,7 +168,6 @@ namespace DollIrisGenerator.Services
 
             // Canvas holds the tilted footprint so a tilted oval is not cut off
             var (footW, footH) = SheetLayout.GetEyeFootprintMm(p);
-            double paddingMm = 2.0;
             double totalWidthMm = footW + paddingMm * 2.0;
             double totalHeightMm = footH + paddingMm * 2.0;
 
@@ -170,13 +182,20 @@ namespace DollIrisGenerator.Services
             double rx = widthMm / 2.0;
             double ry = heightMm / 2.0;
 
-            AppendIrisSvg(sb, eyeId, cx, cy, rx, ry, p, isRightEye, includePrintGuides);
+            AppendIrisSvg(sb, eyeId, cx, cy, rx, ry, p, isRightEye, cutLine, centerMark);
 
             sb.AppendLine("</svg>");
             return sb.ToString();
         }
 
-        public static string GeneratePairSvg(IrisParameters p, bool includePrintGuides = false, double pairSpacingMm = 4.0)
+        public static string GeneratePairSvg(IrisParameters p, bool includePrintGuides = false, double pairSpacingMm = 4.0) =>
+            GeneratePairSvg(p, includePrintGuides, includePrintGuides, pairSpacingMm, PairPaddingMm);
+
+        /// <summary>
+        /// Left and right eye side by side, <paramref name="pairSpacingMm"/> apart (between their footprints), with
+        /// <paramref name="paddingMm"/> around the pair.
+        /// </summary>
+        public static string GeneratePairSvg(IrisParameters p, bool cutLine, bool centerMark, double pairSpacingMm, double paddingMm)
         {
             double sizeMm = p.SizeMm;
             double widthMm = sizeMm;
@@ -187,7 +206,6 @@ namespace DollIrisGenerator.Services
 
             // Canvas and eye spacing use the tilted footprint so tilted ovals are not cut off or overlapping
             var (footW, footH) = SheetLayout.GetEyeFootprintMm(p);
-            double paddingMm = 3.0;
             double totalWidthMm = (footW * 2.0) + pairSpacingMm + (paddingMm * 2.0);
             double totalHeightMm = footH + (paddingMm * 2.0);
 
@@ -202,11 +220,11 @@ namespace DollIrisGenerator.Services
 
             // Left eye
             double leftCx = paddingMm + footW / 2.0;
-            AppendIrisSvg(sb, "left_eye", leftCx, cy, rx, ry, p, false, includePrintGuides);
+            AppendIrisSvg(sb, "left_eye", leftCx, cy, rx, ry, p, false, cutLine, centerMark);
 
             // Right eye (Mirrored or Odd-Eye)
             double rightCx = leftCx + footW + pairSpacingMm;
-            AppendIrisSvg(sb, "right_eye", rightCx, cy, rx, ry, p, true, includePrintGuides);
+            AppendIrisSvg(sb, "right_eye", rightCx, cy, rx, ry, p, true, cutLine, centerMark);
 
             sb.AppendLine("</svg>");
             return sb.ToString();
@@ -221,7 +239,8 @@ namespace DollIrisGenerator.Services
             double ry,
             IrisParameters p,
             bool isRightEye,
-            bool includePrintGuides)
+            bool cutLine,
+            bool centerMark)
         {
             double baseR = Math.Min(rx, ry);
 
@@ -627,13 +646,18 @@ namespace DollIrisGenerator.Services
             }
 
             // Print Guides
-            if (includePrintGuides)
+            // Print guides: dashed cut line on the iris edge, center cross
+            if (cutLine || centerMark)
             {
                 sb.AppendLine($@"    <g id=""{idPrefix}_guides"">");
-                sb.AppendLine($@"      <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""#999999"" stroke-width=""0.15"" stroke-dasharray=""2,2"" />");
-                double markLen = baseR * 0.15;
-                sb.AppendLine($@"      <line x1=""{(cx - markLen).ToFixed(3)}"" y1=""{cy.ToFixed(3)}"" x2=""{(cx + markLen).ToFixed(3)}"" y2=""{cy.ToFixed(3)}"" stroke=""#777777"" stroke-width=""0.1"" />");
-                sb.AppendLine($@"      <line x1=""{cx.ToFixed(3)}"" y1=""{(cy - markLen).ToFixed(3)}"" x2=""{cx.ToFixed(3)}"" y2=""{(cy + markLen).ToFixed(3)}"" stroke=""#777777"" stroke-width=""0.1"" />");
+                if (cutLine)
+                    sb.AppendLine($@"      <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""#999999"" stroke-width=""0.15"" stroke-dasharray=""2,2"" />");
+                if (centerMark)
+                {
+                    double markLen = baseR * 0.15;
+                    sb.AppendLine($@"      <line x1=""{(cx - markLen).ToFixed(3)}"" y1=""{cy.ToFixed(3)}"" x2=""{(cx + markLen).ToFixed(3)}"" y2=""{cy.ToFixed(3)}"" stroke=""#777777"" stroke-width=""0.1"" />");
+                    sb.AppendLine($@"      <line x1=""{cx.ToFixed(3)}"" y1=""{(cy - markLen).ToFixed(3)}"" x2=""{cx.ToFixed(3)}"" y2=""{(cy + markLen).ToFixed(3)}"" stroke=""#777777"" stroke-width=""0.1"" />");
+                }
                 sb.AppendLine("    </g>");
             }
 
