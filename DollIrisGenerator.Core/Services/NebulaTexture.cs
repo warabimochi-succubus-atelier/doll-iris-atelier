@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
-using System.Windows;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
@@ -165,11 +165,7 @@ namespace DollIrisGenerator.Services
             }
         }
 
-        private static (byte A, byte R, byte G, byte B) Argb(string hex)
-        {
-            var c = GeometryHelper.ParseHexColor(hex);
-            return (c.A, c.R, c.G, c.B);
-        }
+        private static (byte A, byte R, byte G, byte B) Argb(string hex) => GeometryHelper.ParseHexArgb(hex);
     }
 
     /// <summary>Minimal PNG writer for 8-bit RGBA images (zlib from the framework, no WPF needed).</summary>

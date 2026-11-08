@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using System.Windows.Media;
 using DollIrisGenerator.Models;
+using CorePoint = DollIrisGenerator.Core.Geometry.Point;
+using CoreRect = DollIrisGenerator.Core.Geometry.Rect;
 
 namespace DollIrisGenerator.Services
 {
@@ -11,21 +13,14 @@ namespace DollIrisGenerator.Services
         /// Preview zoom the app opens at (and "リセット" returns to). 360% shows the default 10 mm iris
         /// about 136 DIP across, the same on-screen size the old 20 mm default had at 180%.
         /// </summary>
-        public const double DefaultPreviewZoom = 3.6;
+        public const double DefaultPreviewZoom = IrisStyle.ReferenceZoom;
         /// <summary>Starting zoom of the A4 sheet view: actual size (100%), so the whole sheet is easier to take in.</summary>
         public const double DefaultSheetPreviewZoom = 1.0;
         public const double MinPreviewZoom = 0.2;
         public const double MaxPreviewZoom = 16.0;
 
-        /// <summary>
-        /// Physical size of one "style unit" (ray thickness, lens ring width, glitter size, guide lines):
-        /// one screen DIP at the default preview zoom, i.e. 25.4 / (96 * 3.6) = 0.0735 mm.
-        /// Tying these to millimetres makes the preview (at any zoom), PDF, PNG and SVG all match the
-        /// default-zoom preview the design was made with. It moved together with the default zoom when the
-        /// size range changed from eye-sized (around 20 mm) to iris-sized (around 10 mm) values, so the
-        /// built-in presets keep the same proportions on the smaller iris.
-        /// </summary>
-        public const double MmPerStyleUnit = 25.4 / (96.0 * DefaultPreviewZoom);
+        /// <summary>Physical size of one "style unit" (see <see cref="IrisStyle.MmPerStyleUnit"/>).</summary>
+        public const double MmPerStyleUnit = IrisStyle.MmPerStyleUnit;
 
         /// <summary>
         /// Brush for a color setting that may be a gradient (see <see cref="ColorFill"/>).
@@ -39,31 +34,31 @@ namespace DollIrisGenerator.Services
             var fill = ColorFill.Parse(value);
             if (!fill.IsGradient)
             {
-                var solid = new SolidColorBrush(GeometryHelper.ParseHexColor(value, opacity));
+                var solid = new SolidColorBrush(WpfGeometry.ParseHexColor(value, opacity));
                 solid.Freeze();
                 return solid;
             }
 
             if (mirror) fill = fill.MirroredX();
-            var map = GradientMapping.Create(fill, box, bandInner, bandOuter);
+            var map = GradientMapping.Create(fill, box.ToCore(), bandInner, bandOuter);
             if (map.Kind == ColorFillKind.Conic) return CreateConicBrush(map, opacity, BrushMappingMode.Absolute);
             var stops = new GradientStopCollection();
-            foreach (var s in map.Stops) stops.Add(new GradientStop(GeometryHelper.ParseHexColor(s.Color, opacity), s.Offset));
+            foreach (var s in map.Stops) stops.Add(new GradientStop(WpfGeometry.ParseHexColor(s.Color, opacity), s.Offset));
 
             GradientBrush brush = map.Kind == ColorFillKind.Radial
                 ? new RadialGradientBrush(stops)
                 {
                     MappingMode = BrushMappingMode.Absolute,
-                    Center = map.Center,
-                    GradientOrigin = map.Center,
+                    Center = map.Center.ToWpf(),
+                    GradientOrigin = map.Center.ToWpf(),
                     RadiusX = map.RadiusX,
                     RadiusY = map.RadiusY
                 }
                 : new LinearGradientBrush(stops)
                 {
                     MappingMode = BrushMappingMode.Absolute,
-                    StartPoint = map.Start,
-                    EndPoint = map.End
+                    StartPoint = map.Start.ToWpf(),
+                    EndPoint = map.End.ToWpf()
                 };
             brush.Freeze();
             return brush;
@@ -78,7 +73,7 @@ namespace DollIrisGenerator.Services
         /// </summary>
         public static Brush CreateConicBrush(GradientMapping map, double opacity, BrushMappingMode units)
         {
-            var area = map.ConicArea();
+            var area = map.ConicArea().ToWpf();
             // Long enough to reach every corner of the area from the center
             double reach = Math.Sqrt(area.Width * area.Width + area.Height * area.Height);
             var group = new DrawingGroup { ClipGeometry = new RectangleGeometry(area) };
@@ -89,12 +84,12 @@ namespace DollIrisGenerator.Services
                 var geo = new StreamGeometry();
                 using (var ctx = geo.Open())
                 {
-                    ctx.BeginFigure(c, true, true);
-                    ctx.LineTo(PolarPoint(c, reach, from), false, false);
-                    ctx.LineTo(PolarPoint(c, reach, to), false, false);
+                    ctx.BeginFigure(c.ToWpf(), true, true);
+                    ctx.LineTo(IrisStyle.PolarPoint(c, reach, from).ToWpf(), false, false);
+                    ctx.LineTo(IrisStyle.PolarPoint(c, reach, to).ToWpf(), false, false);
                 }
                 geo.Freeze();
-                var wedgeBrush = new SolidColorBrush(GeometryHelper.ParseHexColor(color, opacity));
+                var wedgeBrush = new SolidColorBrush(WpfGeometry.ParseHexColor(color, opacity));
                 wedgeBrush.Freeze();
                 group.Children.Add(new GeometryDrawing(wedgeBrush, null, geo));
             }
@@ -118,7 +113,7 @@ namespace DollIrisGenerator.Services
         /// each ray's fiber outline (先細り / 太さのばらつき / うねり) filled with the same brush.
         /// </summary>
         private static void DrawRays(DrawingContext dc, System.Collections.Generic.IEnumerable<RaySpec> rays, Brush brush,
-            IrisParameters p, Point center, double rx, double ry, double baseR, double style, bool isRightEye)
+            IrisParameters p, CorePoint center, double rx, double ry, double baseR, double style, bool isRightEye)
         {
             double width = p.RayThickness * style;
             if (!p.HasFiberRays)
@@ -134,8 +129,8 @@ namespace DollIrisGenerator.Services
                         pens[ray.WidthFactor] = pen;
                     }
                     dc.DrawLine(pen,
-                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.InnerR, ray.Angle),
-                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.OuterR, ray.Angle));
+                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.InnerR, ray.Angle).ToWpf(),
+                        IrisPatterns.OnIris(center, rx, ry, baseR, ray.OuterR, ray.Angle).ToWpf());
                 }
                 return;
             }
@@ -147,29 +142,12 @@ namespace DollIrisGenerator.Services
             }
         }
 
-        /// <summary>
-        /// Color ("#AARRGGBB" or plain hex) a glitter grain has where it sits: the solid color, or the iris-wide
-        /// gradient's color at that point (placed exactly like the grains' brush). Shared with the SVG export.
-        /// </summary>
-        internal static Func<Point, string> GrainColorSampler(string? value, Rect irisBox, bool mirror, double bandInner, double bandOuter)
-        {
-            var fill = ColorFill.Parse(value);
-            if (!fill.IsGradient)
-            {
-                string solid = GeometryHelper.SanitizeColorHex(value, "#FFFFFF");
-                return _ => solid;
-            }
-            if (mirror) fill = fill.MirroredX();
-            var map = GradientMapping.Create(fill, irisBox, bandInner, bandOuter);
-            return pt => map.ColorAt(pt);
-        }
-
         /// <summary>Soft round halo of one color, on the grain's own circle (relative to its bounds).</summary>
         private static Brush CreateHaloBrush(string color, double opacity, double glow)
         {
             var stops = new GradientStopCollection();
             foreach (var (offset, alpha) in IrisPatterns.HaloStops(glow))
-                stops.Add(new GradientStop(GeometryHelper.ParseHexColor(color, opacity * alpha), offset));
+                stops.Add(new GradientStop(WpfGeometry.ParseHexColor(color, opacity * alpha), offset));
             var brush = new RadialGradientBrush(stops);
             brush.Freeze();
             return brush;
@@ -194,21 +172,9 @@ namespace DollIrisGenerator.Services
             return bmp;
         }
 
-        internal static Point PolarPoint(Point c, double r, double degrees)
-        {
-            double rad = degrees * Math.PI / 180.0;
-            return new Point(c.X + r * Math.Cos(rad), c.Y + r * Math.Sin(rad));
-        }
-
-        /// <summary>Local box (around 0, 0) of a highlight shape, the area its gradient is laid across.</summary>
-        public static Rect HighlightBox(HighlightItem h, double radius) => h.Shape switch
-        {
-            HighlightShape.Oval => new Rect(-radius * HighlightAspect(h), -radius, 2.0 * radius * HighlightAspect(h), 2.0 * radius),
-            HighlightShape.Rhombus => new Rect(-radius * 0.65, -radius, 1.3 * radius, 2.0 * radius),
-            _ => new Rect(-radius, -radius, 2.0 * radius, 2.0 * radius)
-        };
-
-        private static double HighlightAspect(HighlightItem h) => h.AspectRatio > 0 ? h.AspectRatio : 1.0;
+        /// <summary>Brush of a color setting laid across a box from the design core (see the WPF-box overload).</summary>
+        private static Brush CreateFillBrush(string? value, double opacity, CoreRect box, bool mirror = false, double bandInner = 0.0, double bandOuter = 1.0) =>
+            CreateFillBrush(value, opacity, box.ToWpf(), mirror, bandInner, bandOuter);
 
         public static void RenderIris(
             DrawingContext dc,
@@ -261,7 +227,8 @@ namespace DollIrisGenerator.Services
 
             // Gradients of iris-wide elements (rays, rings, glitter) are laid across the iris ellipse;
             // the right eye sees them mirrored like everything else
-            var irisBox = GradientMapping.EllipseBox(center, rx, ry);
+            var coreCenter = center.ToCore();
+            var irisBox = GradientMapping.EllipseBox(coreCenter, rx, ry);
 
             // Push Clip to Iris Boundary
             dc.PushClip(boundaryGeometry);
@@ -275,9 +242,9 @@ namespace DollIrisGenerator.Services
                 RadiusY = 0.55 * (ry / baseR)
             };
 
-            var colInner = GeometryHelper.ParseHexColor(effectiveInnerColor);
-            var colBase = GeometryHelper.ParseHexColor(effectiveBaseColor);
-            var colOuter = GeometryHelper.ParseHexColor(effectiveOuterColor);
+            var colInner = WpfGeometry.ParseHexColor(effectiveInnerColor);
+            var colBase = WpfGeometry.ParseHexColor(effectiveBaseColor);
+            var colOuter = WpfGeometry.ParseHexColor(effectiveOuterColor);
 
             baseRadialBrush.GradientStops.Add(new GradientStop(colInner, 0.0));
             baseRadialBrush.GradientStops.Add(new GradientStop(colInner, p.InnerGradientRadius * 0.4));
@@ -298,7 +265,7 @@ namespace DollIrisGenerator.Services
             if (p.NebulaOpacity > 0.01)
             {
                 dc.PushOpacity(p.NebulaOpacity);
-                dc.DrawImage(NebulaBitmap(p, effectiveSeed, isRightEye), irisBox);
+                dc.DrawImage(NebulaBitmap(p, effectiveSeed, isRightEye), irisBox.ToWpf());
                 dc.Pop();
             }
 
@@ -314,7 +281,7 @@ namespace DollIrisGenerator.Services
             // Lower Glow / Reflected Light (アニメ調下部ハイライト・照り返し)
             if (p.BottomHighlightIntensity > 0.01)
             {
-                var bottomColor = GeometryHelper.ParseHexColor(effectiveBottomColor, p.BottomHighlightIntensity);
+                var bottomColor = WpfGeometry.ParseHexColor(effectiveBottomColor, p.BottomHighlightIntensity);
                 var lowerGlowBrush = new LinearGradientBrush(
                     Color.FromArgb(0, 0, 0, 0),
                     bottomColor,
@@ -332,13 +299,13 @@ namespace DollIrisGenerator.Services
 
                 // Radial gradient: from the rays' start to their (nominal) tips
                 var rayBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity, irisBox, isRightEye, bandInner, bandOuter);
-                DrawRays(dc, IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayBrush, p, center, rx, ry, baseR, style, isRightEye);
+                DrawRays(dc, IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayBrush, p, coreCenter, rx, ry, baseR, style, isRightEye);
 
                 // Fine rays (細線レイヤー) between the main ones, on top so their light lines stay visible
                 if (p.RayFineLayer > 0.01)
                 {
                     var fineBrush = CreateFillBrush(effectiveRayColor, p.RayIntensity * p.RayFineLayer, irisBox, isRightEye, bandInner, bandOuter);
-                    DrawRays(dc, IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), fineBrush, p, center, rx, ry, baseR, style, isRightEye);
+                    DrawRays(dc, IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), fineBrush, p, coreCenter, rx, ry, baseR, style, isRightEye);
                 }
             }
 
@@ -381,7 +348,7 @@ namespace DollIrisGenerator.Services
                 if (p.LensRefractionGlow > 0.01)
                 {
                     // One color only (a gradient's first color): the glow already fades out by itself
-                    var glowColor = GeometryHelper.ParseHexColor(p.LensRingColor, p.LensRefractionGlow * 0.45);
+                    var glowColor = WpfGeometry.ParseHexColor(p.LensRingColor, p.LensRefractionGlow * 0.45);
                     var causticBrush = new RadialGradientBrush(glowColor, Color.FromArgb(0, 0, 0, 0));
                     dc.DrawEllipse(causticBrush, null, center, baseR * 0.55 * (rx / baseR), baseR * 0.55 * (ry / baseR));
                 }
@@ -418,7 +385,7 @@ namespace DollIrisGenerator.Services
                 // Drawn around (0, 0) with the move pushed on the context, so a gradient follows the pupil;
                 // the gradient spans the pupil's own bounding box
                 Geometry pupilGeo;
-                Rect pupilBox;
+                CoreRect pupilBox;
                 var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry);
                 if (pupilOutline != null)
                 {
@@ -430,12 +397,12 @@ namespace DollIrisGenerator.Services
                 else if (p.PupilShape == PupilShape.VerticalOval)
                 {
                     pupilGeo = new EllipseGeometry(new Point(0, 0), prx * 0.75, pry * 1.25);
-                    pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx * 0.75, pry * 1.25);
+                    pupilBox = GradientMapping.EllipseBox(new CorePoint(0, 0), prx * 0.75, pry * 1.25);
                 }
                 else
                 {
                     pupilGeo = new EllipseGeometry(new Point(0, 0), prx, pry);
-                    pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx, pry);
+                    pupilBox = GradientMapping.EllipseBox(new CorePoint(0, 0), prx, pry);
                 }
 
                 var pupilBrush = CreateFillBrush(p.PupilColor, p.PupilOpacity, pupilBox, isRightEye);
@@ -474,7 +441,7 @@ namespace DollIrisGenerator.Services
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
                 double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
-                var grains = IrisPatterns.Grains(p, center, rx, ry, baseR, effectiveSeed, isRightEye, style, 1.0);
+                var grains = IrisPatterns.Grains(p, coreCenter, rx, ry, baseR, effectiveSeed, isRightEye, style, 1.0);
 
                 // One brush over the whole iris: each grain takes the gradient color of where it sits
                 // (radial: from the inner to the outer edge of the glitter band)
@@ -483,7 +450,7 @@ namespace DollIrisGenerator.Services
                 // Halos first (光のにじみ), so every grain stays crisp on top of its neighbours' glow
                 if (p.ParticleGlow > 0.01)
                 {
-                    var colorAt = GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
+                    var colorAt = IrisStyle.GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
                     var haloBrushes = new System.Collections.Generic.Dictionary<string, Brush>();
                     foreach (var g in grains)
                     {
@@ -494,7 +461,7 @@ namespace DollIrisGenerator.Services
                             haloBrushes[color] = halo;
                         }
                         double hr = IrisPatterns.HaloRadius(g.Size, p.ParticleGlow);
-                        dc.DrawEllipse(halo, null, g.Position, hr, hr);
+                        dc.DrawEllipse(halo, null, g.Position.ToWpf(), hr, hr);
                     }
                 }
 
@@ -508,7 +475,7 @@ namespace DollIrisGenerator.Services
                     }
                     else
                     {
-                        dc.DrawEllipse(particleBrush, null, g.Position, g.Size * 0.5, g.Size * 0.5);
+                        dc.DrawEllipse(particleBrush, null, g.Position.ToWpf(), g.Size * 0.5, g.Size * 0.5);
                     }
                 }
 
@@ -611,7 +578,7 @@ namespace DollIrisGenerator.Services
                     double hRadius = baseR * h.Size;
 
                     // Gradient across the highlight's own box, turning with it; mirrored with the highlight
-                    var hBrush = CreateFillBrush(h.Color, h.Opacity, HighlightBox(h, hRadius), isRightEye && p.MirrorHighlightsWithIris);
+                    var hBrush = CreateFillBrush(h.Color, h.Opacity, IrisStyle.HighlightBox(h, hRadius), isRightEye && p.MirrorHighlightsWithIris);
 
                     Geometry hGeo;
                     switch (h.Shape)
@@ -620,10 +587,10 @@ namespace DollIrisGenerator.Services
                             hGeo = new EllipseGeometry(new Point(0, 0), hRadius * (h.AspectRatio > 0 ? h.AspectRatio : 1.0), hRadius);
                             break;
                         case HighlightShape.Star4:
-                            hGeo = GeometryHelper.CreateStar4Geometry(hRadius, 0.22);
+                            hGeo = WpfGeometry.CreateStar4Geometry(hRadius, 0.22);
                             break;
                         case HighlightShape.Rhombus:
-                            hGeo = GeometryHelper.CreateDiamondGeometry(hRadius * 0.65, hRadius);
+                            hGeo = WpfGeometry.CreateDiamondGeometry(hRadius * 0.65, hRadius);
                             break;
                         case HighlightShape.Circle:
                         default:

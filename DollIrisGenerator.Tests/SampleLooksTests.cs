@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Text.Json;
-using System.Windows;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 using Xunit;

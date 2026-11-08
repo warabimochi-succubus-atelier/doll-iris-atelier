@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using System.Windows;
-using System.Windows.Media;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
@@ -35,7 +34,7 @@ namespace DollIrisGenerator.Services
 
     /// <summary>
     /// A closed outline made of lines and cubic Beziers, centered at (0, 0).
-    /// The pupil shapes and decorative symbols are built here once and then turned into a WPF geometry
+    /// The pupil shapes and decorative symbols are built here once and then turned into a WPF geometry (in the app)
     /// (screen / PNG / PDF) or SVG path data, so every output draws exactly the same outline.
     /// <see cref="Rounded"/> rounds the corners (star tips, heart cusp, moon horns...).
     /// </summary>
@@ -354,23 +353,7 @@ namespace DollIrisGenerator.Services
         // Output
         // ------------------------------------------------------------------
 
-        /// <summary>WPF geometry of this outline (closed and filled), centered at (0, 0).</summary>
-        public PathGeometry ToPathGeometry()
-        {
-            var figure = new PathFigure { StartPoint = Start, IsClosed = true, IsFilled = true };
-            for (int i = 0; i < Segments.Count; i++)
-            {
-                var seg = Segments[i];
-                // A straight closing edge is implied by IsClosed (same as the original polygons)
-                if (i == Segments.Count - 1 && seg.IsLine) break;
-                figure.Segments.Add(seg.IsLine
-                    ? new LineSegment(seg.End, true)
-                    : new BezierSegment(seg.C1, seg.C2, seg.End, true));
-            }
-            var geometry = new PathGeometry();
-            geometry.Figures.Add(figure);
-            return geometry;
-        }
+        // The WPF geometry of an outline is built by WpfGeometry.ToPathGeometry() in the app.
 
         /// <summary>
         /// SVG path data ("M … L … C … Z") of this outline moved to (<paramref name="offsetX"/>, <paramref name="offsetY"/>),

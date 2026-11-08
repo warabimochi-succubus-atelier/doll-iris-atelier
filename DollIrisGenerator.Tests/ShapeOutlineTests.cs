@@ -9,6 +9,9 @@ using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 using DollIrisGenerator.ViewModels;
 using Xunit;
+using Point = DollIrisGenerator.Core.Geometry.Point;
+using Rect = DollIrisGenerator.Core.Geometry.Rect;
+using Vector = DollIrisGenerator.Core.Geometry.Vector;
 
 namespace DollIrisGenerator.Tests
 {
@@ -198,7 +201,8 @@ namespace DollIrisGenerator.Tests
             foreach (double amount in Amounts)
             {
                 var pts = outline.Rounded(amount).Flatten(64);
-                var box = new Rect(new Point(pts.Min(p => p.X), pts.Min(p => p.Y)), new Point(pts.Max(p => p.X), pts.Max(p => p.Y)));
+                double minX = pts.Min(p => p.X), minY = pts.Min(p => p.Y);
+                var box = new Rect(minX, minY, pts.Max(p => p.X) - minX, pts.Max(p => p.Y) - minY);
                 if (previous is Rect prev)
                 {
                     double change = new[] { box.Left - prev.Left, box.Top - prev.Top, box.Right - prev.Right, box.Bottom - prev.Bottom }.Max(Math.Abs);

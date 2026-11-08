@@ -67,9 +67,20 @@
 
 ### 2.2 開発環境
 - **言語**: C# 14
-- **フレームワーク**: .NET 10.0 (`net10.0-windows`)
+- **フレームワーク**: .NET 10.0 (`net10.0-windows`、デザインコアは `net10.0`)
 - **UI フレームワーク**: Windows Presentation Foundation (WPF) / DirectX ハードウェアアクセラレーション
 - **PDF 出力**: 独立純国産 C# PDF 描画エンジン（ISO 32000-1 準拠、ライセンス制限・外部パッケージ不要）
+
+### 2.3 プロジェクト構成
+| プロジェクト | ターゲット | 内容 |
+|---|---|---|
+| `DollIrisGenerator.Core` | `net10.0`（WPF なし） | デザインモデル (`IrisParameters`・プリセット・JSON)、ランダム生成、輪郭・模様・グラデーション配置の計算 (`ShapeOutline` / `IrisPatterns` / `GradientMapping`)、SVG 出力、星雲テクスチャ、お気に入り・A4 シートの保存形式 |
+| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、WPF 描画 (`WpfIrisRenderer`)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
+| `DollIrisGenerator.Tests` | `net10.0-windows` | xUnit テスト |
+
+- コアは WPF に依存しないため、Windows 以外（ブラウザ版など）からも同じ計算を使える。同じパラメータとシードからは、どこで計算しても同じ輪郭・模様・SVG になる（3. の 2）。
+- コアの座標型 (`DollIrisGenerator.Core.Geometry` の `Point` / `Vector` / `Rect`) は、WPF の同名の型と同じ順序で計算し、ビット単位で同じ結果を返す（`CoreGeometryTests`）。WPF 側との変換は `WpfGeometry` の `ToWpf()` / `ToCore()` で行う。
+- 線幅などの「スタイル単位」の実寸 (`IrisStyle.MmPerStyleUnit`) やハイライトの範囲など、画面と SVG で共有する描画の決まりは `IrisStyle` に置く。
 
 ---
 
@@ -175,7 +186,7 @@
 
 **左右対称**: 右目では線形の角度を左右反転する（θ → 180° − θ）。ハイライトは「ハイライトも左右反転する」がオンのときのみ反転。放射状は対称なので変化しない。
 
-**単色が必要な箇所**: レンズ中心の屈折光、`SanitizeColorHex` / `ParseHexColor` にグラデーションが渡った場合（手で編集したファイルなど）は、最初のストップの色を使う。
+**単色が必要な箇所**: レンズ中心の屈折光、`SanitizeColorHex` / `ParseHexArgb`（WPF 側は `ParseHexColor`）にグラデーションが渡った場合（手で編集したファイルなど）は、最初のストップの色を使う。
 
 **描画実装**: 画面・PDF（WPF レンダラー）は絶対座標 (`BrushMappingMode.Absolute`) の Linear/RadialGradientBrush を使い、図形側には Transform を持たせず、回転・移動は DrawingContext に Push する（ブラシが図形と一緒に動くように）。SVG は `gradientUnits="userSpaceOnUse"` の `<linearGradient>` / `<radialGradient>`（放射状は単位円を `gradientTransform` で楕円に伸ばす）を、使う要素の直前の `<defs>` に出力する。記号は複製ごとに1つずつ定義する。`#AARRGGBB` のストップは `stop-color="#RRGGBB"` と `stop-opacity` に分けて出力する（SVG では8桁 HEX が RRGGBBAA と解釈されるため）。単色の場合は、画面・PDF・SVG とも従来と同じ出力（バイト単位で一致）。
 
@@ -620,7 +631,7 @@ PDF 出力時にシートが空の場合は、編集中のデザイン 1 ペア�
 |---|---|---|
 | **性能 (Performance)** | 60fps の滑らかなリアルタイムプレビュー | WPF DirectX ベクター描画、メモリ内 Bitmap キャッシュ |
 | **品質 (Accuracy)** | 印刷時の寸法誤差 ±0.1mm 以内 | PDF ポイント数式完全換算、1200 DPI 超高解像度出力 |
-| **保守性 (Maintainability)** | MVVM アーキテクチャ、新形状・新記号の追加容易性 | `GeometryHelper` による幾何モデル分離、データバインディング |
+| **保守性 (Maintainability)** | MVVM アーキテクチャ、新形状・新記号の追加容易性 | WPF に依存しないデザインコア (`DollIrisGenerator.Core`、2.3) による幾何モデル分離、データバインディング |
 | **セキュリティ・オフライン** | 外部通信を行わないこと | サードパーティクラウド API 非依存、完全ローカル完結。マニュアル・GitHub へのリンクはユーザーが操作したときに既定のブラウザへ URL を渡すだけで、アプリ自身は通信しない |
 
 ### 22.1 バージョン情報・ヘルプ

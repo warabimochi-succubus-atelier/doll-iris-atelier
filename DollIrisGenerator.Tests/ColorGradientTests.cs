@@ -14,6 +14,9 @@ using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 using DollIrisGenerator.ViewModels;
 using Xunit;
+using CorePoint = DollIrisGenerator.Core.Geometry.Point;
+using CoreRect = DollIrisGenerator.Core.Geometry.Rect;
+using CoreVector = DollIrisGenerator.Core.Geometry.Vector;
 
 namespace DollIrisGenerator.Tests
 {
@@ -124,7 +127,7 @@ namespace DollIrisGenerator.Tests
         {
             // A gradient in a solid-only setting (hand-edited file) must still give a valid color
             Assert.Equal("#FF0000", GeometryHelper.SanitizeColorHex(RedToBlue, "#000000"));
-            Assert.Equal(Color.FromRgb(255, 0, 0), GeometryHelper.ParseHexColor(RedToBlue));
+            Assert.Equal(Color.FromRgb(255, 0, 0), WpfGeometry.ParseHexColor(RedToBlue));
             Assert.Equal("#ABCDEF", GeometryHelper.SanitizeColorHex("#ABCDEF"));
         }
 
@@ -239,10 +242,10 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestLinearMappingCoversTheBoxAtAnyAngle()
         {
-            var box = new Rect(10, 20, 40, 20);
+            var box = new CoreRect(10, 20, 40, 20);
             var horizontal = GradientMapping.Create(ColorFill.Parse(RedToBlue), box);
-            Assert.Equal(new Point(10, 30), horizontal.Start);
-            Assert.Equal(new Point(50, 30), horizontal.End);
+            Assert.Equal(new CorePoint(10, 30), horizontal.Start);
+            Assert.Equal(new CorePoint(50, 30), horizontal.End);
 
             var down = GradientMapping.Create(ColorFill.Parse("linear-gradient(90deg, #FF0000 0%, #0000FF 100%)"), box);
             Assert.Equal(30, down.Start.X, 9);
@@ -252,9 +255,13 @@ namespace DollIrisGenerator.Tests
             // Diagonal: every corner projects inside 0..100 %
             var diag = GradientMapping.Create(ColorFill.Parse("linear-gradient(37deg, #FF0000 0%, #0000FF 100%)"), box);
             var dir = diag.End - diag.Start;
-            foreach (var corner in new[] { box.TopLeft, box.TopRight, box.BottomLeft, box.BottomRight })
+            foreach (var corner in new[]
             {
-                double t = Vector.Multiply(corner - diag.Start, dir) / dir.LengthSquared;
+                new CorePoint(box.Left, box.Top), new CorePoint(box.Right, box.Top),
+                new CorePoint(box.Left, box.Bottom), new CorePoint(box.Right, box.Bottom)
+            })
+            {
+                double t = CoreVector.Multiply(corner - diag.Start, dir) / dir.LengthSquared;
                 Assert.InRange(t, -1e-9, 1.0 + 1e-9);
             }
         }
@@ -262,8 +269,8 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestRadialMappingMovesStopsIntoTheBand()
         {
-            var map = GradientMapping.Create(ColorFill.Parse(RadialRedToBlue), new Rect(0, 0, 100, 60), 0.8, 1.0);
-            Assert.Equal(new Point(50, 30), map.Center);
+            var map = GradientMapping.Create(ColorFill.Parse(RadialRedToBlue), new CoreRect(0, 0, 100, 60), 0.8, 1.0);
+            Assert.Equal(new CorePoint(50, 30), map.Center);
             Assert.Equal(50, map.RadiusX);
             Assert.Equal(30, map.RadiusY);
             Assert.Equal(0.8, map.Stops[0].Offset, 9);
@@ -397,7 +404,7 @@ namespace DollIrisGenerator.Tests
             {
                 var brush = WpfIrisRenderer.CreateFillBrush("#336699", 0.5, new Rect(0, 0, 10, 10));
                 var solid = Assert.IsType<SolidColorBrush>(brush);
-                Assert.Equal(GeometryHelper.ParseHexColor("#336699", 0.5), solid.Color);
+                Assert.Equal(WpfGeometry.ParseHexColor("#336699", 0.5), solid.Color);
             });
         }
 
