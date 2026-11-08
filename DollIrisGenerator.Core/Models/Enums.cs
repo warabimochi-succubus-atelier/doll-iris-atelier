@@ -30,6 +30,18 @@ namespace DollIrisGenerator.Models
         SakuraPetal     // 桜の花びら (Cherry Blossom Petal)
     }
 
+    /// <summary>
+    /// How a layer is laid over what is under it (CSS / SVG mix-blend-mode). The numbers are saved in design files.
+    /// </summary>
+    public enum LayerBlend
+    {
+        Normal = 0,     // 通常
+        Screen = 1,     // スクリーン (明るくなるだけ。発光)
+        ColorDodge = 2, // 覆い焼き (強い発光)
+        Overlay = 3,    // オーバーレイ (明るいところをより明るく、暗いところをより暗く)
+        SoftLight = 4   // ソフトライト (オーバーレイの弱いもの)
+    }
+
     public enum HighlightShape
     {
         Circle,         // 正円
