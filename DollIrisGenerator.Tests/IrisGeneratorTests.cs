@@ -366,7 +366,7 @@ namespace DollIrisGenerator.Tests
             // Test geometry generation on STA thread
             RunOnSta(() =>
             {
-                var geom = GeometryHelper.CreateSakuraPetalGeometry(50.0);
+                var geom = WpfGeometry.CreateSakuraPetalGeometry(50.0);
                 Assert.NotNull(geom);
                 Assert.True(geom.Figures.Count > 0);
                 Assert.True(geom.Figures[0].IsClosed);

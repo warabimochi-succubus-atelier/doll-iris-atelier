@@ -122,6 +122,8 @@ dotnet test .\DollIrisGenerator.Tests
 dotnet build .\DollIrisGenerator --configuration Release
 ```
 
+デザインの計算と SVG 出力は WPF に依存しない `DollIrisGenerator.Core`（`net10.0`）にまとめてあり、アプリはそれを参照します（構成は [SPECIFICATION.md](SPECIFICATION.md) の 2.3）。
+
 ### 配布用ファイルの作成
 .NET のインストールが不要な形式です。出力された `dist\DollIrisAtelier` フォルダーごと配布します。
 ```powershell

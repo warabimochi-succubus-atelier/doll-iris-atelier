@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="IrisGenerationApp.png" />
     <Resource Include="app.ico" />
     <Resource Include="AuthorLogo.png" />

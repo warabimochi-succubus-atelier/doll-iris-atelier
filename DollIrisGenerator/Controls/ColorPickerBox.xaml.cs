@@ -130,7 +130,7 @@ namespace DollIrisGenerator.Controls
                 Cursor = System.Windows.Input.Cursors.Hand,
                 ToolTip = hex
             };
-            var color = GeometryHelper.ParseHexColor(hex);
+            var color = WpfGeometry.ParseHexColor(hex);
             btn.Background = new SolidColorBrush(color);
             btn.Click += (s, e) =>
             {
@@ -196,7 +196,7 @@ namespace DollIrisGenerator.Controls
             try
             {
                 HexTextBox.Text = hex;
-                var color = GeometryHelper.ParseHexColor(hex);
+                var color = WpfGeometry.ParseHexColor(hex);
                 ColorSwatch.Background = new SolidColorBrush(color);
                 ShowCustomSliders(color);
             }
@@ -333,7 +333,7 @@ namespace DollIrisGenerator.Controls
         /// <summary>The CMYK shown for the current solid color.</summary>
         private CmykColor CurrentCmyk()
         {
-            var color = GeometryHelper.ParseHexColor(ColorFill.Parse(SelectedColorHex).PrimaryColor);
+            var color = WpfGeometry.ParseHexColor(ColorFill.Parse(SelectedColorHex).PrimaryColor);
             return CmykColor.Resolve(_heldCmyk, color.R, color.G, color.B);
         }
 
@@ -387,7 +387,7 @@ namespace DollIrisGenerator.Controls
                 try
                 {
                     SelectedColorHex = text;
-                    var color = GeometryHelper.ParseHexColor(text);
+                    var color = WpfGeometry.ParseHexColor(text);
                     ColorSwatch.Background = new SolidColorBrush(color);
                     ShowCustomSliders(color);
                 }
@@ -531,20 +531,20 @@ namespace DollIrisGenerator.Controls
             // Swatch: the gradient as it is laid on a shape; bar: the colors in order, left = 0 %, right = 100 %
             ColorSwatch.Background = CreatePreviewBrush(fill);
             var bar = new LinearGradientBrush { StartPoint = new Point(0, 0.5), EndPoint = new Point(1, 0.5) };
-            foreach (var s in fill.Stops) bar.GradientStops.Add(new GradientStop(GeometryHelper.ParseHexColor(s.Color), s.Offset));
+            foreach (var s in fill.Stops) bar.GradientStops.Add(new GradientStop(WpfGeometry.ParseHexColor(s.Color), s.Offset));
             GradientBar.Background = bar;
         }
 
         /// <summary>Preview brush on a unit box (relative to the swatch), placed the same way as on the iris.</summary>
         internal static Brush CreatePreviewBrush(ColorFill fill)
         {
-            if (!fill.IsGradient) return new SolidColorBrush(GeometryHelper.ParseHexColor(fill.PrimaryColor));
-            var map = GradientMapping.Create(fill, new Rect(0, 0, 1, 1));
+            if (!fill.IsGradient) return new SolidColorBrush(WpfGeometry.ParseHexColor(fill.PrimaryColor));
+            var map = GradientMapping.Create(fill, new DollIrisGenerator.Core.Geometry.Rect(0, 0, 1, 1));
             if (map.Kind == ColorFillKind.Conic) return WpfIrisRenderer.CreateConicBrush(map, 1.0, BrushMappingMode.RelativeToBoundingBox);
-            var stops = new GradientStopCollection(map.Stops.Select(s => new GradientStop(GeometryHelper.ParseHexColor(s.Color), s.Offset)));
+            var stops = new GradientStopCollection(map.Stops.Select(s => new GradientStop(WpfGeometry.ParseHexColor(s.Color), s.Offset)));
             return map.Kind == ColorFillKind.Radial
-                ? new RadialGradientBrush(stops) { Center = map.Center, GradientOrigin = map.Center, RadiusX = map.RadiusX, RadiusY = map.RadiusY }
-                : new LinearGradientBrush(stops) { StartPoint = map.Start, EndPoint = map.End };
+                ? new RadialGradientBrush(stops) { Center = map.Center.ToWpf(), GradientOrigin = map.Center.ToWpf(), RadiusX = map.RadiusX, RadiusY = map.RadiusY }
+                : new LinearGradientBrush(stops) { StartPoint = map.Start.ToWpf(), EndPoint = map.End.ToWpf() };
         }
 
         private void OnKindChanged(object sender, SelectionChangedEventArgs e)
@@ -597,7 +597,7 @@ namespace DollIrisGenerator.Controls
             }
             var a = sorted[gapAt];
             var b = sorted[Math.Min(gapAt + 1, sorted.Count - 1)];
-            var mixed = Mix(GeometryHelper.ParseHexColor(a.Color), GeometryHelper.ParseHexColor(b.Color), 0.5);
+            var mixed = Mix(WpfGeometry.ParseHexColor(a.Color), WpfGeometry.ParseHexColor(b.Color), 0.5);
             var stop = new ColorStop($"#{mixed.R:X2}{mixed.G:X2}{mixed.B:X2}", Math.Round((a.Offset + b.Offset) / 2.0, 3));
 
             int insertAt = _stops.IndexOf(a) + 1;

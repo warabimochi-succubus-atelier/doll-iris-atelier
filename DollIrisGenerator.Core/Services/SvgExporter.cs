@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Windows;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
@@ -73,8 +73,8 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($@"{indent}    <g shape-rendering=""crispEdges"">");
             foreach (var (from, to, color) in map.ConicWedges())
             {
-                var a = WpfIrisRenderer.PolarPoint(c, reach, from);
-                var b = WpfIrisRenderer.PolarPoint(c, reach, to);
+                var a = IrisStyle.PolarPoint(c, reach, from);
+                var b = IrisStyle.PolarPoint(c, reach, to);
                 var (rgb, alpha) = SvgStopColor(color);
                 string opacityAttr = alpha < 1.0 ? $@" fill-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
                 sb.AppendLine($@"{indent}      <path d=""M{F(c.X)},{F(c.Y)} L{F(a.X)},{F(a.Y)} L{F(b.X)},{F(b.Y)} Z"" fill=""{rgb}""{opacityAttr} />");
@@ -279,7 +279,7 @@ namespace DollIrisGenerator.Services
             if (p.LensPatternEnabled && p.LensRingIntensity > 0.01)
             {
                 string lensPaint = Paint(sb, "      ", $"{idPrefix}_lens_fill", p.LensRingColor, "#FFFFFF", irisBox, isRightEye, p.PupilSizeRatio, 0.92);
-                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{(p.LensRingWidth * WpfIrisRenderer.MmPerStyleUnit).ToString("F3", Inv)}"" opacity=""{p.LensRingIntensity.ToString("F2", Inv)}"" fill=""none"">");
+                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{(p.LensRingWidth * IrisStyle.MmPerStyleUnit).ToString("F3", Inv)}"" opacity=""{p.LensRingIntensity.ToString("F2", Inv)}"" fill=""none"">");
                 double pupilR = baseR * p.PupilSizeRatio;
                 double ringSpan = (baseR * 0.92) - pupilR;
 
@@ -366,12 +366,12 @@ namespace DollIrisGenerator.Services
             if (p.ParticleCount > 0 && p.ParticleOpacity > 0.01)
             {
                 double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
-                var grains = IrisPatterns.Grains(p, new Point(cx, cy), rx, ry, baseR, effectiveSeed, isRightEye, WpfIrisRenderer.MmPerStyleUnit, 0.5);
+                var grains = IrisPatterns.Grains(p, new Point(cx, cy), rx, ry, baseR, effectiveSeed, isRightEye, IrisStyle.MmPerStyleUnit, 0.5);
 
                 // Halos (光のにじみ): one small radial gradient per distinct grain color, opacity baked into its stops
                 if (p.ParticleGlow > 0.01)
                 {
-                    var colorAt = WpfIrisRenderer.GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
+                    var colorAt = IrisStyle.GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
                     var haloIds = new System.Collections.Generic.Dictionary<string, string>();
                     var halos = new StringBuilder();
                     sb.AppendLine("      <defs>");
@@ -514,7 +514,7 @@ namespace DollIrisGenerator.Services
                     double hy = cy + h.PositionY * ry;
                     double hRadius = baseR * h.Size;
                     // Gradient across the highlight's own box around (hx, hy), turned with it (as on screen)
-                    var hBox = WpfIrisRenderer.HighlightBox(h, hRadius);
+                    var hBox = IrisStyle.HighlightBox(h, hRadius);
                     hBox.Offset(hx, hy);
                     string safeHColor = Paint(sb, "      ", $"{idPrefix}_highlight{highlightIndex}_fill", h.Color, "#FFFFFF", hBox,
                         isRightEye && p.MirrorHighlightsWithIris);
@@ -564,7 +564,7 @@ namespace DollIrisGenerator.Services
         private static void AppendRays(StringBuilder sb, string id, System.Collections.Generic.IEnumerable<RaySpec> rays, string paint,
             double opacity, IrisParameters p, Point center, double rx, double ry, double baseR, bool isRightEye)
         {
-            double width = p.RayThickness * WpfIrisRenderer.MmPerStyleUnit;
+            double width = p.RayThickness * IrisStyle.MmPerStyleUnit;
             if (!p.HasFiberRays)
             {
                 // Without 太さのばらつき all rays of a group share one width (the fine rays a thinner one)

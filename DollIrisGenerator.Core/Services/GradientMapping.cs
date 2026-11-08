@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Design core of Doll Iris Atelier: the design model (IrisParameters, presets, JSON), the iris geometry and
+    patterns, the SVG export and the nebula texture. No WPF, so it also runs outside Windows (e.g. a browser app).
+    Root namespace stays DollIrisGenerator so the types keep their names (DollIrisGenerator.Models / .Services).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DollIrisGenerator</RootNamespace>
+    <Product>Doll Iris Atelier</Product>
+    <Authors>わらびもちサキュバス工房</Authors>
+    <Company>わらびもちサキュバス工房</Company>
+    <Copyright>© 2026 わらびもちサキュバス工房</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DollIrisGenerator" />
+    <InternalsVisibleTo Include="DollIrisGenerator.Tests" />
+  </ItemGroup>
+
+</Project>
