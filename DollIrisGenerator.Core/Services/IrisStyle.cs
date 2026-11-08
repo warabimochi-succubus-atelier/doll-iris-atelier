@@ -40,7 +40,13 @@ namespace DollIrisGenerator.Services
             }
             if (mirror) fill = fill.MirroredX();
             var map = GradientMapping.Create(fill, irisBox, bandInner, bandOuter);
-            return pt => map.ColorAt(pt);
+            // Same text as map.ColorAt, with the stop colors read once for all the grains
+            var argbAt = map.ArgbSampler();
+            return pt =>
+            {
+                var c = argbAt(pt);
+                return ColorFill.FormatArgb(c.A, c.R, c.G, c.B);
+            };
         }
 
         internal static Point PolarPoint(Point c, double r, double degrees)

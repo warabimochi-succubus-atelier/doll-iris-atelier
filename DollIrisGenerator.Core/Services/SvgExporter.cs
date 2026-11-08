@@ -248,7 +248,7 @@ namespace DollIrisGenerator.Services
             if (p.NebulaOpacity > 0.01)
             {
                 // The same cloud pixels the screen / PDF renderer draws, embedded as a PNG over the iris box
-                string png = Convert.ToBase64String(NebulaTexture.Png(p, effectiveSeed, isRightEye));
+                string png = NebulaTexture.PngBase64(p, effectiveSeed, isRightEye);
                 sb.AppendLine($@"      <image id=""{idPrefix}_nebula"" x=""{F(irisBox.X)}"" y=""{F(irisBox.Y)}"" width=""{F(irisBox.Width)}"" height=""{F(irisBox.Height)}"" preserveAspectRatio=""none"" opacity=""{p.NebulaOpacity.ToFixed(2)}"" href=""data:image/png;base64,{png}"" />");
             }
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_upper_shadow"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{upperShadowId})"" />");
@@ -325,7 +325,7 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"">");
                 if (pupilOutline != null)
                 {
-                    sb.AppendLine($@"        <path d=""{pupilOutline.ToSvgPathData(cx, cy)}"" />");
+                    AppendPath(sb, "        <path d=\"", pupilOutline, cx, cy, "\" />");
                 }
                 else if (p.PupilShape == PupilShape.VerticalOval)
                 {
@@ -344,7 +344,7 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine("      <defs>");
                     sb.AppendLine($@"        <clipPath id=""{facetClip}"">");
                     if (pupilOutline != null)
-                        sb.AppendLine($@"          <path d=""{pupilOutline.ToSvgPathData(cx, cy)}"" />");
+                        AppendPath(sb, "          <path d=\"", pupilOutline, cx, cy, "\" />");
                     else if (p.PupilShape == PupilShape.VerticalOval)
                         sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}"" />");
                     else
@@ -356,7 +356,8 @@ namespace DollIrisGenerator.Services
                     {
                         double alpha = p.PupilOpacity * p.PupilFacetIntensity * IrisPatterns.MaxFacetAlpha * Math.Abs(shade);
                         string color = shade >= 0 ? "#FFFFFF" : "#000000";
-                        sb.AppendLine($@"        <path d=""{ShapeOutline.Polygon(poly).ToSvgPathData(cx, cy)}"" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
+                        AppendPath(sb, "        <path d=\"", ShapeOutline.Polygon(poly), cx, cy,
+                            $@""" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
                     }
                     sb.AppendLine("      </g>");
                 }
@@ -416,7 +417,7 @@ namespace DollIrisGenerator.Services
                     foreach (var g in grains)
                     {
                         if (!g.HasFlare) continue;
-                        sb.AppendLine($@"        <path d=""{IrisPatterns.Flare(g.Size, p.ParticleFlareLength).ToSvgPathData(g.Position.X, g.Position.Y)}"" />");
+                        AppendPath(sb, "        <path d=\"", IrisPatterns.Flare(g.Size, p.ParticleFlareLength), g.Position.X, g.Position.Y, "\" />");
                     }
                 }
                 sb.AppendLine("      </g>");
@@ -481,7 +482,7 @@ namespace DollIrisGenerator.Services
                             fillAttr = $@" fill=""{paint}""";
                         }
                         // The moon faces the other way in the right eye (mirrored before the rotation, as on screen)
-                        sb.AppendLine($@"        <path d=""{symOutline.ToSvgPathData(curX, curY, mirror)}""{fillAttr}{rotAttr} />");
+                        AppendPath(sb, "        <path d=\"", symOutline, curX, curY, $"\"{fillAttr}{rotAttr} />", mirror);
                     }
                     sb.AppendLine("      </g>");
                 }
@@ -586,9 +587,21 @@ namespace DollIrisGenerator.Services
             foreach (var ray in rays)
             {
                 var outline = IrisPatterns.FiberOutline(center, rx, ry, baseR, ray, width * ray.WidthFactor, p.RayTaper, p.RayCurve, isRightEye);
-                sb.AppendLine($@"        <path d=""{outline.ToSvgPathData(0, 0)}"" />");
+                AppendPath(sb, "        <path d=\"", outline, 0, 0, "\" />");
             }
             sb.AppendLine("      </g>");
+        }
+
+        /// <summary>
+        /// One line: <paramref name="before"/>, the outline's path data, <paramref name="after"/> (the same text as
+        /// <c>sb.AppendLine(before + outline.ToSvgPathData(…) + after)</c>, without the in-between strings).
+        /// </summary>
+        private static void AppendPath(StringBuilder sb, string before, ShapeOutline outline, double offsetX, double offsetY,
+            string after, bool mirrorX = false)
+        {
+            sb.Append(before);
+            outline.AppendSvgPathData(sb, offsetX, offsetY, mirrorX);
+            sb.AppendLine(after);
         }
 
         private static string BuildSvgStar4(double cx, double cy, double radius, double innerRatio, string transform = "", string? fill = null, double opacity = 1.0)
