@@ -230,6 +230,71 @@ namespace DollIrisGenerator.Services
             return sb.ToString();
         }
 
+        /// <summary>Blur of the pupil's edge at 輪郭の柔らかさ 1, as a fraction of the pupil's radius (max setting 0.3 → 0.15).</summary>
+        public const double PupilBlurPerSoftness = 0.5;
+
+        /// <summary>How far inside the outline (in blur deviations) the blurred pupil's sharp core starts.</summary>
+        public const double PupilCoreInset = 2.5;
+
+        /// <summary>Softness (one Gaussian deviation) of the limbal ring's inner edge at 境界の柔らかさ 1, as a fraction of the ring's width.</summary>
+        public const double LimbalBlurPerSoftness = 0.9;
+
+        /// <summary>Blur of the glitter glow, in mean grain sizes: base + per 光のにじみ.</summary>
+        public const double GlowBlurBase = 0.4, GlowBlurPerGlow = 1.6;
+
+        /// <summary>The glow's alpha is multiplied by this (clamped) so the faint blurred edges still read as light.</summary>
+        public const double GlowAlphaSlope = 2.5;
+
+        /// <summary>
+        /// Stops (offset 0–1 of the radius, alpha) of an edge blurred by a Gaussian of <paramref name="sigma"/>:
+        /// clear inside, rising through 50% at <paramref name="edge"/>, opaque outside (the normal distribution's
+        /// cumulative curve at −2.5σ … +2.5σ). Offsets are clamped to 0–1 and kept in order.
+        /// </summary>
+        internal static (double Offset, double Alpha)[] GaussianEdgeStops(double edge, double sigma)
+        {
+            double[] ks = { -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5 };
+            var stops = new System.Collections.Generic.List<(double, double)>();
+            double last = 0.0;
+            foreach (double k in ks)
+            {
+                double offset = Math.Clamp(edge + k * sigma, 0.0, 1.0);
+                if (offset < last) offset = last;
+                last = offset;
+                stops.Add((offset, k <= -2.5 ? 0.0 : k >= 2.5 ? 1.0 : NormalCdf(k)));
+            }
+            return stops.ToArray();
+        }
+
+        /// <summary>Φ(x), the standard normal cumulative distribution (Abramowitz–Stegun 7.1.26, error &lt; 1.5e-7).</summary>
+        internal static double NormalCdf(double x)
+        {
+            double z = Math.Abs(x) / Math.Sqrt(2.0);
+            double t = 1.0 / (1.0 + 0.3275911 * z);
+            double erf = 1.0 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.Exp(-z * z);
+            return 0.5 * (1.0 + (x >= 0 ? erf : -erf));
+        }
+
+        /// <summary>
+        /// A Gaussian blur filter of <paramref name="stdDeviation"/> (mm) whose region is <paramref name="box"/> grown
+        /// by <paramref name="extra"/> plus three deviations (user space: a stroke is outside an element's bounding box).
+        /// <paramref name="alphaSlope"/> &gt; 1 strengthens the blurred alpha.
+        /// </summary>
+        private static void AppendBlurFilter(StringBuilder sb, string id, double stdDeviation, Rect box, double extra, double alphaSlope = 1.0)
+        {
+            double m = extra + stdDeviation * 3.0;
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <filter id=""{id}"" filterUnits=""userSpaceOnUse"" x=""{F(box.X - m)}"" y=""{F(box.Y - m)}"" width=""{F(box.Width + 2 * m)}"" height=""{F(box.Height + 2 * m)}"">");
+            sb.AppendLine($@"          <feGaussianBlur stdDeviation=""{F(stdDeviation, 4)}"" />");
+            if (alphaSlope > 1.0)
+            {
+                sb.AppendLine("          <feComponentTransfer>");
+                sb.AppendLine($@"            <feFuncA type=""linear"" slope=""{F(alphaSlope, 2)}"" />");
+                sb.AppendLine("          </feComponentTransfer>");
+            }
+            sb.AppendLine("        </filter>");
+            sb.AppendLine("      </defs>");
+        }
+
         /// <summary>Number of radial strips the fiber noise is made of.</summary>
         public const int FiberStripCount = 40;
 
@@ -466,12 +531,28 @@ namespace DollIrisGenerator.Services
             {
                 double ringWidth = baseR * p.LimbalRingThickness;
                 string limbalPaint = Paint(sb, "      ", $"{idPrefix}_limbal_fill", p.LimbalRingColor, "#051636", irisBox, isRightEye, 1.0 - p.LimbalRingThickness);
-                sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 2.0).ToFixed(3)}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" />");
-
-                // Soft inner edge (境界の柔らかさ): a wider, fainter ring in the same paint
+                // Soft inner edge (境界の柔らかさ): the ring's paint over the whole iris, shown through a mask that rises
+                // from clear to opaque across the inner edge along a Gaussian curve (the shape a blur gives, but exact:
+                // a large blur in resvg leaves faint steps). The rim stays fully covered; any ring color works.
                 if (p.LimbalRingSoftness > 0.05)
                 {
-                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_soft"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 3.5 * p.LimbalRingSoftness).ToFixed(3)}"" opacity=""{(p.LimbalRingOpacity * 0.45).ToFixed(3)}"" />");
+                    string maskId = $"{idPrefix}_limbal_mask";
+                    double edge = 1.0 - p.LimbalRingThickness;                                 // inner edge, radius 1 = rim
+                    double sigma = p.LimbalRingThickness * p.LimbalRingSoftness * LimbalBlurPerSoftness;
+                    sb.AppendLine("      <defs>");
+                    sb.AppendLine($@"        <radialGradient id=""{maskId}_grad"">");
+                    foreach (var (offset, alpha) in GaussianEdgeStops(edge, sigma))
+                        sb.AppendLine($@"          <stop offset=""{F(offset, 4)}"" stop-color=""#FFFFFF"" stop-opacity=""{F(alpha, 4)}"" />");
+                    sb.AppendLine("        </radialGradient>");
+                    sb.AppendLine($@"        <mask id=""{maskId}"">");
+                    sb.AppendLine($@"          <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{maskId}_grad)"" />");
+                    sb.AppendLine("        </mask>");
+                    sb.AppendLine("      </defs>");
+                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{limbalPaint}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+                }
+                else
+                {
+                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 2.0).ToFixed(3)}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" />");
                 }
             }
 
@@ -493,7 +574,18 @@ namespace DollIrisGenerator.Services
                 pupilBox.Offset(cx, cy);
 
                 string pupilPaint = Paint(sb, "      ", $"{idPrefix}_pupil_fill", p.PupilColor, "#060A18", pupilBox, isRightEye);
-                sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"">");
+
+                // Soft edge (輪郭の柔らかさ): the pupil's fill blurred (the gem-cut facets stay sharp, clipped to the outline)
+                string pupilBlur = "";
+                double pupilSigma = 0.0;
+                if (p.PupilSoftness > 0.02)
+                {
+                    string blurId = $"{idPrefix}_pupil_blur";
+                    pupilSigma = Math.Max(prx, pry) * p.PupilSoftness * PupilBlurPerSoftness;
+                    AppendBlurFilter(sb, blurId, pupilSigma, pupilBox, 0.0);
+                    pupilBlur = $@" filter=""url(#{blurId})""";
+                }
+                sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}""{pupilBlur}>");
                 if (pupilOutline != null)
                 {
                     AppendPath(sb, "        <path d=\"", pupilOutline, cx, cy, "\" />");
@@ -507,6 +599,30 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{prx.ToFixed(3)}"" ry=""{pry.ToFixed(3)}"" />");
                 }
                 sb.AppendLine("      </g>");
+
+                // Sharp core over the blurred pupil: the same pupil, cut to its outline shrunk inward by 2.5 deviations.
+                // A small blur (a few pixels) is computed approximately and can leave the inside of the blurred pupil
+                // a little see-through; the core fills it, while the soft edge stays as the blur drew it.
+                if (pupilSigma > 0)
+                {
+                    double core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / Math.Min(prx, pry));
+                    if (core > 0.05)
+                    {
+                        string coreClip = $"{idPrefix}_pupil_core_clip";
+                        string coreTransform = $@" transform=""translate({F(cx)} {F(cy)}) scale({F(core, 5)}) translate({F(-cx)} {F(-cy)})""";
+                        sb.AppendLine("      <defs>");
+                        sb.AppendLine($@"        <clipPath id=""{coreClip}"">");
+                        if (pupilOutline != null)
+                            AppendPath(sb, "          <path d=\"", pupilOutline, cx, cy, $"\"{coreTransform} />");
+                        else if (p.PupilShape == PupilShape.VerticalOval)
+                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}""{coreTransform} />");
+                        else
+                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}""{coreTransform} />");
+                        sb.AppendLine("        </clipPath>");
+                        sb.AppendLine("      </defs>");
+                        sb.AppendLine($@"      <rect id=""{idPrefix}_pupil_core"" x=""{F(pupilBox.X)}"" y=""{F(pupilBox.Y)}"" width=""{F(pupilBox.Width)}"" height=""{F(pupilBox.Height)}"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"" clip-path=""url(#{coreClip})"" />");
+                    }
+                }
 
                 // Gem-cut facets (宝石カット), clipped to the same pupil outline
                 if (p.PupilFacetIntensity > 0.01)
@@ -532,18 +648,6 @@ namespace DollIrisGenerator.Services
                     }
                     sb.AppendLine("      </g>");
                 }
-
-                // Soft edge (輪郭の柔らかさ): the outline stroked wide and faint in the pupil's paint
-                if (p.PupilSoftness > 0.02)
-                {
-                    string soft = $@" fill=""none"" stroke=""{pupilPaint}"" stroke-width=""{F(prx * p.PupilSoftness * 1.5)}"" opacity=""{F(p.PupilOpacity * 0.35)}""";
-                    if (pupilOutline != null)
-                        AppendPath(sb, $@"      <path id=""{idPrefix}_pupil_soft"" d=""", pupilOutline, cx, cy, $@"""{soft} />");
-                    else if (p.PupilShape == PupilShape.VerticalOval)
-                        sb.AppendLine($@"      <ellipse id=""{idPrefix}_pupil_soft"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}""{soft} />");
-                    else
-                        sb.AppendLine($@"      <ellipse id=""{idPrefix}_pupil_soft"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}""{soft} />");
-                }
             }
 
             // Particles / Glitter
@@ -552,33 +656,17 @@ namespace DollIrisGenerator.Services
                 double bandInner = p.PupilSizeRatio * 0.95, bandOuter = p.ParticleRadiusRatio;
                 var grains = IrisPatterns.Grains(p, new Point(cx, cy), rx, ry, baseR, effectiveSeed, isRightEye, IrisStyle.MmPerStyleUnit, 0.5);
 
-                // Halos (光のにじみ): one small radial gradient per distinct grain color, opacity baked into its stops
-                if (p.ParticleGlow > 0.01)
+                // Glow (光のにじみ): a blurred, brightened copy of the grains (stars stay star-shaped, gradient colors
+                // stay where they are) under the sharp grains. The copy points at the glitter drawn just below.
+                if (p.ParticleGlow > 0.01 && grains.Count > 0)
                 {
-                    var colorAt = IrisStyle.GrainColorSampler(p.ParticleColor, irisBox, isRightEye, bandInner, bandOuter);
-                    var haloIds = new System.Collections.Generic.Dictionary<string, string>();
-                    var halos = new StringBuilder();
-                    sb.AppendLine("      <defs>");
-                    foreach (var g in grains)
-                    {
-                        string color = colorAt(g.Position);
-                        if (!haloIds.TryGetValue(color, out var haloId))
-                        {
-                            haloId = $"{idPrefix}_halo{haloIds.Count}";
-                            haloIds[color] = haloId;
-                            var (rgb, alpha) = SvgStopColor(color);
-                            sb.AppendLine($@"        <radialGradient id=""{haloId}"">");
-                            foreach (var (offset, a) in IrisPatterns.HaloStops(p.ParticleGlow))
-                                sb.AppendLine($@"          <stop offset=""{(offset * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}"" stop-opacity=""{(alpha * a * p.ParticleOpacity).ToString("0.###", Inv)}"" />");
-                            sb.AppendLine("        </radialGradient>");
-                        }
-                        double hr = IrisPatterns.HaloRadius(g.Size, p.ParticleGlow);
-                        halos.AppendLine($@"        <circle cx=""{F(g.Position.X)}"" cy=""{F(g.Position.Y)}"" r=""{F(hr)}"" fill=""url(#{haloId})"" />");
-                    }
-                    sb.AppendLine("      </defs>");
-                    sb.AppendLine($@"      <g id=""{idPrefix}_glitter_glow"">");
-                    sb.Append(halos);
-                    sb.AppendLine("      </g>");
+                    double meanSize = 0;
+                    foreach (var g in grains) meanSize += g.Size;
+                    meanSize /= grains.Count;
+                    string glowId = $"{idPrefix}_glitter_glow";
+                    AppendBlurFilter(sb, glowId + "_filter", meanSize * (GlowBlurBase + GlowBlurPerGlow * p.ParticleGlow), irisBox, meanSize * 4.0,
+                        alphaSlope: GlowAlphaSlope);
+                    sb.AppendLine($@"      <use id=""{glowId}"" href=""#{idPrefix}_glitter"" filter=""url(#{glowId}_filter)"" opacity=""{F(Math.Min(1.0, p.ParticleGlow))}"" />");
                 }
 
                 string glitterPaint = Paint(sb, "      ", $"{idPrefix}_glitter_fill", p.ParticleColor, "#FFFFFF", irisBox, isRightEye, bandInner, bandOuter);
