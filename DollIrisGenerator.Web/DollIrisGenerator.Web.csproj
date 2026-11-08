@@ -15,6 +15,13 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- Only the invariant culture is needed (numbers in SVG / JSON); keeps the download small -->
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!--
+      dotnet publish compiles the .NET code ahead of time to WebAssembly (AOT): drawing the preview runs about
+      1.6 times faster (the nebula about 4 times) than in the interpreter, for a download about 2.3 times larger
+      and a publish of several minutes. It needs the wasm-tools workload (dotnet workload install wasm-tools).
+      dotnet build / run stay interpreted, so they work without the workload.
+    -->
+    <RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
     <!-- [JSImport] (PreviewInterop) generates code that needs it -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Shown under the app name in the header; keep the same as <Version> in DollIrisGenerator.csproj -->

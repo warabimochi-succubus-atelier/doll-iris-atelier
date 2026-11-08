@@ -158,9 +158,15 @@ dotnet run --project .\DollIrisGenerator.Web
 表示された URL（既定は http://localhost:5062）をブラウザで開きます。
 
 ### 配布用ファイルの作成
+発行では .NET のコードを WebAssembly に事前コンパイル（AOT）します。初回だけ wasm-tools ワークロードを入れてください（`dotnet build` / `dotnet run` には不要です）。
+```powershell
+dotnet workload install wasm-tools
+```
 ```powershell
 dotnet publish .\DollIrisGenerator.Web --configuration Release --output .\dist\web
 ```
+発行には数分かかります。プレビューの再描画は AOT なしの約 1.6 倍（星雲の計算は約 4 倍）速くなり、代わりにダウンロードは約 2.3 倍（Brotli 圧縮で約 2.1 MB → 約 4.9 MB）になります。
+
 `dist\web\wwwroot` の中身を静的ファイルとして HTTPS で公開します。サブフォルダー（GitHub Pages の `https://<ユーザー>.github.io/<リポジトリ>/` など）に置く場合は、`index.html` の `<base href="/" />` をそのフォルダー（例: `/doll-iris-atelier/`）に書き換えてください。
 
 ---
