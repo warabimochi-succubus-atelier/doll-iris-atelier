@@ -279,7 +279,12 @@ namespace DollIrisGenerator.Services
             if (p.LensPatternEnabled && p.LensRingIntensity > 0.01)
             {
                 string lensPaint = Paint(sb, "      ", $"{idPrefix}_lens_fill", p.LensRingColor, "#FFFFFF", irisBox, isRightEye, p.PupilSizeRatio, 0.92);
-                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{(p.LensRingWidth * IrisStyle.MmPerStyleUnit).ToFixed(3)}"" opacity=""{p.LensRingIntensity.ToFixed(2)}"" fill=""none"">");
+                double ringStroke = p.LensRingWidth * IrisStyle.MmPerStyleUnit;
+                // Odd rings: thinner and finely dotted, dashes 4 : 3 of the line width with square ends
+                // (WPF's dash units and default dash cap)
+                double dotStroke = ringStroke * 0.8;
+                string dotAttr = $@" stroke-width=""{F(dotStroke)}"" stroke-dasharray=""{F(dotStroke * 4.0)},{F(dotStroke * 3.0)}"" stroke-linecap=""square""";
+                sb.AppendLine($@"      <g id=""{idPrefix}_lens_rings"" stroke=""{lensPaint}"" stroke-width=""{F(ringStroke)}"" opacity=""{p.LensRingIntensity.ToFixed(2)}"" fill=""none"">");
                 double pupilR = baseR * p.PupilSizeRatio;
                 double ringSpan = (baseR * 0.92) - pupilR;
 
@@ -290,10 +295,25 @@ namespace DollIrisGenerator.Services
                     double ringRx = ringR * (rx / baseR);
                     double ringRy = ringR * (ry / baseR);
 
-                    string dashAttr = (k % 2 == 1) ? @" stroke-dasharray=""1.5,1.0""" : "";
+                    string dashAttr = (k % 2 == 1) ? dotAttr : "";
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{ringRx.ToFixed(3)}"" ry=""{ringRy.ToFixed(3)}""{dashAttr} />");
                 }
                 sb.AppendLine("      </g>");
+
+                // Center refraction glow (中心屈折光): one color (a gradient's first), fading out to the edge
+                if (p.LensRefractionGlow > 0.01)
+                {
+                    var (ga, gr, gg, gb) = GeometryHelper.ParseHexArgb(p.LensRingColor, p.LensRefractionGlow * 0.45);
+                    string glowRgb = $"#{gr:X2}{gg:X2}{gb:X2}";
+                    string glowId = $"{idPrefix}_lens_glow_grad";
+                    sb.AppendLine("      <defs>");
+                    sb.AppendLine($@"        <radialGradient id=""{glowId}"">");
+                    sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{glowRgb}"" stop-opacity=""{(ga / 255.0).ToString("0.###", Inv)}"" />");
+                    sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{glowRgb}"" stop-opacity=""0"" />");
+                    sb.AppendLine("        </radialGradient>");
+                    sb.AppendLine("      </defs>");
+                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_lens_glow"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx * 0.55)}"" ry=""{F(ry * 0.55)}"" fill=""url(#{glowId})"" />");
+                }
             }
 
             // Limbal Ring
@@ -302,6 +322,12 @@ namespace DollIrisGenerator.Services
                 double ringWidth = baseR * p.LimbalRingThickness;
                 string limbalPaint = Paint(sb, "      ", $"{idPrefix}_limbal_fill", p.LimbalRingColor, "#051636", irisBox, isRightEye, 1.0 - p.LimbalRingThickness);
                 sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_ring"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 2.0).ToFixed(3)}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" />");
+
+                // Soft inner edge (境界の柔らかさ): a wider, fainter ring in the same paint
+                if (p.LimbalRingSoftness > 0.05)
+                {
+                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_limbal_soft"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 3.5 * p.LimbalRingSoftness).ToFixed(3)}"" opacity=""{(p.LimbalRingOpacity * 0.45).ToFixed(3)}"" />");
+                }
             }
 
             // Pupil
@@ -360,6 +386,18 @@ namespace DollIrisGenerator.Services
                             $@""" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
                     }
                     sb.AppendLine("      </g>");
+                }
+
+                // Soft edge (輪郭の柔らかさ): the outline stroked wide and faint in the pupil's paint
+                if (p.PupilSoftness > 0.02)
+                {
+                    string soft = $@" fill=""none"" stroke=""{pupilPaint}"" stroke-width=""{F(prx * p.PupilSoftness * 1.5)}"" opacity=""{F(p.PupilOpacity * 0.35)}""";
+                    if (pupilOutline != null)
+                        AppendPath(sb, $@"      <path id=""{idPrefix}_pupil_soft"" d=""", pupilOutline, cx, cy, $@"""{soft} />");
+                    else if (p.PupilShape == PupilShape.VerticalOval)
+                        sb.AppendLine($@"      <ellipse id=""{idPrefix}_pupil_soft"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}""{soft} />");
+                    else
+                        sb.AppendLine($@"      <ellipse id=""{idPrefix}_pupil_soft"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}""{soft} />");
                 }
             }
 

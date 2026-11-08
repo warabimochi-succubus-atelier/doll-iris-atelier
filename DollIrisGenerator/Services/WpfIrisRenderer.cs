@@ -238,8 +238,9 @@ namespace DollIrisGenerator.Services
             {
                 Center = new Point(0.5, 0.42),
                 GradientOrigin = new Point(0.5, 0.42),
-                RadiusX = 0.55 * (rx / baseR),
-                RadiusY = 0.55 * (ry / baseR)
+                // 55% of the iris box each way (as the SVG export): an oval iris gets an oval gradient of its own shape
+                RadiusX = 0.55,
+                RadiusY = 0.55
             };
 
             var colInner = WpfGeometry.ParseHexColor(effectiveInnerColor);
@@ -270,8 +271,9 @@ namespace DollIrisGenerator.Services
             }
 
             // Upper Shadow (Eyelid depth)
+            // 0.65 like the SVG export (166 / 255)
             var upperShadowBrush = new LinearGradientBrush(
-                Color.FromArgb(160, 0, 0, 0),
+                Color.FromArgb(166, 0, 0, 0),
                 Color.FromArgb(0, 0, 0, 0),
                 new Point(0.5, 0.0),
                 new Point(0.5, 0.65)
@@ -282,8 +284,10 @@ namespace DollIrisGenerator.Services
             if (p.BottomHighlightIntensity > 0.01)
             {
                 var bottomColor = WpfGeometry.ParseHexColor(effectiveBottomColor, p.BottomHighlightIntensity);
+                // Fades from the same color made transparent (as the SVG export), not from transparent black,
+                // which darkened the middle of the glow
                 var lowerGlowBrush = new LinearGradientBrush(
-                    Color.FromArgb(0, 0, 0, 0),
+                    Color.FromArgb(0, bottomColor.R, bottomColor.G, bottomColor.B),
                     bottomColor,
                     new Point(0.5, 0.45),
                     new Point(0.5, 1.0)
@@ -349,7 +353,8 @@ namespace DollIrisGenerator.Services
                 {
                     // One color only (a gradient's first color): the glow already fades out by itself
                     var glowColor = WpfGeometry.ParseHexColor(p.LensRingColor, p.LensRefractionGlow * 0.45);
-                    var causticBrush = new RadialGradientBrush(glowColor, Color.FromArgb(0, 0, 0, 0));
+                    // Fades to the same color made transparent (as the SVG export), not to transparent black
+                    var causticBrush = new RadialGradientBrush(glowColor, Color.FromArgb(0, glowColor.R, glowColor.G, glowColor.B));
                     dc.DrawEllipse(causticBrush, null, center, baseR * 0.55 * (rx / baseR), baseR * 0.55 * (ry / baseR));
                 }
             }
