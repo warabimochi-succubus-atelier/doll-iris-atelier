@@ -58,6 +58,51 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(1200, bmp.DpiX, 3);
         }
 
+        /// <summary>
+        /// At a DPI the SVG keeps its real size from the top-left corner: a 1 mm square at 1 mm is 10 px at 10 px
+        /// at 254 DPI, and the rest of a rounded-up bitmap stays background (not stretched).
+        /// </summary>
+        [Fact]
+        public void RenderAtDpi_KeepsTheRealSizeWhateverTheBitmapSize()
+        {
+            const string svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"3mm\" height=\"3mm\" viewBox=\"0 0 3 3\">" +
+                "<rect x=\"1\" y=\"1\" width=\"1\" height=\"1\" fill=\"#000000\" /></svg>";
+            var bmp = ResvgRasterizer.RenderAtDpi(svg, 254.0, 31, 33, Colors.White); // 30 × 30 px would be exact
+
+            Assert.Equal(254.0, bmp.DpiX, 3);
+            var px = new byte[31 * 33 * 4];
+            bmp.CopyPixels(px, 31 * 4, 0);
+            Assert.Equal((255, 255, 255, 255), At(px, 31, 9, 9));
+            Assert.Equal((0, 0, 0, 255), At(px, 31, 10, 10));
+            Assert.Equal((0, 0, 0, 255), At(px, 31, 19, 19));
+            Assert.Equal((255, 255, 255, 255), At(px, 31, 20, 20));
+            Assert.Equal((255, 255, 255, 255), At(px, 31, 30, 32)); // the rounded-up margin
+        }
+
+        /// <summary>The PNG pair export draws the cut line and the center mark only when asked to.</summary>
+        [Fact]
+        public void PairExport_DrawsTheGuidesOnlyWhenAsked()
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            byte[] Pixels(bool cut, bool mark)
+            {
+                var bmp = RasterExporter.RenderPairToBitmap(p, dpi: 300, pairSpacingMm: 4.0, showCutLines: cut, showCenterMarks: mark);
+                var px = new byte[bmp.PixelWidth * bmp.PixelHeight * 4];
+                bmp.CopyPixels(px, bmp.PixelWidth * 4, 0);
+                return px;
+            }
+            var none = Pixels(false, false);
+            var cutOnly = Pixels(true, false);
+            var markOnly = Pixels(false, true);
+            Assert.False(none.SequenceEqual(cutOnly));
+            Assert.False(none.SequenceEqual(markOnly));
+            Assert.False(cutOnly.SequenceEqual(markOnly));
+
+            // Transparent outside the eyes (the corner)
+            Assert.Equal(0, none[3]);
+        }
+
         [Fact]
         public void Render_ThrowsOnBrokenSvg()
         {

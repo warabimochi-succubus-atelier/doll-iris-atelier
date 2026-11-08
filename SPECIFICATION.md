@@ -75,11 +75,12 @@
 | プロジェクト | ターゲット | 内容 |
 |---|---|---|
 | `DollIrisGenerator.Core` | `net10.0`（WPF なし） | デザインモデル (`IrisParameters`・プリセット・JSON)、ランダム生成、輪郭・模様・グラデーション配置の計算 (`ShapeOutline` / `IrisPatterns` / `GradientMapping`)、SVG 出力、星雲テクスチャ、お気に入り・A4 シートの保存形式 |
-| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、WPF 描画 (`WpfIrisRenderer`)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
+| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、WPF 描画 (`WpfIrisRenderer`、画面プレビュー)、SVG のラスタライズ (`ResvgRasterizer`、resvg)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
 | `DollIrisGenerator.Web` | `net10.0`（Blazor WebAssembly） | ブラウザ版 (PWA)。デザインの編集とお気に入りのみ（2.4） |
 | `DollIrisGenerator.Tests` | `net10.0-windows` | xUnit テスト |
 
 - コアは WPF に依存しないため、Windows 以外（ブラウザ版など）からも同じ計算を使える。同じパラメータとシードからは、どこで計算しても同じ輪郭・模様・SVG になる（3. の 2）。
+- **描画の正本は SVG**（[設計書](docs/design/svg-canonical-rendering.md)）。PNG と A4 PDF の目の画像は、`SvgExporter` が作る SVG を resvg (`third_party/resvg`、P/Invoke の `ResvgRasterizer`) で画像にしたもの。画面プレビューは、切り替えが終わるまで `WpfIrisRenderer` で描き、SVG と同じ見た目であることを `SvgWpfParityTests` で確かめる。起動時に resvg を 1 回呼び、使えなければ警告を出す（「resvg.dll を読み込めません」。PNG・PDF の書き出しができない）。
 - コアの座標型 (`DollIrisGenerator.Core.Geometry` の `Point` / `Vector` / `Rect`) は、WPF の同名の型と同じ順序で計算し、ビット単位で同じ結果を返す（`CoreGeometryTests`）。WPF 側との変換は `WpfGeometry` の `ToWpf()` / `ToCore()` で行う。
 - 線幅などの「スタイル単位」の実寸 (`IrisStyle.MmPerStyleUnit`) やハイライトの範囲など、画面と SVG で共有する描画の決まりは `IrisStyle` に置く。
 - SVG の数値は `FixedFormat.ToFixed`（`ToString("F3")` と同じ文字列を速く作る。`FixedFormatTests`）で書く。ブラウザ版 (WebAssembly) では `ToString` が 1 回数十マイクロ秒かかり、プレビュー 1 枚に 1 秒近くかかっていたため。
@@ -207,7 +208,7 @@
 
 **単色が必要な箇所**: レンズ中心の屈折光、`SanitizeColorHex` / `ParseHexArgb`（WPF 側は `ParseHexColor`）にグラデーションが渡った場合（手で編集したファイルなど）は、最初のストップの色を使う。
 
-**描画実装**: 画面・PDF（WPF レンダラー）は絶対座標 (`BrushMappingMode.Absolute`) の Linear/RadialGradientBrush を使い、図形側には Transform を持たせず、回転・移動は DrawingContext に Push する（ブラシが図形と一緒に動くように）。SVG は `gradientUnits="userSpaceOnUse"` の `<linearGradient>` / `<radialGradient>`（放射状は単位円を `gradientTransform` で楕円に伸ばす）を、使う要素の直前の `<defs>` に出力する。円周は SVG にないため、画面と同じ細い扇形を並べた `<pattern>` にする。パターンはレンダラーが使う図形ごとに描き直すので、図形の多い放射ライン・ラメ・フレネルリングに円周を使う場合は、図形を白い `<mask>` にして、パターンで塗った四角形を 1 回だけ描く（見た目は同じ。`{目のID}_{要素}_mask`）。記号は複製ごとに1つずつ定義する。`#AARRGGBB` のストップは `stop-color="#RRGGBB"` と `stop-opacity` に分けて出力する（SVG では8桁 HEX が RRGGBBAA と解釈されるため）。単色の場合は、画面・PDF・SVG とも従来と同じ出力（バイト単位で一致）。
+**描画実装**: 画面（WPF レンダラー）は絶対座標 (`BrushMappingMode.Absolute`) の Linear/RadialGradientBrush を使い、図形側には Transform を持たせず、回転・移動は DrawingContext に Push する（ブラシが図形と一緒に動くように）。SVG は `gradientUnits="userSpaceOnUse"` の `<linearGradient>` / `<radialGradient>`（放射状は単位円を `gradientTransform` で楕円に伸ばす）を、使う要素の直前の `<defs>` に出力する。円周は SVG にないため、画面と同じ細い扇形を並べた `<pattern>` にする。パターンはレンダラーが使う図形ごとに描き直すので、図形の多い放射ライン・ラメ・フレネルリングに円周を使う場合は、図形を白い `<mask>` にして、パターンで塗った四角形を 1 回だけ描く（見た目は同じ。`{目のID}_{要素}_mask`）。記号は複製ごとに1つずつ定義する。`#AARRGGBB` のストップは `stop-color="#RRGGBB"` と `stop-opacity` に分けて出力する（SVG では8桁 HEX が RRGGBBAA と解釈されるため）。単色の場合は、画面・SVG とも従来と同じ出力（バイト単位で一致）。PNG・PDF は SVG を画像にしたもの。
 
 ### 7.2 内蔵プリセット一覧 (全25種)
 プリセットは色以外の設定も含むため、UI では「虹彩プリセット」と呼び、「基本」タブの先頭に置く。
@@ -344,7 +345,7 @@
 
 ### 13.1 角の丸み (Corner Rounding)
 
-瞳孔形状と装飾記号の輪郭は、直線と 3 次ベジエ曲線をつないだ閉じた輪郭 (`ShapeOutline`) として一か所で定義し、画面プレビュー・PNG・PDF（WPF 描画）と SVG 出力の両方がこの同じ輪郭を使う。角の丸みは次のように輪郭を作り直す。
+瞳孔形状と装飾記号の輪郭は、直線と 3 次ベジエ曲線をつないだ閉じた輪郭 (`ShapeOutline`) として一か所で定義し、画面プレビュー（WPF 描画）と SVG 出力（PNG・PDF はこれを画像にしたもの）の両方がこの同じ輪郭を使う。角の丸みは次のように輪郭を作り直す。
 
 1. 隣り合う辺の接線の向きが 2° 以上変わる点を「角」とする（三日月の弧の途中など、もともと滑らかなつなぎ目は対象外）。
 2. 角ごとに、両側の辺を同じ長さだけ切り戻す。切り戻す長さの上限は、短いほうの辺の半分（隣の角の切り戻しと重ならない）、曲線の辺ではその辺の向きが 45° 変わるところまで、さらに切り戻した点どうしの接線の角度差が元の角より 40°（最大 165°）を超えないところまで。実際に切り戻す長さは、この上限 × 角の丸み（0〜1）。
@@ -441,6 +442,7 @@
 - **用紙サイズ**: A4縦（`210.0 mm` × `297.0 mm` / `595.28 pt` × `841.89 pt`）
 - **寸法精度**: PDF 標準ポイント換算（$1\text{ pt} = \frac{25.4}{72}\text{ mm}$）により、**寸法誤差 ±0.1mm 以内**を数学的に保証。
 - **複数デザイン混載**: 1枚のシート内に異なるサイズ・異なる配色のアイペアを任意の数量配置可能。
+- **目の画像**: 片目ずつ、SVG（傾きを含む外接枠 + 周囲 1mm、印刷補助マークなし）を resvg で 1200 DPI の画像にし、JPEG（品質 98）で埋め込む。同じデザインの画像は 1 回だけ埋め込んで使い回す。画像は実寸どおりに左上から描き、ピクセル数は切り上げるので、PDF にはそのピクセル数どおりの大きさ（例: 10mm の目は 12mm = 566.9 ピクセル → 567 ピクセル = 34.020pt）で置く（引き伸ばさない）。カットライン・センターマーク・ラベルは PDF のベクターで描く。
 
 ### 18.2 印刷補助マーク
 - **カットライン (Cut Lines)**: ハサミや円形ポンチで切り抜くための破線円ガイド。
@@ -502,6 +504,7 @@ PDF 出力時にシートが空の場合は、編集中のデザイン 1 ペア�
   - 市販のプロ向けインクジェットプリンター（最高解像度 4800〜9600 DPI）の微細印刷に完全対応。
 - **基準解像度**: **600 DPI**（高速出力・Webプレビュー用）
 - **出力形式**: 透過 PNG (`.png`)
+- **描画**: ペアの SVG（左右の間隔はシートの「ペア内左右の間隔」、周囲余白 2mm、カットライン・センターマークはプレビューの表示どおり）を resvg で画像にする。実寸どおりに左上から描き、ピクセル数は切り上げる。
 
 ---
 

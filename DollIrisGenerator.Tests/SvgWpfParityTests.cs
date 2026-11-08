@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using DollIrisGenerator.Models;
@@ -13,8 +11,9 @@ using Xunit;
 namespace DollIrisGenerator.Tests
 {
     /// <summary>
-    /// Temporary (docs/design/svg-canonical-rendering.md, steps 2–5): while the screen / PNG / PDF still draw with
-    /// WpfIrisRenderer, the exported SVG rasterized by resvg must look the same. Removed together with WpfIrisRenderer.
+    /// Temporary (docs/design/svg-canonical-rendering.md, steps 2–5): while the screen still draws with
+    /// WpfIrisRenderer, the PDF / PNG images (the SVG drawn by resvg, RasterExporter) must look the same.
+    /// Removed together with WpfIrisRenderer.
     /// Set DOLL_IRIS_PARITY_DIR to a folder to also write WPF | resvg | difference (×4) images there.
     /// </summary>
     public class SvgWpfParityTests
@@ -74,17 +73,13 @@ namespace DollIrisGenerator.Tests
 
         private static double Compare(IrisParameters p, bool right, string tag)
         {
-            int w = 0, h = 0;
-            byte[] a = Array.Empty<byte>();
-            RunOnSta(() =>
-            {
-                var wpf = RasterExporter.RenderSingleToBitmap(p, right, Dpi); // Pbgra32
-                w = wpf.PixelWidth;
-                h = wpf.PixelHeight;
-                a = new byte[w * h * 4];
-                wpf.CopyPixels(a, w * 4, 0);
-            });
-            var b = ResvgRasterizer.RenderToBgra(OnBitmapCanvas(SvgExporter.GenerateSingleEyeSvg(p, right), w, h), w, h, Colors.White);
+            var svgImage = RasterExporter.RenderSingleToBitmap(p, right, Dpi); // resvg, Pbgra32, white
+            int w = svgImage.PixelWidth, h = svgImage.PixelHeight;
+            var b = new byte[w * h * 4];
+            svgImage.CopyPixels(b, w * 4, 0);
+
+            var a = new byte[w * h * 4];
+            RunOnSta(() => RenderWithWpf(p, right, w, h).CopyPixels(a, w * 4, 0));
 
             long sum = 0;
             var diff = new byte[a.Length];
@@ -108,16 +103,22 @@ namespace DollIrisGenerator.Tests
             return sum / (3.0 * w * h);
         }
 
-        /// <summary>
-        /// The SVG (2 mm padding) re-framed onto exactly the WPF bitmap's canvas: 1 mm padding, pixel size rounded up.
-        /// </summary>
-        private static string OnBitmapCanvas(string svg, int w, int h)
+        /// <summary>The same canvas drawn by the screen renderer (what RasterExporter did before it used resvg).</summary>
+        private static BitmapSource RenderWithWpf(IrisParameters p, bool right, int w, int h)
         {
-            double pxPerMm = Dpi / 25.4;
-            string F(double v) => v.ToString("0.######", CultureInfo.InvariantCulture);
-            double padShift = 1.0; // SVG pads 2 mm, the bitmap 1 mm
-            string head = $"<svg width=\"{w}\" height=\"{h}\" viewBox=\"{F(padShift)} {F(padShift)} {F(w / pxPerMm)} {F(h / pxPerMm)}\" xmlns=\"http://www.w3.org/2000/svg\">";
-            return Regex.Replace(svg, "<svg [^>]*>", head);
+            double dipPerMm = 96.0 / 25.4;
+            var (footW, footH) = SheetLayout.GetEyeFootprintMm(p);
+            double pad = RasterExporter.SingleEyePaddingMm;
+            var visual = new DrawingVisual();
+            using (var dc = visual.RenderOpen())
+            {
+                dc.DrawRectangle(Brushes.White, null, new System.Windows.Rect(0, 0, w * 96.0 / Dpi, h * 96.0 / Dpi));
+                var center = new System.Windows.Point((footW / 2.0 + pad) * dipPerMm, (footH / 2.0 + pad) * dipPerMm);
+                WpfIrisRenderer.RenderIris(dc, center, p.SizeMm / 2.0, dipPerMm, p, isRightEye: right);
+            }
+            var rtb = new RenderTargetBitmap(w, h, Dpi, Dpi, PixelFormats.Pbgra32);
+            rtb.Render(visual);
+            return rtb;
         }
 
         private static void SaveRow(string path, int w, int h, params byte[][] tiles)

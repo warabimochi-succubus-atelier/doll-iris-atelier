@@ -549,6 +549,35 @@ namespace DollIrisGenerator.Tests
 
         }
 
+        /// <summary>
+        /// Eye images are placed at their own size (pixels at 1200 DPI), not stretched over the canvas in mm:
+        /// a 10 mm eye has a 12 mm canvas = 566.9 px, rounded up to 567 px = 34.020 pt (12 mm would be 34.016 pt).
+        /// </summary>
+        [Fact]
+        public void TestPdfPlacesEyeImagesAtTheirRealSize()
+        {
+            string tempPdf = Path.Combine(Path.GetTempPath(), $"test_pdf_image_size_{Guid.NewGuid():N}.pdf");
+            try
+            {
+                var items = new ObservableCollection<SheetItem> { new(new IrisParameters { Name = "Size", SizeMm = 10.0 }, 1) };
+                PdfExporter.ExportA4SheetToPdf(tempPdf, items, new PrintSheetConfig());
+
+                string pdfText = File.ReadAllText(tempPdf);
+                Assert.Contains("/Width 567 /Height 567", pdfText);
+                var cm = System.Text.RegularExpressions.Regex.Matches(pdfText, @"([\d.]+) 0 0 ([\d.]+) ([\d.]+) ([\d.]+) cm\r?\n/Im\d+ Do");
+                Assert.Equal(2, cm.Count);
+                foreach (System.Text.RegularExpressions.Match m in cm)
+                {
+                    Assert.Equal("34.020", m.Groups[1].Value);
+                    Assert.Equal("34.020", m.Groups[2].Value);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPdf)) File.Delete(tempPdf);
+            }
+        }
+
         [Fact]
         public void TestPdfExportPreventsInfiniteLoopOnExtremeOrZeroGrid()
         {
