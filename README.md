@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.10.0
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.11.0
 
 ## Overview (English)
 
