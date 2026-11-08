@@ -25,15 +25,15 @@ namespace DollIrisGenerator.Models
         public double InnerGradientRadius { get; set; } = 0.55;
         public double OuterGradientRadius { get; set; } = 0.95;
 
-        // Layers: always applied (0 = off), so picking a plain preset clears another preset's aurora / nebula / gem cut.
-        // Palettes saved before these existed load as 0.
+        // Layers: always applied (0 = off), so picking a plain preset clears another preset's aurora / nebula / gem cut
         public string? AuroraColor { get; set; }
         public double AuroraOpacity { get; set; }
         public string? NebulaColor { get; set; }
         public double NebulaOpacity { get; set; }
         public double PupilFacetIntensity { get; set; }
 
-        // Look settings: applied only when the preset sets them (null = keep the design's own value)
+        // Look settings. null = the app's default value, never the design's current one: a preset always gives the
+        // same look whatever was picked before it.
         public double? NebulaDensity { get; set; }
         public double? NebulaSwirl { get; set; }
         public int? PupilFacetCount { get; set; }
@@ -51,186 +51,65 @@ namespace DollIrisGenerator.Models
         public int? SymbolCount { get; set; }
         public double? SymbolOpacity { get; set; }
 
+        // Detail settings (limbal ring, pupil, rays, glitter, nebula)
+        public double? LimbalRingThickness { get; set; }
+        public double? LimbalRingOpacity { get; set; }
+        public double? LimbalRingSoftness { get; set; }
+        public double? PupilOpacity { get; set; }
+        public double? PupilSoftness { get; set; }
+        public double? PupilCornerRounding { get; set; }
+        public double? NebulaScale { get; set; }
+        public double? RayThickness { get; set; }
+        public double? RayLengthRatio { get; set; }
+        public double? RayRandomness { get; set; }
+        public double? RayInnerRadiusRatio { get; set; }
+        public double? RayTaper { get; set; }
+        public double? RayWidthVariation { get; set; }
+        public double? RayCurve { get; set; }
+        public double? RayFineLayer { get; set; }
+        public double? ParticleMinSize { get; set; }
+        public double? ParticleMaxSize { get; set; }
+        public double? ParticleOpacity { get; set; }
+        public double? ParticleFlareLength { get; set; }
+
+        // Highlights: null = the app's default highlights
+        public List<HighlightItem>? Highlights { get; set; }
+        public bool? MirrorHighlightsWithIris { get; set; }
+
+        // Lens pattern
+        public bool? LensPatternEnabled { get; set; }
+        public int? LensRingCount { get; set; }
+        public double? LensRingIntensity { get; set; }
+        public double? LensRingWidth { get; set; }
+        public string? LensRingColor { get; set; }
+        public double? LensRefractionGlow { get; set; }
+
         /// <summary>
-        /// The preset's symbol replaces the design's symbols: every other symbol is switched off (all of them when the
-        /// preset has none), so a symbol from another preset, e.g. the outline heart of 花びら, does not stay behind.
+        /// The whole symbol list (presets made from a design). When set, it replaces the design's symbols and
+        /// <see cref="DefaultSymbol"/> and the Symbol* settings are not used.
         /// </summary>
-        public bool ReplaceSymbols { get; set; }
+        public List<DecorativeSymbolItem>? Symbols { get; set; }
     }
 
     public static class ColorPresets
     {
         public static ObservableCollection<PresetDefinition> All { get; } = new()
         {
-            new PresetDefinition
-            {
-                Name = "ブルー (サファイア)",
-                Description = "透明感のある澄んだアニメ調ブルーアイ",
-                BaseColor = "#2979FF",
-                InnerColor = "#80D8FF",
-                OuterColor = "#0D47A1",
-                BottomHighlightColor = "#E1F5FE",
-                LimbalRingColor = "#051636",
-                PupilColor = "#060A18",
-                RayColor = "#B3E5FC",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "グリーン (エメラルド)",
-                Description = "深みのある鮮やかなエメラルドグリーン",
-                BaseColor = "#00C853",
-                InnerColor = "#B9F6CA",
-                OuterColor = "#1B5E20",
-                BottomHighlightColor = "#E8F5E9",
-                LimbalRingColor = "#092E10",
-                PupilColor = "#051A09",
-                RayColor = "#CCFF90",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "レッド (ルビー)",
-                Description = "情熱的で高貴な深紅のルビーアイ",
-                BaseColor = "#D50000",
-                InnerColor = "#FF8A80",
-                OuterColor = "#5A0000",
-                BottomHighlightColor = "#FFEBEE",
-                LimbalRingColor = "#2B0000",
-                PupilColor = "#140000",
-                RayColor = "#FFCDD2",
-                ParticleColor = "#FFE0B2",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "パープル (アメジスト)",
-                Description = "神秘的で幻想的なヴァイオレットパープル",
-                BaseColor = "#AA00FF",
-                InnerColor = "#EA80FC",
-                OuterColor = "#4A148C",
-                BottomHighlightColor = "#F3E5F5",
-                LimbalRingColor = "#1E053D",
-                PupilColor = "#120224",
-                RayColor = "#E1BEE7",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "ゴールド (琥珀・アンバー)",
-                Description = "温かみのある輝く黄金・琥珀色",
-                BaseColor = "#FFB300",
-                InnerColor = "#FFE082",
-                OuterColor = "#E65100",
-                BottomHighlightColor = "#FFF8E1",
-                LimbalRingColor = "#3E2723",
-                PupilColor = "#1F1411",
-                RayColor = "#FFF9C4",
-                ParticleColor = "#FFFDE7",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "シルバー (クールグレー)",
-                Description = "知的で澄明な白銀・モノトーンアイ",
-                BaseColor = "#90A4AE",
-                InnerColor = "#ECEFF1",
-                OuterColor = "#37474F",
-                BottomHighlightColor = "#FFFFFF",
-                LimbalRingColor = "#1B2327",
-                PupilColor = "#0F1417",
-                RayColor = "#CFD8DC",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.None
-            },
-            new PresetDefinition
-            {
-                Name = "ピンク (ローズクォーツ)",
-                Description = "愛らしく華やかな桜ピンクアイ",
-                BaseColor = "#FF4081",
-                InnerColor = "#FF80AB",
-                OuterColor = "#880E4F",
-                BottomHighlightColor = "#FCE4EC",
-                LimbalRingColor = "#3F0523",
-                PupilColor = "#200211",
-                RayColor = "#F8BBD0",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.Heart,
-                SymbolColor = "#FFFFFF"
-            },
-            new PresetDefinition
-            {
-                Name = "サクラ (桜舞う春風)",
-                Description = "桜の花びら装飾が舞う春色のソフトピンクアイ",
-                BaseColor = "#FF6090",
-                InnerColor = "#FFB2D0",
-                OuterColor = "#7A0035",
-                BottomHighlightColor = "#FFF0F5",
-                LimbalRingColor = "#3B0018",
-                PupilColor = "#1F000C",
-                RayColor = "#FFD6E7",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.SakuraPetal,
-                SymbolColor = "#FFF5F8"
-            },
-            new PresetDefinition
-            {
-                Name = "サンセット (夕暮れグラデ)",
-                Description = "上部パープルと下部オレンジの夕暮れグラデーション",
-                BaseColor = "#7C4DFF",
-                InnerColor = "#FF9100",
-                OuterColor = "#311B92",
-                BottomHighlightColor = "#FFD180",
-                LimbalRingColor = "#1A0933",
-                PupilColor = "#100620",
-                RayColor = "#FFE082",
-                ParticleColor = "#FFF9C4",
-                DefaultSymbol = SymbolType.Star4,
-                SymbolColor = "#FFF9C4"
-            },
-            new PresetDefinition
-            {
-                Name = "ギャラクシー (夜空・星雲)",
-                Description = "星屑が舞う宇宙・銀河のダークネイビー",
-                BaseColor = "#304FFE",
-                InnerColor = "#00E5FF",
-                OuterColor = "#0D1B2A",
-                BottomHighlightColor = "#84FFFF",
-                LimbalRingColor = "#050B14",
-                PupilColor = "#02060D",
-                RayColor = "#80D8FF",
-                ParticleColor = "#FFFFFF",
-                DefaultSymbol = SymbolType.Moon,
-                SymbolColor = "#E0F7FA"
-            },
-            new PresetDefinition
-            {
-                Name = "キャットアイ (猫目スリット)",
-                Description = "縦長瞳孔を持つ魅惑的なゴールドキャットアイ",
-                BaseColor = "#FFD600",
-                InnerColor = "#AEEA00",
-                OuterColor = "#BF360C",
-                BottomHighlightColor = "#FFFF8D",
-                LimbalRingColor = "#260E04",
-                PupilColor = "#0D0502",
-                RayColor = "#F4FF81",
-                ParticleColor = "#FFFFFF",
-                PupilShape = PupilShape.CatSlit,
-                DefaultSymbol = SymbolType.None
-            },
-
             // ---------------- ベーシックカラー ----------------
+            // The first one is the preset selected at start-up
             Basic("クリアブルー", "澄んだ水色のガラスのようなクリアブルー",
                 "#2E86FF", "#9BE1FF", "#0A2A8A", "#CFF3FF", "#06173F", "#071030", "#C9F0FF"),
             Basic("アクア", "南国の海のような明るいアクアブルー",
                 "#12B5C9", "#9FF3F0", "#04506B", "#D6FFFB", "#02303C", "#03202A", "#C8FFF7"),
             Basic("ラベンダー", "やさしく透けるラベンダーパープル",
                 "#8E63E0", "#D9C6FF", "#3B1C8C", "#EEE4FF", "#1E0E4A", "#140A33", "#E6DAFF"),
+            Basic("パープル", "神秘的で幻想的なヴァイオレットパープル",
+                "#AA00FF", "#EA80FC", "#4A148C", "#F3E5F5", "#1E053D", "#120224", "#E1BEE7"),
             Basic("ピンク", "甘く華やかなローズピンク",
                 "#F06292", "#FFC1D9", "#8E1F4F", "#FFE6F0", "#4A0A27", "#3A0A20", "#FFD6E6"),
+            Basic("サクラ", "桜の花びらが舞う春色のソフトピンク",
+                "#FF6090", "#FFB2D0", "#7A0035", "#FFF0F5", "#3B0018", "#1F000C", "#FFD6E7",
+                symbol: SymbolType.SakuraPetal, symbolColor: "#FFF5F8"),
             Basic("レッド", "宝石のように深く輝くレッド",
                 "#E0283C", "#FF8A8A", "#6E0612", "#FFD0D0", "#3A0309", "#2A0207", "#FFC2C2"),
             Basic("アンバー", "蜂蜜のようにとろける琥珀色",
@@ -239,11 +118,13 @@ namespace DollIrisGenerator.Models
                 "#19A36B", "#8FF0C0", "#064D33", "#D5FFEA", "#022B1C", "#021F14", "#C6FFE3"),
             Basic("グレー", "銀色にきらめくクールグレー",
                 "#7D8792", "#D3DAE2", "#2E343B", "#EEF2F6", "#15181C", "#0D0F12", "#E6EBF0"),
+            Basic("キャットアイ", "縦長の瞳孔を持つ、魅惑的なゴールドの猫目",
+                "#FFD600", "#AEEA00", "#BF360C", "#FFFF8D", "#260E04", "#0D0502", "#F4FF81",
+                pupilShape: PupilShape.CatSlit),
 
             // ---------------- 特殊デザイン ----------------
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 星屑",
                 Description = "濃紺の虹彩いっぱいに光る星屑が散らばる",
                 BaseColor = "#1C2C8C", InnerColor = "#4E7CFF", OuterColor = "#070D33", BottomHighlightColor = "#8FB4FF",
@@ -253,7 +134,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: オーロラ",
                 Description = "ピンク・ブルー・パープルが瞳孔のまわりで移り変わる",
                 BaseColor = "#6F7CE0", InnerColor = "#D7C8FF", OuterColor = "#2A2370", BottomHighlightColor = "#E3F6FF",
@@ -264,7 +144,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 銀河",
                 Description = "紫と青の星雲が渦巻く銀河",
                 BaseColor = "#3D2A9A", InnerColor = "#7E57C2", OuterColor = "#12082E", BottomHighlightColor = "#B39DDB",
@@ -275,7 +154,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 夕焼け",
                 Description = "オレンジから深紅へ沈む夕焼け色",
                 BaseColor = "#F2683C", InnerColor = "#FFD08A", OuterColor = "#8A1E12", BottomHighlightColor = "#FFE1B0",
@@ -285,7 +163,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 夜空",
                 Description = "夜空の濃紺に小さなハートの瞳孔と星",
                 BaseColor = "#142060", InnerColor = "#2E4BB0", OuterColor = "#050A24", BottomHighlightColor = "#5C7CFA",
@@ -297,7 +174,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 宝石",
                 Description = "ブルーの虹彩に、カットされた宝石のハート",
                 BaseColor = "#2E8FC8", InnerColor = "#9FE6FF", OuterColor = "#0B3A6A", BottomHighlightColor = "#D8F6FF",
@@ -308,7 +184,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: ハート",
                 Description = "赤い虹彩の中心に、ルビーのようなカットのハート",
                 BaseColor = "#E53950", InnerColor = "#FF8A9B", OuterColor = "#6A0418", BottomHighlightColor = "#FFD5DB",
@@ -319,7 +194,6 @@ namespace DollIrisGenerator.Models
             },
             new PresetDefinition
             {
-                ReplaceSymbols = true,
                 Name = "特殊: 花びら",
                 Description = "淡いピンクに、ふちどりのハートが浮かぶ",
                 BaseColor = "#F48FB1", InnerColor = "#FFE0EC", OuterColor = "#C2185B", BottomHighlightColor = "#FFF0F6",
@@ -350,18 +224,19 @@ namespace DollIrisGenerator.Models
                 pupilSize: 0.38)
         };
 
-        /// <summary>ベーシックカラー: round pupil, fiber rays and glowing glitter in one hue.</summary>
+        /// <summary>ベーシックカラー: fiber rays and glowing glitter in one hue, with an optional pupil shape or symbol.</summary>
         private static PresetDefinition Basic(string name, string description, string baseColor, string inner, string outer,
-            string bottom, string limbal, string pupil, string ray) => new()
+            string bottom, string limbal, string pupil, string ray,
+            PupilShape pupilShape = PupilShape.Round, SymbolType symbol = SymbolType.None, string symbolColor = "#FFFFFF") => new()
         {
-            ReplaceSymbols = true,
             Name = "ベーシック: " + name,
             Description = description,
             BaseColor = baseColor, InnerColor = inner, OuterColor = outer, BottomHighlightColor = bottom,
             LimbalRingColor = limbal, PupilColor = pupil, RayColor = ray, ParticleColor = "#FFFFFF",
-            PupilShape = PupilShape.Round, PupilSizeRatio = 0.32,
+            PupilShape = pupilShape, PupilSizeRatio = 0.32,
             RayCount = 64, RayIntensity = 0.65, ParticleCount = 75, ParticleRadiusRatio = 0.8,
-            ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45
+            ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45,
+            DefaultSymbol = symbol, SymbolColor = symbolColor
         };
 
         /// <summary>雰囲気別おすすめ: a basic look with its own glitter amount and an optional pupil / layer twist.</summary>
@@ -370,7 +245,6 @@ namespace DollIrisGenerator.Models
             PupilShape pupil = PupilShape.Round, double pupilSize = 0.32, double facets = 0.0,
             string? aurora = null, double auroraOpacity = 0.0) => new()
         {
-            ReplaceSymbols = true,
             Name = "雰囲気: " + name,
             Description = description,
             BaseColor = baseColor, InnerColor = inner, OuterColor = outer, BottomHighlightColor = bottom,
@@ -395,63 +269,187 @@ namespace DollIrisGenerator.Models
             target.InnerGradientRadius = preset.InnerGradientRadius;
             target.OuterGradientRadius = preset.OuterGradientRadius;
 
+            // Everything the preset leaves out goes back to the app's default, so nothing from the previously picked
+            // preset (or from hand edits to these settings) stays behind
+            var d = new IrisParameters();
+
             // Layers
-            if (preset.AuroraColor != null) target.AuroraColor = preset.AuroraColor;
+            target.AuroraColor = preset.AuroraColor ?? d.AuroraColor;
             target.AuroraOpacity = preset.AuroraOpacity;
-            if (preset.NebulaColor != null) target.NebulaColor = preset.NebulaColor;
+            target.NebulaColor = preset.NebulaColor ?? d.NebulaColor;
             target.NebulaOpacity = preset.NebulaOpacity;
             target.PupilFacetIntensity = preset.PupilFacetIntensity;
 
-            // Look settings the preset chose
-            if (preset.NebulaDensity is { } nd) target.NebulaDensity = nd;
-            if (preset.NebulaSwirl is { } ns) target.NebulaSwirl = ns;
-            if (preset.PupilFacetCount is { } fc) target.PupilFacetCount = fc;
-            if (preset.PupilSizeRatio is { } ps) target.PupilSizeRatio = ps;
-            if (preset.BottomHighlightIntensity is { } bh) target.BottomHighlightIntensity = bh;
-            if (preset.RayCount is { } rc) target.RayCount = rc;
-            if (preset.RayIntensity is { } ri) target.RayIntensity = ri;
-            if (preset.ParticleCount is { } pc) target.ParticleCount = pc;
-            if (preset.ParticleRadiusRatio is { } pr) target.ParticleRadiusRatio = pr;
-            if (preset.ParticleGlow is { } pg) target.ParticleGlow = pg;
-            if (preset.ParticleFlareRatio is { } pf) target.ParticleFlareRatio = pf;
+            // Look settings
+            target.NebulaDensity = preset.NebulaDensity ?? d.NebulaDensity;
+            target.NebulaSwirl = preset.NebulaSwirl ?? d.NebulaSwirl;
+            target.PupilFacetCount = preset.PupilFacetCount ?? d.PupilFacetCount;
+            target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
+            target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
+            target.RayCount = preset.RayCount ?? d.RayCount;
+            target.RayIntensity = preset.RayIntensity ?? d.RayIntensity;
+            target.ParticleCount = preset.ParticleCount ?? d.ParticleCount;
+            target.ParticleRadiusRatio = preset.ParticleRadiusRatio ?? d.ParticleRadiusRatio;
+            target.ParticleGlow = preset.ParticleGlow ?? d.ParticleGlow;
+            target.ParticleFlareRatio = preset.ParticleFlareRatio ?? d.ParticleFlareRatio;
 
-            if (preset.ReplaceSymbols)
+            // Detail settings
+            target.LimbalRingThickness = preset.LimbalRingThickness ?? d.LimbalRingThickness;
+            target.LimbalRingOpacity = preset.LimbalRingOpacity ?? d.LimbalRingOpacity;
+            target.LimbalRingSoftness = preset.LimbalRingSoftness ?? d.LimbalRingSoftness;
+            target.PupilOpacity = preset.PupilOpacity ?? d.PupilOpacity;
+            target.PupilSoftness = preset.PupilSoftness ?? d.PupilSoftness;
+            target.PupilCornerRounding = preset.PupilCornerRounding ?? d.PupilCornerRounding;
+            target.NebulaScale = preset.NebulaScale ?? d.NebulaScale;
+            target.RayThickness = preset.RayThickness ?? d.RayThickness;
+            target.RayLengthRatio = preset.RayLengthRatio ?? d.RayLengthRatio;
+            target.RayRandomness = preset.RayRandomness ?? d.RayRandomness;
+            target.RayInnerRadiusRatio = preset.RayInnerRadiusRatio ?? d.RayInnerRadiusRatio;
+            target.RayTaper = preset.RayTaper ?? d.RayTaper;
+            target.RayWidthVariation = preset.RayWidthVariation ?? d.RayWidthVariation;
+            target.RayCurve = preset.RayCurve ?? d.RayCurve;
+            target.RayFineLayer = preset.RayFineLayer ?? d.RayFineLayer;
+            target.ParticleMinSize = preset.ParticleMinSize ?? d.ParticleMinSize;
+            target.ParticleMaxSize = preset.ParticleMaxSize ?? d.ParticleMaxSize;
+            target.ParticleOpacity = preset.ParticleOpacity ?? d.ParticleOpacity;
+            target.ParticleFlareLength = preset.ParticleFlareLength ?? d.ParticleFlareLength;
+
+            // Highlights (replaced in place, so the list on screen stays bound)
+            ReplaceItems(target.Highlights, preset.Highlights ?? d.Highlights.ToList(), h => h.Clone());
+            target.MirrorHighlightsWithIris = preset.MirrorHighlightsWithIris ?? d.MirrorHighlightsWithIris;
+
+            // Lens pattern
+            target.LensPatternEnabled = preset.LensPatternEnabled ?? d.LensPatternEnabled;
+            target.LensRingCount = preset.LensRingCount ?? d.LensRingCount;
+            target.LensRingIntensity = preset.LensRingIntensity ?? d.LensRingIntensity;
+            target.LensRingWidth = preset.LensRingWidth ?? d.LensRingWidth;
+            target.LensRingColor = preset.LensRingColor ?? d.LensRingColor;
+            target.LensRefractionGlow = preset.LensRefractionGlow ?? d.LensRefractionGlow;
+
+            // A preset made from a design brings back its whole symbol list
+            if (preset.Symbols != null)
             {
-                for (int i = preset.DefaultSymbol != SymbolType.None ? 1 : 0; i < target.Symbols.Count; i++) target.Symbols[i].Enabled = false;
+                ReplaceItems(target.Symbols, preset.Symbols, s => s.Clone());
+                return;
             }
 
-            if (preset.DefaultSymbol != SymbolType.None)
+            // The preset's symbol (or none) replaces the design's symbols: every other symbol is switched off, so a
+            // symbol from another preset, e.g. the outline heart of 花びら, does not stay behind
+            bool hasSymbol = preset.DefaultSymbol != SymbolType.None;
+            for (int i = hasSymbol ? 1 : 0; i < target.Symbols.Count; i++) target.Symbols[i].Enabled = false;
+            if (!hasSymbol) return;
+
+            DecorativeSymbolItem symbol;
+            if (target.Symbols.Count > 0)
             {
-                DecorativeSymbolItem symbol;
-                if (target.Symbols.Count > 0)
-                {
-                    symbol = target.Symbols[0];
-                    symbol.Type = preset.DefaultSymbol;
-                    symbol.Color = preset.SymbolColor;
-                    symbol.Enabled = true;
-                }
-                else
-                {
-                    // ランダム生成などで記号が 0 個のときも、プリセットの記号を反映する
-                    symbol = new DecorativeSymbolItem
-                    {
-                        Type = preset.DefaultSymbol,
-                        Count = 1,
-                        Size = 0.18,
-                        PositionX = 0.25,
-                        PositionY = -0.15,
-                        Color = preset.SymbolColor,
-                        Opacity = 0.85,
-                        Enabled = true
-                    };
-                    target.Symbols.Add(symbol);
-                }
-                if (preset.SymbolSize is { } ss) symbol.Size = ss;
-                if (preset.SymbolPositionX is { } sx) symbol.PositionX = sx;
-                if (preset.SymbolPositionY is { } sy) symbol.PositionY = sy;
-                if (preset.SymbolCount is { } sc) symbol.Count = sc;
-                if (preset.SymbolOpacity is { } so) symbol.Opacity = so;
+                symbol = target.Symbols[0];
             }
+            else
+            {
+                // ランダム生成などで記号が 0 個のときも、プリセットの記号を反映する
+                symbol = new DecorativeSymbolItem();
+                target.Symbols.Add(symbol);
+            }
+            symbol.Type = preset.DefaultSymbol;
+            symbol.Color = preset.SymbolColor;
+            symbol.Size = preset.SymbolSize ?? DefaultSymbolSize;
+            symbol.PositionX = preset.SymbolPositionX ?? DefaultSymbolPositionX;
+            symbol.PositionY = preset.SymbolPositionY ?? DefaultSymbolPositionY;
+            symbol.Count = preset.SymbolCount ?? 1;
+            symbol.Opacity = preset.SymbolOpacity ?? DefaultSymbolOpacity;
+            symbol.Rotation = 0.0;
+            symbol.CornerRounding = 0.0;
+            symbol.Enabled = true;
+        }
+
+        /// <summary>Puts copies of <paramref name="source"/> into <paramref name="target"/> (skipping nulls, at most the design's item limit).</summary>
+        private static void ReplaceItems<T>(ObservableCollection<T> target, IEnumerable<T?> source, Func<T, T> copy) where T : class
+        {
+            var copies = source.Where(x => x != null).Take(IrisParameters.MaxNestedItems).Select(x => copy(x!)).ToList();
+            target.Clear();
+            foreach (var item in copies) target.Add(item);
+        }
+
+        // Where a preset's symbol goes when the preset does not say: upper right of the pupil
+        private const double DefaultSymbolSize = 0.18;
+        private const double DefaultSymbolPositionX = 0.25;
+        private const double DefaultSymbolPositionY = -0.15;
+        private const double DefaultSymbolOpacity = 0.85;
+
+        /// <summary>
+        /// Makes a preset from a design: everything about its look (colors, pupil, rays, glitter, layers, limbal ring,
+        /// highlights, symbols, lens pattern). Applying it brings the look back. Size, shape, tilt, seed, name and the
+        /// odd-eye settings are not part of a preset. Color fills (gradients) are kept as they are.
+        /// </summary>
+        public static PresetDefinition FromDesign(IrisParameters design, string name, string description)
+        {
+            var preset = new PresetDefinition
+            {
+                Name = name,
+                Description = description,
+                BaseColor = design.BaseColor,
+                InnerColor = design.InnerColor,
+                OuterColor = design.OuterColor,
+                BottomHighlightColor = design.BottomHighlightColor,
+                LimbalRingColor = design.LimbalRingColor,
+                PupilColor = design.PupilColor,
+                RayColor = design.RayColor,
+                ParticleColor = design.ParticleColor,
+                PupilShape = design.PupilShape,
+                InnerGradientRadius = design.InnerGradientRadius,
+                OuterGradientRadius = design.OuterGradientRadius,
+
+                AuroraColor = design.AuroraColor,
+                AuroraOpacity = design.AuroraOpacity,
+                NebulaColor = design.NebulaColor,
+                NebulaOpacity = design.NebulaOpacity,
+                PupilFacetIntensity = design.PupilFacetIntensity,
+
+                NebulaDensity = design.NebulaDensity,
+                NebulaSwirl = design.NebulaSwirl,
+                PupilFacetCount = design.PupilFacetCount,
+                PupilSizeRatio = design.PupilSizeRatio,
+                BottomHighlightIntensity = design.BottomHighlightIntensity,
+                RayCount = design.RayCount,
+                RayIntensity = design.RayIntensity,
+                ParticleCount = design.ParticleCount,
+                ParticleRadiusRatio = design.ParticleRadiusRatio,
+                ParticleGlow = design.ParticleGlow,
+                ParticleFlareRatio = design.ParticleFlareRatio,
+
+                LimbalRingThickness = design.LimbalRingThickness,
+                LimbalRingOpacity = design.LimbalRingOpacity,
+                LimbalRingSoftness = design.LimbalRingSoftness,
+                PupilOpacity = design.PupilOpacity,
+                PupilSoftness = design.PupilSoftness,
+                PupilCornerRounding = design.PupilCornerRounding,
+                NebulaScale = design.NebulaScale,
+                RayThickness = design.RayThickness,
+                RayLengthRatio = design.RayLengthRatio,
+                RayRandomness = design.RayRandomness,
+                RayInnerRadiusRatio = design.RayInnerRadiusRatio,
+                RayTaper = design.RayTaper,
+                RayWidthVariation = design.RayWidthVariation,
+                RayCurve = design.RayCurve,
+                RayFineLayer = design.RayFineLayer,
+                ParticleMinSize = design.ParticleMinSize,
+                ParticleMaxSize = design.ParticleMaxSize,
+                ParticleOpacity = design.ParticleOpacity,
+                ParticleFlareLength = design.ParticleFlareLength,
+
+                Highlights = design.Highlights.Select(h => h.Clone()).ToList(),
+                MirrorHighlightsWithIris = design.MirrorHighlightsWithIris,
+
+                LensPatternEnabled = design.LensPatternEnabled,
+                LensRingCount = design.LensRingCount,
+                LensRingIntensity = design.LensRingIntensity,
+                LensRingWidth = design.LensRingWidth,
+                LensRingColor = design.LensRingColor,
+                LensRefractionGlow = design.LensRefractionGlow,
+
+                Symbols = design.Symbols.Select(s => s.Clone()).ToList()
+            };
+            return preset;
         }
 
         public static void ExportPalettesToFile(string filePath, IEnumerable<PresetDefinition> presets)

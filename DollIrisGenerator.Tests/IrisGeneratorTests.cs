@@ -484,13 +484,13 @@ namespace DollIrisGenerator.Tests
                 Directory.CreateDirectory(outDir);
 
                 var blue = new IrisParameters { Name = "サファイアブルー", SizeMm = 10.0, Seed = 12345 };
-                ColorPresets.ApplyPreset(blue, ColorPresets.All[0]);
+                ColorPresets.ApplyPreset(blue, ColorPresets.All.Single(x => x.Name == "ベーシック: クリアブルー"));
 
                 var galaxy = new IrisParameters { Name = "ギャラクシー", SizeMm = 10.0, Seed = 45678 };
-                ColorPresets.ApplyPreset(galaxy, ColorPresets.All[9]);
+                ColorPresets.ApplyPreset(galaxy, ColorPresets.All.Single(x => x.Name == "特殊: 銀河"));
 
                 var sakura = new IrisParameters { Name = "サクラ (桜舞う春風)", SizeMm = 10.0, Seed = 56789 };
-                ColorPresets.ApplyPreset(sakura, ColorPresets.All[7]); // Sakura preset with SakuraPetal symbol
+                ColorPresets.ApplyPreset(sakura, ColorPresets.All.Single(x => x.Name == "ベーシック: サクラ")); // with the SakuraPetal symbol
 
                 // Export SVGs
                 File.WriteAllText(Path.Combine(outDir, "Sample_SapphireBlue_10.0mm.svg"), SvgExporter.GeneratePairSvg(blue, includePrintGuides: true));

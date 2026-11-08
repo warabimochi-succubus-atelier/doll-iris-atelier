@@ -206,8 +206,9 @@ namespace DollIrisGenerator.Tests
 
         private static readonly string[] SampleNames =
         {
-            "ベーシック: クリアブルー", "ベーシック: アクア", "ベーシック: ラベンダー", "ベーシック: ピンク",
-            "ベーシック: レッド", "ベーシック: アンバー", "ベーシック: グリーン", "ベーシック: グレー",
+            "ベーシック: クリアブルー", "ベーシック: アクア", "ベーシック: ラベンダー", "ベーシック: パープル",
+            "ベーシック: ピンク", "ベーシック: サクラ", "ベーシック: レッド", "ベーシック: アンバー",
+            "ベーシック: グリーン", "ベーシック: グレー", "ベーシック: キャットアイ",
             "特殊: 星屑", "特殊: オーロラ", "特殊: 銀河", "特殊: 夕焼け", "特殊: 夜空", "特殊: 宝石", "特殊: ハート", "特殊: 花びら",
             "雰囲気: A. ナチュラル (ピンク系)", "雰囲気: B. 精霊 (ブルー系)", "雰囲気: C. アンニュイ (パープル系)",
             "雰囲気: D. つんでれ (レッド系)", "雰囲気: E. 小悪魔 (赤紫系)", "雰囲気: F. 無邪気 (アクア系)"
@@ -216,13 +217,31 @@ namespace DollIrisGenerator.Tests
         private static PresetDefinition Preset(string name) => ColorPresets.All.Single(x => x.Name == name);
 
         [Fact]
-        public void TestAllSampleInspiredPresetsExistAfterTheOldOnes()
+        public void TestBuiltInPresetsAreTheThreeGroups()
         {
-            foreach (var name in SampleNames) Assert.Single(ColorPresets.All, x => x.Name == name);
-            // The earlier presets keep their places (saved selections and tests refer to them by position)
-            Assert.Equal("ブルー (サファイア)", ColorPresets.All[0].Name);
-            Assert.Equal("キャットアイ (猫目スリット)", ColorPresets.All[10].Name);
-            Assert.Equal(11 + SampleNames.Length, ColorPresets.All.Count);
+            // ベーシック (the first-generation presets merged in) / 特殊 / 雰囲気, in this order
+            Assert.Equal(SampleNames, ColorPresets.All.Select(x => x.Name));
+            // Selected at start-up
+            Assert.Equal("ベーシック: クリアブルー", ColorPresets.All[0].Name);
+        }
+
+        [Fact]
+        public void TestAPresetLooksTheSameWhateverWasPickedBefore()
+        {
+            foreach (var next in ColorPresets.All)
+            {
+                var fresh = new IrisParameters();
+                ColorPresets.ApplyPreset(fresh, next);
+                string expected = SvgExporter.GeneratePairSvg(fresh);
+
+                foreach (var before in ColorPresets.All)
+                {
+                    var p = new IrisParameters();
+                    ColorPresets.ApplyPreset(p, before);
+                    ColorPresets.ApplyPreset(p, next);
+                    Assert.True(expected == SvgExporter.GeneratePairSvg(p), $"{before.Name} → {next.Name}");
+                }
+            }
         }
 
         [Fact]
@@ -272,20 +291,149 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestOldPalettesStillLoadAndClearTheLayers()
+        public void TestSettingsAPresetLeavesOutGoBackToDefaults()
         {
-            // A palette saved before the layers existed: applying it turns them off and keeps the look settings
-            var old = JsonSerializer.Deserialize<PresetDefinition>("{\"Name\":\"旧パレット\",\"BaseColor\":\"#112233\"}")!;
-            var p = new IrisParameters { AuroraOpacity = 0.5, NebulaOpacity = 0.5, PupilFacetIntensity = 0.5, ParticleCount = 33, RayCount = 21 };
+            // A preset with colors only: the look settings and layers return to the app's defaults, symbols go off
+            var colorsOnly = JsonSerializer.Deserialize<PresetDefinition>("{\"Name\":\"色だけ\",\"BaseColor\":\"#112233\"}")!;
+            var p = new IrisParameters { AuroraOpacity = 0.5, NebulaOpacity = 0.5, PupilFacetIntensity = 0.5, ParticleCount = 33, RayCount = 21, PupilSizeRatio = 0.45 };
             p.Symbols[0].Enabled = true;
-            ColorPresets.ApplyPreset(p, old);
+            ColorPresets.ApplyPreset(p, colorsOnly);
+            var d = new IrisParameters();
             Assert.Equal("#112233", p.BaseColor);
             Assert.Equal(0.0, p.AuroraOpacity);
             Assert.Equal(0.0, p.NebulaOpacity);
             Assert.Equal(0.0, p.PupilFacetIntensity);
-            Assert.Equal(33, p.ParticleCount);
-            Assert.Equal(21, p.RayCount);
-            Assert.True(p.Symbols[0].Enabled); // old palettes do not replace symbols
+            Assert.Equal(d.ParticleCount, p.ParticleCount);
+            Assert.Equal(d.RayCount, p.RayCount);
+            Assert.Equal(d.PupilSizeRatio, p.PupilSizeRatio);
+            Assert.DoesNotContain(p.Symbols, s => s.Enabled);
+        }
+
+        [Fact]
+        public void TestPresetFromDesignBringsBackTheSameLook()
+        {
+            // Start from a built-in look with a symbol, then change the look settings by hand
+            var source = new IrisParameters();
+            ColorPresets.ApplyPreset(source, Preset("特殊: 花びら"));
+            source.RayCount = 37;
+            source.RayIntensity = 0.42;
+            source.ParticleCount = 123;
+            source.ParticleGlow = 0.66;
+            source.PupilSizeRatio = 0.27;
+            source.NebulaDensity = 0.31;
+            source.PupilColor = "linear-gradient(90deg, #FF0000 0%, #0000FF 100%)";
+
+            var preset = ColorPresets.FromDesign(source, "カスタム: テスト", "");
+
+            // Apply it to a design that looks different: everything the preset holds comes back
+            var target = new IrisParameters { SizeMm = 12.0, Seed = 777 };
+            ColorPresets.ApplyPreset(target, Preset("特殊: 銀河"));
+            target.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Star5, Enabled = true });
+            ColorPresets.ApplyPreset(target, preset);
+
+            Assert.Equal(source.PupilColor, target.PupilColor);
+            Assert.Equal(source.BaseColor, target.BaseColor);
+            Assert.Equal(source.PupilShape, target.PupilShape);
+            Assert.Equal(37, target.RayCount);
+            Assert.Equal(0.42, target.RayIntensity);
+            Assert.Equal(123, target.ParticleCount);
+            Assert.Equal(0.66, target.ParticleGlow);
+            Assert.Equal(0.27, target.PupilSizeRatio);
+            Assert.Equal(0.31, target.NebulaDensity);
+            Assert.Equal(source.NebulaOpacity, target.NebulaOpacity);
+            Assert.Equal(source.PupilFacetIntensity, target.PupilFacetIntensity);
+
+            var sourceSymbol = source.Symbols.First(s => s.Enabled);
+            var symbol = Assert.Single(target.Symbols, s => s.Enabled);
+            Assert.Equal(sourceSymbol.Type, symbol.Type);
+            Assert.Equal(sourceSymbol.Size, symbol.Size);
+            Assert.Equal(sourceSymbol.PositionX, symbol.PositionX);
+            Assert.Equal(sourceSymbol.PositionY, symbol.PositionY);
+
+            // Size and seed are not part of a preset
+            Assert.Equal(12.0, target.SizeMm);
+            Assert.Equal(777, target.Seed);
+        }
+
+        [Fact]
+        public void TestPresetFromDesignWithoutSymbolsTurnsSymbolsOff()
+        {
+            var source = new IrisParameters();
+            foreach (var s in source.Symbols) s.Enabled = false;
+            var preset = ColorPresets.FromDesign(source, "カスタム: 記号なし", "");
+            Assert.Equal(SymbolType.None, preset.DefaultSymbol);
+
+            var target = new IrisParameters();
+            ColorPresets.ApplyPreset(target, Preset("特殊: 花びら"));
+            ColorPresets.ApplyPreset(target, preset);
+            Assert.DoesNotContain(target.Symbols, s => s.Enabled);
+        }
+
+        [Fact]
+        public void TestPresetFromRandomDesignRebuildsItsLookExceptOddEye()
+        {
+            for (int seed = 1; seed <= 20; seed++)
+            {
+                var source = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(source, new Random(seed));
+                source.LensPatternEnabled = seed % 2 == 0;
+                source.Highlights.Add(new HighlightItem { PositionX = 0.4, PositionY = 0.3, Size = 0.1 });
+                source.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Enabled = true, Rotation = 30 });
+                source.IsOddEye = false;
+
+                // Through a shared file, like a preset passed to another user
+                string path = Path.Combine(Path.GetTempPath(), $"dolliris_preset_{Guid.NewGuid():N}.json");
+                PresetDefinition preset;
+                try
+                {
+                    ColorPresets.ExportPalettesToFile(path, new[] { ColorPresets.FromDesign(source, "カスタム", "") });
+                    preset = ColorPresets.ImportPalettesFromFile(path)![0];
+                }
+                finally
+                {
+                    File.Delete(path);
+                }
+
+                // Another design that had a built-in preset and its own random look: the preset rebuilds the source
+                var target = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(target, new Random(seed + 1000));
+                target.IsOddEye = false;
+                ColorPresets.ApplyPreset(target, Preset("特殊: 花びら"));
+                ColorPresets.ApplyPreset(target, preset);
+                target.Seed = source.Seed; // the seed is not part of a preset
+                Assert.True(SvgExporter.GeneratePairSvg(source) == SvgExporter.GeneratePairSvg(target), $"seed {seed}");
+            }
+        }
+
+        [Fact]
+        public void TestPresetLeavesSizeShapeAndOddEyeAlone()
+        {
+            var p = new IrisParameters { SizeMm = 12.5, Shape = IrisShape.VerticalOval, AspectRatio = 1.3, TiltAngle = 10, Seed = 4242, IsOddEye = true, OddEyeBaseColor = "#123456" };
+            ColorPresets.ApplyPreset(p, Preset("特殊: 銀河"));
+            Assert.Equal(12.5, p.SizeMm);
+            Assert.Equal(IrisShape.VerticalOval, p.Shape);
+            Assert.Equal(1.3, p.AspectRatio);
+            Assert.Equal(10, p.TiltAngle);
+            Assert.Equal(4242, p.Seed);
+            Assert.True(p.IsOddEye);
+            Assert.Equal("#123456", p.OddEyeBaseColor);
+        }
+
+        [Fact]
+        public void TestBuiltInPresetAfterRandomGenerationLooksTheSame()
+        {
+            foreach (var preset in ColorPresets.All)
+            {
+                var fresh = new IrisParameters();
+                ColorPresets.ApplyPreset(fresh, preset);
+
+                var p = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(p, new Random(7));
+                p.IsOddEye = false;
+                p.Seed = fresh.Seed;
+                ColorPresets.ApplyPreset(p, preset);
+                Assert.True(SvgExporter.GeneratePairSvg(fresh) == SvgExporter.GeneratePairSvg(p), preset.Name);
+            }
         }
 
         [Fact]
@@ -298,7 +446,6 @@ namespace DollIrisGenerator.Tests
                 var loaded = ColorPresets.ImportPalettesFromFile(path)!;
                 Assert.Equal(Preset("特殊: 銀河").NebulaOpacity, loaded[0].NebulaOpacity);
                 Assert.Equal(Preset("特殊: 花びら").SymbolSize, loaded[1].SymbolSize);
-                Assert.True(loaded[1].ReplaceSymbols);
             }
             finally
             {
