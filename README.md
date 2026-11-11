@@ -1,5 +1,7 @@
 # Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.12.0
 
+![Doll Iris Atelier のデスクトップ版。左に左右の虹彩のプレビュー、右に設定タブが並ぶ画面](docs/images/screenshot-desktop.png)
+
 ## Overview (English)
 
 **Doll Iris Atelier** is a Windows desktop app (WPF / .NET 10) for designing anime-style irises for doll eyes — ball-jointed dolls (SD / DD / MDD), Obitsu, resin and glass-cabochon eyes — and printing them at exact physical size.
