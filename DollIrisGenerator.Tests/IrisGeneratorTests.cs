@@ -168,7 +168,7 @@ namespace DollIrisGenerator.Tests
             var template = OddEyeTemplate.Presets[0]; // Sapphire & Gold
 
             var p = new IrisParameters();
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             vm.CurrentIris = p;
             vm.ApplyOddEyeTemplate(template);
 
@@ -299,7 +299,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestHistoryManagementAndUndoRedo()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             string originalName = vm.CurrentIris.Name;
 
             vm.CurrentIris.Name = "変更後1";
@@ -749,7 +749,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestRandomizeAttributesCommandInViewModelPreservesSizeAndSupportsUndo()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             vm.CurrentIris.SizeMm = 16.0;
             vm.CurrentIris.Shape = IrisShape.HorizontalOval;
             vm.CurrentIris.AspectRatio = 1.20;
@@ -859,7 +859,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestSliderStyleEditsAreUndoableAsOneStep()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             double original = vm.CurrentIris.PupilSizeRatio;
 
             // Simulates a slider drag: many small changes in a row
@@ -879,7 +879,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestHighlightEditIsUndoable()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             double original = vm.CurrentIris.Highlights[0].Size;
 
             vm.CurrentIris.Highlights[0].Size = 0.40;
@@ -1196,7 +1196,7 @@ namespace DollIrisGenerator.Tests
         {
             // 1 style unit = 1 screen DIP at the default 360% zoom
             Assert.Equal(25.4 / (96.0 * 3.6), IrisStyle.MmPerStyleUnit, 9);
-            Assert.Equal(IrisPreviewControl.DefaultPairZoom, new MainViewModel().ZoomScale, 9);
+            Assert.Equal(IrisPreviewControl.DefaultPairZoom, IsolatedViewModel.Create().ZoomScale, 9);
 
             // Plain lines (the fiber look, on by default, draws filled outlines instead of strokes)
             var p = new IrisParameters { RayThickness = 1.2, RayTaper = 0, RayWidthVariation = 0, RayCurve = 0 };
@@ -1269,7 +1269,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestRemoveSheetItemRemovesTheClickedRowNotTheSelection()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             vm.AddCurrentToSheetCommand.Execute(null);
             var first = vm.SheetItems[0];
             var second = vm.SheetItems[1];

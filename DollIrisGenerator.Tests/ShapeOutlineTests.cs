@@ -262,7 +262,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestRoundingEditsAreUndoable()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             // Slider drag on the pupil and then on a symbol card: one undo step for the whole edit burst
             vm.CurrentIris.PupilCornerRounding = 0.3;
             vm.CurrentIris.PupilCornerRounding = 0.7;
