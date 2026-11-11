@@ -20,7 +20,23 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <!-- 「🔒 ランダム生成で変えない」 next to a settings box title: that box's values survive 「✨ 属性ランダム生成」 -->
+        <!-- Die icon of 「属性ランダム生成」: the same figure as the browser version's randomize button
+             (DollIrisGenerator.Web/Pages/Home.razor, 24x24 viewBox: rounded square + five pips). Drawn in the button's
+             text color. x:Shared="False": each button gets its own copy. -->
+        <Viewbox x:Key="RandomizeDieIcon" x:Shared="False" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center">
+            <Canvas Width="24" Height="24">
+                <Rectangle Canvas.Left="3.5" Canvas.Top="3.5" Width="17" Height="17" RadiusX="3.5" RadiusY="3.5" StrokeThickness="1.8"
+                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                <Path Data="M6.8,8.3 A1.5,1.5 0 1 1 9.8,8.3 A1.5,1.5 0 1 1 6.8,8.3 Z
+                            M14.2,8.3 A1.5,1.5 0 1 1 17.2,8.3 A1.5,1.5 0 1 1 14.2,8.3 Z
+                            M10.5,12 A1.5,1.5 0 1 1 13.5,12 A1.5,1.5 0 1 1 10.5,12 Z
+                            M6.8,15.7 A1.5,1.5 0 1 1 9.8,15.7 A1.5,1.5 0 1 1 6.8,15.7 Z
+                            M14.2,15.7 A1.5,1.5 0 1 1 17.2,15.7 A1.5,1.5 0 1 1 14.2,15.7 Z"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Canvas>
+        </Viewbox>
+
+        <!-- 「🔒 ランダム生成で変えない」 next to a settings box title: that box's values survive 「属性ランダム生成」 -->
         <Style x:Key="RandomizeLockCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
             <Setter Property="Margin" Value="12,0,0,0"/>
             <Setter Property="FontSize" Value="10"/>
@@ -133,10 +149,15 @@
                             Background="#333842" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderDark}"
                             Padding="10,5" Margin="0,2,4,2" Cursor="Hand" ToolTip="選択中の枠のデザインを、起動時と同じ初期状態 (虹彩 10mm・正円・標準の配色) に置き換えます。デザインは増えません。前のデザインは ↩ 元に戻す (Ctrl+Z) で戻せます"/>
 
-                    <Button Content="✨ 属性ランダム生成" Command="{Binding RandomizeAttributesCommand}"
+                    <Button Command="{Binding RandomizeAttributesCommand}" AutomationProperties.Name="属性ランダム生成"
                             Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
                             Padding="10,5" Margin="0,2,0,2" Cursor="Hand" FontWeight="SemiBold"
-                            ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+                            ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成">
+                        <StackPanel Orientation="Horizontal">
+                            <StaticResource ResourceKey="RandomizeDieIcon"/>
+                            <TextBlock Text="属性ランダム生成" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <Border Style="{StaticResource ToolbarSeparator}"/>
 
@@ -459,10 +480,15 @@
                                                   ToolTip="乱数シード (放射模様の揺らぎやラメの散らばり方) をランダム生成で変えない"/>
 
                                         <!-- Randomize Attributes Button -->
-                                        <Button Content="✨ 属性ランダム生成 (サイズ・寸法維持)" Command="{Binding RandomizeAttributesCommand}"
+                                        <Button Command="{Binding RandomizeAttributesCommand}" AutomationProperties.Name="属性ランダム生成 (サイズ・寸法維持)"
                                                 Background="#3B2654" Foreground="#E1BEE7" BorderBrush="#BA68C8"
                                                 Padding="10,6" Margin="0,10,0,0" Cursor="Hand" FontWeight="SemiBold" HorizontalAlignment="Stretch"
-                                                ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成"/>
+                                                ToolTip="サイズ・形状・寸法と、各設定枠の「🔒 ランダム生成で変えない」でロックした項目を維持したまま、カラー・瞳孔・光彩・パターン等の属性値をランダム生成">
+                                            <StackPanel Orientation="Horizontal">
+                                                <StaticResource ResourceKey="RandomizeDieIcon"/>
+                                                <TextBlock Text="属性ランダム生成 (サイズ・寸法維持)" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
 
                                         <!-- What is locked right now: the lock check boxes sit in each settings box, spread over several tabs -->
                                         <Border Background="#241B30" BorderBrush="#5E3F75" BorderThickness="1" CornerRadius="3" Padding="8,4" Margin="0,6,0,0">
