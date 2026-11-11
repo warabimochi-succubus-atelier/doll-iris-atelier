@@ -201,7 +201,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestGradientEditsAreUndoableAndRedoable()
         {
-            var vm = new MainViewModel();
+            var vm = IsolatedViewModel.Create();
             string original = vm.CurrentIris.RayColor;
 
             // A stop slider drag: many values in a row become one undo step

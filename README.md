@@ -15,7 +15,7 @@
 
 The app is built around two buttons in the top toolbar:
 
-1. **Design** an iris in the settings tabs (or press ✨ *Randomize attributes* for ideas).
+1. **Design** an iris in the settings tabs (or press the die-icon *Randomize attributes* button for ideas).
 2. **⭐ Add to favorites** — keeps the design. Favorites are saved automatically and stay after you restart the app. The design you are editing is *not* saved on its own.
 3. **🖨️ Add to A4 sheet** — puts the design on the print sheet. You can also select several favorites in the *History / Favorites* tab and add them all at once.
 4. **📄 Export A4 PDF** and print it at **actual size (100%)**.
@@ -34,7 +34,7 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 アニメ調のドールアイ用虹彩を、パラメータと乱数シードから自動生成し、A4 印刷用 PDF（±0.1mm 精度）・PNG・SVG に実寸で書き出す Windows 向けデスクトップアプリケーションです。詳しい仕様は [SPECIFICATION.md](SPECIFICATION.md) を参照してください。
 
 ### 基本の流れ
-1. 設定タブで虹彩を作る（迷ったら **✨ 属性ランダム生成**）
+1. 設定タブで虹彩を作る（迷ったら **属性ランダム生成**）
 2. 気に入ったら **⭐ お気に入りに追加** で残す（編集中のデザインは自動保存されません）
 3. 印刷したいデザインを **🖨️ A4シートに追加**（お気に入りからまとめて追加することもできます）
 4. **📄 A4 PDF 出力** で書き出し、「実際のサイズ（100%）」で印刷

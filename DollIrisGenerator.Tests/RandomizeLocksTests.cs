@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DollIrisGenerator.Tests
 {
-    /// <summary>「✨ 属性ランダム生成」 with locked attribute groups.</summary>
+    /// <summary>「属性ランダム生成」 with locked attribute groups.</summary>
     public sealed class RandomizeLocksTests : IDisposable
     {
         private readonly string _dir = Directory.CreateTempSubdirectory("dolliris_locks_").FullName;

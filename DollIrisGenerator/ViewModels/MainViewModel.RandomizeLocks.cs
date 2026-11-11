@@ -3,7 +3,7 @@ using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.ViewModels
 {
-    // Locks for 「✨ 属性ランダム生成」: groups the user ticked stay as they are when attributes are randomized.
+    // Locks for 「属性ランダム生成」: groups the user ticked stay as they are when attributes are randomized.
     // They are an app setting, not part of the design, so they are not in undo history and are saved with the
     // window settings (MainWindow restores them at start and saves them on exit).
     public partial class MainViewModel
@@ -38,7 +38,7 @@ namespace DollIrisGenerator.ViewModels
         public bool HasRandomizeLocks => _randomizeLocks != RandomizeLocks.None;
 
         /// <summary>
-        /// 「🔒 ロック中: 色・瞳孔」 or 「ロックなし …」 for the line under the ✨ button. The check boxes themselves sit in
+        /// 「🔒 ロック中: 色・瞳孔」 or 「ロックなし …」 for the line under the randomize button. The check boxes themselves sit in
         /// each settings box across several tabs, so this line is the one place that shows every lock at once.
         /// </summary>
         public string RandomizeLocksSummary => HasRandomizeLocks

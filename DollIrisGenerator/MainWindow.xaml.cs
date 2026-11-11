@@ -22,7 +22,7 @@ namespace DollIrisGenerator
             WindowSettingsService.ApplySettings(this, settings);
             if (DataContext is MainViewModel startVm)
             {
-                startVm.RandomizeLocks = settings.RandomizeLocks; // 「✨ 属性ランダム生成」 locks from the last session
+                startVm.RandomizeLocks = settings.RandomizeLocks; // 「属性ランダム生成」 locks from the last session
             }
             Loaded += (_, _) =>
             {

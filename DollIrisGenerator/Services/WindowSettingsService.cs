@@ -20,7 +20,7 @@ namespace DollIrisGenerator.Services
         public ColorInputMode ColorInputMode { get; set; } = ColorInputMode.Rgb;
 
         /// <summary>
-        /// Groups 「✨ 属性ランダム生成」 leaves unchanged, written as names ("Colors, Pupil").
+        /// Groups 「属性ランダム生成」 leaves unchanged, written as names ("Colors, Pupil").
         /// Older files without it: nothing locked.
         /// </summary>
         [JsonConverter(typeof(JsonStringEnumConverter))]

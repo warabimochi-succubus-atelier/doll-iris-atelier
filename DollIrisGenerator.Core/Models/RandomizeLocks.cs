@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace DollIrisGenerator.Models
 {
     /// <summary>
-    /// Attribute groups that 「✨ 属性ランダム生成」 leaves unchanged. Size, shape, aspect ratio and tilt are always kept,
+    /// Attribute groups that 「属性ランダム生成」 leaves unchanged. Size, shape, aspect ratio and tilt are always kept,
     /// so they are not listed here.
     /// <para>
     /// A color is kept when <see cref="Colors"/> is locked <b>or</b> when the part it belongs to is locked
