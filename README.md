@@ -18,7 +18,12 @@ The app is built around two buttons in the top toolbar:
 3. **🖨️ Add to A4 sheet** — puts the design on the print sheet. You can also select several favorites in the *History / Favorites* tab and add them all at once.
 4. **📄 Export A4 PDF** and print it at **actual size (100%)**.
 
-PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. The user interface is in Japanese. See [USER_MANUAL.md](USER_MANUAL.md) for the full manual and [SPECIFICATION.md](SPECIFICATION.md) for the specification (both in Japanese).
+PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. The user interface is in Japanese.
+
+### Get the app
+
+- **Browser version (no install)**: open <https://warabimochi-succubus-atelier.github.io/doll-iris-atelier/> on your phone, tablet or PC. You can design irises and keep favorites, but printing (PDF / PNG / SVG) needs the desktop app.
+- **Windows desktop app**: open the [Releases page](https://github.com/warabimochi-succubus-atelier/doll-iris-atelier/releases), download `DollIrisAtelier-vX.Y.Z-win-x64.zip` from *Assets* of the newest release, unzip it, and run `DollIrisGenerator.exe`. No .NET install is needed. If Windows SmartScreen warns you, choose *More info* → *Run anyway*. See [USER_MANUAL.md](USER_MANUAL.md) for the full manual and [SPECIFICATION.md](SPECIFICATION.md) for the specification (both in Japanese).
 
 ---
 
@@ -31,6 +36,26 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 2. 気に入ったら **⭐ お気に入りに追加** で残す（編集中のデザインは自動保存されません）
 3. 印刷したいデザインを **🖨️ A4シートに追加**（お気に入りからまとめて追加することもできます）
 4. **📄 A4 PDF 出力** で書き出し、「実際のサイズ（100%）」で印刷
+
+---
+
+## 📥 使ってみる（ダウンロード）
+
+### ブラウザ版（インストール不要）
+**<https://warabimochi-succubus-atelier.github.io/doll-iris-atelier/>** をスマホ・タブレット・PC のブラウザで開くだけで使えます。
+
+- 虹彩のデザインとお気に入りの保存ができます。印刷用の A4 PDF・PNG・SVG の出力はデスクトップ版で行います（お気に入りを `.irisfav.json` で書き出して受け渡せます）
+- 一度開けばオフラインでも動きます。ホーム画面に追加するとアプリのように使えます
+
+### Windows デスクトップ版
+1. [Releases ページ](https://github.com/warabimochi-succubus-atelier/doll-iris-atelier/releases) を開きます
+2. いちばん上（最新）のリリースの **Assets** から `DollIrisAtelier-vX.Y.Z-win-x64.zip` をダウンロードします（`Source code` は開発用なので不要です）
+3. zip を右クリック →「すべて展開」で好きな場所に展開します
+4. 展開したフォルダーの `DollIrisGenerator.exe` をダブルクリックして起動します
+
+- .NET などの追加インストールは不要です（Windows 10 / 11 の 64 bit 版）
+- 「Windows によって PC が保護されました」と表示されたら、「詳細情報」→「実行」を押してください（署名していないアプリのため表示されます）
+- 新しい版に更新するときは、同じ手順で新しい zip をダウンロードして展開し直します。お気に入りは exe とは別の場所に保存されているので、そのまま引き継がれます
 
 ---
 
