@@ -2,8 +2,8 @@
 
 @*
     A color setting. The swatch picks a solid color; settings that allow it can switch to a gradient
-    (直線 / 放射 / 円周, built from the current color like the desktop app's picker) and the gradient text
-    (CSS-like, same as in the saved JSON) can be edited by hand.
+    (直線 / 放射 / 円周, built from the current color like the desktop app's picker); each color of a gradient
+    has its own picker, and the gradient text (CSS-like, same as in the saved JSON) can be edited by hand.
 *@
 
 <div class="field color-field" title="@Hint">
@@ -13,12 +13,11 @@
         {
             <span class="swatch" style="background: @SwatchCss" title="グラデーション"></span>
         }
-        <input type="color" value="@PickerHex" aria-label="@(_fill.IsGradient ? $"{Label} (最初の色)" : Label)"
-               title="@(_fill.IsGradient ? "グラデーションの最初の色" : null)"
-               @oninput="e => OnPick(e.Value?.ToString())" @onchange="_ => OnCommit.InvokeAsync()" />
-        @if (!_fill.IsGradient)
+        else
         {
-            <span class="color-code">@PickerHex.ToUpperInvariant()</span>
+            <input type="color" value="@PickerHex(_fill.PrimaryColor)" aria-label="@Label"
+                   @oninput="e => OnPick(e.Value?.ToString())" @onchange="_ => OnCommit.InvokeAsync()" />
+            <span class="color-code">@PickerHex(_fill.PrimaryColor).ToUpperInvariant()</span>
         }
         @if (AllowGradient)
         {
@@ -34,6 +33,16 @@
     </div>
     @if (_fill.IsGradient)
     {
+        @* One picker per stop, so every color of the gradient can be chosen, not only the first *@
+        <div class="color-row gradient-stops">
+            @for (int i = 0; i < _fill.Stops.Count; i++)
+            {
+                int index = i;
+                <input type="color" value="@PickerHex(_fill.Stops[index].Color)" aria-label="@($"{Label} (色{index + 1})")"
+                       title="@($"グラデーションの色{index + 1}")"
+                       @oninput="e => OnPickStop(index, e.Value?.ToString())" @onchange="_ => OnCommit.InvokeAsync()" />
+            }
+        </div>
         <input type="text" class="gradient-text" value="@Value" spellcheck="false" aria-label="@($"{Label} (グラデーション)")"
                @onchange="e => OnText(e.Value?.ToString())" />
         @if (_textError)
@@ -68,16 +77,13 @@
         _fill = ColorFill.Parse(Value);
     }
 
-    /// <summary>The color picker only takes "#rrggbb": the first color, without alpha.</summary>
-    private string PickerHex
+    /// <summary>The color picker only takes "#rrggbb": the color without alpha.</summary>
+    private static string PickerHex(string color)
     {
-        get
-        {
-            string hex = _fill.PrimaryColor.Trim().TrimStart('#');
-            if (hex.Length == 8) hex = hex[2..];
-            if (hex.Length == 3) hex = string.Concat(hex.Select(ch => new string(ch, 2)));
-            return hex.Length == 6 ? "#" + hex.ToLowerInvariant() : "#ffffff";
-        }
+        string hex = color.Trim().TrimStart('#');
+        if (hex.Length == 8) hex = hex[2..];
+        if (hex.Length == 3) hex = string.Concat(hex.Select(ch => new string(ch, 2)));
+        return hex.Length == 6 ? "#" + hex.ToLowerInvariant() : "#ffffff";
     }
 
     /// <summary>
@@ -89,7 +95,7 @@
     {
         get
         {
-            if (!_fill.IsGradient) return PickerHex;
+            if (!_fill.IsGradient) return PickerHex(_fill.PrimaryColor);
             var inv = System.Globalization.CultureInfo.InvariantCulture;
             string stops = string.Join(", ", _fill.Stops.Select(s => $"{CssColor(s.Color)} {(s.Offset * 100).ToString("0.##", inv)}%"));
             string angle = ((_fill.Angle + 90.0) % 360.0).ToString("0.##", inv);
@@ -112,11 +118,18 @@
     private async Task OnPick(string? hex)
     {
         if (!ColorFill.IsHexColor(hex)) return;
-        string color = hex!.ToUpperInvariant();
-        // On a gradient the picker recolors its first stop, keeping the rest
-        string value = _fill.IsGradient
-            ? ColorFill.Create(_fill.Kind, _fill.Angle, _fill.Stops.Select((s, i) => i == 0 ? s with { Color = color } : s)).ToString()
-            : color;
+        await OnPreview.InvokeAsync(hex!.ToUpperInvariant());
+    }
+
+    /// <summary>Recolors one stop of the gradient, keeping its alpha, its position and the other stops.</summary>
+    private async Task OnPickStop(int index, string? hex)
+    {
+        if (!ColorFill.IsHexColor(hex) || index >= _fill.Stops.Count) return;
+        string rgb = hex!.Trim().TrimStart('#').ToUpperInvariant();
+        string old = _fill.Stops[index].Color.Trim().TrimStart('#');
+        string color = old.Length == 8 ? $"#{old[..2].ToUpperInvariant()}{rgb}" : $"#{rgb}";
+        string value = ColorFill.Create(_fill.Kind, _fill.Angle,
+            _fill.Stops.Select((s, i) => i == index ? s with { Color = color } : s)).ToString();
         await OnPreview.InvokeAsync(value);
     }
 
