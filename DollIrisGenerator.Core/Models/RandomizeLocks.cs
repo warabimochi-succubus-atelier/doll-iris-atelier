@@ -16,21 +16,21 @@ namespace DollIrisGenerator.Models
     public enum RandomizeLocks
     {
         None = 0,
-        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity and the design name.</summary>
+        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity, the design name, and the rest of the 「虹彩カラー設定」 box (aurora / nebula strength and blend, light direction and strength, fiber noise).</summary>
         Colors = 1 << 0,
         /// <summary>乱数シード (the pattern jitter of rays and glitter).</summary>
         Seed = 1 << 1,
-        /// <summary>瞳孔: shape, size, opacity, softness and color.</summary>
+        /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color.</summary>
         Pupil = 1 << 2,
-        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius and color.</summary>
+        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color.</summary>
         Rays = 1 << 3,
         /// <summary>外輪: thickness, opacity, softness and color.</summary>
         LimbalRing = 1 << 4,
-        /// <summary>ラメ: count, sizes, opacity, spread and color.</summary>
+        /// <summary>ラメ: count, sizes, opacity, spread, glow, flares, blend mode and color.</summary>
         Particles = 1 << 5,
         /// <summary>装飾記号: the whole symbol list.</summary>
         Symbols = 1 << 6,
-        /// <summary>ハイライト: the whole highlight list.</summary>
+        /// <summary>ハイライト: the whole highlight list and its blend mode.</summary>
         Highlights = 1 << 7,
         /// <summary>レンズ風: on/off and every lens parameter including its color.</summary>
         Lens = 1 << 8,

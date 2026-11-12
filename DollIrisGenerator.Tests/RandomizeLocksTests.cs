@@ -25,19 +25,20 @@ namespace DollIrisGenerator.Tests
                 p.InnerGradientRadius, p.OuterGradientRadius, p.BottomHighlightIntensity,
                 p.LimbalRingColor, p.PupilColor, p.RayColor, p.ParticleColor, p.LensRingColor,
                 p.OddEyeBaseColor, p.OddEyeInnerColor, p.OddEyeOuterColor, p.OddEyeRayColor, p.OddEyeBottomHighlightColor,
-                p.AuroraColor, p.AuroraOpacity, p.NebulaColor, p.NebulaOpacity, p.NebulaDensity, p.NebulaScale, p.NebulaSwirl),
+                p.AuroraColor, p.AuroraOpacity, p.AuroraBlend, p.NebulaColor, p.NebulaOpacity, p.NebulaDensity, p.NebulaScale, p.NebulaSwirl,
+                p.LightAngle, p.LightStrength, p.FiberNoise, p.FiberNoiseScale),
             RandomizeLocks.Seed => p.Seed.ToString(),
             RandomizeLocks.Pupil => string.Join("|", p.PupilShape, p.PupilSizeRatio, p.PupilOpacity, p.PupilSoftness, p.PupilColor,
-                p.PupilFacetIntensity, p.PupilFacetCount),
+                p.PupilFacetIntensity, p.PupilFacetCount, p.PupilCornerRounding),
             RandomizeLocks.Rays => string.Join("|", p.RayCount, p.RayThickness, p.RayLengthRatio, p.RayIntensity,
                 p.RayRandomness, p.RayInnerRadiusRatio, p.RayColor,
                 p.RayTaper, p.RayWidthVariation, p.RayCurve, p.RayFineLayer),
             RandomizeLocks.LimbalRing => string.Join("|", p.LimbalRingThickness, p.LimbalRingOpacity, p.LimbalRingSoftness, p.LimbalRingColor),
             RandomizeLocks.Particles => string.Join("|", p.ParticleCount, p.ParticleMinSize, p.ParticleMaxSize,
                 p.ParticleOpacity, p.ParticleRadiusRatio, p.ParticleColor,
-                p.ParticleGlow, p.ParticleFlareRatio, p.ParticleFlareLength),
+                p.ParticleGlow, p.ParticleFlareRatio, p.ParticleFlareLength, p.GlitterBlend),
             RandomizeLocks.Symbols => WithoutIds(JsonSerializer.Serialize(p.Symbols)),
-            RandomizeLocks.Highlights => WithoutIds(JsonSerializer.Serialize(p.Highlights)),
+            RandomizeLocks.Highlights => WithoutIds(JsonSerializer.Serialize(p.Highlights)) + "|" + p.HighlightBlend,
             RandomizeLocks.Lens => string.Join("|", p.LensPatternEnabled, p.LensRingCount, p.LensRingIntensity,
                 p.LensRingWidth, p.LensRefractionGlow, p.LensRingColor),
             RandomizeLocks.OddEye => string.Join("|", p.IsOddEye, p.OddEyeSeedOffset, p.OddEyeBaseColor, p.OddEyeInnerColor,
@@ -89,6 +90,11 @@ namespace DollIrisGenerator.Tests
                 RayFineLayer = 0.03,
                 AuroraColor = "linear-gradient(10deg, #010203 0%, #040506 100%)",
                 AuroraOpacity = 0.99,
+                AuroraBlend = LayerBlend.Overlay,
+                LightAngle = 10.0,
+                LightStrength = 0.97,
+                FiberNoise = 0.97,
+                FiberNoiseScale = 1.97,
                 NebulaColor = "linear-gradient(20deg, #0A0B0C 0%, #0C0D0E 100%)",
                 NebulaOpacity = 0.03,
                 NebulaDensity = 0.97,
@@ -96,6 +102,7 @@ namespace DollIrisGenerator.Tests
                 NebulaSwirl = -0.97,
                 PupilFacetIntensity = 0.03,
                 PupilFacetCount = 23,
+                PupilCornerRounding = 0.9,
                 LensPatternEnabled = true,
                 LensRingCount = 20,
                 LensRingIntensity = 0.99,
@@ -111,6 +118,8 @@ namespace DollIrisGenerator.Tests
                 ParticleGlow = 0.02,
                 ParticleFlareRatio = 0.99,
                 ParticleFlareLength = 7.9,
+                GlitterBlend = LayerBlend.SoftLight,
+                HighlightBlend = LayerBlend.ColorDodge,
                 IsOddEye = true,
                 OddEyeBaseColor = "#666666",
                 OddEyeInnerColor = "#777777",
@@ -198,6 +207,60 @@ namespace DollIrisGenerator.Tests
             var before = Groups.ToDictionary(g => g, g => Snapshot(p, g));
             IrisRandomizer.RandomizeAttributes(p, new Random(5)); // the old signature: nothing locked
             Assert.All(Groups, g => Assert.NotEqual(before[g], Snapshot(p, g)));
+        }
+
+        /// <summary>Settings 「属性ランダム生成」 never changes: the size and outline, and how the pair of eyes is built.</summary>
+        private static readonly HashSet<string> AlwaysKept = new()
+        {
+            nameof(IrisParameters.SizeMm), nameof(IrisParameters.Shape), nameof(IrisParameters.AspectRatio),
+            nameof(IrisParameters.TiltAngle), nameof(IrisParameters.MirrorHighlightsWithIris)
+        };
+
+        private static string ValueOf(System.Reflection.PropertyInfo prop, IrisParameters p) =>
+            WithoutIds(JsonSerializer.Serialize(prop.GetValue(p)));
+
+        /// <summary>
+        /// Guards against a new design setting being left out of the randomizer: with nothing locked, every saved
+        /// setting except <see cref="AlwaysKept"/> changes in some run, and is covered by one lock group's snapshot.
+        /// </summary>
+        [Fact]
+        public void EveryDesignSetting_IsRandomized_AndBelongsToALockGroup()
+        {
+            var props = typeof(IrisParameters).GetProperties()
+                .Where(pr => pr.CanRead && pr.GetIndexParameters().Length == 0
+                             && (pr.CanWrite || pr.PropertyType.IsGenericType) // the highlight / symbol lists are get-only
+                             && pr.GetCustomAttributes(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), true).Length == 0)
+                .ToList();
+            var original = Distinctive();
+            var changed = new HashSet<string>();
+            for (int i = 0; i < 40; i++)
+            {
+                var p = Distinctive();
+                IrisRandomizer.RandomizeAttributes(p, new Random(i));
+                foreach (var prop in props)
+                {
+                    if (ValueOf(prop, p) != ValueOf(prop, original)) changed.Add(prop.Name);
+                }
+            }
+
+            var neverChanged = props.Select(pr => pr.Name).Where(n => !changed.Contains(n) && !AlwaysKept.Contains(n)).OrderBy(n => n);
+            Assert.Empty(neverChanged);
+            Assert.All(AlwaysKept, n => Assert.DoesNotContain(n, changed));
+
+            // Each randomized setting is kept by at least one lock group on its own
+            var keptBySomeLock = new HashSet<string>();
+            foreach (var group in Groups)
+            {
+                var kept = new HashSet<string>(changed);
+                for (int i = 0; i < 40; i++)
+                {
+                    var p = Distinctive();
+                    IrisRandomizer.RandomizeAttributes(p, group, new Random(i));
+                    kept.RemoveWhere(n => ValueOf(typeof(IrisParameters).GetProperty(n)!, p) != ValueOf(typeof(IrisParameters).GetProperty(n)!, original));
+                }
+                keptBySomeLock.UnionWith(kept);
+            }
+            Assert.Empty(changed.Except(keptBySomeLock).OrderBy(n => n));
         }
 
         [Fact]
