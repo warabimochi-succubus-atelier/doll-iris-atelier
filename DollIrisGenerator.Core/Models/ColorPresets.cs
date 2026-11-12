@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DollIrisGenerator.Services;
 
 namespace DollIrisGenerator.Models
@@ -88,9 +87,6 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
-        /// <summary>Read from user presets saved before each highlight had its own 重ね方; never written (see <see cref="HighlightItem.Blend"/>).</summary>
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public LayerBlend? HighlightBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
@@ -349,11 +345,6 @@ namespace DollIrisGenerator.Models
 
             // Highlights (replaced in place, so the list on screen stays bound)
             ReplaceItems(target.Highlights, preset.Highlights ?? d.Highlights.ToList(), h => h.Clone());
-            // An older user preset's one 重ね方 for all highlights goes to each highlight
-            if (preset.HighlightBlend is { } oldBlend)
-            {
-                foreach (var h in target.Highlights) h.Blend = oldBlend;
-            }
             target.MirrorHighlightsWithIris = preset.MirrorHighlightsWithIris ?? d.MirrorHighlightsWithIris;
 
             // Lens pattern

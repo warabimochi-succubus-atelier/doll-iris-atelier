@@ -109,7 +109,6 @@ namespace DollIrisGenerator.Tests
             var p = new IrisParameters { AuroraBlend = LayerBlend.ColorDodge, GlitterBlend = LayerBlend.Screen };
             p.Highlights[0].Blend = LayerBlend.SoftLight;
             string json = JsonSerializer.Serialize(p);
-            Assert.DoesNotContain("\"HighlightBlend\"", json);
             var back = JsonSerializer.Deserialize<IrisParameters>(json)!;
             Assert.Equal(LayerBlend.ColorDodge, back.AuroraBlend);
             Assert.Equal(LayerBlend.Screen, back.GlitterBlend);
@@ -129,28 +128,6 @@ namespace DollIrisGenerator.Tests
             ColorPresets.ApplyPreset(q, ColorPresets.All[0]);
             Assert.Equal(LayerBlend.Normal, q.AuroraBlend);
             Assert.All(q.Highlights, h => Assert.Equal(LayerBlend.Normal, h.Blend));
-        }
-
-        /// <summary>Files and user presets saved with one "HighlightBlend" for all highlights load into each highlight.</summary>
-        [Theory]
-        [InlineData("{\"HighlightBlend\":1,\"Highlights\":[{\"Size\":0.2},{\"Size\":0.1}]}")]
-        [InlineData("{\"Highlights\":[{\"Size\":0.2},{\"Size\":0.1}],\"HighlightBlend\":1}")]
-        public void OldFileWithOneHighlightBlend_GivesItToEveryHighlight(string json)
-        {
-            var p = JsonSerializer.Deserialize<IrisParameters>(json)!;
-            Assert.Equal(2, p.Highlights.Count);
-            Assert.All(p.Highlights, h => Assert.Equal(LayerBlend.Screen, h.Blend));
-            Assert.DoesNotContain("\"HighlightBlend\"", JsonSerializer.Serialize(p));
-
-            // Unknown numbers become Normal
-            var odd = JsonSerializer.Deserialize<IrisParameters>("{\"HighlightBlend\":42,\"Highlights\":[{\"Size\":0.2}]}")!;
-            Assert.Equal(LayerBlend.Normal, odd.Highlights[0].Blend);
-
-            var preset = JsonSerializer.Deserialize<PresetDefinition>("{\"Name\":\"old\",\"HighlightBlend\":4,\"Highlights\":[{\"Size\":0.2}]}")!;
-            var q = new IrisParameters();
-            ColorPresets.ApplyPreset(q, preset);
-            Assert.Equal(LayerBlend.SoftLight, Assert.Single(q.Highlights).Blend);
-            Assert.DoesNotContain("\"HighlightBlend\"", JsonSerializer.Serialize(ColorPresets.FromDesign(q, "x", "")));
         }
     }
 }
