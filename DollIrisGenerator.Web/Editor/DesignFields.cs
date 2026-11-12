@@ -146,9 +146,6 @@ public static class DesignFields
         new HeadingField<IrisParameters>("左右対称設定"),
         new ToggleField<IrisParameters>("ハイライトも左右反転する (完全鏡像)", p => p.MirrorHighlightsWithIris, (p, v) => p.MirrorHighlightsWithIris = v,
             "オフにすると、光源位置が固定された自然なライティングになります"),
-        new ChoiceField<IrisParameters>("ハイライトの重ね方", p => p.HighlightBlend, (p, v) => p.HighlightBlend = (LayerBlend)v,
-            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
-            "すべてのハイライトの重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光"),
     };
 
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> Symbol = new Field<DecorativeSymbolItem>[]
@@ -183,6 +180,9 @@ public static class DesignFields
         new SliderField<HighlightItem>("楕円 縦横比", h => h.AspectRatio, (h, v) => h.AspectRatio = v, 0.3, 2.5, 0.01, Fmt.F2),
         new SliderField<HighlightItem>("回転角度", h => h.Rotation, (h, v) => h.Rotation = v, -180, 180, 1, Fmt.Deg),
         Transparency<HighlightItem>(h => h.Opacity, (h, v) => h.Opacity = v),
+        new ChoiceField<HighlightItem>("重ね方", h => h.Blend, (h, v) => h.Blend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "このハイライトの重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
     };
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>

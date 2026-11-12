@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 
 namespace DollIrisGenerator.Models
 {
-    public class IrisParameters : INotifyPropertyChanged
+    public class IrisParameters : INotifyPropertyChanged, IJsonOnDeserialized
     {
         /// <summary>
         /// Iris diameter range. This is the iris only, not the whole doll eye: the iris is roughly half the
@@ -90,7 +90,7 @@ namespace DollIrisGenerator.Models
         private double _nebulaScale = 1.2;    // cloud size (higher = smaller, busier clouds)
         private double _nebulaDensity = 0.5;  // how much of the iris the clouds cover
         private double _nebulaSwirl = 0.4;    // -1..1: spiral twist round the pupil
-        private LayerBlend _highlightBlend = LayerBlend.Normal;
+        private LayerBlend? _legacyHighlightBlend;
         private LayerBlend _glitterBlend = LayerBlend.Normal;
         private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
@@ -425,11 +425,25 @@ namespace DollIrisGenerator.Models
             set { _glitterBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
-        /// <summary>ハイライトの重ね方: How the highlights are laid over the eye. Unknown numbers from a file become Normal.</summary>
-        public LayerBlend HighlightBlend
+        /// <summary>
+        /// Files saved before each highlight had its own 重ね方 (<see cref="HighlightItem.Blend"/>) have one
+        /// "HighlightBlend" for all highlights. Read only: it is handed to every highlight after loading
+        /// (<see cref="OnDeserialized"/>) and never written back.
+        /// </summary>
+        [JsonInclude, JsonPropertyName("HighlightBlend"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        private LayerBlend? LegacyHighlightBlend
         {
-            get => _highlightBlend;
-            set { _highlightBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+            get => null;
+            set => _legacyHighlightBlend = value;
+        }
+
+        void IJsonOnDeserialized.OnDeserialized()
+        {
+            if (_legacyHighlightBlend is { } blend && blend != LayerBlend.Normal)
+            {
+                foreach (var h in Highlights) h.Blend = blend; // unknown numbers become Normal in the setter
+            }
+            _legacyHighlightBlend = null;
         }
 
         public double PupilCornerRounding

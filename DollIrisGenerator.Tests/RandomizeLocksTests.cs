@@ -38,7 +38,7 @@ namespace DollIrisGenerator.Tests
                 p.ParticleOpacity, p.ParticleRadiusRatio, p.ParticleColor,
                 p.ParticleGlow, p.ParticleFlareRatio, p.ParticleFlareLength, p.GlitterBlend),
             RandomizeLocks.Symbols => WithoutIds(JsonSerializer.Serialize(p.Symbols)),
-            RandomizeLocks.Highlights => WithoutIds(JsonSerializer.Serialize(p.Highlights)) + "|" + p.HighlightBlend,
+            RandomizeLocks.Highlights => WithoutIds(JsonSerializer.Serialize(p.Highlights)),
             RandomizeLocks.Lens => string.Join("|", p.LensPatternEnabled, p.LensRingCount, p.LensRingIntensity,
                 p.LensRingWidth, p.LensRefractionGlow, p.LensRingColor),
             RandomizeLocks.OddEye => string.Join("|", p.IsOddEye, p.OddEyeSeedOffset, p.OddEyeBaseColor, p.OddEyeInnerColor,
@@ -119,7 +119,6 @@ namespace DollIrisGenerator.Tests
                 ParticleFlareRatio = 0.99,
                 ParticleFlareLength = 7.9,
                 GlitterBlend = LayerBlend.SoftLight,
-                HighlightBlend = LayerBlend.ColorDodge,
                 IsOddEye = true,
                 OddEyeBaseColor = "#666666",
                 OddEyeInnerColor = "#777777",
@@ -129,7 +128,7 @@ namespace DollIrisGenerator.Tests
                 OddEyeSeedOffset = 7
             };
             p.Highlights.Clear();
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, PositionX = 0.11, PositionY = 0.22, Size = 0.33, Color = "#ABCDEF", Opacity = 0.44, Enabled = true });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, PositionX = 0.11, PositionY = 0.22, Size = 0.33, Color = "#ABCDEF", Opacity = 0.44, Enabled = true, Blend = LayerBlend.ColorDodge });
             p.Symbols.Clear();
             p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Count = 5, Size = 0.4, PositionX = -0.3, PositionY = 0.3, Color = "#FEDCBA", Opacity = 0.5, Enabled = true });
             return p;

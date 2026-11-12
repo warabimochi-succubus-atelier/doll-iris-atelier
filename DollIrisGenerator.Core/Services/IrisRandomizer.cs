@@ -310,7 +310,11 @@ namespace DollIrisGenerator.Services
 
             if (!Locked(RandomizeLocks.Highlights))
             {
-                p.HighlightBlend = rng.Next(10) < 7 ? LayerBlend.Normal : LayerBlend.Screen;
+                // Each generated highlight gets its own 重ね方
+                foreach (var h in p.Highlights)
+                {
+                    h.Blend = rng.Next(10) < 7 ? LayerBlend.Normal : LayerBlend.Screen;
+                }
             }
 
             // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
