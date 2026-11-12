@@ -19,6 +19,7 @@ namespace DollIrisGenerator.Models
         private double _rotation = 0.0;    // degrees
         private double _cornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0) .. 1 = fully rounded
         private bool _enabled = false;
+        private LayerBlend _blend = LayerBlend.Normal;
 
         public string Id
         {
@@ -87,6 +88,15 @@ namespace DollIrisGenerator.Models
             set { _enabled = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// 重ね方: how this symbol (all its copies together) is laid over the iris. Unknown numbers from a file become Normal.
+        /// </summary>
+        public LayerBlend Blend
+        {
+            get => _blend;
+            set { _blend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
         public DecorativeSymbolItem Clone()
         {
             return new DecorativeSymbolItem
@@ -101,7 +111,8 @@ namespace DollIrisGenerator.Models
                 Opacity = this.Opacity,
                 Rotation = this.Rotation,
                 CornerRounding = this.CornerRounding,
-                Enabled = this.Enabled
+                Enabled = this.Enabled,
+                Blend = this.Blend
             };
         }
 

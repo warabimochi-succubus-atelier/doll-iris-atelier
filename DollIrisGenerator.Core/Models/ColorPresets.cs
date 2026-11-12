@@ -388,6 +388,7 @@ namespace DollIrisGenerator.Models
             symbol.Opacity = preset.SymbolOpacity ?? DefaultSymbolOpacity;
             symbol.Rotation = 0.0;
             symbol.CornerRounding = 0.0;
+            symbol.Blend = LayerBlend.Normal;
             symbol.Enabled = true;
         }
 

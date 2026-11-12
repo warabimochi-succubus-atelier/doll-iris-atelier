@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
@@ -101,6 +102,30 @@ namespace DollIrisGenerator.Tests
             Assert.Contains("mix-blend-mode:color-dodge", shapes[2].Value);
             Assert.Contains("rotate(", shapes[2].Value);
             Assert.Contains("mix-blend-mode:soft-light", shapes[3].Value);
+        }
+
+        /// <summary>Each symbol's 重ね方 goes on its group, so its copies blend with the iris together.</summary>
+        [Fact]
+        public void EachSymbolGetsItsOwnBlendMode()
+        {
+            var p = new IrisParameters();
+            p.Symbols.Clear();
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Heart, Count = 3, Enabled = true, Blend = LayerBlend.Screen });
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Enabled = true });
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Star5, Enabled = true, Blend = LayerBlend.Overlay, Color = "linear-gradient(90deg, #FF0000 0%, #0000FF 100%)" });
+
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
+            Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
+            Assert.Matches("<g id=\"eye_left_symbol_Heart\" [^>]*style=\"mix-blend-mode:screen\">", svg);
+            Assert.Matches("<g id=\"eye_left_symbol_Moon\" [^>]*opacity=\"[0-9.]+\">", svg);
+            Assert.Matches("<g id=\"eye_left_symbol_Star5\" [^>]*style=\"mix-blend-mode:overlay\">", svg);
+            // The copies themselves carry no blend of their own
+            Assert.DoesNotMatch("<path [^>]*mix-blend-mode", svg);
+
+            var back = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(p))!;
+            Assert.Equal(new[] { LayerBlend.Screen, LayerBlend.Normal, LayerBlend.Overlay }, back.Symbols.Select(s => s.Blend));
+            Assert.Equal(LayerBlend.Screen, p.Symbols[0].Clone().Blend);
+            Assert.Equal(LayerBlend.Normal, JsonSerializer.Deserialize<DecorativeSymbolItem>("{\"Blend\":42}")!.Blend);
         }
 
         [Fact]
