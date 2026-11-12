@@ -15,7 +15,7 @@ namespace DollIrisGenerator.Tests
             var p = new IrisParameters { AuroraOpacity = 0.5 };
             Assert.Equal(LayerBlend.Normal, p.AuroraBlend);
             Assert.Equal(LayerBlend.Normal, p.GlitterBlend);
-            Assert.Equal(LayerBlend.Normal, p.HighlightBlend);
+            Assert.All(p.Highlights, h => Assert.Equal(LayerBlend.Normal, h.Blend));
             string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
             Assert.DoesNotContain("mix-blend-mode", svg);
             Assert.DoesNotContain("_glitter_layer", svg);
@@ -28,13 +28,15 @@ namespace DollIrisGenerator.Tests
         [InlineData(LayerBlend.SoftLight, "soft-light")]
         public void EachLayerGetsItsBlendMode(LayerBlend blend, string css)
         {
-            var p = new IrisParameters { AuroraOpacity = 0.5, AuroraBlend = blend, GlitterBlend = blend, HighlightBlend = blend };
+            var p = new IrisParameters { AuroraOpacity = 0.5, AuroraBlend = blend, GlitterBlend = blend };
+            foreach (var h in p.Highlights) h.Blend = blend;
             string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
             Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
             string style = $"style=\"mix-blend-mode:{css}\"";
             Assert.Matches($"<ellipse id=\"eye_left_aurora\" [^>]*{style}", svg);
             Assert.Contains($"<g id=\"eye_left_glitter_layer\" {style}>", svg);
-            Assert.Contains($"<g id=\"eye_left_highlights\" {style}>", svg);
+            Assert.Contains("<g id=\"eye_left_highlights\">", svg);
+            Assert.Matches($"<g id=\"eye_left_highlights\">\\s*<(ellipse|polygon) [^>]*{style}", svg);
 
             // The glow goes inside the blended glitter layer, with the grains
             int layer = svg.IndexOf("eye_left_glitter_layer", StringComparison.Ordinal);
@@ -78,14 +80,43 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(0, screenDarker);
         }
 
+        /// <summary>Each highlight has its own 重ね方, on its own shape; the others stay as they are.</summary>
+        [Fact]
+        public void EachHighlightGetsItsOwnBlendMode()
+        {
+            var p = new IrisParameters();
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Blend = LayerBlend.Screen });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Oval, AspectRatio = 1.4 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, Rotation = 20, Blend = LayerBlend.ColorDodge });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus, Blend = LayerBlend.SoftLight });
+
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
+            Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
+            string highlights = svg[svg.IndexOf("<g id=\"eye_left_highlights\">", StringComparison.Ordinal)..];
+            var shapes = System.Text.RegularExpressions.Regex.Matches(highlights, "<(ellipse|polygon)[^>]*/>");
+            Assert.Equal(4, shapes.Count);
+            Assert.Contains("mix-blend-mode:screen", shapes[0].Value);
+            Assert.DoesNotContain("mix-blend-mode", shapes[1].Value);
+            Assert.Contains("mix-blend-mode:color-dodge", shapes[2].Value);
+            Assert.Contains("rotate(", shapes[2].Value);
+            Assert.Contains("mix-blend-mode:soft-light", shapes[3].Value);
+        }
+
         [Fact]
         public void SavedLoadedAndCheckedLikeOtherSettings()
         {
-            var p = new IrisParameters { AuroraBlend = LayerBlend.ColorDodge, GlitterBlend = LayerBlend.Screen, HighlightBlend = LayerBlend.SoftLight };
-            var back = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(p))!;
+            var p = new IrisParameters { AuroraBlend = LayerBlend.ColorDodge, GlitterBlend = LayerBlend.Screen };
+            p.Highlights[0].Blend = LayerBlend.SoftLight;
+            string json = JsonSerializer.Serialize(p);
+            var back = JsonSerializer.Deserialize<IrisParameters>(json)!;
             Assert.Equal(LayerBlend.ColorDodge, back.AuroraBlend);
             Assert.Equal(LayerBlend.Screen, back.GlitterBlend);
-            Assert.Equal(LayerBlend.SoftLight, back.HighlightBlend);
+            Assert.Equal(LayerBlend.SoftLight, back.Highlights[0].Blend);
+            Assert.Equal(LayerBlend.Normal, back.Highlights[1].Blend);
+            Assert.Equal(LayerBlend.SoftLight, back.Clone().Highlights[0].Blend);
+            Assert.Equal(LayerBlend.SoftLight, back.Highlights[0].Clone().Blend);
+            Assert.Equal(LayerBlend.Normal, JsonSerializer.Deserialize<HighlightItem>("{\"Blend\":42}")!.Blend);
 
             // An unknown number from a hand-edited file
             Assert.Equal(LayerBlend.Normal, JsonSerializer.Deserialize<IrisParameters>("{\"AuroraBlend\":42}")!.AuroraBlend);
@@ -93,8 +124,10 @@ namespace DollIrisGenerator.Tests
             var q = new IrisParameters();
             ColorPresets.ApplyPreset(q, ColorPresets.FromDesign(p, "x", ""));
             Assert.Equal(LayerBlend.ColorDodge, q.AuroraBlend);
+            Assert.Equal(LayerBlend.SoftLight, q.Highlights[0].Blend);
             ColorPresets.ApplyPreset(q, ColorPresets.All[0]);
             Assert.Equal(LayerBlend.Normal, q.AuroraBlend);
+            Assert.All(q.Highlights, h => Assert.Equal(LayerBlend.Normal, h.Blend));
         }
     }
 }

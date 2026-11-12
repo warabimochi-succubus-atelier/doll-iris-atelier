@@ -32,7 +32,6 @@ namespace DollIrisGenerator.ViewModels
             [nameof(IrisParameters.NebulaDensity)] = "星雲の量",
             [nameof(IrisParameters.NebulaScale)] = "星雲の細かさ",
             [nameof(IrisParameters.NebulaSwirl)] = "星雲の渦巻き",
-            [nameof(IrisParameters.HighlightBlend)] = "ハイライトの重ね方",
             [nameof(IrisParameters.GlitterBlend)] = "ラメの重ね方",
             [nameof(IrisParameters.AuroraBlend)] = "オーロラ層の重ね方",
             [nameof(IrisParameters.FiberNoiseScale)] = "繊維ノイズの細かさ",

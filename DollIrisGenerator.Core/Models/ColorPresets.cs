@@ -87,7 +87,6 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
-        public LayerBlend? HighlightBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
@@ -319,7 +318,6 @@ namespace DollIrisGenerator.Models
 
             // Detail settings
             target.LimbalRingThickness = preset.LimbalRingThickness ?? d.LimbalRingThickness;
-            target.HighlightBlend = preset.HighlightBlend ?? d.HighlightBlend;
             target.GlitterBlend = preset.GlitterBlend ?? d.GlitterBlend;
             target.AuroraBlend = preset.AuroraBlend ?? d.AuroraBlend;
             target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
@@ -449,7 +447,6 @@ namespace DollIrisGenerator.Models
                 ParticleFlareRatio = design.ParticleFlareRatio,
 
                 LimbalRingThickness = design.LimbalRingThickness,
-                HighlightBlend = design.HighlightBlend,
                 GlitterBlend = design.GlitterBlend,
                 AuroraBlend = design.AuroraBlend,
                 FiberNoiseScale = design.FiberNoiseScale,

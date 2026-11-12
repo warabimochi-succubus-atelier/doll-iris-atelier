@@ -17,6 +17,7 @@ namespace DollIrisGenerator.Models
         private string _color = "#FFFFFF";
         private double _opacity = 0.90;
         private bool _enabled = true;
+        private LayerBlend _blend = LayerBlend.Normal;
 
         public string Id
         {
@@ -78,6 +79,13 @@ namespace DollIrisGenerator.Models
             set { _enabled = value; OnPropertyChanged(); }
         }
 
+        /// <summary>重ね方: how this highlight is laid over the eye. Unknown numbers from a file become Normal.</summary>
+        public LayerBlend Blend
+        {
+            get => _blend;
+            set { _blend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
         public HighlightItem Clone()
         {
             return new HighlightItem
@@ -91,7 +99,8 @@ namespace DollIrisGenerator.Models
                 Rotation = this.Rotation,
                 Color = this.Color,
                 Opacity = this.Opacity,
-                Enabled = this.Enabled
+                Enabled = this.Enabled,
+                Blend = this.Blend
             };
         }
 

@@ -784,7 +784,7 @@ namespace DollIrisGenerator.Services
             // Highlights (Drawn on top without clipping)
             if (p.Highlights != null)
             {
-                sb.AppendLine($@"    <g id=""{idPrefix}_highlights""{BlendStyle(p.HighlightBlend)}>");
+                sb.AppendLine($@"    <g id=""{idPrefix}_highlights"">");
                 int highlightIndex = -1;
                 foreach (var h in p.Highlights)
                 {
@@ -811,22 +811,24 @@ namespace DollIrisGenerator.Services
                         isRightEye && p.MirrorHighlightsWithIris);
 
                     string rotAttr = Math.Abs(rot) > 0.1 ? $@" transform=""rotate({rot.ToFixed(1)}, {hx.ToFixed(3)}, {hy.ToFixed(3)})""" : "";
+                    // Each highlight's own 重ね方, on its shape (the group is not isolated, so it blends with the eye below)
+                    string attrs = rotAttr + BlendStyle(h.Blend);
 
                     switch (h.Shape)
                     {
                         case HighlightShape.Oval:
                             double hrx = hRadius * (h.AspectRatio > 0 ? h.AspectRatio : 1.0);
-                            sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{hrx.ToFixed(3)}"" ry=""{hRadius.ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{rotAttr} />");
+                            sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{hrx.ToFixed(3)}"" ry=""{hRadius.ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
                             break;
                         case HighlightShape.Star4:
-                            sb.AppendLine(BuildSvgStar4(hx, hy, hRadius, 0.22, rotAttr, safeHColor, h.Opacity));
+                            sb.AppendLine(BuildSvgStar4(hx, hy, hRadius, 0.22, attrs, safeHColor, h.Opacity));
                             break;
                         case HighlightShape.Rhombus:
-                            sb.AppendLine(BuildSvgDiamond(hx, hy, hRadius * 0.65, hRadius, rotAttr, safeHColor, h.Opacity));
+                            sb.AppendLine(BuildSvgDiamond(hx, hy, hRadius * 0.65, hRadius, attrs, safeHColor, h.Opacity));
                             break;
                         case HighlightShape.Circle:
                         default:
-                            sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{hRadius.ToFixed(3)}"" ry=""{hRadius.ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{rotAttr} />");
+                            sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{hRadius.ToFixed(3)}"" ry=""{hRadius.ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
                             break;
                     }
                 }

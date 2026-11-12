@@ -30,7 +30,7 @@ namespace DollIrisGenerator.Models
         Particles = 1 << 5,
         /// <summary>装飾記号: the whole symbol list.</summary>
         Symbols = 1 << 6,
-        /// <summary>ハイライト: the whole highlight list and its blend mode.</summary>
+        /// <summary>ハイライト: the whole highlight list (each highlight's blend mode included).</summary>
         Highlights = 1 << 7,
         /// <summary>レンズ風: on/off and every lens parameter including its color.</summary>
         Lens = 1 << 8,
