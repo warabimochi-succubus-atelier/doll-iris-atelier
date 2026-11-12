@@ -130,7 +130,7 @@ namespace DollIrisGenerator.Tests
             p.Highlights.Clear();
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, PositionX = 0.11, PositionY = 0.22, Size = 0.33, Color = "#ABCDEF", Opacity = 0.44, Enabled = true, Blend = LayerBlend.ColorDodge });
             p.Symbols.Clear();
-            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Count = 5, Size = 0.4, PositionX = -0.3, PositionY = 0.3, Color = "#FEDCBA", Opacity = 0.5, Enabled = true });
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Count = 5, Size = 0.4, PositionX = -0.3, PositionY = 0.3, Color = "#FEDCBA", Opacity = 0.5, Enabled = true, Blend = LayerBlend.SoftLight });
             return p;
         }
 

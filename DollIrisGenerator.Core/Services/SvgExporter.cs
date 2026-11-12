@@ -738,7 +738,9 @@ namespace DollIrisGenerator.Services
                     string safeSymColor = GeometryHelper.SanitizeColorHex(symbol.Color, "#FFFFFF");
                     bool symGradient = ColorFill.Parse(symbol.Color).IsGradient;
 
-                    sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToFixed(2)}"">");
+                    // 重ね方 on the group: the copies overlap each other normally, and the group (faded by its opacity)
+                    // is blended with the iris below
+                    sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToFixed(2)}""{BlendStyle(symbol.Blend)}>");
 
                     // Same outline as the screen / PDF renderer; rounded once and reused for every copy
                     var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);

@@ -164,6 +164,9 @@ public static class DesignFields
         new SliderField<DecorativeSymbolItem>("回転角度", s => s.Rotation, (s, v) => s.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<DecorativeSymbolItem>("角の丸み", s => s.CornerRounding, (s, v) => s.CornerRounding = v, 0, 1, 0.01, Fmt.Percent),
         Transparency<DecorativeSymbolItem>(s => s.Opacity, (s, v) => s.Opacity = v),
+        new ChoiceField<DecorativeSymbolItem>("重ね方", s => s.Blend, (s, v) => s.Blend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "この記号の重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
     };
 
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]

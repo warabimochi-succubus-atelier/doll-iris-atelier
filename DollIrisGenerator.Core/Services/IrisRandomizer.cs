@@ -317,6 +317,15 @@ namespace DollIrisGenerator.Services
                 }
             }
 
+            if (!Locked(RandomizeLocks.Symbols))
+            {
+                // Each generated symbol gets its own 重ね方, like the highlights
+                foreach (var s in p.Symbols)
+                {
+                    s.Blend = rng.Next(10) < 6 ? LayerBlend.Normal : LayerBlend.Screen;
+                }
+            }
+
             // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;

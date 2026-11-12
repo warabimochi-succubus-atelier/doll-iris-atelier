@@ -28,7 +28,7 @@ namespace DollIrisGenerator.Models
         LimbalRing = 1 << 4,
         /// <summary>ラメ: count, sizes, opacity, spread, glow, flares, blend mode and color.</summary>
         Particles = 1 << 5,
-        /// <summary>装飾記号: the whole symbol list.</summary>
+        /// <summary>装飾記号: the whole symbol list (each symbol's blend mode included).</summary>
         Symbols = 1 << 6,
         /// <summary>ハイライト: the whole highlight list (each highlight's blend mode included).</summary>
         Highlights = 1 << 7,

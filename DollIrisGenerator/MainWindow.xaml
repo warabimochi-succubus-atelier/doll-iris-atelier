@@ -1278,6 +1278,16 @@
                                                                 <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                             </DockPanel>
                                                             <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
+                                                            <DockPanel Margin="0,6,0,0" ToolTip="この記号の重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
+                                                                <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
+                                                                <WrapPanel>
+                                                                    <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                                    <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                                    <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                                    <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                                    <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                                                </WrapPanel>
+                                                            </DockPanel>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
