@@ -180,9 +180,8 @@
 
     private async Task AddFavorite()
     {
-        Favorites.Items.Insert(0, new FavoriteItem(Session.Current));
-        string? error = await Favorites.SaveAsync();
-        _message = error ?? $"「{Session.Current.Name}」をお気に入りに追加しました (計 {Favorites.Items.Count} 件)。";
+        var (favorite, error) = await Favorites.AddAsync(Session.Current);
+        _message = error ?? $"「{favorite.Name}」としてお気に入りに追加しました (計 {Favorites.Items.Count} 件)。名前はお気に入り一覧で変えられます。";
     }
 
     private void ApplyPreset(ChangeEventArgs e)

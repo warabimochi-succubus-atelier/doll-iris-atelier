@@ -81,14 +81,28 @@ public sealed class FavoritesRepository
     }
 
     /// <summary>「〇〇 のコピー」, then 「〇〇 のコピー (2)」… (same rule as the desktop app).</summary>
-    public string MakeCopyName(string name)
+    public string MakeCopyName(string name) => FavoriteNames.MakeCopyName(name, Items);
+
+    /// <summary>
+    /// Adds <paramref name="design"/> at the top of the list and saves. A name already in the list gets 「 (2)」…
+    /// (same rule as the desktop app); the design being edited keeps its name.
+    /// </summary>
+    /// <returns>The new favorite, and an error message when the list could not be saved (otherwise null).</returns>
+    public async Task<(FavoriteItem Favorite, string? Error)> AddAsync(IrisParameters design)
     {
-        string baseName = $"{name} のコピー";
-        if (Items.All(f => f.Name != baseName)) return baseName;
-        for (int n = 2; ; n++)
-        {
-            string candidate = $"{baseName} ({n})";
-            if (Items.All(f => f.Name != candidate)) return candidate;
-        }
+        var favorite = FavoriteNames.CreateFavorite(design, Items);
+        Items.Insert(0, favorite);
+        return (favorite, await SaveAsync());
+    }
+
+    /// <summary>
+    /// Renames a favorite (the list entry and the design it holds) and saves. The design being edited is not
+    /// changed, so this is not an undo step. An empty name is ignored.
+    /// </summary>
+    /// <returns>Whether the name changed, and an error message when the list could not be saved (otherwise null).</returns>
+    public async Task<(bool Renamed, string? Error)> RenameAsync(FavoriteItem item, string? newName)
+    {
+        if (!Items.Contains(item) || !item.Rename(newName)) return (false, null);
+        return (true, await SaveAsync());
     }
 }

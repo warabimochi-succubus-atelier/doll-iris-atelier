@@ -129,15 +129,22 @@ namespace DollIrisGenerator.ViewModels
         /// True when some cell holds a design that would be lost on exit: it was changed since the cell was
         /// created and is not saved as a favorite either. Designs are not saved automatically, so only then
         /// is it worth asking before closing.
+        /// A favorite counts whatever its name: adding one may give it a name of its own (「〇〇 (2)」), and it can be
+        /// renamed in the list, while the design being edited keeps its name.
         /// </summary>
         public bool HasUnsavedDesigns()
         {
-            var favoriteJson = Favorites.Select(f => JsonSerializer.Serialize(f.Parameters)).ToHashSet();
+            var favoriteJson = Favorites.Select(f => JsonWithoutName(f.Parameters)).ToHashSet();
             return _allSlots.Any(slot =>
-            {
-                string json = JsonSerializer.Serialize(slot.Iris);
-                return json != _slotStartJson[slot] && !favoriteJson.Contains(json);
-            });
+                JsonSerializer.Serialize(slot.Iris) != _slotStartJson[slot] &&
+                !favoriteJson.Contains(JsonWithoutName(slot.Iris)));
+        }
+
+        private static string JsonWithoutName(IrisParameters design)
+        {
+            var copy = design.Clone();
+            copy.Name = "";
+            return JsonSerializer.Serialize(copy);
         }
 
         private void ClearAllUndoHistory()

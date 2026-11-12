@@ -42,6 +42,43 @@ namespace DollIrisGenerator
             };
         }
 
+        // Favorite names are edited in place in the 「履歴・お気に入り」 list
+        private void OnFavoriteNameKeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.TextBox box || box.DataContext is not FavoriteItem item) return;
+            if (e.Key == Key.Enter)
+            {
+                CommitFavoriteName(box, item);
+                Keyboard.ClearFocus();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                ShowFavoriteName(box);
+                Keyboard.ClearFocus();
+                e.Handled = true;
+            }
+        }
+
+        private void OnFavoriteNameLostFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.TextBox box && box.DataContext is FavoriteItem item)
+            {
+                CommitFavoriteName(box, item);
+            }
+        }
+
+        private void CommitFavoriteName(System.Windows.Controls.TextBox box, FavoriteItem item)
+        {
+            if (DataContext is MainViewModel vm) vm.RenameFavorite(item, box.Text);
+            ShowFavoriteName(box); // an empty name is not taken: show the kept name (also drops surrounding spaces)
+        }
+
+        // Re-reads the name through the binding; assigning Text directly would replace the binding, and the row's
+        // container is reused for other favorites when the list scrolls
+        private static void ShowFavoriteName(System.Windows.Controls.TextBox box) =>
+            box.GetBindingExpression(System.Windows.Controls.TextBox.TextProperty)?.UpdateTarget();
+
         private void OnAboutClick(object sender, RoutedEventArgs e) =>
             new Views.AboutWindow { Owner = this }.ShowDialog();
 
