@@ -38,7 +38,10 @@
             <li @key="item.Id" class="favorite">
                 <IrisPreview Design="item.Parameters" SingleEye="true" Class="thumb" />
                 <div class="favorite-text">
-                    <strong>@item.Name</strong>
+                    @* Saved when the box loses focus or on Enter (change event); an empty name puts the old one back *@
+                    <input @key="(item.Id, _nameResets)" class="favorite-name" type="text" value="@item.Name" maxlength="100"
+                           aria-label="お気に入りの名前" title="名前を変更 (Enter またはほかの場所をクリックで確定)"
+                           @onchange="e => Rename(item, e.Value as string)" />
                     <span class="field-hint">@item.Note</span>
                     <span class="field-hint">@item.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
                 </div>
@@ -54,6 +57,8 @@
 
 @code {
     private const string MimeType = "application/json";
+
+    private int _nameResets;
 
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
     [Parameter] public EventCallback<string> OnMessage { get; set; }
@@ -142,6 +147,19 @@
         Favorites.Items.Insert(index < 0 ? 0 : index + 1, copy);
         string? error = await Favorites.SaveAsync();
         await OnMessage.InvokeAsync(error ?? $"「{source.Name}」を「{newName}」として複製しました。");
+    }
+
+    private async Task Rename(FavoriteItem item, string? newName)
+    {
+        string oldName = item.Name;
+        var (renamed, error) = await Favorites.RenameAsync(item, newName);
+        // Not taken (empty, or only spaces added): the name to show has not changed, so Blazor would leave the
+        // typed text in the box. A new key re-creates the boxes with the kept names.
+        if (!renamed) _nameResets++;
+        if (renamed || error != null)
+        {
+            await OnMessage.InvokeAsync(error ?? $"お気に入り「{oldName}」の名前を「{item.Name}」に変えました。");
+        }
     }
 
     private async Task Remove(FavoriteItem item)

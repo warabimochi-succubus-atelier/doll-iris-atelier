@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -75,10 +77,59 @@ namespace DollIrisGenerator.Models
             _createdAt = DateTime.Now;
         }
 
+        /// <summary>
+        /// Renames the favorite: the list entry and the design it holds, so restoring it gives the design the new
+        /// name too. Surrounding spaces are dropped.
+        /// </summary>
+        /// <returns>False (nothing changes) when the new name is empty or the same as now.</returns>
+        public bool Rename(string? newName)
+        {
+            string name = (newName ?? "").Trim();
+            if (name.Length == 0 || (name == Name && name == Parameters.Name)) return false;
+            Name = name;
+            Parameters.Name = name;
+            return true;
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? propName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+        }
+    }
+
+    /// <summary>Naming rules for favorites, shared by the desktop and browser apps.</summary>
+    public static class FavoriteNames
+    {
+        /// <summary>
+        /// <paramref name="name"/> when no favorite uses it yet, otherwise 「〇〇 (2)」, 「〇〇 (3)」…, so favorites
+        /// added from a design that keeps the same name (such as the default 「新規虹彩デザイン」) can be told apart.
+        /// </summary>
+        public static string MakeUnique(string name, IEnumerable<FavoriteItem> favorites)
+        {
+            var used = favorites.Select(f => f.Name).ToHashSet();
+            if (!used.Contains(name)) return name;
+            for (int n = 2; ; n++)
+            {
+                string candidate = $"{name} ({n})";
+                if (!used.Contains(candidate)) return candidate;
+            }
+        }
+
+        /// <summary>「〇〇 のコピー」, then 「〇〇 のコピー (2)」…</summary>
+        public static string MakeCopyName(string name, IEnumerable<FavoriteItem> favorites) =>
+            MakeUnique($"{name} のコピー", favorites);
+
+        /// <summary>
+        /// A new favorite of <paramref name="design"/>, named so it differs from the existing favorites. The design
+        /// in the favorite gets the same name; <paramref name="design"/> itself is not changed.
+        /// </summary>
+        public static FavoriteItem CreateFavorite(IrisParameters design, IEnumerable<FavoriteItem> favorites)
+        {
+            var favorite = new FavoriteItem(design);
+            string name = MakeUnique(design.Name, favorites);
+            if (name != design.Name) favorite.Rename(name);
+            return favorite;
         }
     }
 }

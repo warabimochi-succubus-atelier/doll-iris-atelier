@@ -1003,7 +1003,13 @@
                                             <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Foreground="{StaticResource TextMuted}" FontSize="9" VerticalAlignment="Center" Width="62"
                                                        DockPanel.Dock="Right"/>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                                <!-- The name is edited in place: Enter or leaving the box saves it, Esc puts it back.
+                                                     Bound one way: the view model renames the favorite and its design and saves the list. -->
+                                                <TextBox Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" FontSize="11" Padding="1,0"
+                                                         Background="Transparent" BorderThickness="0,0,0,1" BorderBrush="#40FFFFFF"
+                                                         AutomationProperties.Name="お気に入りの名前"
+                                                         ToolTip="クリックして名前を変更 (Enter で確定、Esc で取り消し)"
+                                                         KeyDown="OnFavoriteNameKeyDown" LostKeyboardFocus="OnFavoriteNameLostFocus"/>
                                                 <TextBlock Text="{Binding Note}" Foreground="{StaticResource TextMuted}" FontSize="10" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </DockPanel>

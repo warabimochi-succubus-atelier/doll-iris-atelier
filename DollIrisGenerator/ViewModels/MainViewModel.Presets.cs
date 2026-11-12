@@ -198,10 +198,26 @@ namespace DollIrisGenerator.ViewModels
 
         private void OnAddFavorite()
         {
-            var favorite = new FavoriteItem(CurrentIris);
+            // A name already in the list gets 「 (2)」… so favorites of the same design name can be told apart
+            var favorite = FavoriteNames.CreateFavorite(CurrentIris, Favorites);
             Favorites.Insert(0, favorite);
             SaveFavorites();
-            StatusMessage = $"「{CurrentIris.Name}」をお気に入りに追加しました (計 {Favorites.Count} 件)。";
+            StatusMessage = $"「{favorite.Name}」としてお気に入りに追加しました (計 {Favorites.Count} 件)。" +
+                            "名前は「履歴・お気に入り」タブの一覧で変えられます。";
+        }
+
+        /// <summary>
+        /// Renames a favorite (the list entry and the design it holds) and saves the list. The design being edited
+        /// is not changed, so this is not an undo step. An empty name is ignored.
+        /// </summary>
+        /// <returns>True when the name changed.</returns>
+        public bool RenameFavorite(FavoriteItem item, string? newName)
+        {
+            string oldName = item.Name;
+            if (!Favorites.Contains(item) || !item.Rename(newName)) return false;
+            SaveFavorites();
+            StatusMessage = $"お気に入り「{oldName}」の名前を「{item.Name}」に変えました。";
+            return true;
         }
 
         private void OnRemoveFavorite(object? param)
@@ -246,16 +262,7 @@ namespace DollIrisGenerator.ViewModels
             StatusMessage = $"お気に入り「{source.Name}」を「{newName}」として複製しました (計 {Favorites.Count} 件)。";
         }
 
-        private string MakeCopyName(string name)
-        {
-            string baseName = $"{name} のコピー";
-            if (!Favorites.Any(f => f.Name == baseName)) return baseName;
-            for (int n = 2; ; n++)
-            {
-                string candidate = $"{baseName} ({n})";
-                if (!Favorites.Any(f => f.Name == candidate)) return candidate;
-            }
-        }
+        private string MakeCopyName(string name) => FavoriteNames.MakeCopyName(name, Favorites);
 
         /// <summary>The favorites a command acts on: the list's selected items, one favorite, or the current selection.</summary>
         private List<FavoriteItem> ResolveFavorites(object? param)
