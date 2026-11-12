@@ -32,7 +32,8 @@ namespace DollIrisGenerator.Services
 
         /// <summary>
         /// Randomizes the design's attributes, leaving the groups in <paramref name="locks"/> unchanged.
-        /// Size, shape, aspect ratio and tilt are always kept. A color is kept when either
+        /// Size, shape, aspect ratio and tilt are always kept, and so is 「ハイライトを左右反転」 (how the pair of eyes is
+        /// built, not a look). A color is kept when either
         /// <see cref="RandomizeLocks.Colors"/> or the part it belongs to is locked.
         /// </summary>
         public static void RandomizeAttributes(IrisParameters p, RandomizeLocks locks, Random? rng = null)
@@ -266,7 +267,53 @@ namespace DollIrisGenerator.Services
                 p.PupilFacetCount = 6 + (int)(count * 10);
             }
 
-            // 14. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
+            // 14. Settings added later (light, fiber noise, corner rounding, blend modes), each kept by the lock of
+            //     the settings box it sits in. Drawn after everything else so the values above stay as they were.
+            if (!colorsLocked)
+            {
+                // Light: half the designs lit from the upper left, where the generated highlights sit
+                bool lit = rng.Next(2) == 0;
+                double angle = rng.NextDouble(), strength = rng.NextDouble();
+                p.LightAngle = Math.Round(200.0 + angle * 70.0);
+                p.LightStrength = lit ? Math.Round(0.15 + strength * 0.35, 2) : 0.0;
+
+                // Fiber noise: on in about half the designs, kept subtle
+                bool fibers = rng.Next(2) == 0;
+                double noise = rng.NextDouble(), noiseScale = rng.NextDouble();
+                p.FiberNoise = fibers ? Math.Round(0.15 + noise * 0.30, 2) : 0.0;
+                p.FiberNoiseScale = Math.Round(0.8 + noiseScale * 0.8, 2);
+
+                // Aurora blend: the gentle modes only (覆い焼き / オーバーレイ easily wash out or darken the iris)
+                p.AuroraBlend = rng.Next(10) switch
+                {
+                    < 4 => LayerBlend.Normal,
+                    < 8 => LayerBlend.Screen,
+                    _ => LayerBlend.SoftLight
+                };
+            }
+
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                // Only shows on the cat slit / heart / star pupils
+                p.PupilCornerRounding = Math.Round(rng.NextDouble() * 0.5, 2);
+            }
+
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                p.GlitterBlend = rng.Next(10) switch
+                {
+                    < 5 => LayerBlend.Normal,
+                    < 9 => LayerBlend.Screen,
+                    _ => LayerBlend.ColorDodge
+                };
+            }
+
+            if (!Locked(RandomizeLocks.Highlights))
+            {
+                p.HighlightBlend = rng.Next(10) < 7 ? LayerBlend.Normal : LayerBlend.Screen;
+            }
+
+            // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;
             p.AspectRatio = preservedAspectRatio;
