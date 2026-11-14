@@ -11,7 +11,7 @@ public static class AppInfo
     public const string Name = "Doll Iris Atelier";
     public const string Author = "わらびもちサキュバス工房";
     public const string Copyright = "© 2026 わらびもちサキュバス工房";
-    public const string License = "MIT License (ロゴとアイコンを除く)";
+    public const string License = "MIT License";
 
     public const string RepositoryUrl = "https://github.com/warabimochi-succubus-atelier/doll-iris-atelier";
     public const string ManualUrl = RepositoryUrl + "/blob/main/USER_MANUAL.md";

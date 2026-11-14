@@ -14,14 +14,19 @@
         <img class="about-icon" src="icon-192.png" alt="" width="96" height="96" />
         <h2 id="about-title" class="about-name">@AppInfo.Name</h2>
         <p class="about-version">@AppInfo.VersionLabel</p>
-        <p class="about-tagline">ドール用の虹彩をデザインして<br />実寸で印刷するためのアトリエツール</p>
-        <p class="about-note">ブラウザ版です。印刷 (A4 PDF) はデスクトップ版で行います。</p>
+        <p class="about-tagline">ドールアイの虹彩をデザインし、実寸で印刷する<br />ドールメイク用アトリエツール</p>
 
         <hr class="about-rule" />
 
         <p class="about-label">作者</p>
-        <img class="about-logo" src="author-logo.jpg" alt="@AppInfo.Author のロゴ" width="700" height="300" />
+        <img class="about-logo" src="author-logo.jpg" alt="@AppInfo.Author" width="700" height="300" />
         <p class="about-author">@AppInfo.Author</p>
+
+        <p class="about-license">
+            ブラウザ版です。印刷（A4 PDF）はデスクトップ版で行います。<br />
+            ロゴとアイコンを除き、<a href="@AppInfo.LicenseUrl" target="_blank" rel="noopener noreferrer">@AppInfo.License</a> で公開しています。<br />
+            @AppInfo.Copyright
+        </p>
 
         <div class="about-links">
             <a class="button-like" href="@AppInfo.RepositoryUrl" target="_blank" rel="noopener noreferrer">
@@ -33,11 +38,6 @@
                 マニュアル
             </a>
         </div>
-
-        <p class="about-license">
-            <a href="@AppInfo.LicenseUrl" target="_blank" rel="noopener noreferrer">@AppInfo.License</a><br />
-            @AppInfo.Copyright
-        </p>
     </div>
     <form method="dialog" class="about-footer">
         <button type="submit" class="primary" autofocus>閉じる</button>
