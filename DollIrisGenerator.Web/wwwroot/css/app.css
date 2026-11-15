@@ -156,7 +156,20 @@ input[type=text], input[type=number], select {
     background: var(--bg);
     border-bottom: 1px solid var(--border);
 }
-.preview { margin: 0; display: flex; justify-content: center; }
+.preview { margin: 0; display: flex; justify-content: center; position: relative; }
+/* Rings round the ticked / pointed-at symbols and highlights, over the picture (same viewBox, centred like the image) */
+.preview-markers { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.preview-markers circle { fill: none; vector-effect: non-scaling-stroke; }
+.preview-markers .marker-shadow { stroke: rgba(0, 0, 0, 0.6); stroke-width: 3.6px; }
+.preview-markers .marker-ring { stroke-width: 1.6px; stroke-dasharray: 3 2; }
+.preview-markers .symbol .marker-ring { stroke: #80d8ff; }
+.preview-markers .highlight .marker-ring { stroke: #ff80ab; }
+.preview-markers .hovered .marker-ring { stroke: #ffd54f; stroke-width: 2.4px; stroke-dasharray: none; }
+.preview-markers .marker-label-bg { fill: rgba(20, 24, 32, 0.85); }
+.preview-markers .marker-label { font-weight: 700; font-family: system-ui, sans-serif; }
+.preview-markers .symbol .marker-label { fill: #80d8ff; }
+.preview-markers .highlight .marker-label { fill: #ff80ab; }
+.preview-markers .hovered .marker-label { fill: #ffd54f; }
 .preview img { width: 100%; max-width: 560px; height: auto; max-height: 34vh; object-fit: contain; }
 .preview-caption { margin: 4px 0 0; text-align: center; font-size: 0.8rem; color: var(--text-muted); overflow-wrap: anywhere; }
 

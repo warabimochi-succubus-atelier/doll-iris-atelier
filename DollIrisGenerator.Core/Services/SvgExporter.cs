@@ -195,6 +195,23 @@ namespace DollIrisGenerator.Services
         /// Left and right eye side by side, <paramref name="pairSpacingMm"/> apart (between their footprints), with
         /// <paramref name="paddingMm"/> around the pair.
         /// </summary>
+        /// <summary>
+        /// Where <see cref="GeneratePairSvg(IrisParameters, bool, bool, double, double)"/> puts things, in its mm
+        /// coordinates (= its viewBox): the canvas size and the two eyes' centers. The browser preview lays its
+        /// item markers over the picture with these.
+        /// </summary>
+        public static (double Width, double Height, double LeftCx, double RightCx, double Cy) PairLayoutMm(
+            IrisParameters p, double pairSpacingMm, double paddingMm)
+        {
+            // Canvas and eye spacing use the tilted footprint so tilted ovals are not cut off or overlapping
+            var (footW, footH) = SheetLayout.GetEyeFootprintMm(p);
+            double totalWidthMm = (footW * 2.0) + pairSpacingMm + (paddingMm * 2.0);
+            double totalHeightMm = footH + (paddingMm * 2.0);
+            double leftCx = paddingMm + footW / 2.0;
+            double rightCx = leftCx + footW + pairSpacingMm;
+            return (totalWidthMm, totalHeightMm, leftCx, rightCx, totalHeightMm / 2.0);
+        }
+
         public static string GeneratePairSvg(IrisParameters p, bool cutLine, bool centerMark, double pairSpacingMm, double paddingMm)
         {
             double sizeMm = p.SizeMm;
@@ -204,10 +221,7 @@ namespace DollIrisGenerator.Services
             if (p.Shape == IrisShape.VerticalOval) heightMm *= p.AspectRatio;
             else if (p.Shape == IrisShape.HorizontalOval) widthMm *= p.AspectRatio;
 
-            // Canvas and eye spacing use the tilted footprint so tilted ovals are not cut off or overlapping
-            var (footW, footH) = SheetLayout.GetEyeFootprintMm(p);
-            double totalWidthMm = (footW * 2.0) + pairSpacingMm + (paddingMm * 2.0);
-            double totalHeightMm = footH + (paddingMm * 2.0);
+            var (totalWidthMm, totalHeightMm, leftCx, rightCx, cy) = PairLayoutMm(p, pairSpacingMm, paddingMm);
 
             var sb = new StringBuilder();
             sb.AppendLine($@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>");
@@ -216,14 +230,11 @@ namespace DollIrisGenerator.Services
 
             double rx = widthMm / 2.0;
             double ry = heightMm / 2.0;
-            double cy = totalHeightMm / 2.0;
 
             // Left eye
-            double leftCx = paddingMm + footW / 2.0;
             AppendIrisSvg(sb, "left_eye", leftCx, cy, rx, ry, p, false, cutLine, centerMark);
 
             // Right eye (Mirrored or Odd-Eye)
-            double rightCx = leftCx + footW + pairSpacingMm;
             AppendIrisSvg(sb, "right_eye", rightCx, cy, rx, ry, p, true, cutLine, centerMark);
 
             sb.AppendLine("</svg>");

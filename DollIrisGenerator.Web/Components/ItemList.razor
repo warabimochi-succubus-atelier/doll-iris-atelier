@@ -56,7 +56,9 @@
 @foreach (var item in Items)
 {
     int number = Items.IndexOf(item) + 1;
-    <div class="item-card @(item.IsSelected ? "selected" : "")" @key="item.Id">
+    <div class="item-card @(item.IsSelected ? "selected" : "")" @key="item.Id"
+         @onmouseenter="() => Point(item.Id)" @onmouseleave="() => Point(null)"
+         @onfocusin="() => Focus(item.Id)" @onfocusout="() => Focus(null)">
         <div class="item-card-header">
             <label class="item-select" title="選んだ@(Noun)は「まとめて変更」でそろえて変えられます">
                 <input type="checkbox" checked="@item.IsSelected" @onchange="e => item.IsSelected = e.Value is true"
@@ -86,6 +88,22 @@
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> TemplateFields { get; set; } = Array.Empty<Field<T>>();
 
     [Parameter] public EventCallback<string> OnMessage { get; set; }
+
+    /// <summary>The item whose card is pointed at or holds the focus (null: none), for the preview's ring.</summary>
+    [Parameter] public EventCallback<string?> OnHover { get; set; }
+
+    private string? _pointedId, _focusedId, _reportedId;
+
+    private Task Point(string? id) { _pointedId = id; return Report(); }
+    private Task Focus(string? id) { _focusedId = id; return Report(); }
+
+    private Task Report()
+    {
+        string? id = _pointedId ?? _focusedId;
+        if (id == _reportedId) return Task.CompletedTask;
+        _reportedId = id;
+        return OnHover.InvokeAsync(id);
+    }
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
 
     private string Full => $"これ以上追加できません ({Noun}は {IrisParameters.MaxNestedItems} 個まで)。";

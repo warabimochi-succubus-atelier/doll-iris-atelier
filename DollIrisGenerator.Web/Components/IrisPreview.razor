@@ -14,6 +14,30 @@
     @if (_url != null)
     {
         <img src="@_url" alt="@Alt" draggable="false" />
+        @if (ShowItemMarkers && !SingleEye)
+        {
+            var layout = SvgExporter.PairLayoutMm(Design, PairSpacingMm, SvgExporter.PairPaddingMm);
+            var marks = Markers(layout.LeftCx, layout.RightCx, layout.Cy);
+            if (marks.Count > 0)
+            {
+                @* Over the picture with the same viewBox (mm), so the rings sit on the items; screen only *@
+                <svg class="preview-markers" viewBox="0 0 @Num(layout.Width) @Num(layout.Height)" aria-hidden="true" focusable="false">
+                    @foreach (var (m, x, y) in marks)
+                    {
+                        string kind = m.Hovered ? "hovered" : m.Kind == MarkedItemKind.Symbol ? "symbol" : "highlight";
+                        double r = Math.Max(m.Radius, MinMarkerMm);
+                        string label = m.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        double lx = x + r * 0.71, ly = y - r * 0.71;
+                        <g class="marker @kind">
+                            <circle class="marker-shadow" cx="@Num(x)" cy="@Num(y)" r="@Num(r)" />
+                            <circle class="marker-ring" cx="@Num(x)" cy="@Num(y)" r="@Num(r)" />
+                            <rect class="marker-label-bg" x="@Num(lx - 0.1)" y="@Num(ly - LabelMm)" width="@Num(LabelMm * 0.62 * label.Length + 0.2)" height="@Num(LabelMm)" rx="0.15" />
+                            <text class="marker-label" x="@Num(lx)" y="@Num(ly - LabelMm * 0.18)" font-size="@Num(LabelMm)">@label</text>
+                        </g>
+                    }
+                </svg>
+            }
+        }
     }
     else if (_error != null)
     {
@@ -31,6 +55,29 @@
     [Parameter] public bool SingleEye { get; set; }
 
     [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// Rings round the ticked symbols / highlights and the one whose card is pointed at (<see cref="HoveredItemId"/>),
+    /// with their numbers in the list (the pair view of the editor only).
+    /// </summary>
+    [Parameter] public bool ShowItemMarkers { get; set; }
+
+    [Parameter] public string? HoveredItemId { get; set; }
+
+    /// <summary>Smallest ring and the label height, in the picture's mm.</summary>
+    private const double MinMarkerMm = 0.35, LabelMm = 0.75;
+
+    private static string Num(double v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>Both eyes' markers in the picture's coordinates; the pointed-at one last, so it is drawn on top.</summary>
+    private List<(ItemMarker Marker, double X, double Y)> Markers(double leftCx, double rightCx, double cy)
+    {
+        var list = new List<(ItemMarker, double, double)>();
+        foreach (var (right, cx) in new[] { (false, leftCx), (true, rightCx) })
+            foreach (var m in ItemMarkers.ForEye(Design, right, HoveredItemId))
+                list.Add((m, cx + m.X, cy + m.Y));
+        return list.OrderBy(t => t.Item1.Hovered).ToList();
+    }
 
     private string? _url;
     private string? _previousUrl;

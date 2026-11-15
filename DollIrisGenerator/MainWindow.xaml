@@ -1371,7 +1371,7 @@
                                         <ItemsControl ItemsSource="{Binding CurrentIris.Symbols}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
+                                                    <Border controls:ItemHover.ItemId="{Binding Id}" Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
                                                         <StackPanel>
                                                             <DockPanel Margin="0,0,0,6">
                                                                 <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
@@ -1707,7 +1707,7 @@
                                         <ItemsControl ItemsSource="{Binding CurrentIris.Highlights}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
+                                                    <Border controls:ItemHover.ItemId="{Binding Id}" Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
                                                         <StackPanel>
                                                             <DockPanel Margin="0,0,0,6">
                                                                 <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
