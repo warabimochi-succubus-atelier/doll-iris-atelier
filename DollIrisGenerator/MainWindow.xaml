@@ -381,7 +381,7 @@
                     <!-- TAB 1 (上段): 基本 (虹彩プリセット・名前・サイズ・形状・シード・ランダム生成) -->
                     <!-- ======================================================== -->
                     <TabItem Header="基本">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Iris presets: colors plus pupil, rays, sparkles, layers and symbol, so they sit here rather than in 色 -->
                                 <GroupBox Header="虹彩プリセット・共有" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -511,7 +511,7 @@
                     <!-- TAB 2 (上段): 色 (虹彩カラー・オーロラ層・星雲) -->
                     <!-- ======================================================== -->
                     <TabItem Header="色">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Color Settings -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -634,7 +634,7 @@
                     <!-- TAB 3 (上段): 瞳孔 & 放射模様 -->
                     <!-- ======================================================== -->
                     <TabItem Header="瞳孔・放射線">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Pupil Parameters -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -792,7 +792,7 @@
                     <!-- TAB 4 (上段): A4印刷・面付け & PDFテンプレート (NEW!) -->
                     <!-- ======================================================== -->
                     <TabItem Header="A4印刷・テンプレート">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- PDF Template Selection -->
                                 <GroupBox Header="PDFテンプレート選択" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -1057,7 +1057,7 @@
                     <!-- TAB 6 (下段): 外輪 & ラメ -->
                     <!-- ======================================================== -->
                     <TabItem Header="外輪・ラメ" controls:TabRowsPanel.Row="1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Limbal Ring -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -1173,7 +1173,7 @@
                     <!-- TAB 7 (下段): 装飾記号 (たくさん追加できるので専用タブ) -->
                     <!-- ======================================================== -->
                     <TabItem Header="記号" controls:TabRowsPanel.Row="1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Decorative Symbols -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -1417,7 +1417,7 @@
                     <!-- TAB 8 (下段): レンズ風パターン & オッドアイ (NEW!) -->
                     <!-- ======================================================== -->
                     <TabItem Header="レンズ風・オッドアイ" controls:TabRowsPanel.Row="1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Lens-Style Optical Pattern -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
@@ -1528,7 +1528,7 @@
                     <!-- TAB 9 (下段): ハイライト & 左右対称 -->
                     <!-- ======================================================== -->
                     <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <GroupBox Header="左右対称設定" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <StackPanel>

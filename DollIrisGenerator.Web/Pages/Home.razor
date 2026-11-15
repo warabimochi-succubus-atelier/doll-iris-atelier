@@ -117,8 +117,8 @@
 
     private string _tab = Tabs[0];
     private string _message = "";
-    private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol);
-    private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight);
+    private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol, ItemLayoutSettings.DefaultSymbolCount);
+    private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight, ItemLayoutSettings.DefaultHighlightCount);
 
     protected override async Task OnInitializedAsync()
     {

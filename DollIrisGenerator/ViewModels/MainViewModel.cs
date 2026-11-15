@@ -352,8 +352,8 @@ namespace DollIrisGenerator.ViewModels
             _currentIris = new IrisParameters();
             _currentIris.PropertyChanged += OnIrisPropertyChanged;
             _undoBaseline = _currentIris.Clone();
-            SymbolTools = new ItemListTools<DecorativeSymbolItem>("装飾記号", NewSymbolItem, RunItemListChange);
-            HighlightTools = new ItemListTools<HighlightItem>("ハイライト", NewHighlightItem, RunItemListChange);
+            SymbolTools = new ItemListTools<DecorativeSymbolItem>("装飾記号", NewSymbolItem, ItemLayoutSettings.DefaultSymbolCount, RunItemListChange);
+            HighlightTools = new ItemListTools<HighlightItem>("ハイライト", NewHighlightItem, ItemLayoutSettings.DefaultHighlightCount, RunItemListChange);
             AttachItemListTools();
             _manualEditTimer = new DispatcherTimer { Interval = ManualEditCommitDelay };
             _manualEditTimer.Tick += (_, _) => CommitManualEdit();
