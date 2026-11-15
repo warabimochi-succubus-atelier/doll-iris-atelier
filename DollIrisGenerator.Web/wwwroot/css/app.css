@@ -278,6 +278,18 @@ input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid v
     padding-bottom: 8px; border-bottom: 1px solid var(--border);
 }
 .item-card-title { color: var(--text-2); font-size: 0.9rem; font-weight: 600; }
+.item-card.selected { border-color: var(--accent); }
+.item-select { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; }
+.item-select input { width: 20px; height: 20px; margin: 0; }
+.item-card-actions { display: flex; gap: 8px; }
+/* まとめて変更: an outlined card above the list, shown while items are ticked */
+.bulk-card { border-color: var(--accent); background: #1a2a38; }
+.selection-row { margin: 8px 0; }
+
+/* 並べて追加: folded until opened, so the list stays close to the top */
+.arrange-panel { margin: 10px 0; padding: 4px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+.arrange-panel > summary { display: flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer; font-weight: 600; color: var(--text-2); }
+.arrange-panel[open] { padding-bottom: 12px; }
 
 /* ---------- favorites ---------- */
 

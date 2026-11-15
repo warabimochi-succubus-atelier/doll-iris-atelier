@@ -1185,6 +1185,72 @@
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
+                                        <StackPanel.Resources>
+                                            <DataTemplate x:Key="SymbolStyleFieldsTop">
+                                                <StackPanel>
+                                                    <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                                    <WrapPanel Margin="0,0,0,6">
+                                                        <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                                                        <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                        <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                        <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                        <RadioButton Content="三日月 (🌙)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
+                                                        <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
+                                                        <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                        <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                    </WrapPanel>
+
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
+                                                        <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                    </DockPanel>
+
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.05" Maximum="0.40" Value="{Binding Size}" Margin="0,0,0,6"/>
+
+                                                    <!-- Same range as DecorativeSymbolItem.Count (1-12); 2 or more puts the copies in a ring round the position -->
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="同じ記号をいくつ並べるか。2 以上にすると、位置のまわりに円を描くように並びます">
+                                                        <TextBlock Text="繰り返し数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="1" Maximum="12" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="SymbolStyleFieldsBottom">
+                                                <StackPanel>
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="星の先・ハートの先・三日月の角など、図形のとがった部分を丸めます。0% で従来どおりのとがった形です。">
+                                                        <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
+                                                    <DockPanel Margin="0,6,0,0" ToolTip="この記号の重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
+                                                        <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
+                                                        <WrapPanel>
+                                                            <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                            <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                            <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                            <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                            <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                                        </WrapPanel>
+                                                    </DockPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </StackPanel.Resources>
                                         <DockPanel Margin="0,0,0,8">
                                             <TextBlock Text="装飾記号一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             <Button Content="➕ 装飾記号追加" Command="{Binding AddSymbolCommand}"
@@ -1204,47 +1270,156 @@
                                             </TextBlock.Style>
                                         </TextBlock>
 
+                                        <Expander Margin="0,0,0,8" Foreground="{StaticResource TextPrimary}"
+                                                  ToolTip="記号を円や直線の上にまとめて追加します。追加した記号は 1 つずつ別の記号になるので、あとから個別にも動かせます">
+                                            <Expander.Header>
+                                                <TextBlock Text="📐 並べて追加 (円・直線にまとめて置く)" FontWeight="SemiBold"/>
+                                            </Expander.Header>
+                                            <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,4,0,0">
+                                                <StackPanel DataContext="{Binding SymbolTools.Editor.Layout}">
+                                                    <WrapPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="並べ方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Width="70"/>
+                                                        <RadioButton Content="円周" GroupName="SymbolToolsLayoutKind" IsChecked="{Binding IsCircle}" Margin="0,0,12,0"/>
+                                                        <RadioButton Content="直線" GroupName="SymbolToolsLayoutKind" IsChecked="{Binding IsLine}"/>
+                                                    </WrapPanel>
+                                                    <DockPanel Margin="0,0,0,2">
+                                                        <TextBlock Text="個数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="2" Maximum="24" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
+                                                    <StackPanel Visibility="{Binding IsCircle, Converter={StaticResource BoolToVisConverter}}">
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="中心 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding CenterX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding CenterX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="中心 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding CenterY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding CenterY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <DockPanel Margin="0,0,0,2">
+                                                            <TextBlock Text="半径:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding Radius, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="0.05" Maximum="0.85" Value="{Binding Radius}" Margin="0,0,0,6"/>
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="最初の記号を置く角度。0° が中心の真上で、時計回りに増えます">
+                                                            <TextBlock Text="開始角:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding StartAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="-180" Maximum="180" Value="{Binding StartAngle}" Margin="0,0,0,6"/>
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="360° で一周に等間隔。それより小さいと弧になり、両端にも記号が置かれます">
+                                                            <TextBlock Text="範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding SweepAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="10" Maximum="360" Value="{Binding SweepAngle}" Margin="0,0,0,6"/>
+                                                    </StackPanel>
+                                                    <StackPanel Visibility="{Binding IsLine, Converter={StaticResource BoolToVisConverter}}">
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="始点 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding StartX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding StartX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="始点 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding StartY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding StartY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="終点 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding EndX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding EndX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="終点 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding EndY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding EndY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                    <CheckBox Content="向きを並びに沿わせる" IsChecked="{Binding AlignRotation}" Margin="0,0,0,6"
+                                                              ToolTip="円周では記号の上側が外を向くように、直線では線の向きに合わせて回します (見本の回転角度に足します)"/>
+                                                    <TextBlock Text="見本: 「選択」した記号のうち一番上のもの (選択がなければ新しい記号の初期値: 白い 4芒星)。種類・色・サイズなどを見本からコピーします。" Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                    <Button Content="➕ 並べて追加" Command="{Binding DataContext.SymbolTools.ArrangeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            HorizontalAlignment="Left" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Expander>
+
+                                        <WrapPanel Margin="0,0,0,6">
+                                            <Button Content="☑ すべて選択" Command="{Binding SymbolTools.SelectAllCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    ToolTip="すべての記号を選びます。選んだ記号は「まとめて変更」でそろえて変えられます"/>
+                                            <Button Content="☐ 選択解除" Command="{Binding SymbolTools.ClearSelectionCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    Visibility="{Binding SymbolTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"/>
+                                            <Button Content="✕ 選択した記号を削除" Command="{Binding SymbolTools.RemoveSelectedCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"
+                                                    Visibility="{Binding SymbolTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"/>
+                                        </WrapPanel>
+
+                                        <Border Visibility="{Binding SymbolTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"
+                                                Background="#16263A" BorderBrush="#80D8FF" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="Bold" Foreground="#80D8FF" Margin="0,0,0,2">
+                                                    <Run Text="✏ まとめて変更 (選択中: "/><Run Text="{Binding SymbolTools.Editor.SelectedCount, Mode=OneWay}"/><Run Text=" 個)"/>
+                                                </TextBlock>
+                                                <TextBlock Text="動かした項目だけが、選んだ記号すべてに同じ値で入ります (位置は変わりません)。最初に表示されるのは、選んだ中で一番上の記号の値です。"
+                                                           Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding SymbolTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                                <ContentControl Content="{Binding SymbolTools.Editor.Bulk}" ContentTemplate="{StaticResource SymbolStyleFieldsTop}" Focusable="False"/>
+                                                <ContentControl Content="{Binding SymbolTools.Editor.Bulk}" ContentTemplate="{StaticResource SymbolStyleFieldsBottom}" Focusable="False"/>
+                                            </StackPanel>
+                                        </Border>
+
                                         <ItemsControl ItemsSource="{Binding CurrentIris.Symbols}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,6">
                                                         <StackPanel>
                                                             <DockPanel Margin="0,0,0,6">
+                                                                <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                                          ToolTip="選んだ記号は「まとめて変更」でそろえて変えられます。「並べて追加」の見本にもなります"/>
+                                                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                                                    <Button Content="⧉ 複製" Command="{Binding DataContext.SymbolTools.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#1E3A5F" Foreground="#80D8FF" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="同じ設定の記号を、少しずらしてすぐ下に追加します"/>
+                                                                    <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
+                                                                </StackPanel>
                                                                 <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
                                                             </DockPanel>
-
-                                                            <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
-                                                            <WrapPanel Margin="0,0,0,6">
-                                                                <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
-                                                                <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                                <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
-                                                                <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
-                                                                <RadioButton Content="三日月 (🌙)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
-                                                                <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
-                                                                <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
-                                                                <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
-                                                            </WrapPanel>
-
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
-                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
-                                                            </DockPanel>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.05" Maximum="0.40" Value="{Binding Size}" Margin="0,0,0,6"/>
-
-                                                            <!-- Same range as DecorativeSymbolItem.Count (1-12); 2 or more puts the copies in a ring round the position -->
-                                                            <DockPanel Margin="0,0,0,4" ToolTip="同じ記号をいくつ並べるか。2 以上にすると、位置のまわりに円を描くように並びます">
-                                                                <TextBlock Text="繰り返し数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="1" Maximum="12" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
-
+                                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SymbolStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
@@ -1260,34 +1435,7 @@
                                                                     <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
                                                                 </StackPanel>
                                                             </Grid>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4" ToolTip="星の先・ハートの先・三日月の角など、図形のとがった部分を丸めます。0% で従来どおりのとがった形です。">
-                                                                <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
-                                                            <DockPanel Margin="0,6,0,0" ToolTip="この記号の重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
-                                                                <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
-                                                                <WrapPanel>
-                                                                    <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
-                                                                    <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
-                                                                    <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
-                                                                    <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
-                                                                    <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
-                                                                </WrapPanel>
-                                                            </DockPanel>
+                                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SymbolStyleFieldsBottom}" Focusable="False"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
@@ -1434,11 +1582,198 @@
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
+                                        <StackPanel.Resources>
+                                            <DataTemplate x:Key="HighlightStyleFieldsTop">
+                                                <StackPanel>
+                                                    <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
+                                                    <WrapPanel Margin="0,0,0,6">
+                                                        <RadioButton Content="正円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                        <RadioButton Content="楕円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
+                                                        <RadioButton Content="4点星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                        <RadioButton Content="菱形" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
+                                                    </WrapPanel>
+
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="色:" VerticalAlignment="Center" Width="70"/>
+                                                        <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
+                                                    </DockPanel>
+
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                            <DataTemplate x:Key="HighlightStyleFieldsBottom">
+                                                <StackPanel>
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4">
+                                                        <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
+                                                    <DockPanel Margin="0,6,0,0" ToolTip="このハイライトの重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
+                                                        <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
+                                                        <WrapPanel>
+                                                            <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                            <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                            <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                            <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                            <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                                        </WrapPanel>
+                                                    </DockPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </StackPanel.Resources>
                                         <DockPanel Margin="0,0,0,8">
                                             <TextBlock Text="ハイライト一覧:" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             <Button Content="➕ ハイライト追加" Command="{Binding AddHighlightCommand}"
                                                     HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
                                         </DockPanel>
+
+                                        <Expander Margin="0,0,0,8" Foreground="{StaticResource TextPrimary}"
+                                                  ToolTip="ハイライトを円や直線の上にまとめて追加します。追加したハイライトは 1 つずつ別のハイライトになるので、あとから個別にも動かせます">
+                                            <Expander.Header>
+                                                <TextBlock Text="📐 並べて追加 (円・直線にまとめて置く)" FontWeight="SemiBold"/>
+                                            </Expander.Header>
+                                            <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,4,0,0">
+                                                <StackPanel DataContext="{Binding HighlightTools.Editor.Layout}">
+                                                    <WrapPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="並べ方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Width="70"/>
+                                                        <RadioButton Content="円周" GroupName="HighlightToolsLayoutKind" IsChecked="{Binding IsCircle}" Margin="0,0,12,0"/>
+                                                        <RadioButton Content="直線" GroupName="HighlightToolsLayoutKind" IsChecked="{Binding IsLine}"/>
+                                                    </WrapPanel>
+                                                    <DockPanel Margin="0,0,0,2">
+                                                        <TextBlock Text="個数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="2" Maximum="24" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
+                                                    <StackPanel Visibility="{Binding IsCircle, Converter={StaticResource BoolToVisConverter}}">
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="中心 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding CenterX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding CenterX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="中心 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding CenterY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding CenterY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <DockPanel Margin="0,0,0,2">
+                                                            <TextBlock Text="半径:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding Radius, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="0.05" Maximum="0.85" Value="{Binding Radius}" Margin="0,0,0,6"/>
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="最初のハイライトを置く角度。0° が中心の真上で、時計回りに増えます">
+                                                            <TextBlock Text="開始角:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding StartAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="-180" Maximum="180" Value="{Binding StartAngle}" Margin="0,0,0,6"/>
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="360° で一周に等間隔。それより小さいと弧になり、両端にもハイライトが置かれます">
+                                                            <TextBlock Text="範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding SweepAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="10" Maximum="360" Value="{Binding SweepAngle}" Margin="0,0,0,6"/>
+                                                    </StackPanel>
+                                                    <StackPanel Visibility="{Binding IsLine, Converter={StaticResource BoolToVisConverter}}">
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="始点 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding StartX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding StartX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="始点 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding StartY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding StartY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Grid.Column="0">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="終点 X (横):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding EndX, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding EndX}"/>
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2">
+                                                                <DockPanel>
+                                                                    <TextBlock Text="終点 Y (縦):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                                    <TextBlock Text="{Binding EndY, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                                </DockPanel>
+                                                                <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding EndY}"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                    <CheckBox Content="向きを並びに沿わせる" IsChecked="{Binding AlignRotation}" Margin="0,0,0,6"
+                                                              ToolTip="円周ではハイライトの上側が外を向くように、直線では線の向きに合わせて回します (見本の回転角度に足します)"/>
+                                                    <TextBlock Text="見本: 「選択」したハイライトのうち一番上のもの (選択がなければ新しいハイライトの初期値: 白い正円)。形状・色・サイズなどを見本からコピーします。" Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                    <Button Content="➕ 並べて追加" Command="{Binding DataContext.HighlightTools.ArrangeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            HorizontalAlignment="Left" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Expander>
+
+                                        <WrapPanel Margin="0,0,0,6">
+                                            <Button Content="☑ すべて選択" Command="{Binding HighlightTools.SelectAllCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    ToolTip="すべてのハイライトを選びます。選んだハイライトは「まとめて変更」でそろえて変えられます"/>
+                                            <Button Content="☐ 選択解除" Command="{Binding HighlightTools.ClearSelectionCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    Visibility="{Binding HighlightTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"/>
+                                            <Button Content="✕ 選択したハイライトを削除" Command="{Binding HighlightTools.RemoveSelectedCommand}" Padding="6,2" Margin="0,0,6,4" FontSize="11"
+                                                    Background="#4A2020" Foreground="#FF8A80" BorderThickness="0"
+                                                    Visibility="{Binding HighlightTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"/>
+                                        </WrapPanel>
+
+                                        <Border Visibility="{Binding HighlightTools.Editor.HasSelection, Converter={StaticResource BoolToVisConverter}}"
+                                                Background="#16263A" BorderBrush="#80D8FF" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="Bold" Foreground="#80D8FF" Margin="0,0,0,2">
+                                                    <Run Text="✏ まとめて変更 (選択中: "/><Run Text="{Binding HighlightTools.Editor.SelectedCount, Mode=OneWay}"/><Run Text=" 個)"/>
+                                                </TextBlock>
+                                                <TextBlock Text="動かした項目だけが、選んだハイライトすべてに同じ値で入ります (位置は変わりません)。最初に表示されるのは、選んだ中で一番上のハイライトの値です。"
+                                                           Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                <CheckBox Content="有効" IsChecked="{Binding HighlightTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                                <ContentControl Content="{Binding HighlightTools.Editor.Bulk}" ContentTemplate="{StaticResource HighlightStyleFieldsTop}" Focusable="False"/>
+                                                <ContentControl Content="{Binding HighlightTools.Editor.Bulk}" ContentTemplate="{StaticResource HighlightStyleFieldsBottom}" Focusable="False"/>
+                                            </StackPanel>
+                                        </Border>
 
                                         <ItemsControl ItemsSource="{Binding CurrentIris.Highlights}">
                                             <ItemsControl.ItemTemplate>
@@ -1446,30 +1781,18 @@
                                                     <Border Background="{StaticResource BgLight}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
                                                         <StackPanel>
                                                             <DockPanel Margin="0,0,0,6">
+                                                                <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                                          ToolTip="選んだハイライトは「まとめて変更」でそろえて変えられます。「並べて追加」の見本にもなります"/>
+                                                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                                                    <Button Content="⧉ 複製" Command="{Binding DataContext.HighlightTools.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#1E3A5F" Foreground="#80D8FF" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="同じ設定のハイライトを、少しずらしてすぐ下に追加します"/>
+                                                                    <Button Content="✕ 削除" Command="{Binding DataContext.RemoveHighlightCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
+                                                                </StackPanel>
                                                                 <CheckBox Content="有効" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                                                <Button Content="✕ 削除" Command="{Binding DataContext.RemoveHighlightCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                        CommandParameter="{Binding}" HorizontalAlignment="Right" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
                                                             </DockPanel>
-
-                                                            <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
-                                                            <WrapPanel Margin="0,0,0,6">
-                                                                <RadioButton Content="正円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                                <RadioButton Content="楕円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
-                                                                <RadioButton Content="4点星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                                <RadioButton Content="菱形" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
-                                                            </WrapPanel>
-
-                                                            <DockPanel Margin="0,0,0,6">
-                                                                <TextBlock Text="色:" VerticalAlignment="Center" Width="70"/>
-                                                                <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
-                                                            </DockPanel>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="サイズ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
-
+                                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HighlightStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
@@ -1485,34 +1808,7 @@
                                                                     <Slider Minimum="-0.85" Maximum="0.85" Value="{Binding PositionY}"/>
                                                                 </StackPanel>
                                                             </Grid>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
-
-                                                            <DockPanel Margin="0,0,0,4">
-                                                                <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                                <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                            </DockPanel>
-                                                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
-                                                            <DockPanel Margin="0,6,0,0" ToolTip="このハイライトの重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
-                                                                <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
-                                                                <WrapPanel>
-                                                                    <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
-                                                                    <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
-                                                                    <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
-                                                                    <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
-                                                                    <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
-                                                                </WrapPanel>
-                                                            </DockPanel>
+                                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HighlightStyleFieldsBottom}" Focusable="False"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>

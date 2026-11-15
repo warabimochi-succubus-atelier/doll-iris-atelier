@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace DollIrisGenerator.Models
 {
-    public class HighlightItem : INotifyPropertyChanged
+    public class HighlightItem : IArrangeableItem<HighlightItem>
     {
         private string _id = Guid.NewGuid().ToString("N");
         private HighlightShape _shape = HighlightShape.Circle;
@@ -18,6 +19,7 @@ namespace DollIrisGenerator.Models
         private double _opacity = 0.90;
         private bool _enabled = true;
         private LayerBlend _blend = LayerBlend.Normal;
+        private bool _isSelected;
 
         public string Id
         {
@@ -84,6 +86,36 @@ namespace DollIrisGenerator.Models
         {
             get => _blend;
             set { _blend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <inheritdoc cref="IArrangeableItem.IsSelected"/>
+        [JsonIgnore]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set { if (_isSelected == value) return; _isSelected = value; OnPropertyChanged(); }
+        }
+
+        public static IReadOnlyList<string> BulkSettingNames { get; } = new[]
+        {
+            nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size), nameof(AspectRatio),
+            nameof(Rotation), nameof(Opacity), nameof(Blend)
+        };
+
+        public bool CopySettingTo(HighlightItem target, string propertyName)
+        {
+            switch (propertyName)
+            {
+                case nameof(Enabled): target.Enabled = Enabled; return true;
+                case nameof(Shape): target.Shape = Shape; return true;
+                case nameof(Color): target.Color = Color; return true;
+                case nameof(Size): target.Size = Size; return true;
+                case nameof(AspectRatio): target.AspectRatio = AspectRatio; return true;
+                case nameof(Rotation): target.Rotation = Rotation; return true;
+                case nameof(Opacity): target.Opacity = Opacity; return true;
+                case nameof(Blend): target.Blend = Blend; return true;
+                default: return false;
+            }
         }
 
         public HighlightItem Clone()
