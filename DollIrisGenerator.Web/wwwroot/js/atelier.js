@@ -66,8 +66,15 @@ export function download(fileName, text, mimeType) {
     setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-export function confirmDialog(message) {
-    return window.confirm(message);
+/** Opens a <dialog> as a modal and resolves once it closes: true when closed by a button with value="ok". */
+export function askDialog(id) {
+    const dialog = document.getElementById(id);
+    if (!dialog) return Promise.resolve(false);
+    dialog.returnValue = ""; // Esc and a tap outside leave it as it is: clear the answer of the last time
+    return new Promise(resolve => {
+        dialog.addEventListener("close", () => resolve(dialog.returnValue === "ok"), { once: true });
+        showDialog(id);
+    });
 }
 
 /** Opens a <dialog> as a modal (Esc closes it); a tap on the dimmed backdrop closes it too. */

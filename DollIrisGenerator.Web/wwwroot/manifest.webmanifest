@@ -12,8 +12,8 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-512.png",
-      "type": "image/png",
+      "src": "icon-512.webp",
+      "type": "image/webp",
       "sizes": "512x512",
       "purpose": "any"
     },
@@ -24,8 +24,8 @@
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-512.png",
-      "type": "image/png",
+      "src": "icon-maskable-512.webp",
+      "type": "image/webp",
       "sizes": "512x512",
       "purpose": "maskable"
     },
@@ -34,6 +34,22 @@
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/narrow.webp",
+      "type": "image/webp",
+      "sizes": "1000x2160",
+      "form_factor": "narrow",
+      "label": "スマホで虹彩をデザインしている画面"
+    },
+    {
+      "src": "screenshots/wide.webp",
+      "type": "image/webp",
+      "sizes": "1280x800",
+      "form_factor": "wide",
+      "label": "PC で左右の虹彩を見ながら設定している画面"
     }
   ]
 }

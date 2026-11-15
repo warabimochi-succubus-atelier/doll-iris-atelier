@@ -1,0 +1,38 @@
+@inject DollIrisGenerator.Web.Services.BrowserApi Browser
+
+@*
+    A yes / no question in the app's own look, instead of the browser's confirm() (plain, and titled with the site's
+    address). A native <dialog> shown with showModal(): Esc and a tap outside count as キャンセル, which also has
+    the focus first, so a stray Enter never deletes anything.
+*@
+
+<dialog id="@_id" class="confirm-dialog" aria-labelledby="@($"{_id}-title")" aria-describedby="@($"{_id}-message")">
+    <form method="dialog">
+        <div class="confirm-body">
+            <h2 id="@($"{_id}-title")" class="confirm-title">@_title</h2>
+            <p id="@($"{_id}-message")" class="confirm-message">@_message</p>
+        </div>
+        <div class="confirm-footer">
+            <button type="submit" value="cancel" autofocus>キャンセル</button>
+            <button type="submit" value="ok" class="danger-solid">@_okLabel</button>
+        </div>
+    </form>
+</dialog>
+
+@code {
+    private readonly string _id = $"confirm-{Guid.NewGuid():N}";
+    private string _title = "";
+    private string _message = "";
+    private string _okLabel = "OK";
+
+    /// <summary>Shows the question; true when the user chose <paramref name="okLabel"/>.</summary>
+    public async Task<bool> AskAsync(string title, string message, string okLabel)
+    {
+        _title = title;
+        _message = message;
+        _okLabel = okLabel;
+        StateHasChanged();
+        await Task.Yield(); // the new text is on the page before the dialog opens
+        return await Browser.AskDialogAsync(_id);
+    }
+}
