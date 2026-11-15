@@ -14,8 +14,10 @@ self.addEventListener('message', event => {
 // Cache Storage is shared by every app on the same origin (e.g. <user>.github.io): use a prefix of this app's own
 const cacheNamePrefix = 'dia-offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.webp$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
+// Images only the browser reads, when the app is installed (manifest icons and screenshots, the iOS home screen icon):
+// not needed offline, so not downloaded into the cache on every install / update
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^icon-512\./, /^icon-maskable-/, /^apple-touch-icon\./, /^screenshots\// ];
 
 // The app may be served from a subfolder (e.g. GitHub Pages): use the folder this worker was registered for
 const baseUrl = new URL(self.registration.scope);

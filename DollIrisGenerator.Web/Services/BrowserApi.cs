@@ -2,7 +2,7 @@ using Microsoft.JSInterop;
 
 namespace DollIrisGenerator.Web.Services;
 
-/// <summary>The browser features the app uses (wwwroot/js/atelier.js): IndexedDB, file save, confirm, modal dialogs.</summary>
+/// <summary>The browser features the app uses (wwwroot/js/atelier.js): IndexedDB, file save, modal dialogs.</summary>
 public sealed class BrowserApi : IAsyncDisposable
 {
     private readonly Lazy<Task<IJSObjectReference>> _module;
@@ -23,7 +23,11 @@ public sealed class BrowserApi : IAsyncDisposable
     public async Task DownloadAsync(string fileName, string text, string mimeType) =>
         await (await Module).InvokeVoidAsync("download", fileName, text, mimeType);
 
-    public async Task<bool> ConfirmAsync(string message) => await (await Module).InvokeAsync<bool>("confirmDialog", message);
+    /// <summary>
+    /// Opens the &lt;dialog&gt; with this id as a modal and waits until it closes: true when it was closed by a
+    /// button with value="ok" (ConfirmDialog), false for any other way (キャンセル, Esc, a tap outside).
+    /// </summary>
+    public async Task<bool> AskDialogAsync(string id) => await (await Module).InvokeAsync<bool>("askDialog", id);
 
     /// <summary>Opens the &lt;dialog&gt; with this id as a modal.</summary>
     public async Task ShowDialogAsync(string id) => await (await Module).InvokeVoidAsync("showDialog", id);

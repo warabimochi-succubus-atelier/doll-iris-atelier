@@ -56,10 +56,13 @@
     </ul>
 </section>
 
+<ConfirmDialog @ref="_confirm" />
+
 @code {
     private const string MimeType = "application/json";
 
     private int _nameResets;
+    private ConfirmDialog _confirm = default!;
 
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
     [Parameter] public EventCallback<string> OnMessage { get; set; }
@@ -174,7 +177,7 @@
     private async Task Remove(FavoriteItem item)
     {
         // Unlike the desktop app there is no file left behind to recover from, so ask first
-        if (!await Browser.ConfirmAsync($"お気に入り「{item.Name}」を削除しますか？\nこの操作は元に戻せません。")) return;
+        if (!await _confirm.AskAsync("お気に入りを削除しますか？", $"「{item.Name}」を削除します。この操作は元に戻せません。", "削除する")) return;
         Favorites.Items.Remove(item);
         string? error = await Favorites.SaveAsync();
         await OnMessage.InvokeAsync(error ?? "お気に入りから削除しました。");
