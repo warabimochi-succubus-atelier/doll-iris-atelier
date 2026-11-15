@@ -16,7 +16,11 @@
     --primary-border: #ba68c8;
     --danger: #ff8a80;
     --gutter: 16px;
-    --toolbar-h: 56px;
+    /* Side padding that also clears a notch / rounded corner (viewport-fit=cover, e.g. an iPhone held sideways) */
+    --pad-l: max(var(--gutter), env(safe-area-inset-left));
+    --pad-r: max(var(--gutter), env(safe-area-inset-right));
+    --toolbar-h: 60px;
+    --status-h: 41px;
 }
 
 * { box-sizing: border-box; }
@@ -85,27 +89,37 @@ input[type=text], input[type=number], select {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 8px var(--gutter);
+    padding: 8px var(--pad-r) 8px var(--pad-l);
     padding-top: calc(8px + env(safe-area-inset-top));
     background: var(--panel);
     border-bottom: 1px solid var(--border);
 }
-/* App icon, then the name in bold with the version under it */
-.app-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* App icon, then the name in bold with the version under it. The whole block is the button for このアプリについて. */
+.app-heading { display: flex; margin: 0; min-width: 0; font: inherit; }
+.app-brand {
+    display: flex; align-items: center; gap: 10px; min-width: 0;
+    min-height: 44px; margin-left: -6px; padding: 4px 8px 4px 6px;
+    border-color: transparent; background: transparent; border-radius: 10px;
+    text-align: left; white-space: normal; overflow: hidden;
+}
+.app-brand:hover:not(:disabled) { border-color: var(--border); }
+.info-icon { width: 13px; height: 13px; flex: 0 0 auto; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.info-icon .dot { fill: currentColor; stroke: none; }
 .app-icon { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .app-brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .app-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-version { font-size: 0.8rem; color: var(--text-muted); }
 .toolbar-buttons { display: flex; gap: 6px; flex: 0 0 auto; }
+/* At least 44 x 44 (Apple's minimum touch target), with a gap that keeps 元に戻す / やり直す apart */
+.toolbar-buttons button { min-width: 44px; min-height: 44px; justify-content: center; }
 @media (max-width: 420px) {
     .toolbar { gap: 6px; }
-    .app-brand { gap: 5px; }
+    .app-brand { gap: 6px; padding-right: 4px; }
     .app-icon { width: 28px; height: 28px; border-radius: 7px; }
     /* Narrow phones: the name may wrap to "Doll Iris / Atelier" rather than being cut off */
     .app-title { font-size: 0.82rem; white-space: normal; line-height: 1.1; }
     .app-version { font-size: 0.65rem; }
-    .toolbar-buttons { gap: 3px; }
-    .toolbar-buttons button { min-width: 36px; padding: 6px 7px; justify-content: center; }
+    .toolbar-buttons button { padding: 6px 7px; }
 }
 /* Phones: icons only; the full label is in the title / aria */
 .toolbar-buttons .label { display: none; }
@@ -116,12 +130,6 @@ input[type=text], input[type=number], select {
     fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
 .toolbar-buttons .icon .pips { fill: currentColor; stroke: none; }
-/* ⓘ: a round, borderless button at the end of the toolbar */
-.toolbar-buttons .icon-button { min-width: 40px; padding: 6px; justify-content: center; border-color: transparent; background: transparent; border-radius: 50%; }
-.toolbar-buttons .icon-button:hover { border-color: var(--border); }
-.toolbar-buttons .icon-button .icon { width: 22px; height: 22px; }
-.toolbar-buttons .icon .dot { fill: currentColor; stroke: none; }
-@media (max-width: 420px) { .toolbar-buttons .icon-button { min-width: 32px; padding: 4px; } }
 /* Phones: a short caption under the randomize icon so they read without the tooltip */
 .toolbar-buttons .short { display: none; }
 @media (max-width: 859.98px) {
@@ -136,7 +144,7 @@ input[type=text], input[type=number], select {
     position: sticky;
     top: calc(var(--toolbar-h) + env(safe-area-inset-top));
     z-index: 5;
-    padding: 12px var(--gutter) 4px;
+    padding: 12px var(--pad-r) 4px var(--pad-l);
     background: var(--bg);
     border-bottom: 1px solid var(--border);
 }
@@ -150,7 +158,7 @@ input[type=text], input[type=number], select {
     .workspace { flex-direction: row; align-items: flex-start; }
     .preview-pane {
         flex: 1;
-        min-height: calc(100dvh - var(--toolbar-h) - 41px);
+        min-height: calc(100dvh - var(--toolbar-h) - var(--status-h));
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -160,6 +168,27 @@ input[type=text], input[type=number], select {
     .preview img { max-height: 70vh; max-width: 900px; }
     .settings-pane { flex: 0 0 440px; }
 }
+@media (min-width: 900px), (orientation: landscape) and (max-height: 520px) {
+    .preview-pane { padding-right: var(--gutter); }
+    .tabs, .tab-body { padding-left: var(--gutter); }
+}
+
+/* Phones held sideways: stacked, the toolbar and the sticky preview would leave about 100px for the settings.
+   Side by side instead, the preview on the left staying in view while the settings scroll. */
+@media (max-width: 899.98px) and (orientation: landscape) and (max-height: 520px) {
+    .workspace { flex-direction: row; align-items: flex-start; }
+    .preview-pane {
+        flex: 0 0 42%;
+        height: calc(100dvh - var(--toolbar-h) - env(safe-area-inset-top) - var(--status-h));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-bottom: none;
+        border-right: 1px solid var(--border);
+    }
+    .preview img { max-height: calc(100dvh - var(--toolbar-h) - env(safe-area-inset-top) - var(--status-h) - 56px); }
+    .settings-pane { flex: 1; }
+}
 
 /* ---------- tabs ---------- */
 
@@ -167,14 +196,14 @@ input[type=text], input[type=number], select {
     display: flex;
     gap: 4px;
     overflow-x: auto;
-    padding: 8px var(--gutter);
+    padding: 8px var(--pad-r) 8px var(--pad-l);
     border-bottom: 1px solid var(--border);
     scrollbar-width: thin;
 }
 .tab { flex: 0 0 auto; min-height: 36px; padding: 4px 12px; background: transparent; }
 .tab.selected { background: var(--panel-2); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
-.tab-body { padding: 8px var(--gutter) 24px; }
+.tab-body { padding: 8px var(--pad-r) 24px var(--pad-l); }
 
 /* ---------- fields ---------- */
 
@@ -241,8 +270,8 @@ code { color: var(--accent); }
 .status {
     position: sticky;
     bottom: 0;
-    min-height: 41px;
-    padding: 10px var(--gutter);
+    min-height: var(--status-h);
+    padding: 10px var(--pad-r) 10px var(--pad-l);
     padding-bottom: max(10px, env(safe-area-inset-bottom));
     background: var(--panel);
     border-top: 1px solid var(--border);
@@ -338,3 +367,27 @@ code { color: var(--accent); }
 .about-license { margin-top: 14px !important; color: var(--text-muted); font-size: 0.75rem; line-height: 1.7; }
 .about-license a { color: var(--text-2); }
 .about-footer { display: flex; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); }
+
+/* ---------- 新しいバージョン (register-sw.js) ---------- */
+
+.update-banner {
+    position: fixed;
+    z-index: 900;
+    left: 50%;
+    bottom: calc(var(--status-h) + 12px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--gutter));
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 8px 8px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    background: var(--panel-2);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+.update-banner p { margin: 0; font-size: 0.9rem; }
+.update-banner-buttons { display: flex; gap: 8px; margin-left: auto; }
+.update-banner button { min-height: 44px; }

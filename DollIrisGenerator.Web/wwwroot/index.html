@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Doll Iris Atelier</title>
     <meta name="description" content="ドールアイ向けの虹彩をデザインして、デスクトップ版で印刷するためのアプリ" />
     <meta name="theme-color" content="#1e1e24" />
@@ -18,7 +18,15 @@
     <link rel="stylesheet" href="css/app.css" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="icon" type="image/png" href="icon-192.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <!--
+      iOS: the home screen icon fills its square (iOS rounds the corners itself; transparency would turn black), the
+      name under it is the short one, and the toolbar runs under the status bar (it pads itself by the safe area).
+    -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Iris Atelier" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <script type="importmap"></script>
     <!--
       Content-Security-Policy (GitHub Pages cannot send headers, so it is a <meta>). It must stay AFTER the import map:

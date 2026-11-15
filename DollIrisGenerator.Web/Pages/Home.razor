@@ -14,13 +14,8 @@
 <CascadingValue Value="Session" IsFixed="true">
     <div class="app">
         <header class="toolbar">
-            <div class="app-brand">
-                <img class="app-icon" src="icon-192.png" alt="" width="36" height="36" />
-                <div class="app-brand-text">
-                    <h1 class="app-title">@AppInfo.Name</h1>
-                    <span class="app-version">@AppInfo.VersionLabel</span>
-                </div>
-            </div>
+            @* The app's name is also the button for このアプリについて, which keeps the toolbar to four buttons on phones *@
+            <AboutDialog />
             <div class="toolbar-buttons">
                 <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す">↩<span class="label"> 元に戻す</span></button>
                 <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す">↪<span class="label"> やり直す</span></button>
@@ -29,7 +24,6 @@
                     <span class="label"> ランダム生成</span><span class="short">ランダム</span>
                 </button>
                 <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す">⭐<span class="label"> お気に入りに追加</span></button>
-                <AboutDialog />
             </div>
         </header>
 
