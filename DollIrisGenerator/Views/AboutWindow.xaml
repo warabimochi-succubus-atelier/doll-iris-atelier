@@ -86,8 +86,8 @@
 
             <TextBlock Grid.Row="3" Text="ライセンス" Style="{StaticResource LabelText}"/>
             <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource ValueText}">
-                <Hyperlink Style="{StaticResource LinkStyle}" NavigateUri="{x:Static local:AppInfo.LicenseUri}"
-                           RequestNavigate="OnRequestNavigate" ToolTip="{x:Static local:AppInfo.LicenseUrl}"><Run Text="{x:Static local:AppInfo.License}"/></Hyperlink>
+                <Run Text="ロゴとアイコンを除き、"/><Hyperlink Style="{StaticResource LinkStyle}" NavigateUri="{x:Static local:AppInfo.LicenseUri}"
+                           RequestNavigate="OnRequestNavigate" ToolTip="{x:Static local:AppInfo.LicenseUrl}"><Run Text="{x:Static local:AppInfo.License}"/></Hyperlink><Run Text=" で公開しています。"/>
             </TextBlock>
 
             <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="{x:Static local:AppInfo.Copyright}"
