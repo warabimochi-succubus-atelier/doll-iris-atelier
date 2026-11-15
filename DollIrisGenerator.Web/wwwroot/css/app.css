@@ -40,7 +40,7 @@ button, input, select { font: inherit; color: inherit; }
 button, .button-like {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     min-height: 40px;
     padding: 6px 12px;
     border: 1px solid var(--border);
@@ -70,6 +70,13 @@ input[type=text], input[type=number], select {
     border-radius: 6px;
     background: var(--bg);
 }
+
+/* Line icons (Icon.razor), drawn in the text color so they match on every OS */
+.icon {
+    width: 18px; height: 18px; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.icon .fill { fill: currentColor; stroke: none; }
 
 .visually-hidden {
     position: absolute !important;
@@ -106,8 +113,7 @@ input[type=text], input[type=number], select {
     text-align: left; white-space: normal; overflow: hidden;
 }
 @media (hover: hover) { .app-brand:hover:not(:disabled) { border-color: var(--border); } }
-.info-icon { width: 13px; height: 13px; flex: 0 0 auto; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.info-icon .dot { fill: currentColor; stroke: none; }
+.icon.info-icon { width: 13px; height: 13px; vertical-align: -2px; stroke-width: 2; }
 .app-icon { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .app-brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .app-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -127,12 +133,7 @@ input[type=text], input[type=number], select {
 /* Phones: icons only; the full label is in the title / aria */
 .toolbar-buttons .label { display: none; }
 @media (min-width: 860px) { .toolbar-buttons .label { display: inline; } }
-/* Line icons (randomize, about) drawn in the button's text color */
-.toolbar-buttons .icon {
-    width: 20px; height: 20px; flex: 0 0 auto;
-    fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-}
-.toolbar-buttons .icon .pips { fill: currentColor; stroke: none; }
+.toolbar-buttons .icon { width: 20px; height: 20px; }
 /* Phones: a short caption under the randomize icon so they read without the tooltip */
 .toolbar-buttons .short { display: none; }
 @media (max-width: 859.98px) {
@@ -349,7 +350,13 @@ code { color: var(--accent); }
     z-index: 1000;
 }
 #blazor-error-ui .reload { color: var(--accent); }
-#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
+#blazor-error-ui { padding-right: 64px; padding-bottom: max(0.7rem, env(safe-area-inset-bottom)); }
+#blazor-error-ui .dismiss {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    min-width: 44px; min-height: 44px; padding: 0; justify-content: center;
+    border-color: transparent; background: transparent; color: #fff;
+}
+#blazor-error-ui .dismiss .icon { width: 22px; height: 22px; }
 
 .blazor-error-boundary { background: #b32121; padding: 1rem; color: white; }
 .blazor-error-boundary::after { content: "エラーが発生しました。"; }
@@ -374,12 +381,29 @@ code { color: var(--accent); }
     stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
     transition: stroke-dasharray 0.05s ease-in-out;
 }
+.loading-icon {
+    position: absolute;
+    top: calc(20vh + 2.25rem);
+    left: calc(50% - 1.75rem);
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.8rem;
+}
+.loading-name {
+    position: absolute;
+    inset: calc(20vh + 9rem) 0 auto 0;
+    margin: 0;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
 .loading-progress-text {
     position: absolute;
     text-align: center;
-    font-weight: bold;
-    color: var(--text-2);
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    inset: calc(20vh + 10.9rem) 0 auto 0;
 }
 .loading-progress-text:after { content: var(--blazor-load-percentage-text, "読み込み中"); }
 
@@ -414,8 +438,6 @@ code { color: var(--accent); }
 .about-author { font-weight: 700; }
 .about-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
 .about-links .button-like { text-decoration: none; gap: 6px; }
-.about-links .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.about-links .icon .fill { fill: currentColor; stroke: none; }
 .about-license { margin-top: 14px !important; color: var(--text-muted); font-size: 0.75rem; line-height: 1.7; }
 .about-license a { color: var(--text-2); }
 .about-footer { display: flex; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); }

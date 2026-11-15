@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @inject FavoritesRepository Favorites
 @inject BrowserApi Browser
+@implements IDisposable
 
 @*
     Favorites, and moving designs to / from the desktop app. The files are *.irisfav.json in the desktop app's own
@@ -17,10 +18,10 @@
         A4 PDF で印刷できます。デスクトップ版で書き出したファイルもここで読み込めます。
     </p>
     <div class="button-row">
-        <button type="button" @onclick="() => Export(Favorites.Items, AllFileName())" disabled="@(Favorites.Items.Count == 0)">📤 お気に入りをすべて書き出す</button>
-        <button type="button" @onclick="ExportCurrent">📤 今のデザインだけ書き出す</button>
+        <button type="button" @onclick="() => Export(Favorites.Items, AllFileName())" disabled="@(Favorites.Items.Count == 0)"><Icon Name="export" />お気に入りをすべて書き出す</button>
+        <button type="button" @onclick="ExportCurrent"><Icon Name="export" />今のデザインだけ書き出す</button>
         <label class="button-like">
-            📥 ファイルを読み込む
+            <Icon Name="import" />ファイルを読み込む
             <InputFile OnChange="Import" accept=".json,application/json" class="visually-hidden" />
         </label>
     </div>
@@ -30,7 +31,7 @@
     <h3 class="field-heading">お気に入り (@Favorites.Items.Count 件)</h3>
     @if (Favorites.Items.Count == 0)
     {
-        <p class="field-hint">まだありません。上部の「⭐ お気に入りに追加」で、今のデザインを残せます。</p>
+        <p class="field-hint">まだありません。上部の星のボタン（お気に入りに追加）で、今のデザインを残せます。</p>
     }
     <ul class="favorites">
         @foreach (var item in Favorites.Items)
@@ -48,7 +49,7 @@
                 <div class="favorite-actions">
                     <button type="button" @onclick="() => Restore(item)" title="このお気に入りを編集中のデザインとして読み込む (元に戻せます)">復元</button>
                     <button type="button" @onclick="() => Duplicate(item)">複製</button>
-                    <button type="button" class="danger" @onclick="() => Remove(item)" aria-label="@($"{item.Name} を削除")">✕</button>
+                    <button type="button" class="danger" @onclick="() => Remove(item)" aria-label="@($"{item.Name} を削除")" title="削除"><Icon Name="close" /></button>
                 </div>
             </li>
         }
@@ -62,6 +63,14 @@
 
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
     [Parameter] public EventCallback<string> OnMessage { get; set; }
+
+    // The list changes from outside this panel too (「お気に入りに追加」 in the toolbar). The page re-renders then, but
+    // this panel's parameters are the same, so Blazor would not re-render it: it listens for itself.
+    protected override void OnInitialized() => Favorites.Changed += OnFavoritesChanged;
+
+    private void OnFavoritesChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Favorites.Changed -= OnFavoritesChanged;
 
     private static string Stamp() => DateTime.Now.ToString("yyyyMMdd-HHmm");
     private static string AllFileName() => $"お気に入り-{Stamp()}.irisfav.json";
