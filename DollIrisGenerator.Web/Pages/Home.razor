@@ -87,7 +87,11 @@
                             @foreach (var symbol in Session.Current.Symbols)
                             {
                                 <div class="item-card" @key="symbol.Id">
-                                    <button type="button" class="danger remove" @onclick="() => RemoveSymbol(symbol)">✕ 削除</button>
+                                    <div class="item-card-header">
+                                        <span class="item-card-title">装飾記号 @(Session.Current.Symbols.IndexOf(symbol) + 1)</span>
+                                        <button type="button" class="danger remove" @onclick="() => RemoveSymbol(symbol)"
+                                                aria-label="@($"装飾記号 {Session.Current.Symbols.IndexOf(symbol) + 1} を削除")">✕ 削除</button>
+                                    </div>
                                     <FieldList T="DecorativeSymbolItem" Target="symbol" Fields="DesignFields.Symbol" />
                                 </div>
                             }
@@ -115,7 +119,11 @@
                             @foreach (var highlight in Session.Current.Highlights)
                             {
                                 <div class="item-card" @key="highlight.Id">
-                                    <button type="button" class="danger remove" @onclick="() => RemoveHighlight(highlight)">✕ 削除</button>
+                                    <div class="item-card-header">
+                                        <span class="item-card-title">ハイライト @(Session.Current.Highlights.IndexOf(highlight) + 1)</span>
+                                        <button type="button" class="danger remove" @onclick="() => RemoveHighlight(highlight)"
+                                                aria-label="@($"ハイライト {Session.Current.Highlights.IndexOf(highlight) + 1} を削除")">✕ 削除</button>
+                                    </div>
                                     <FieldList T="HighlightItem" Target="highlight" Fields="DesignFields.Highlight" />
                                 </div>
                             }
