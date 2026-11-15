@@ -115,6 +115,8 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 
 操作方法は [USER_MANUAL.md](USER_MANUAL.md) を参照してください。
 
+AI チャット（ChatGPT・Claude など）に言葉でデザインを作ってもらう方法は [AI デザインガイド](docs/AI_DESIGN_GUIDE.md) にあります。
+
 ---
 
 ## 🚀 起動方法
