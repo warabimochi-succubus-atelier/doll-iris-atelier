@@ -23,10 +23,11 @@ namespace DollIrisGenerator.Services
         private ObservableCollection<T> _items = new();
         private bool _loadingBulk;
 
-        /// <param name="newItem">What 「➕ 追加」 adds; also the model for 並べて追加 when nothing is ticked.</param>
+        /// <param name="newItem">What 「➕ 追加」 adds; also the starting look of the 並べて追加 form.</param>
         public ItemListEditor(Func<T> newItem)
         {
             _newItem = newItem;
+            Template = newItem();
             Bulk = newItem();
             Bulk.PropertyChanged += OnBulkPropertyChanged;
             Layout.PropertyChanged += (_, e) =>
@@ -36,6 +37,15 @@ namespace DollIrisGenerator.Services
         }
 
         public ItemLayoutSettings Layout { get; } = new();
+
+        /// <summary>
+        /// The look of the items 並べて追加 makes (type / shape, color, size, corner rounding, opacity, blend...),
+        /// edited in the form itself. Not in the design; its position and rotation are not used.
+        /// </summary>
+        public T Template { get; }
+
+        /// <summary>Where 並べて追加 draws its random places from (tests set a seeded one).</summary>
+        public Random Random { get; set; } = Random.Shared;
 
         /// <summary>The まとめて変更 values (see the class summary).</summary>
         public T Bulk { get; }
@@ -77,14 +87,10 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>
-        /// 並べて追加: adds items at the layout's places, copied from the first ticked item (or a new item when none is ticked).
+        /// 並べて追加: adds <see cref="Template"/> copies at random places (in reading order, see <see cref="ItemLayout.Compute"/>).
         /// Stops when the list holds <see cref="IrisParameters.MaxNestedItems"/>.
         /// </summary>
-        public List<T> AddArranged()
-        {
-            var model = _items.FirstOrDefault(i => i.IsSelected) ?? _newItem();
-            return ItemLayout.AddArranged(_items, model, Layout);
-        }
+        public List<T> AddArranged() => ItemLayout.AddArranged(_items, Template, Layout, Random);
 
         /// <summary>How many 並べて追加 would add now (fewer than asked near the limit).</summary>
         public int ArrangeableCount => Math.Max(0, Math.Min(Layout.Count, IrisParameters.MaxNestedItems - _items.Count));
