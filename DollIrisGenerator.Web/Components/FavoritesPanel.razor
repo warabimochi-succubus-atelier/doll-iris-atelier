@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @inject FavoritesRepository Favorites
 @inject BrowserApi Browser
+@implements IDisposable
 
 @*
     Favorites, and moving designs to / from the desktop app. The files are *.irisfav.json in the desktop app's own
@@ -62,6 +63,14 @@
 
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
     [Parameter] public EventCallback<string> OnMessage { get; set; }
+
+    // The list changes from outside this panel too (「お気に入りに追加」 in the toolbar). The page re-renders then, but
+    // this panel's parameters are the same, so Blazor would not re-render it: it listens for itself.
+    protected override void OnInitialized() => Favorites.Changed += OnFavoritesChanged;
+
+    private void OnFavoritesChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Favorites.Changed -= OnFavoritesChanged;
 
     private static string Stamp() => DateTime.Now.ToString("yyyyMMdd-HHmm");
     private static string AllFileName() => $"お気に入り-{Stamp()}.irisfav.json";
