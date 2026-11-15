@@ -1,0 +1,140 @@
+@typeparam T where T : class, DollIrisGenerator.Models.IArrangeableItem<T>
+@using System.Collections.ObjectModel
+@using DollIrisGenerator.Models
+@using DollIrisGenerator.Services
+@using DollIrisGenerator.Web.Editor
+@using DollIrisGenerator.Web.Services
+
+@*
+    One item list of the design (装飾記号 / ハイライト) with the same tools as the desktop app: 追加, 📐 並べて追加,
+    ⧉ 複製, 選択 and まとめて変更. The work is done by the core's ItemListEditor; every change of the design is one
+    undo step through the session. The 並べて追加 form and the ticks are not part of the design.
+*@
+
+<div class="list-header">
+    <h3 class="field-heading">@Noun (@Items.Count)</h3>
+    <button type="button" @onclick="Add" disabled="@(Items.Count >= IrisParameters.MaxNestedItems)"><Icon Name="plus" />@(Noun)追加</button>
+</div>
+@if (Items.Count == 0)
+{
+    <p class="field-hint">@(Noun)はありません。「@(Noun)追加」か「並べて追加」で追加できます。</p>
+}
+
+<details class="arrange-panel">
+    <summary><Icon Name="ring" />並べて追加 (円・直線にまとめて置く)</summary>
+    <p class="field-hint">@(Noun)を円や直線の上にまとめて追加します。追加した@(Noun)は 1 つずつ別の@(Noun)になるので、あとから個別にも動かせます。</p>
+    <FieldList T="ItemLayoutSettings" Target="Editor.Layout" Fields="DesignFields.LayoutKind" OnLocalChange="StateHasChanged" />
+    <FieldList T="ItemLayoutSettings" Target="Editor.Layout"
+               Fields="@(Editor.Layout.Kind == ItemLayoutKind.Line ? DesignFields.LayoutLine : DesignFields.LayoutCircle)" OnLocalChange="StateHasChanged" />
+    <FieldList T="ItemLayoutSettings" Target="Editor.Layout" Fields="DesignFields.LayoutAlign" OnLocalChange="StateHasChanged" />
+    <p class="field-hint">@ModelHint</p>
+    <button type="button" class="primary" @onclick="Arrange" disabled="@(Editor.ArrangeableCount == 0)"><Icon Name="plus" />並べて追加</button>
+</details>
+
+@if (Items.Count > 0)
+{
+    <div class="button-row selection-row">
+        <button type="button" @onclick="() => Editor.SetAllSelected(true)">すべて選択</button>
+        @if (Editor.HasSelection)
+        {
+            <button type="button" @onclick="() => Editor.SetAllSelected(false)">選択解除</button>
+            <button type="button" class="danger" @onclick="RemoveSelected"><Icon Name="close" />選択した@(Noun)を削除</button>
+        }
+    </div>
+}
+
+@if (Editor.HasSelection)
+{
+    <div class="item-card bulk-card">
+        <div class="item-card-header">
+            <span class="item-card-title">まとめて変更 (選択中: @Editor.SelectedCount 個)</span>
+        </div>
+        <p class="field-hint">動かした項目だけが、選んだ@(Noun)すべてに同じ値で入ります (位置は変わりません)。最初に表示されるのは、選んだ中で一番上の@(Noun)の値です。</p>
+        <FieldList T="T" Target="Editor.Bulk" Fields="BulkFields" />
+    </div>
+}
+
+@foreach (var item in Items)
+{
+    int number = Items.IndexOf(item) + 1;
+    <div class="item-card @(item.IsSelected ? "selected" : "")" @key="item.Id">
+        <div class="item-card-header">
+            <label class="item-select" title="選んだ@(Noun)は「まとめて変更」でそろえて変えられます。「並べて追加」の見本にもなります">
+                <input type="checkbox" checked="@item.IsSelected" @onchange="e => item.IsSelected = e.Value is true"
+                       aria-label="@($"{Noun} {number} を選択")" />
+                <span class="item-card-title">@Noun @number</span>
+            </label>
+            <span class="item-card-actions">
+                <button type="button" @onclick="() => Duplicate(item)" disabled="@(Items.Count >= IrisParameters.MaxNestedItems)"
+                        title="同じ設定の@(Noun)を、少しずらしてすぐ下に追加します" aria-label="@($"{Noun} {number} を複製")"><Icon Name="copy" />複製</button>
+                <button type="button" class="danger remove" @onclick="() => Remove(item)"
+                        aria-label="@($"{Noun} {number} を削除")"><Icon Name="close" />削除</button>
+            </span>
+        </div>
+        <FieldList T="T" Target="item" Fields="Fields" />
+    </div>
+}
+
+@code {
+    /// <summary>「装飾記号」 / 「ハイライト」.</summary>
+    [Parameter, EditorRequired] public string Noun { get; set; } = "";
+    [Parameter, EditorRequired] public ObservableCollection<T> Items { get; set; } = default!;
+    [Parameter, EditorRequired] public ItemListEditor<T> Editor { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<Field<T>> Fields { get; set; } = Array.Empty<Field<T>>();
+    [Parameter, EditorRequired] public IReadOnlyList<Field<T>> BulkFields { get; set; } = Array.Empty<Field<T>>();
+
+    /// <summary>What the model of 並べて追加 is, in the user's words.</summary>
+    [Parameter] public string ModelHint { get; set; } = "";
+
+    [Parameter] public EventCallback<string> OnMessage { get; set; }
+    [CascadingParameter] public DesignSession Session { get; set; } = default!;
+
+    private string Full => $"これ以上追加できません ({Noun}は {IrisParameters.MaxNestedItems} 個まで)。";
+
+    // Undo, presets and restores replace the design's list: follow it
+    protected override void OnParametersSet() => Editor.Attach(Items);
+
+    private Task Message(string text)
+    {
+        Session.Status = text;
+        return OnMessage.InvokeAsync(text);
+    }
+
+    private Task Add()
+    {
+        Session.Apply("", _ => Items.Add(Editor.NewItem()));
+        return Message($"{Noun}を追加しました。");
+    }
+
+    private Task Remove(T item)
+    {
+        Session.Apply("", _ => Items.Remove(item));
+        return Message($"{Noun}を削除しました (元に戻せます)。");
+    }
+
+    private Task Duplicate(T item)
+    {
+        if (Items.Count >= IrisParameters.MaxNestedItems) return Message(Full);
+        Session.Apply("", _ => Editor.Duplicate(item));
+        return Message($"{Noun}を複製しました (すぐ下に追加しました)。");
+    }
+
+    private Task Arrange()
+    {
+        if (Editor.ArrangeableCount == 0) return Message(Full);
+        int added = 0;
+        Session.Apply("", _ => added = Editor.AddArranged().Count);
+        string shape = Editor.Layout.Kind == ItemLayoutKind.Line ? "直線" : "円周";
+        int skipped = Editor.Layout.Count - added;
+        return Message(skipped > 0
+            ? $"{Noun}を{shape}上に {added} 個追加しました ({IrisParameters.MaxNestedItems} 個までのため、{skipped} 個は追加していません)。"
+            : $"{Noun}を{shape}上に {added} 個追加しました (元に戻せます)。");
+    }
+
+    private Task RemoveSelected()
+    {
+        int removed = 0;
+        Session.Apply("", _ => removed = Editor.RemoveSelected());
+        return Message($"選択した{Noun}を {removed} 個削除しました (元に戻せます)。");
+    }
+}

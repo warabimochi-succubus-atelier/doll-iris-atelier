@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace DollIrisGenerator.Models
 {
-    public class DecorativeSymbolItem : INotifyPropertyChanged
+    public class DecorativeSymbolItem : IArrangeableItem<DecorativeSymbolItem>
     {
         public const int MaxCount = 12;
 
@@ -20,6 +22,7 @@ namespace DollIrisGenerator.Models
         private double _cornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0) .. 1 = fully rounded
         private bool _enabled = false;
         private LayerBlend _blend = LayerBlend.Normal;
+        private bool _isSelected;
 
         public string Id
         {
@@ -95,6 +98,37 @@ namespace DollIrisGenerator.Models
         {
             get => _blend;
             set { _blend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <inheritdoc cref="IArrangeableItem.IsSelected"/>
+        [JsonIgnore]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set { if (_isSelected == value) return; _isSelected = value; OnPropertyChanged(); }
+        }
+
+        public static IReadOnlyList<string> BulkSettingNames { get; } = new[]
+        {
+            nameof(Enabled), nameof(Type), nameof(Color), nameof(Size), nameof(Count),
+            nameof(Rotation), nameof(CornerRounding), nameof(Opacity), nameof(Blend)
+        };
+
+        public bool CopySettingTo(DecorativeSymbolItem target, string propertyName)
+        {
+            switch (propertyName)
+            {
+                case nameof(Enabled): target.Enabled = Enabled; return true;
+                case nameof(Type): target.Type = Type; return true;
+                case nameof(Color): target.Color = Color; return true;
+                case nameof(Size): target.Size = Size; return true;
+                case nameof(Count): target.Count = Count; return true;
+                case nameof(Rotation): target.Rotation = Rotation; return true;
+                case nameof(CornerRounding): target.CornerRounding = CornerRounding; return true;
+                case nameof(Opacity): target.Opacity = Opacity; return true;
+                case nameof(Blend): target.Blend = Blend; return true;
+                default: return false;
+            }
         }
 
         public DecorativeSymbolItem Clone()

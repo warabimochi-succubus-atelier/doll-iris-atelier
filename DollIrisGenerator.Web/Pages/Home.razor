@@ -76,25 +76,9 @@
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.RingAndGlitter" />
                             break;
                         case "記号":
-                            <div class="list-header">
-                                <h3 class="field-heading">装飾記号 (@Session.Current.Symbols.Count)</h3>
-                                <button type="button" @onclick="AddSymbol" disabled="@(Session.Current.Symbols.Count >= IrisParameters.MaxNestedItems)"><Icon Name="plus" />装飾記号追加</button>
-                            </div>
-                            @if (Session.Current.Symbols.Count == 0)
-                            {
-                                <p class="field-hint">装飾記号はありません。「装飾記号追加」で追加できます。</p>
-                            }
-                            @foreach (var symbol in Session.Current.Symbols)
-                            {
-                                <div class="item-card" @key="symbol.Id">
-                                    <div class="item-card-header">
-                                        <span class="item-card-title">装飾記号 @(Session.Current.Symbols.IndexOf(symbol) + 1)</span>
-                                        <button type="button" class="danger remove" @onclick="() => RemoveSymbol(symbol)"
-                                                aria-label="@($"装飾記号 {Session.Current.Symbols.IndexOf(symbol) + 1} を削除")"><Icon Name="close" />削除</button>
-                                    </div>
-                                    <FieldList T="DecorativeSymbolItem" Target="symbol" Fields="DesignFields.Symbol" />
-                                </div>
-                            }
+                            <ItemList T="DecorativeSymbolItem" Noun="装飾記号" Items="Session.Current.Symbols" Editor="_symbols"
+                                      Fields="DesignFields.Symbol" BulkFields="DesignFields.SymbolBulk" OnMessage="ShowMessage"
+                                      ModelHint="見本: 「選択」した記号のうち一番上のもの (選択がなければ新しい記号の初期値: 白い 4芒星)。種類・色・サイズなどを見本からコピーします。" />
                             break;
                         case "レンズ・オッドアイ":
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
@@ -112,21 +96,9 @@
                             break;
                         case "ハイライト":
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
-                            <div class="list-header">
-                                <h3 class="field-heading">ハイライト (@Session.Current.Highlights.Count)</h3>
-                                <button type="button" @onclick="AddHighlight" disabled="@(Session.Current.Highlights.Count >= IrisParameters.MaxNestedItems)"><Icon Name="plus" />ハイライト追加</button>
-                            </div>
-                            @foreach (var highlight in Session.Current.Highlights)
-                            {
-                                <div class="item-card" @key="highlight.Id">
-                                    <div class="item-card-header">
-                                        <span class="item-card-title">ハイライト @(Session.Current.Highlights.IndexOf(highlight) + 1)</span>
-                                        <button type="button" class="danger remove" @onclick="() => RemoveHighlight(highlight)"
-                                                aria-label="@($"ハイライト {Session.Current.Highlights.IndexOf(highlight) + 1} を削除")"><Icon Name="close" />削除</button>
-                                    </div>
-                                    <FieldList T="HighlightItem" Target="highlight" Fields="DesignFields.Highlight" />
-                                </div>
-                            }
+                            <ItemList T="HighlightItem" Noun="ハイライト" Items="Session.Current.Highlights" Editor="_highlights"
+                                      Fields="DesignFields.Highlight" BulkFields="DesignFields.HighlightBulk" OnMessage="ShowMessage"
+                                      ModelHint="見本: 「選択」したハイライトのうち一番上のもの (選択がなければ新しいハイライトの初期値: 白い正円)。形状・色・サイズなどを見本からコピーします。" />
                             break;
                         case "お気に入り":
                             <FavoritesPanel OnMessage="ShowMessage" />
@@ -145,6 +117,8 @@
 
     private string _tab = Tabs[0];
     private string _message = "";
+    private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol);
+    private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight);
 
     protected override async Task OnInitializedAsync()
     {
@@ -214,30 +188,6 @@
         int seed = Random.Shared.Next(1, 999999);
         Session.Apply("", p => p.Seed = seed);
         Done($"乱数シードを変更しました: {seed}");
-    }
-
-    private void AddSymbol()
-    {
-        Session.Apply("", p => p.Symbols.Add(DesignFields.NewSymbol()));
-        Done("装飾記号を追加しました。");
-    }
-
-    private void RemoveSymbol(DecorativeSymbolItem item)
-    {
-        Session.Apply("", p => p.Symbols.Remove(item));
-        Done("装飾記号を削除しました (元に戻せます)。");
-    }
-
-    private void AddHighlight()
-    {
-        Session.Apply("", p => p.Highlights.Add(DesignFields.NewHighlight()));
-        Done("ハイライトを追加しました。");
-    }
-
-    private void RemoveHighlight(HighlightItem item)
-    {
-        Session.Apply("", p => p.Highlights.Remove(item));
-        Done("ハイライトを削除しました (元に戻せます)。");
     }
 
     public void Dispose()

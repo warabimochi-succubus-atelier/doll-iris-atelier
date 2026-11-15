@@ -3,7 +3,8 @@
 @using DollIrisGenerator.Web.Editor
 @using DollIrisGenerator.Web.Services
 
-@* The controls of one settings group. Every change goes through the session so it redraws and can be undone. *@
+@* The controls of one settings group. Every change goes through the session so it redraws and can be undone
+   (except with OnLocalChange: settings that are not part of the design, such as the 並べて追加 form). *@
 
 @foreach (var field in Fields)
 {
@@ -26,14 +27,14 @@
                         <span class="field-value">@s.Format(value)</span>
                     </span>
                     <input type="range" min="@Num(s.Min)" max="@Num(s.Max)" step="@Num(s.Step)" value="@Num(value)"
-                           @oninput="e => OnSlider(s, e)" @onchange="_ => Session.CommitEdit()" />
+                           @oninput="e => OnSlider(s, e)" @onchange="_ => Commit()" />
                 </label>
             }
             break;
 
         case ColorField<T> c:
             <ColorInput Label="@c.Label" Hint="@c.Hint" AllowGradient="c.AllowGradient" Value="@c.Get(Target)"
-                        OnPreview="v => Preview(() => c.Set(Target, v))" OnCommit="() => Session.CommitEdit()" />
+                        OnPreview="v => Preview(() => c.Set(Target, v))" OnCommit="Commit" />
             break;
 
         case ToggleField<T> t:
@@ -52,7 +53,7 @@
                 <span class="field-label">@x.Label</span>
                 <input type="text" value="@x.Get(Target)" maxlength="100"
                        @oninput="e => Preview(() => x.Set(Target, e.Value?.ToString() ?? string.Empty))"
-                       @onchange="_ => Session.CommitEdit()" />
+                       @onchange="_ => Commit()" />
             </label>
             break;
 
@@ -81,6 +82,12 @@
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> Fields { get; set; } = Array.Empty<Field<T>>();
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
 
+    /// <summary>
+    /// Set for a target that is not part of the design: changes then skip the session (no redraw, no undo step)
+    /// and call this instead.
+    /// </summary>
+    [Parameter] public Action? OnLocalChange { get; set; }
+
     private static string Num(double v) => v.ToString("R", CultureInfo.InvariantCulture);
 
     private void OnSlider(SliderField<T> s, ChangeEventArgs e)
@@ -92,6 +99,12 @@
     /// <summary>A change in the middle of a gesture (drag, typing): redraw, undo step on commit.</summary>
     private void Preview(Action set)
     {
+        if (OnLocalChange != null)
+        {
+            set();
+            OnLocalChange();
+            return;
+        }
         Session.BeginEdit();
         set();
         Session.Touch();
@@ -101,6 +114,11 @@
     private void Change(Action set)
     {
         Preview(set);
-        Session.CommitEdit();
+        Commit();
+    }
+
+    private void Commit()
+    {
+        if (OnLocalChange == null) Session.CommitEdit();
     }
 }

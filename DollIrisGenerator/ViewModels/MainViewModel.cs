@@ -80,6 +80,7 @@ namespace DollIrisGenerator.ViewModels
                     // Undo, loads and new designs replace the instance: the selected cell keeps showing it
                     if (_selectedSlot != null) _selectedSlot.Iris = _currentIris;
                 }
+                AttachItemListTools();
                 ResetManualEditTracking();
                 OnPropertyChanged();
             }
@@ -351,6 +352,9 @@ namespace DollIrisGenerator.ViewModels
             _currentIris = new IrisParameters();
             _currentIris.PropertyChanged += OnIrisPropertyChanged;
             _undoBaseline = _currentIris.Clone();
+            SymbolTools = new ItemListTools<DecorativeSymbolItem>("装飾記号", NewSymbolItem, RunItemListChange);
+            HighlightTools = new ItemListTools<HighlightItem>("ハイライト", NewHighlightItem, RunItemListChange);
+            AttachItemListTools();
             _manualEditTimer = new DispatcherTimer { Interval = ManualEditCommitDelay };
             _manualEditTimer.Tick += (_, _) => CommitManualEdit();
             _sheetConfig = new PrintSheetConfig();
@@ -453,6 +457,8 @@ namespace DollIrisGenerator.ViewModels
         private void OnIrisPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(CurrentIris));
+            if (e.PropertyName is nameof(IrisParameters.Symbols) or nameof(IrisParameters.Highlights))
+                AttachItemListTools(); // the list itself was replaced (preset, template...)
             if (!_isInternalStateChange && !_suppressManualEditTracking)
             {
                 TrackManualEdit(e.PropertyName);
@@ -688,16 +694,7 @@ namespace DollIrisGenerator.ViewModels
         private void OnAddHighlight()
         {
             PushUndo();
-            CurrentIris.Highlights.Add(new HighlightItem
-            {
-                Shape = HighlightShape.Circle,
-                PositionX = 0.25,
-                PositionY = 0.25,
-                Size = 0.15,
-                Color = "#FFFFFF",
-                Opacity = 0.85,
-                Enabled = true
-            });
+            CurrentIris.Highlights.Add(NewHighlightItem());
             RecordHistory("ハイライト追加");
             StatusMessage = "新しいハイライトを追加しました。";
         }
@@ -716,17 +713,7 @@ namespace DollIrisGenerator.ViewModels
         private void OnAddSymbol()
         {
             PushUndo();
-            CurrentIris.Symbols.Add(new DecorativeSymbolItem
-            {
-                Type = SymbolType.Star4,
-                Count = 1,
-                Size = 0.18,
-                PositionX = 0.25,
-                PositionY = -0.15,
-                Color = "#FFFFFF",
-                Opacity = 0.85,
-                Enabled = true
-            });
+            CurrentIris.Symbols.Add(NewSymbolItem());
             RecordHistory("装飾記号追加");
             StatusMessage = "装飾記号を追加しました。";
         }

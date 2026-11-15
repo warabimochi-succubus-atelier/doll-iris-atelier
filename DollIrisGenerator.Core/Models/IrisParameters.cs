@@ -688,6 +688,8 @@ namespace DollIrisGenerator.Models
 
         private void OnNestedItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            // Ticking an item for まとめて変更 is not an edit of the design (no redraw, undo step or history)
+            if (e.PropertyName == nameof(IArrangeableItem.IsSelected)) return;
             OnPropertyChanged(NestedItemsChangedName);
         }
 
