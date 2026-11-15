@@ -41,18 +41,22 @@
 </head>
 
 <body>
+    <!-- Shown while the app downloads (the first start can take a while): the icon inside the progress ring, the name and percentage under it -->
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />
             <circle r="40%" cx="50%" cy="50%" />
         </svg>
+        <img class="loading-icon" src="icon-192.png" alt="" width="64" height="64" />
+        <p class="loading-name">Doll Iris Atelier</p>
         <div class="loading-progress-text"></div>
     </div>
 
     <div id="blazor-error-ui">
         エラーが発生しました。
         <a href="." class="reload">再読み込み</a>
-        <span class="dismiss">🗙</span>
+        <!-- Blazor hides the bar when .dismiss is clicked. A drawn ×: the 🗙 character is missing from most phone fonts. -->
+        <button type="button" class="dismiss" aria-label="閉じる"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button>
     </div>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script src="js/register-sw.js"></script>

@@ -17,13 +17,13 @@
             @* The app's name is also the button for このアプリについて, which keeps the toolbar to four buttons on phones *@
             <AboutDialog />
             <div class="toolbar-buttons">
-                <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す">↩<span class="label"> 元に戻す</span></button>
-                <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す">↪<span class="label"> やり直す</span></button>
+                <button type="button" @onclick="Session.Undo" disabled="@(!Session.CanUndo)" title="元に戻す" aria-label="元に戻す"><Icon Name="undo" /><span class="label">元に戻す</span></button>
+                <button type="button" @onclick="Session.Redo" disabled="@(!Session.CanRedo)" title="やり直す" aria-label="やり直す"><Icon Name="redo" /><span class="label">やり直す</span></button>
                 <button type="button" class="has-short" @onclick="Randomize" title="サイズ・形状・寸法を保ったまま、色や模様をランダムに作る" aria-label="ランダム生成">
-                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><g class="pips"><circle cx="8.3" cy="8.3" r="1.5"/><circle cx="15.7" cy="8.3" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8.3" cy="15.7" r="1.5"/><circle cx="15.7" cy="15.7" r="1.5"/></g></svg>
-                    <span class="label"> ランダム生成</span><span class="short">ランダム</span>
+                    <Icon Name="dice" />
+                    <span class="label">ランダム生成</span><span class="short">ランダム</span>
                 </button>
-                <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す">⭐<span class="label"> お気に入りに追加</span></button>
+                <button type="button" class="primary" @onclick="AddFavorite" title="今のデザインをお気に入りに残す" aria-label="お気に入りに追加"><Icon Name="star" /><span class="label">お気に入りに追加</span></button>
             </div>
         </header>
 
@@ -62,7 +62,7 @@
                                 <span class="field-label">乱数シード</span>
                                 <div class="seed-row">
                                     <input type="number" min="0" value="@Session.Current.Seed" aria-label="乱数シード" @onchange="SetSeed" />
-                                    <button type="button" @onclick="RandomSeed">🎲 変更</button>
+                                    <button type="button" @onclick="RandomSeed"><Icon Name="dice" />変更</button>
                                 </div>
                             </div>
                             break;
@@ -78,11 +78,11 @@
                         case "記号":
                             <div class="list-header">
                                 <h3 class="field-heading">装飾記号 (@Session.Current.Symbols.Count)</h3>
-                                <button type="button" @onclick="AddSymbol" disabled="@(Session.Current.Symbols.Count >= IrisParameters.MaxNestedItems)">➕ 装飾記号追加</button>
+                                <button type="button" @onclick="AddSymbol" disabled="@(Session.Current.Symbols.Count >= IrisParameters.MaxNestedItems)"><Icon Name="plus" />装飾記号追加</button>
                             </div>
                             @if (Session.Current.Symbols.Count == 0)
                             {
-                                <p class="field-hint">装飾記号はありません。「➕ 装飾記号追加」で追加できます。</p>
+                                <p class="field-hint">装飾記号はありません。「装飾記号追加」で追加できます。</p>
                             }
                             @foreach (var symbol in Session.Current.Symbols)
                             {
@@ -90,7 +90,7 @@
                                     <div class="item-card-header">
                                         <span class="item-card-title">装飾記号 @(Session.Current.Symbols.IndexOf(symbol) + 1)</span>
                                         <button type="button" class="danger remove" @onclick="() => RemoveSymbol(symbol)"
-                                                aria-label="@($"装飾記号 {Session.Current.Symbols.IndexOf(symbol) + 1} を削除")">✕ 削除</button>
+                                                aria-label="@($"装飾記号 {Session.Current.Symbols.IndexOf(symbol) + 1} を削除")"><Icon Name="close" />削除</button>
                                     </div>
                                     <FieldList T="DecorativeSymbolItem" Target="symbol" Fields="DesignFields.Symbol" />
                                 </div>
@@ -114,7 +114,7 @@
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
                             <div class="list-header">
                                 <h3 class="field-heading">ハイライト (@Session.Current.Highlights.Count)</h3>
-                                <button type="button" @onclick="AddHighlight" disabled="@(Session.Current.Highlights.Count >= IrisParameters.MaxNestedItems)">➕ ハイライト追加</button>
+                                <button type="button" @onclick="AddHighlight" disabled="@(Session.Current.Highlights.Count >= IrisParameters.MaxNestedItems)"><Icon Name="plus" />ハイライト追加</button>
                             </div>
                             @foreach (var highlight in Session.Current.Highlights)
                             {
@@ -122,7 +122,7 @@
                                     <div class="item-card-header">
                                         <span class="item-card-title">ハイライト @(Session.Current.Highlights.IndexOf(highlight) + 1)</span>
                                         <button type="button" class="danger remove" @onclick="() => RemoveHighlight(highlight)"
-                                                aria-label="@($"ハイライト {Session.Current.Highlights.IndexOf(highlight) + 1} を削除")">✕ 削除</button>
+                                                aria-label="@($"ハイライト {Session.Current.Highlights.IndexOf(highlight) + 1} を削除")"><Icon Name="close" />削除</button>
                                     </div>
                                     <FieldList T="HighlightItem" Target="highlight" Fields="DesignFields.Highlight" />
                                 </div>
