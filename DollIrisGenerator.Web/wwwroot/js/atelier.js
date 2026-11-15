@@ -91,4 +91,8 @@ export function showDialog(id) {
         });
     }
     dialog.showModal();
+    // The <dialog> stays on the page between openings, so its scroll position would carry over: start at the top
+    for (const el of [dialog, ...dialog.querySelectorAll("*")]) {
+        if (el.scrollTop) el.scrollTop = 0;
+    }
 }
