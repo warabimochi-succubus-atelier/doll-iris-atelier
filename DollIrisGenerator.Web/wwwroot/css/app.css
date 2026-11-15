@@ -290,6 +290,7 @@ input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid v
 .arrange-panel { margin: 10px 0; padding: 4px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
 .arrange-panel > summary { display: flex; align-items: center; gap: 6px; min-height: 40px; cursor: pointer; font-weight: 600; color: var(--text-2); }
 .arrange-panel[open] { padding-bottom: 12px; }
+.arrange-subheading { margin: 14px 0 4px; font-size: 0.9rem; color: var(--text-2); }
 
 /* ---------- favorites ---------- */
 

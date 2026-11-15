@@ -11,55 +11,90 @@ using DollIrisGenerator.ViewModels;
 namespace DollIrisGenerator.Tests
 {
     /// <summary>
-    /// 並べて追加 / 複製 / まとめて変更 for decorative symbols and highlights (SPECIFICATION 13.2): the placement math,
+    /// 並べて追加 / 複製 / まとめて変更 for decorative symbols and highlights (SPECIFICATION 13.2): the random placement,
     /// the shared list editor both apps use, and the desktop app's undo / history around it.
     /// </summary>
     public class ItemLayoutTests
     {
-        private const double Eps = 1e-9;
+        private static double Distance(ItemPlacement p) => Math.Sqrt(p.X * p.X + p.Y * p.Y);
 
-        private static void AssertPlace(ItemPlacement p, double x, double y, double angle)
+        [Fact]
+        public void TestRandomPlacesStayInTheRingAndAreRepeatableWithASeed()
         {
-            Assert.Equal(x, p.X, 9);
-            Assert.Equal(y, p.Y, 9);
-            Assert.Equal(angle, p.Angle, 9);
+            var s = new ItemLayoutSettings { Count = 24, InnerRadius = 0.3, OuterRadius = 0.7 };
+            var places = ItemLayout.Compute(s, new Random(7), 0.1);
+
+            Assert.Equal(24, places.Count);
+            Assert.All(places, p =>
+            {
+                Assert.InRange(Distance(p), 0.3 - 0.001, 0.7 + 0.001); // positions are rounded to 0.001
+                Assert.Equal(Math.Round(p.X, 3), p.X);
+                Assert.Equal(Math.Round(p.Y, 3), p.Y);
+            });
+            Assert.Equal(places, ItemLayout.Compute(s, new Random(7), 0.1));
+            Assert.NotEqual(places, ItemLayout.Compute(s, new Random(8), 0.1));
+
+            // Inner and outer the wrong way round still mean the ring between them
+            var swapped = new ItemLayoutSettings { Count = 10, InnerRadius = 0.7, OuterRadius = 0.3 };
+            Assert.All(ItemLayout.Compute(swapped, new Random(1), 0.1), p => Assert.InRange(Distance(p), 0.3 - 0.001, 0.7 + 0.001));
         }
 
         [Fact]
-        public void TestFullCircleStartsAtTheTopAndGoesClockwiseEvenly()
+        public void TestRandomPlacesSpreadOutInsteadOfPilingUp()
         {
-            var s = new ItemLayoutSettings { Kind = ItemLayoutKind.Circle, Count = 4, Radius = 0.5, CenterX = 0.1, CenterY = -0.2 };
-            var places = ItemLayout.Compute(s);
-            Assert.Equal(4, places.Count);
-            // Y grows downward, so "above the center" is a smaller Y
-            AssertPlace(places[0], 0.1, -0.7, 0);
-            AssertPlace(places[1], 0.6, -0.2, 90);
-            AssertPlace(places[2], 0.1, 0.3, 180);
-            AssertPlace(places[3], -0.4, -0.2, -90);
+            var s = new ItemLayoutSettings { Count = 8 }; // the form's defaults: 0.3 to 0.75 from the center
+            for (int seed = 1; seed <= 30; seed++)
+            {
+                var places = ItemLayout.Compute(s, new Random(seed), 0.18);
+                double closest = places
+                    .SelectMany((p, i) => places.Skip(i + 1).Select(q => Math.Sqrt((p.X - q.X) * (p.X - q.X) + (p.Y - q.Y) * (p.Y - q.Y))))
+                    .Min();
+                Assert.True(closest > 0.15, $"seed {seed}: two items only {closest:F3} apart");
+            }
+
+            // Items already in the list are kept clear of too: one new item next to a crowd goes to the far side
+            var crowd = Enumerable.Range(0, 12).Select(i => (X: 0.6 + 0.01 * i, Y: 0.0)).ToList();
+            var single = ItemLayout.Compute(new ItemLayoutSettings { Count = 1, InnerRadius = 0.5, OuterRadius = 0.7 }, new Random(3), 0.1, crowd);
+            Assert.True(single[0].X < 0, $"placed at {single[0].X:F3}");
         }
 
         [Fact]
-        public void TestArcPutsItemsOnBothEnds()
+        public void TestRotationIsRandomOnlyWhenAsked()
         {
-            var s = new ItemLayoutSettings { Count = 3, Radius = 0.6, StartAngle = -90, SweepAngle = 180 };
-            var places = ItemLayout.Compute(s);
-            AssertPlace(places[0], -0.6, 0, -90);
-            AssertPlace(places[1], 0, -0.6, 0);
-            AssertPlace(places[2], 0.6, 0, 90);
+            var s = new ItemLayoutSettings { Count = 20, RandomRotation = true };
+            var turned = ItemLayout.Compute(s, new Random(5), 0.1);
+            Assert.All(turned, p =>
+            {
+                Assert.InRange(p.Rotation, -179.0, 180.0);
+                Assert.Equal(Math.Round(p.Rotation), p.Rotation);
+            });
+            Assert.True(turned.Select(p => p.Rotation).Distinct().Count() > 10);
+
+            s.RandomRotation = false;
+            Assert.All(ItemLayout.Compute(s, new Random(5), 0.1), p => Assert.Equal(0.0, p.Rotation));
         }
 
         [Fact]
-        public void TestLineSpacesItemsEvenlyAlongItsDirection()
+        public void TestPlacesComeTopLeftToBottomRight()
         {
-            var s = new ItemLayoutSettings { Kind = ItemLayoutKind.Line, Count = 3, StartX = -0.6, StartY = 0.5, EndX = 0.6, EndY = 0.5 };
-            var places = ItemLayout.Compute(s);
-            AssertPlace(places[0], -0.6, 0.5, 0);
-            AssertPlace(places[1], 0, 0.5, 0);
-            AssertPlace(places[2], 0.6, 0.5, 0);
+            // Rows as high as an item (2 x size = 0.2): top row first, left to right inside a row
+            var places = new[]
+            {
+                new ItemPlacement(0.5, 0.42, 0), new ItemPlacement(-0.5, -0.5, 0), new ItemPlacement(0.4, -0.45, 0),
+                new ItemPlacement(-0.3, 0.5, 0), new ItemPlacement(0.0, 0.05, 0),
+            };
+            var ordered = ItemLayout.ReadingOrder(places, 0.1);
+            Assert.Equal(new[] { (-0.5, -0.5), (0.4, -0.45), (0.0, 0.05), (-0.3, 0.5), (0.5, 0.42) },
+                ordered.Select(p => (p.X, p.Y)));
 
-            // Straight down: the items turn a quarter clockwise
-            s.StartX = 0; s.StartY = -0.4; s.EndX = 0; s.EndY = 0.4;
-            Assert.All(ItemLayout.Compute(s), p => Assert.Equal(90, p.Angle, 9));
+            // Whatever the random places, the list reads row by row
+            var computed = ItemLayout.Compute(new ItemLayoutSettings { Count = 24 }, new Random(11), 0.12);
+            var rows = computed.Select(p => Math.Floor((p.Y + 2.0) / 0.24)).ToList();
+            for (int i = 1; i < computed.Count; i++)
+            {
+                Assert.True(rows[i] >= rows[i - 1]);
+                if (rows[i] == rows[i - 1]) Assert.True(computed[i].X >= computed[i - 1].X);
+            }
         }
 
         [Theory]
@@ -77,61 +112,61 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestLayoutSettingsStayInRange()
         {
-            var s = new ItemLayoutSettings { Count = 500, Radius = 9, CenterX = -3, SweepAngle = 0, StartAngle = double.NaN };
+            var s = new ItemLayoutSettings { Count = 500, InnerRadius = -1, OuterRadius = 9 };
             Assert.Equal(ItemLayoutSettings.MaxCount, s.Count);
-            Assert.Equal(0.85, s.Radius);
-            Assert.Equal(-0.85, s.CenterX);
-            Assert.Equal(10, s.SweepAngle);
-            Assert.Equal(0, s.StartAngle);
+            Assert.Equal(0.0, s.InnerRadius);
+            Assert.Equal(0.85, s.OuterRadius);
             s.Count = 0;
+            s.OuterRadius = double.NaN;
             Assert.Equal(ItemLayoutSettings.MinCount, s.Count);
+            Assert.Equal(0.75, s.OuterRadius);
         }
 
         [Fact]
-        public void TestArrangedItemsCopyTheModelAndTurnAlongTheCircle()
+        public void TestArrangedItemsCopyTheTemplateLook()
         {
-            var model = new DecorativeSymbolItem
+            var template = new DecorativeSymbolItem
             {
-                Type = SymbolType.Heart, Color = "#FF88AA", Size = 0.12, Opacity = 0.6, Rotation = 10, Count = 2,
-                CornerRounding = 0.3, Blend = LayerBlend.Screen, Enabled = true, PositionX = 0.4, PositionY = 0.4, IsSelected = true
+                Type = SymbolType.Heart, Color = "#FF88AA", Size = 0.12, Opacity = 0.6, Rotation = 45, Count = 1,
+                CornerRounding = 0.3, Blend = LayerBlend.Screen, Enabled = true, PositionX = 0.4, PositionY = 0.4
             };
-            var list = new List<DecorativeSymbolItem> { model };
-            var s = new ItemLayoutSettings { Count = 4, Radius = 0.5 };
+            var existing = new DecorativeSymbolItem { IsSelected = true };
+            var list = new List<DecorativeSymbolItem> { existing };
+            var s = new ItemLayoutSettings { Count = 5, RandomRotation = false };
 
-            var added = ItemLayout.AddArranged(list, model, s);
+            var added = ItemLayout.AddArranged(list, template, s, new Random(2));
 
-            Assert.Equal(4, added.Count);
-            Assert.Equal(5, list.Count);
-            Assert.Equal(0.4, model.PositionX); // the model itself is not moved
-            Assert.True(model.IsSelected);
-            Assert.Equal(5, list.Select(i => i.Id).Distinct().Count());
-            double[] rotations = { 10, 100, -170, -80 };
-            for (int i = 0; i < 4; i++)
+            Assert.Equal(5, added.Count);
+            Assert.Equal(6, list.Count);
+            Assert.Equal(added, list.Skip(1));
+            Assert.Equal(0.4, template.PositionX); // the template itself stays as it is
+            Assert.Equal(6, list.Select(i => i.Id).Distinct().Count());
+            Assert.All(added, item =>
             {
-                var item = added[i];
                 Assert.False(item.IsSelected);
                 Assert.Equal(SymbolType.Heart, item.Type);
                 Assert.Equal("#FF88AA", item.Color);
                 Assert.Equal(0.12, item.Size);
                 Assert.Equal(0.6, item.Opacity);
-                Assert.Equal(2, item.Count);
                 Assert.Equal(0.3, item.CornerRounding);
                 Assert.Equal(LayerBlend.Screen, item.Blend);
-                Assert.Equal(rotations[i], item.Rotation, 9);
-            }
-
-            s.AlignRotation = false;
-            Assert.All(ItemLayout.AddArranged(list, model, s), i => Assert.Equal(10, i.Rotation));
+                Assert.True(item.Enabled);
+                Assert.Equal(0.0, item.Rotation); // not random: upright, not the template's 45°
+            });
+            // In the order Compute gives (reading order), keeping clear of the item already there
+            Assert.Equal(ItemLayout.Compute(s, new Random(2), 0.12, new[] { (existing.PositionX, existing.PositionY) })
+                    .Select(p => (p.X, p.Y)),
+                added.Select(i => (i.PositionX, i.PositionY)));
         }
 
         [Fact]
         public void TestArrangingStopsAtTheItemLimit()
         {
             var list = Enumerable.Range(0, IrisParameters.MaxNestedItems - 3).Select(_ => new HighlightItem()).ToList();
-            var added = ItemLayout.AddArranged(list, new HighlightItem(), new ItemLayoutSettings { Count = 10 });
+            var added = ItemLayout.AddArranged(list, new HighlightItem(), new ItemLayoutSettings { Count = 10 }, new Random(1));
             Assert.Equal(3, added.Count);
             Assert.Equal(IrisParameters.MaxNestedItems, list.Count);
-            Assert.Empty(ItemLayout.AddArranged(list, new HighlightItem(), new ItemLayoutSettings { Count = 10 }));
+            Assert.Empty(ItemLayout.AddArranged(list, new HighlightItem(), new ItemLayoutSettings { Count = 10 }, new Random(1)));
         }
 
         [Fact]
@@ -249,30 +284,34 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestEditorFollowsAReplacedListAndUsesTheTickedItemAsModel()
+        public void TestEditorFollowsAReplacedListAndArrangesItsTemplate()
         {
-            var editor = new ItemListEditor<HighlightItem>(() => new HighlightItem { Shape = HighlightShape.Circle, Color = "#FFFFFF" });
+            var editor = new ItemListEditor<HighlightItem>(() => new HighlightItem { Shape = HighlightShape.Circle, Color = "#FFFFFF" })
+            {
+                Random = new Random(4)
+            };
             var first = new ObservableCollection<HighlightItem> { new() { IsSelected = true } };
             editor.Attach(first);
             Assert.True(editor.HasSelection);
 
             var second = new ObservableCollection<HighlightItem>
             {
-                new() { Shape = HighlightShape.Rhombus, Color = "#AACCFF" },
-                new() { Shape = HighlightShape.Star4, Color = "#FFAA00" },
+                new() { Shape = HighlightShape.Rhombus, Color = "#AACCFF", IsSelected = true },
             };
             editor.Attach(second);
-            Assert.False(editor.HasSelection);
+            Assert.True(editor.HasSelection);
 
-            // Nothing ticked: the new-item defaults
-            editor.Layout.Count = 2;
-            Assert.All(editor.AddArranged(), h => Assert.Equal(HighlightShape.Circle, h.Shape));
-
-            second[1].IsSelected = true;
+            // The form's own look, whatever is ticked
+            Assert.Equal(HighlightShape.Circle, editor.Template.Shape);
+            editor.Template.Shape = HighlightShape.Star4;
+            editor.Template.Color = "#FFAA00";
+            editor.Layout.Count = 3;
             var added = editor.AddArranged();
+            Assert.Equal(3, added.Count);
             Assert.All(added, h => { Assert.Equal(HighlightShape.Star4, h.Shape); Assert.Equal("#FFAA00", h.Color); });
-            Assert.Equal(6, second.Count);
+            Assert.Equal(4, second.Count);
             Assert.Single(first);
+            Assert.Equal(HighlightShape.Rhombus, second[0].Shape); // the ticked item is not touched
         }
 
         [Fact]

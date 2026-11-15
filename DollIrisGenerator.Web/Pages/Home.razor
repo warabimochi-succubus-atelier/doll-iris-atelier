@@ -78,7 +78,7 @@
                         case "記号":
                             <ItemList T="DecorativeSymbolItem" Noun="装飾記号" Items="Session.Current.Symbols" Editor="_symbols"
                                       Fields="DesignFields.Symbol" BulkFields="DesignFields.SymbolBulk" OnMessage="ShowMessage"
-                                      ModelHint="見本: 「選択」した記号のうち一番上のもの (選択がなければ新しい記号の初期値: 白い 4芒星)。種類・色・サイズなどを見本からコピーします。" />
+                                      TemplateFields="DesignFields.SymbolTemplate" />
                             break;
                         case "レンズ・オッドアイ":
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
@@ -98,7 +98,7 @@
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
                             <ItemList T="HighlightItem" Noun="ハイライト" Items="Session.Current.Highlights" Editor="_highlights"
                                       Fields="DesignFields.Highlight" BulkFields="DesignFields.HighlightBulk" OnMessage="ShowMessage"
-                                      ModelHint="見本: 「選択」したハイライトのうち一番上のもの (選択がなければ新しいハイライトの初期値: 白い正円)。形状・色・サイズなどを見本からコピーします。" />
+                                      TemplateFields="DesignFields.HighlightTemplate" />
                             break;
                         case "お気に入り":
                             <FavoritesPanel OnMessage="ShowMessage" />

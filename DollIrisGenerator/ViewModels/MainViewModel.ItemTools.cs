@@ -25,10 +25,9 @@ namespace DollIrisGenerator.ViewModels
                 run($"{noun}を並べて追加", () =>
                 {
                     int added = Editor.AddArranged().Count;
-                    string shape = Editor.Layout.Kind == ItemLayoutKind.Line ? "直線" : "円周";
                     return added < Editor.Layout.Count
-                        ? $"{noun}を{shape}上に {added} 個追加しました ({IrisParameters.MaxNestedItems} 個までのため、{Editor.Layout.Count - added} 個は追加していません)。"
-                        : $"{noun}を{shape}上に {added} 個追加しました。";
+                        ? $"{noun}をランダムに {added} 個追加しました ({IrisParameters.MaxNestedItems} 個までのため、{Editor.Layout.Count - added} 個は追加していません)。"
+                        : $"{noun}をランダムに {added} 個追加しました (押し直すと別の並びになります。元に戻せます)。";
                 });
             });
             DuplicateCommand = new RelayCommand(param =>
@@ -60,7 +59,7 @@ namespace DollIrisGenerator.ViewModels
         public ItemListTools<DecorativeSymbolItem> SymbolTools { get; }
         public ItemListTools<HighlightItem> HighlightTools { get; }
 
-        /// <summary>What 「➕ 装飾記号追加」 adds (also the model of 並べて追加 when no symbol is ticked).</summary>
+        /// <summary>What 「➕ 装飾記号追加」 adds (also the starting look of the 並べて追加 form).</summary>
         public static DecorativeSymbolItem NewSymbolItem() => new()
         {
             Type = SymbolType.Star4,
@@ -73,7 +72,7 @@ namespace DollIrisGenerator.ViewModels
             Enabled = true
         };
 
-        /// <summary>What 「➕ ハイライト追加」 adds (also the model of 並べて追加 when no highlight is ticked).</summary>
+        /// <summary>What 「➕ ハイライト追加」 adds (also the starting look of the 並べて追加 form).</summary>
         public static HighlightItem NewHighlightItem() => new()
         {
             Shape = HighlightShape.Circle,

@@ -5,7 +5,7 @@ namespace DollIrisGenerator.Models
 {
     /// <summary>
     /// An item of a design's list that sits at a position in the iris (decorative symbol, highlight), so the editor
-    /// can lay several out at once (並べて追加), copy one (複製) and change the ticked ones together (まとめて変更).
+    /// can scatter several at once (並べて追加), copy one (複製) and change the ticked ones together (まとめて変更).
     /// </summary>
     public interface IArrangeableItem : INotifyPropertyChanged
     {
@@ -13,6 +13,7 @@ namespace DollIrisGenerator.Models
         double PositionX { get; set; }
         double PositionY { get; set; }
         double Rotation { get; set; }
+        double Size { get; set; }
 
         /// <summary>
         /// Ticked for まとめて変更. Screen-only state: not saved, not copied by Clone, and not an edit of the design

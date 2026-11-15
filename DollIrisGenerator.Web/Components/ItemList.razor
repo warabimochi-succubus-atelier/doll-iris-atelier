@@ -21,13 +21,12 @@
 }
 
 <details class="arrange-panel">
-    <summary><Icon Name="ring" />並べて追加 (円・直線にまとめて置く)</summary>
-    <p class="field-hint">@(Noun)を円や直線の上にまとめて追加します。追加した@(Noun)は 1 つずつ別の@(Noun)になるので、あとから個別にも動かせます。</p>
-    <FieldList T="ItemLayoutSettings" Target="Editor.Layout" Fields="DesignFields.LayoutKind" OnLocalChange="StateHasChanged" />
-    <FieldList T="ItemLayoutSettings" Target="Editor.Layout"
-               Fields="@(Editor.Layout.Kind == ItemLayoutKind.Line ? DesignFields.LayoutLine : DesignFields.LayoutCircle)" OnLocalChange="StateHasChanged" />
-    <FieldList T="ItemLayoutSettings" Target="Editor.Layout" Fields="DesignFields.LayoutAlign" OnLocalChange="StateHasChanged" />
-    <p class="field-hint">@ModelHint</p>
+    <summary><Icon Name="ring" />並べて追加 (ランダムにまとめて置く)</summary>
+    <p class="field-hint">@(Noun)を虹彩の中にランダムにまとめて追加します。追加した@(Noun)は 1 つずつ別の@(Noun)になるので、あとから個別にも動かせます。</p>
+    <FieldList T="ItemLayoutSettings" Target="Editor.Layout" Fields="DesignFields.Layout" OnLocalChange="StateHasChanged" />
+    <h4 class="arrange-subheading">追加する@(Noun)</h4>
+    <FieldList T="T" Target="Editor.Template" Fields="TemplateFields" OnLocalChange="StateHasChanged" />
+    <p class="field-hint">範囲の中に、なるべく重ならないように散らします。一覧には左上から右下の順 (上の行から、同じ行は左から) に入ります。押すたびに違う並びになります (気に入らなければ「元に戻す」で戻して押し直してください)。</p>
     <button type="button" class="primary" @onclick="Arrange" disabled="@(Editor.ArrangeableCount == 0)"><Icon Name="plus" />並べて追加</button>
 </details>
 
@@ -59,7 +58,7 @@
     int number = Items.IndexOf(item) + 1;
     <div class="item-card @(item.IsSelected ? "selected" : "")" @key="item.Id">
         <div class="item-card-header">
-            <label class="item-select" title="選んだ@(Noun)は「まとめて変更」でそろえて変えられます。「並べて追加」の見本にもなります">
+            <label class="item-select" title="選んだ@(Noun)は「まとめて変更」でそろえて変えられます">
                 <input type="checkbox" checked="@item.IsSelected" @onchange="e => item.IsSelected = e.Value is true"
                        aria-label="@($"{Noun} {number} を選択")" />
                 <span class="item-card-title">@Noun @number</span>
@@ -83,8 +82,8 @@
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> Fields { get; set; } = Array.Empty<Field<T>>();
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> BulkFields { get; set; } = Array.Empty<Field<T>>();
 
-    /// <summary>What the model of 並べて追加 is, in the user's words.</summary>
-    [Parameter] public string ModelHint { get; set; } = "";
+    /// <summary>The look settings of the 並べて追加 form (edits <see cref="ItemListEditor{T}.Template"/>).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<Field<T>> TemplateFields { get; set; } = Array.Empty<Field<T>>();
 
     [Parameter] public EventCallback<string> OnMessage { get; set; }
     [CascadingParameter] public DesignSession Session { get; set; } = default!;
@@ -124,11 +123,10 @@
         if (Editor.ArrangeableCount == 0) return Message(Full);
         int added = 0;
         Session.Apply("", _ => added = Editor.AddArranged().Count);
-        string shape = Editor.Layout.Kind == ItemLayoutKind.Line ? "直線" : "円周";
         int skipped = Editor.Layout.Count - added;
         return Message(skipped > 0
-            ? $"{Noun}を{shape}上に {added} 個追加しました ({IrisParameters.MaxNestedItems} 個までのため、{skipped} 個は追加していません)。"
-            : $"{Noun}を{shape}上に {added} 個追加しました (元に戻せます)。");
+            ? $"{Noun}をランダムに {added} 個追加しました ({IrisParameters.MaxNestedItems} 個までのため、{skipped} 個は追加していません)。"
+            : $"{Noun}をランダムに {added} 個追加しました (押し直すと別の並びになります。元に戻せます)。");
     }
 
     private Task RemoveSelected()

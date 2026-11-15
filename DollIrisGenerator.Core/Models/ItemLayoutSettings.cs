@@ -4,58 +4,21 @@ using System.Runtime.CompilerServices;
 
 namespace DollIrisGenerator.Models
 {
-    /// <summary>How 並べて追加 lays the new items out.</summary>
-    public enum ItemLayoutKind
-    {
-        /// <summary>On a circle (or an arc of it) round a center.</summary>
-        Circle = 0,
-        /// <summary>Evenly from a start point to an end point.</summary>
-        Line = 1
-    }
-
     /// <summary>
-    /// The 並べて追加 form (decorative symbols / highlights). Screen-only: not part of a design and not saved.
-    /// Positions are in iris-radius units like the items' own position (X right, Y down), angles in degrees with
-    /// 0° at the top and going clockwise.
+    /// The 並べて追加 form (decorative symbols / highlights): how many items to scatter, where, and whether each gets
+    /// a random direction. The new items' look (type, color, size...) is the editor's template item.
+    /// Screen-only: not part of a design and not saved. Distances are in iris-radius units like the items' position.
     /// </summary>
     public class ItemLayoutSettings : INotifyPropertyChanged
     {
-        public const int MinCount = 2;
+        public const int MinCount = 1;
         public const int MaxCount = 24;
-        public const double PositionLimit = 0.85; // the items' position sliders
-        public const double MinRadius = 0.05;
+        public const double MaxRadius = 0.85; // the items' position sliders
 
-        private ItemLayoutKind _kind = ItemLayoutKind.Circle;
         private int _count = 8;
-        private double _centerX;
-        private double _centerY;
-        private double _radius = 0.6;
-        private double _startAngle;
-        private double _sweepAngle = 360.0;
-        private double _startX = -0.6;
-        private double _startY = 0.55;
-        private double _endX = 0.6;
-        private double _endY = 0.55;
-        private bool _alignRotation = true;
-
-        public ItemLayoutKind Kind
-        {
-            get => _kind;
-            set { _kind = Enum.IsDefined(value) ? value : ItemLayoutKind.Circle; OnPropertyChanged(); OnPropertyChanged(nameof(IsCircle)); OnPropertyChanged(nameof(IsLine)); }
-        }
-
-        /// <summary>For radio buttons / showing the circle's or the line's settings.</summary>
-        public bool IsCircle
-        {
-            get => Kind == ItemLayoutKind.Circle;
-            set { if (value) Kind = ItemLayoutKind.Circle; }
-        }
-
-        public bool IsLine
-        {
-            get => Kind == ItemLayoutKind.Line;
-            set { if (value) Kind = ItemLayoutKind.Line; }
-        }
+        private double _innerRadius = 0.3;
+        private double _outerRadius = 0.75;
+        private bool _randomRotation = true;
 
         /// <summary>How many items to add.</summary>
         public int Count
@@ -64,45 +27,26 @@ namespace DollIrisGenerator.Models
             set { _count = Math.Clamp(value, MinCount, MaxCount); OnPropertyChanged(); }
         }
 
-        public double CenterX { get => _centerX; set { _centerX = Pos(value); OnPropertyChanged(); } }
-        public double CenterY { get => _centerY; set { _centerY = Pos(value); OnPropertyChanged(); } }
-
-        public double Radius
+        /// <summary>Nearest the items come to the iris center (keeps them off the pupil).</summary>
+        public double InnerRadius
         {
-            get => _radius;
-            set { _radius = Finite(value, MinRadius, PositionLimit, 0.6); OnPropertyChanged(); }
+            get => _innerRadius;
+            set { _innerRadius = Finite(value, 0.0, MaxRadius, 0.3); OnPropertyChanged(); }
         }
 
-        /// <summary>Where the first item goes: 0° = straight above the center, clockwise.</summary>
-        public double StartAngle
+        /// <summary>Farthest the items go from the iris center.</summary>
+        public double OuterRadius
         {
-            get => _startAngle;
-            set { _startAngle = Finite(value, -180.0, 180.0, 0.0); OnPropertyChanged(); }
+            get => _outerRadius;
+            set { _outerRadius = Finite(value, 0.05, MaxRadius, 0.75); OnPropertyChanged(); }
         }
 
-        /// <summary>360° = all the way round (evenly spaced, the last one does not land on the first); less = an arc from end to end.</summary>
-        public double SweepAngle
+        /// <summary>Turn each item a random way (otherwise every item is upright, 0°).</summary>
+        public bool RandomRotation
         {
-            get => _sweepAngle;
-            set { _sweepAngle = Finite(value, 10.0, 360.0, 360.0); OnPropertyChanged(); }
+            get => _randomRotation;
+            set { _randomRotation = value; OnPropertyChanged(); }
         }
-
-        public double StartX { get => _startX; set { _startX = Pos(value); OnPropertyChanged(); } }
-        public double StartY { get => _startY; set { _startY = Pos(value); OnPropertyChanged(); } }
-        public double EndX { get => _endX; set { _endX = Pos(value); OnPropertyChanged(); } }
-        public double EndY { get => _endY; set { _endY = Pos(value); OnPropertyChanged(); } }
-
-        /// <summary>
-        /// Turn each item along the layout: on a circle its top points away from the center, on a line it follows
-        /// the line's direction. The angle is added to the model item's own rotation.
-        /// </summary>
-        public bool AlignRotation
-        {
-            get => _alignRotation;
-            set { _alignRotation = value; OnPropertyChanged(); }
-        }
-
-        private static double Pos(double v) => Finite(v, -PositionLimit, PositionLimit, 0.0);
 
         private static double Finite(double v, double min, double max, double fallback) =>
             double.IsFinite(v) ? Math.Clamp(v, min, max) : fallback;

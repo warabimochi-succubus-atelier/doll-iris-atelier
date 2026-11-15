@@ -196,41 +196,29 @@ public static class DesignFields
     /// <summary>まとめて変更 of the ticked highlights: the highlight's settings without the position.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightBulk = Highlight.Where(f => !IsPosition(f)).ToArray();
 
+    private static Field<T>[] Pick<T>(IEnumerable<Field<T>> fields, params string[] labels) =>
+        labels.Select(l => fields.Single(f => f.Label == l)).ToArray();
+
     // 並べて追加 (the same labels and ranges as the desktop app's 「📐 並べて追加」)
-    public static readonly IReadOnlyList<Field<ItemLayoutSettings>> LayoutKind = new Field<ItemLayoutSettings>[]
+    public static readonly IReadOnlyList<Field<ItemLayoutSettings>> Layout = new Field<ItemLayoutSettings>[]
     {
-        new ChoiceField<ItemLayoutSettings>("並べ方", l => l.Kind, (l, v) => l.Kind = (ItemLayoutKind)v, new (string, object)[]
-        {
-            ("円周", ItemLayoutKind.Circle), ("直線", ItemLayoutKind.Line)
-        }),
         new SliderField<ItemLayoutSettings>("個数", l => l.Count, (l, v) => l.Count = Int(v),
             ItemLayoutSettings.MinCount, ItemLayoutSettings.MaxCount, 1, v => Fmt.Count(v, "個")),
+        new SliderField<ItemLayoutSettings>("範囲 内側 (中心からの距離)", l => l.InnerRadius, (l, v) => l.InnerRadius = v,
+            0, ItemLayoutSettings.MaxRadius, 0.01, Fmt.F2, "虹彩の中心からこれより近くには置きません (瞳孔の上にのせないため)。1 で虹彩の縁"),
+        new SliderField<ItemLayoutSettings>("範囲 外側 (中心からの距離)", l => l.OuterRadius, (l, v) => l.OuterRadius = v,
+            0.05, ItemLayoutSettings.MaxRadius, 0.01, Fmt.F2, "これより遠く (縁の近く) には置きません。1 で虹彩の縁"),
+        new ToggleField<ItemLayoutSettings>("向きをランダムにする", l => l.RandomRotation, (l, v) => l.RandomRotation = v,
+            "オンで 1 つずつ回転角度をランダムにします。オフでは全部まっすぐ (0°) です"),
     };
 
-    public static readonly IReadOnlyList<Field<ItemLayoutSettings>> LayoutCircle = new Field<ItemLayoutSettings>[]
-    {
-        new SliderField<ItemLayoutSettings>("中心 X (横)", l => l.CenterX, (l, v) => l.CenterX = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("中心 Y (縦)", l => l.CenterY, (l, v) => l.CenterY = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("半径", l => l.Radius, (l, v) => l.Radius = v, ItemLayoutSettings.MinRadius, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("開始角", l => l.StartAngle, (l, v) => l.StartAngle = v, -180, 180, 1, Fmt.Deg,
-            "最初の 1 つを置く角度。0° が中心の真上で、時計回りに増えます"),
-        new SliderField<ItemLayoutSettings>("範囲", l => l.SweepAngle, (l, v) => l.SweepAngle = v, 10, 360, 1, Fmt.Deg,
-            "360° で一周に等間隔。それより小さいと弧になり、両端にも置かれます"),
-    };
+    /// <summary>The look of the symbols 並べて追加 makes.</summary>
+    public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
+        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "透明度", "重ね方");
 
-    public static readonly IReadOnlyList<Field<ItemLayoutSettings>> LayoutLine = new Field<ItemLayoutSettings>[]
-    {
-        new SliderField<ItemLayoutSettings>("始点 X (横)", l => l.StartX, (l, v) => l.StartX = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("始点 Y (縦)", l => l.StartY, (l, v) => l.StartY = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("終点 X (横)", l => l.EndX, (l, v) => l.EndX = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<ItemLayoutSettings>("終点 Y (縦)", l => l.EndY, (l, v) => l.EndY = v, -0.85, 0.85, 0.01, Fmt.F2),
-    };
-
-    public static readonly IReadOnlyList<Field<ItemLayoutSettings>> LayoutAlign = new Field<ItemLayoutSettings>[]
-    {
-        new ToggleField<ItemLayoutSettings>("向きを並びに沿わせる", l => l.AlignRotation, (l, v) => l.AlignRotation = v,
-            "円周では上側が外を向くように、直線では線の向きに合わせて回します (見本の回転角度に足します)"),
-    };
+    /// <summary>The look of the highlights 並べて追加 makes (縦横比 for the oval).</summary>
+    public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
+        Pick(Highlight, "形状", "色", "サイズ", "楕円 縦横比", "透明度", "重ね方");
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
     public static DecorativeSymbolItem NewSymbol() => new()
