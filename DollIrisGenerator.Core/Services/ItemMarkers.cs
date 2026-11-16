@@ -28,14 +28,15 @@ namespace DollIrisGenerator.Services
         /// <summary>How much larger than the item the ring is, and the least room it leaves (mm).</summary>
         public const double RingScale = 1.2, RingMinMm = 0.25;
 
-        public static IReadOnlyList<ItemMarker> ForEye(IrisParameters p, bool isRightEye, string? hoveredId)
+        /// <param name="only">Only this kind (the editor rings the open tab's list); null for both.</param>
+        public static IReadOnlyList<ItemMarker> ForEye(IrisParameters p, bool isRightEye, string? hoveredId, MarkedItemKind? only = null)
         {
             var result = new List<ItemMarker>();
             var (rx, ry) = IrisRadiiMm(p);
             double baseR = Math.Min(rx, ry);
             double tilt = isRightEye ? -p.TiltAngle : p.TiltAngle;
 
-            for (int i = 0; i < p.Symbols.Count; i++)
+            for (int i = 0; only != MarkedItemKind.Highlight && i < p.Symbols.Count; i++)
             {
                 var s = p.Symbols[i];
                 bool hovered = hoveredId != null && s.Id == hoveredId;
@@ -46,7 +47,7 @@ namespace DollIrisGenerator.Services
             }
 
             bool mirrorHighlights = isRightEye && p.MirrorHighlightsWithIris;
-            for (int i = 0; i < p.Highlights.Count; i++)
+            for (int i = 0; only != MarkedItemKind.Symbol && i < p.Highlights.Count; i++)
             {
                 var h = p.Highlights[i];
                 bool hovered = hoveredId != null && h.Id == hoveredId;

@@ -1172,7 +1172,7 @@
                     <!-- ======================================================== -->
                     <!-- TAB 7 (下段): 装飾記号 (たくさん追加できるので専用タブ) -->
                     <!-- ======================================================== -->
-                    <TabItem Header="記号" controls:TabRowsPanel.Row="1">
+                    <TabItem Header="記号" controls:TabRowsPanel.Row="1" controls:ItemHover.MarkersFor="Symbol">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <!-- Decorative Symbols -->
@@ -1527,7 +1527,7 @@
                     <!-- ======================================================== -->
                     <!-- TAB 9 (下段): ハイライト & 左右対称 -->
                     <!-- ======================================================== -->
-                    <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1">
+                    <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1" controls:ItemHover.MarkersFor="Highlight">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
                                 <GroupBox Header="左右対称設定" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">

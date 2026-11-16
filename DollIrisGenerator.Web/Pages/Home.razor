@@ -29,7 +29,7 @@
 
         <main class="workspace">
             <div class="preview-pane">
-                <IrisPreview Design="Session.Current" Version="Session.Version" ShowItemMarkers="true" HoveredItemId="@_hoveredItemId" />
+                <IrisPreview Design="Session.Current" Version="Session.Version" MarkersFor="MarkersForTab" HoveredItemId="@_hoveredItemId" />
                 <p class="preview-caption">@Session.Current.Name ・ 虹彩 @Fmt.Mm(Session.Current.SizeMm) ・ シード @Session.Current.Seed</p>
             </div>
 
@@ -118,6 +118,14 @@
     private string _tab = Tabs[0];
     private string _message = "";
     private string? _hoveredItemId; // the symbol / highlight whose card is pointed at or being edited (ringed in the preview)
+
+    /// <summary>The preview rings only the open tab's list (記号 / ハイライト); none on the other tabs.</summary>
+    private MarkedItemKind? MarkersForTab => _tab switch
+    {
+        "記号" => MarkedItemKind.Symbol,
+        "ハイライト" => MarkedItemKind.Highlight,
+        _ => null,
+    };
     private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol, ItemLayoutSettings.DefaultSymbolCount);
     private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight, ItemLayoutSettings.DefaultHighlightCount);
 

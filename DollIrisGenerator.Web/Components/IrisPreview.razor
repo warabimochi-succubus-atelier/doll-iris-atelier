@@ -14,7 +14,7 @@
     @if (_url != null)
     {
         <img src="@_url" alt="@Alt" draggable="false" />
-        @if (ShowItemMarkers && !SingleEye)
+        @if (MarkersFor != null && !SingleEye)
         {
             var layout = SvgExporter.PairLayoutMm(Design, PairSpacingMm, SvgExporter.PairPaddingMm);
             var marks = Markers(layout.LeftCx, layout.RightCx, layout.Cy);
@@ -58,9 +58,9 @@
 
     /// <summary>
     /// Rings round the ticked symbols / highlights and the one whose card is pointed at (<see cref="HoveredItemId"/>),
-    /// with their numbers in the list (the pair view of the editor only).
+    /// with their numbers in the list (the pair view of the editor only): the open tab's list, or none (null).
     /// </summary>
-    [Parameter] public bool ShowItemMarkers { get; set; }
+    [Parameter] public MarkedItemKind? MarkersFor { get; set; }
 
     [Parameter] public string? HoveredItemId { get; set; }
 
@@ -74,7 +74,7 @@
     {
         var list = new List<(ItemMarker, double, double)>();
         foreach (var (right, cx) in new[] { (false, leftCx), (true, rightCx) })
-            foreach (var m in ItemMarkers.ForEye(Design, right, HoveredItemId))
+            foreach (var m in ItemMarkers.ForEye(Design, right, HoveredItemId, MarkersFor))
                 list.Add((m, cx + m.X, cy + m.Y));
         return list.OrderBy(t => t.Item1.Hovered).ToList();
     }

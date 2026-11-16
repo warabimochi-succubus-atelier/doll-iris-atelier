@@ -12,6 +12,7 @@ using Xunit;
 namespace DollIrisGenerator.Tests
 {
     /// <summary>The preview draws the eyes as pictures of their SVG (resvg), redrawn in the background after changes.</summary>
+    [Collection(ItemHoverCollection.Name)]
     public class IrisPreviewControlTests
     {
         private const double ViewW = 600, ViewH = 300, Zoom = 3.6;
@@ -42,6 +43,24 @@ namespace DollIrisGenerator.Tests
             var px = new byte[4];
             bmp.CopyPixels(new Int32Rect((int)at.X, (int)at.Y, 1, 1), px, 4, 0);
             return Color.FromArgb(px[3], px[2], px[1], px[0]);
+        }
+
+        /// <summary>The pixels at 72 points round a circle (one render), to compare with and without a ring.</summary>
+        private static Color[] PixelsOnRing(UIElement element, Point center, double radius)
+        {
+            element.UpdateLayout();
+            var bmp = new RenderTargetBitmap((int)ViewW, (int)ViewH, 96, 96, PixelFormats.Pbgra32);
+            bmp.Render(element);
+            var px = new byte[4];
+            var result = new Color[72];
+            for (int i = 0; i < result.Length; i++)
+            {
+                double a = i * Math.PI / 36.0;
+                int x = (int)Math.Round(center.X + radius * Math.Cos(a)), y = (int)Math.Round(center.Y + radius * Math.Sin(a));
+                bmp.CopyPixels(new Int32Rect(x, y, 1, 1), px, 4, 0);
+                result[i] = Color.FromArgb(px[3], px[2], px[1], px[0]);
+            }
+            return result;
         }
 
         /// <summary>Center of the left eye in the pair view (same layout as IrisPreviewControl, spacing 4 mm).</summary>
@@ -163,18 +182,31 @@ namespace DollIrisGenerator.Tests
             var rightOnRing = new Point(ViewW - onRing.X, onRing.Y);
 
             static bool Amber(Color c) => c.R > 200 && c.G > 170 && c.B < 140;
-            Assert.False(Amber(PixelAt(ctrl, onRing)), "no ring before the card is pointed at");
             try
             {
+                ItemHover.SetShownKind(MarkedItemKind.Symbol); // the 記号 tab is open
+                Assert.False(Amber(PixelAt(ctrl, onRing)), "no ring before the card is pointed at");
                 ItemHover.SetCurrent(symbol.Id);
                 Assert.True(Amber(PixelAt(ctrl, onRing)), $"left ring expected, got {PixelAt(ctrl, onRing)}");
                 Assert.True(Amber(PixelAt(ctrl, rightOnRing)), $"right ring expected, got {PixelAt(ctrl, rightOnRing)}");
+                ItemHover.SetCurrent(null);
+                Assert.False(Amber(PixelAt(ctrl, onRing)), "ring gone once the pointer leaves the card");
+
+                // A ticked symbol is ringed (dashed: looked for all the way round) on the 記号 tab only
+                var center = new Point(eye.X + marker.X * ppm, eye.Y + marker.Y * ppm);
+                var bare = PixelsOnRing(ctrl, center, r);
+                symbol.IsSelected = true;
+                Assert.NotEqual(bare, PixelsOnRing(ctrl, center, r)); // dashed ring on the 記号 tab
+                ItemHover.SetShownKind(MarkedItemKind.Highlight);
+                Assert.Equal(bare, PixelsOnRing(ctrl, center, r)); // no symbol ring on the ハイライト tab
+                ItemHover.SetShownKind(null);
+                Assert.Equal(bare, PixelsOnRing(ctrl, center, r)); // none on the other tabs
             }
             finally
             {
                 ItemHover.SetCurrent(null);
+                ItemHover.SetShownKind(null);
             }
-            Assert.False(Amber(PixelAt(ctrl, onRing)), "ring gone once the pointer leaves the card");
         });
     }
 
