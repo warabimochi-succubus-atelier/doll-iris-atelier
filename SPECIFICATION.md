@@ -88,7 +88,7 @@
 - 線幅などの「スタイル単位」の実寸 (`IrisStyle.MmPerStyleUnit`) やハイライトの範囲など、画面と SVG で共有する描画の決まりは `IrisStyle` に置く。
 - SVG の数値は `FixedFormat.ToFixed`（`ToString("F3")` と同じ文字列を速く作る。`FixedFormatTests`）で書く。ブラウザ版 (WebAssembly) では `ToString` が 1 回数十マイクロ秒かかり、プレビュー 1 枚に 1 秒近くかかっていたため。
 - 星雲の右目の画像は左目の画像の左右反転として作る（ピクセル中心の座標が 2 進で正確に左右対称になるため、計算し直した場合と同じ値）。グラデーションの色は `ColorFill.StopSampler` で、ストップの色を 1 回だけ読んでから各ピクセルの補間をする。
-- ブラウザ版で遅い処理を避ける（出力は変わらない。`FastPathParityTests`）: 色の判定 (`ColorFill.IsHexColor`) は正規表現を使わず、`ColorFill.Parse` は "(" を含まない値をすぐに単色とする。円周グラデーションの扇形はストップの色を 1 回だけ読み、`ColorFill.FormatArgb` で書く。パスの座標は `FixedFormat.AppendFixed` / `ShapeOutline.AppendSvgPathData` で `StringBuilder` に直接書く。星雲の PNG の Base64 は、キャッシュ中の画像ごとに使い回す (`NebulaTexture.PngBase64`)。
+- ブラウザ版で遅い処理を避ける（出力は変わらない。`FastPathParityTests`）: 色の判定 (`ColorFill.IsHexColor`) は正規表現を使わず、`ColorFill.Parse` は "(" を含まない値をすぐに単色とする。円周グラデーションの扇形はストップの色を 1 回だけ読み、`ColorFill.FormatArgb` で書く。パスの座標は `FixedFormat.AppendFixed` / `ShapeOutline.AppendSvgPathData` で `StringBuilder` に直接書く。星雲の PNG の Base64 は、キャッシュ中の画像ごとに使い回す (`NebulaTexture.PngBase64`)。星雲の雲のノイズは形 (細かさ・渦巻き・シード) ごとにキャッシュし、量・色だけを変えたときは計算し直さない。ノイズは 1 行ずつ、オクターブごとに行全体を計算し、隣の画素と同じ格子なら格子点の値を使い回す (1 画素ずつ関数を呼んで計算した場合と同じ値)。
 
 ### 2.4 ブラウザ版 (PWA)
 スマホ・タブレットでデザインし、デスクトップ版で印刷するための版。
