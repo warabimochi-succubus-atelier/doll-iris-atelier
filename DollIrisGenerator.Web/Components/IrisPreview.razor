@@ -55,6 +55,9 @@
     /// <summary>Left eye only (thumbnails) instead of the pair.</summary>
     [Parameter] public bool SingleEye { get; set; }
 
+    /// <summary>With <see cref="SingleEye"/>: the right eye instead of the left (odd-eyed thumbnails).</summary>
+    [Parameter] public bool RightEye { get; set; }
+
     [Parameter] public string? Class { get; set; }
 
     /// <summary>
@@ -85,17 +88,19 @@
     private string? _error;
     private IrisParameters? _drawnDesign;
     private int _drawnVersion = -1;
+    private bool _drawnRightEye;
     private bool _dirty;
     private bool _drawing;
     private bool _disposed;
 
-    private string Alt => SingleEye ? $"{Design.Name} (左目)" : $"{Design.Name} の左右ペア";
+    private string Alt => SingleEye ? $"{Design.Name} ({(RightEye ? "右目" : "左目")})" : $"{Design.Name} の左右ペア";
 
     protected override void OnParametersSet()
     {
-        if (ReferenceEquals(_drawnDesign, Design) && _drawnVersion == Version) return;
+        if (ReferenceEquals(_drawnDesign, Design) && _drawnVersion == Version && _drawnRightEye == RightEye) return;
         _drawnDesign = Design;
         _drawnVersion = Version;
+        _drawnRightEye = RightEye;
         _dirty = true;
         if (!_drawing) _ = DrawLatestAsync();
     }
@@ -125,7 +130,7 @@
                 try
                 {
                     string svg = SingleEye
-                        ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: false)
+                        ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: RightEye)
                         : SvgExporter.GeneratePairSvg(Design, includePrintGuides: false, pairSpacingMm: PairSpacingMm);
                     url = await PreviewInterop.LoadSvgAsync(svg);
                 }
