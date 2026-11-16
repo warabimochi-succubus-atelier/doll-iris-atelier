@@ -6,8 +6,9 @@
 @*
     The left / right pair, drawn from the same SVG the desktop app exports (DollIrisGenerator.Core), so what is
     seen here is what the desktop app prints. Shown as an image: SVG inside <img> never runs scripts, whatever
-    a hand-edited file contains. The image is a blob: URL (PreviewInterop); each one is released once the next
-    is on screen.
+    a hand-edited file contains. The image is a blob: URL (PreviewInterop), put on screen only once it has
+    loaded, so a heavy redraw keeps the last picture instead of leaving the preview empty; each one is released
+    once the next is on screen.
 *@
 
 <figure class="preview @Class">
@@ -39,9 +40,9 @@
             }
         }
     }
-    else if (_error != null)
+    @if (_error != null)
     {
-        <figcaption class="field-error">プレビューを描けませんでした: @_error</figcaption>
+        <figcaption class="field-error">@(_url != null ? "プレビューを更新できませんでした (前の状態を表示中)" : "プレビューを描けませんでした"): @_error</figcaption>
     }
 </figure>
 
@@ -86,6 +87,7 @@
     private int _drawnVersion = -1;
     private bool _dirty;
     private bool _drawing;
+    private bool _disposed;
 
     private string Alt => SingleEye ? $"{Design.Name} (左目)" : $"{Design.Name} の左右ペア";
 
@@ -94,13 +96,6 @@
         if (ReferenceEquals(_drawnDesign, Design) && _drawnVersion == Version) return;
         _drawnDesign = Design;
         _drawnVersion = Version;
-
-        // First picture right away; later ones through the loop below
-        if (_url == null && _error == null)
-        {
-            Draw();
-            return;
-        }
         _dirty = true;
         if (!_drawing) _ = DrawLatestAsync();
     }
@@ -108,42 +103,51 @@
     /// <summary>
     /// While a slider is dragged the design changes faster than it can be drawn. Each pass first lets the browser
     /// deliver the input already waiting, then draws only the newest state, so the preview keeps up instead of
-    /// replaying every step.
+    /// replaying every step. The new picture replaces the old one only once it has loaded: a heavy design can take
+    /// longer to load than the next change takes to come, and swapping earlier would leave the preview empty.
     /// </summary>
     private async Task DrawLatestAsync()
     {
         _drawing = true;
         try
         {
-            while (_dirty)
+            while (_dirty && !_disposed)
             {
                 _dirty = false;
-                await Task.Delay(1);
-                if (_dirty) continue;
-                Draw();
+                // The first picture right away; later ones after the waiting input
+                if (_url != null || _error != null)
+                {
+                    await Task.Delay(1);
+                    if (_dirty) continue;
+                }
+
+                string? url = null, error = null;
+                try
+                {
+                    string svg = SingleEye
+                        ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: false)
+                        : SvgExporter.GeneratePairSvg(Design, includePrintGuides: false, pairSpacingMm: PairSpacingMm);
+                    url = await PreviewInterop.LoadSvgAsync(svg);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+
+                if (_disposed)
+                {
+                    if (url != null) PreviewInterop.Revoke(url);
+                    return;
+                }
+                // A picture that could not be made leaves the last one on screen, with the reason below it
+                if (url != null) Show(url);
+                _error = error;
                 StateHasChanged();
             }
         }
         finally
         {
             _drawing = false;
-        }
-    }
-
-    private void Draw()
-    {
-        try
-        {
-            string svg = SingleEye
-                ? SvgExporter.GenerateSingleEyeSvg(Design, isRightEye: false)
-                : SvgExporter.GeneratePairSvg(Design, includePrintGuides: false, pairSpacingMm: PairSpacingMm);
-            Show(PreviewInterop.SvgUrl(svg));
-            _error = null;
-        }
-        catch (Exception ex)
-        {
-            Show(null);
-            _error = ex.Message;
         }
     }
 
@@ -165,6 +169,7 @@
 
     public void Dispose()
     {
+        _disposed = true;
         if (_previousUrl != null) PreviewInterop.Revoke(_previousUrl);
         if (_url != null) PreviewInterop.Revoke(_url);
         _previousUrl = _url = null;
