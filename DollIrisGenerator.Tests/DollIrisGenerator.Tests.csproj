@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DollIrisGenerator\DollIrisGenerator.csproj" />
+    <ProjectReference Include="..\DollIrisGenerator.Cli\DollIrisGenerator.Cli.csproj" />
   </ItemGroup>
 
 </Project>

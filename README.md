@@ -59,6 +59,14 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 - 「Windows によって PC が保護されました」と表示されたら、「詳細情報」→「実行」を押してください（署名していないアプリのため表示されます）
 - 新しい版に更新するときは、同じ手順で新しい zip をダウンロードして展開し直します。お気に入りは exe とは別の場所に保存されているので、そのまま引き継がれます
 
+### コマンドライン版（一括書き出し）
+デザインファイル（JSON）の検査と SVG の一括書き出しを、コマンドで行えます。同じ Releases ページの `DollIrisAtelier-vX.Y.Z-cli-win-x64.zip` を展開して使います（.NET のインストールは不要です）。
+```powershell
+.\DollIrisCli.exe validate my-design.json
+.\DollIrisCli.exe svg favorites.irisfav.json -o .\svg
+```
+描画はアプリと同じ数式で行い、画像生成 AI は使いません。通信もしません。使い方は `DollIrisCli.exe --help` と [USER_MANUAL.md](USER_MANUAL.md) の 5 章にあります。
+
 ---
 
 ## 🌟 主な機能と Section 20 拡張機能対応
@@ -126,10 +134,12 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 .\DollIrisGenerator\bin\Release\net10.0-windows\DollIrisGenerator.exe
 ```
 
-### CLI から起動
+### dotnet で起動
 ```powershell
 dotnet run --project .\DollIrisGenerator
 ```
+
+コマンドライン版は `dotnet run --project .\DollIrisGenerator.Cli -- --help` で動かせます。
 
 ---
 
@@ -151,15 +161,15 @@ dotnet test .\DollIrisGenerator.Tests
 dotnet build .\DollIrisGenerator --configuration Release
 ```
 
-デザインの計算と SVG 出力は WPF に依存しない `DollIrisGenerator.Core`（`net10.0`）にまとめてあり、アプリはそれを参照します（構成は [SPECIFICATION.md](SPECIFICATION.md) の 2.3）。
+デザインの計算と SVG 出力は WPF に依存しない `DollIrisGenerator.Core`（`net10.0`）にまとめてあり、アプリとコマンドライン版 `DollIrisGenerator.Cli` はそれを参照します（構成は [SPECIFICATION.md](SPECIFICATION.md) の 2.3）。
 
 ### リリース（GitHub Actions）
-`DollIrisGenerator.csproj` と `DollIrisGenerator.Web.csproj` の `<Version>` を上げて `main` に入れたら、そのコミットにバージョンのタグを付けて push します。
+`DollIrisGenerator.csproj`・`DollIrisGenerator.Web.csproj`・`DollIrisGenerator.Cli.csproj` の `<Version>` を上げて `main` に入れたら、そのコミットにバージョンのタグを付けて push します。
 ```powershell
 git tag v0.14.0
 git push origin v0.14.0
 ```
-`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.14.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
+`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.14.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）と、コマンドライン版の `DollIrisAtelier-v0.14.0-cli-win-x64.zip`（`DollIrisCli.exe` と LICENSE・NOTICE.md・README.md・DESIGN_JSON_FORMAT.md）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
 
 ### 配布用ファイルの作成（手元で作る場合）
 .NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに LICENSE・NOTICE.md・README.md・USER_MANUAL.md を加えて配布します。

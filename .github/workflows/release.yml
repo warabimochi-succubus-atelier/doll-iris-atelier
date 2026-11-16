@@ -1,10 +1,10 @@
 name: Release desktop version
 
-# Pushing a tag such as v0.11.0 builds the desktop app (WPF) and attaches
-# DollIrisAtelier-<tag>-win-x64.zip to a GitHub Release of that tag:
+# Pushing a tag such as v0.11.0 builds the desktop app (WPF) and the command line tool, and attaches
+# DollIrisAtelier-<tag>-win-x64.zip and DollIrisAtelier-<tag>-cli-win-x64.zip to a GitHub Release of that tag:
 #   git tag v0.11.0
 #   git push origin v0.11.0
-# The tag must match <Version> in DollIrisGenerator.csproj.
+# The tag must match <Version> in DollIrisGenerator.csproj (the tests check the CLI's <Version> matches it).
 
 on:
   push:
@@ -26,6 +26,7 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       TAG: ${{ github.ref_name }}
       PACKAGE: DollIrisAtelier-${{ github.ref_name }}-win-x64
+      CLI_PACKAGE: DollIrisAtelier-${{ github.ref_name }}-cli-win-x64
     defaults:
       run:
         shell: pwsh
@@ -73,7 +74,20 @@ jobs:
           Get-ChildItem "dist/$env:PACKAGE" | Format-Table Name, Length
           Compress-Archive -Path "dist/$env:PACKAGE" -DestinationPath "dist/$env:PACKAGE.zip"
 
-      # 0.x versions are pre-releases, like v0.9.0 and v0.10.0. Re-running replaces the zip of an existing release.
+      # The command line tool in its own zip, so the desktop download stays the same size (SPECIFICATION.md 23.6)
+      - name: Publish command line tool
+        run: >
+          dotnet publish DollIrisGenerator.Cli --configuration Release --runtime win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          --output "dist/$env:CLI_PACKAGE"
+
+      - name: Zip command line tool
+        run: |
+          Copy-Item LICENSE, NOTICE.md, README.md, docs/DESIGN_JSON_FORMAT.md "dist/$env:CLI_PACKAGE"
+          Get-ChildItem "dist/$env:CLI_PACKAGE" | Format-Table Name, Length
+          Compress-Archive -Path "dist/$env:CLI_PACKAGE" -DestinationPath "dist/$env:CLI_PACKAGE.zip"
+
+      # 0.x versions are pre-releases, like v0.9.0 and v0.10.0. Re-running replaces the zips of an existing release.
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -82,10 +96,10 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $false
           gh release view $env:TAG *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:TAG "dist/$env:PACKAGE.zip" --clobber
+            gh release upload $env:TAG "dist/$env:PACKAGE.zip" "dist/$env:CLI_PACKAGE.zip" --clobber
           } else {
             # @(...) keeps it an array: a one-item if result becomes a plain string, and @pre would then splat it char by char
             $pre = @(if ($env:TAG.StartsWith('v0.')) { '--prerelease' })
-            gh release create $env:TAG "dist/$env:PACKAGE.zip" --title $env:TAG --generate-notes --verify-tag @pre
+            gh release create $env:TAG "dist/$env:PACKAGE.zip" "dist/$env:CLI_PACKAGE.zip" --title $env:TAG --generate-notes --verify-tag @pre
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

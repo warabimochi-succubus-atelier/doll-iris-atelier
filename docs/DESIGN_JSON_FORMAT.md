@@ -381,6 +381,13 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 JSON を書き出せるプログラムなら何でも使えます。`Seed` や色を少しずつ変えたデザインを並べて `〇〇.irisfav.json` にまとめれば、一度に読み込んで見比べられます。
 
+コマンドライン版 `DollIrisCli` を使うと、作ったファイルをアプリを開かずに確かめたり、SVG にまとめて書き出したりできます（[USER_MANUAL.md](../USER_MANUAL.md) の 5 章）。
+
+```text
+DollIrisCli validate 〇〇.irisfav.json
+DollIrisCli svg 〇〇.irisfav.json -o svg
+```
+
 ### AI チャットに書いてもらう
 
 ChatGPT・Claude・Gemini などの AI チャットに、このページを渡して JSON を書いてもらうこともできます。AI が決めるのは数値と色だけで、絵を描くのはアプリです。
@@ -409,6 +416,8 @@ ChatGPT・Claude・Gemini などの AI チャットに、このページを渡�
 ---
 
 ## 7. うまくいかないとき
+
+`DollIrisCli validate 〇〇.json` を使うと、下のような誤りが項目の場所つきで一覧になります。
 
 | 症状 | 対処 |
 |---|---|

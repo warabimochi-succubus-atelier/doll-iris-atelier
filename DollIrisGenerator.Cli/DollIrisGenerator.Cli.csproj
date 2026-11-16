@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Command line tool of Doll Iris Atelier (SPECIFICATION.md 23): checks design JSON files and writes SVG, with the
+    same design core (DollIrisGenerator.Core) as the apps. No WPF, so it builds for any OS .NET runs on.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DollIrisGenerator.Cli</RootNamespace>
+    <AssemblyName>DollIrisCli</AssemblyName>
+    <!-- Keep in step with <Version> in DollIrisGenerator.csproj (VersionSyncTests checks it) -->
+    <Version>0.14.0</Version>
+    <Product>Doll Iris Atelier</Product>
+    <Title>Doll Iris Atelier CLI</Title>
+    <AssemblyTitle>Doll Iris Atelier CLI</AssemblyTitle>
+    <Authors>わらびもちサキュバス工房</Authors>
+    <Company>わらびもちサキュバス工房</Company>
+    <Copyright>© 2026 わらびもちサキュバス工房</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DollIrisGenerator.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
+  </ItemGroup>
+
+</Project>

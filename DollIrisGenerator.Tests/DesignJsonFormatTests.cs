@@ -51,6 +51,13 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestTemplatePassesTheValidator()
+        {
+            // DollIrisCli validate finds nothing to say about the template: every name known, every value in range
+            Assert.Empty(DesignFileValidator.Validate(TemplateJson()).Issues);
+        }
+
+        [Fact]
         public void TestSeveralDesignsLoadAsFavoritesList()
         {
             // The format's 「複数のデザイン」 shape: Name, Note and Parameters only (no Id or CreatedAt).
