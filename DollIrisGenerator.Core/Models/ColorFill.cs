@@ -296,6 +296,24 @@ namespace DollIrisGenerator.Models
             static int Lerp(int a, int z, double t) => (int)Math.Round(a + (z - a) * t);
         }
 
+        /// <summary>
+        /// This fill switched to another kind, keeping its colors (as the desktop app's 種類 box does):
+        /// a gradient keeps its stops; a solid color starts the gradient from itself (<see cref="DefaultGradientFrom"/>);
+        /// back to solid keeps the first (0 %) color. The angle means a direction of travel for linear but a starting
+        /// direction for conic, so switching to conic starts from the top and conic back to linear runs top to bottom.
+        /// </summary>
+        public ColorFill WithKind(ColorFillKind kind)
+        {
+            if (kind == Kind) return this;
+            if (kind == ColorFillKind.Solid) return Solid(PrimaryColor);
+            if (!IsGradient) return DefaultGradientFrom(PrimaryColor, kind);
+
+            double angle = Angle;
+            if (kind == ColorFillKind.Conic) angle = ConicDefaultAngle;
+            else if (Kind == ColorFillKind.Conic && kind == ColorFillKind.Linear) angle = DefaultAngle;
+            return new ColorFill(kind, angle, Stops);
+        }
+
         /// <summary>RGB of a hex color (alpha ignored); invalid input gives white.</summary>
         private static (int R, int G, int B) ToRgb(string hex)
         {

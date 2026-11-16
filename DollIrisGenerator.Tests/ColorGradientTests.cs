@@ -123,6 +123,35 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestChangingTheKindKeepsTheColors()
+        {
+            // Solid -> gradient starts from the current color
+            var linear = ColorFill.Parse("#0D47A1").WithKind(ColorFillKind.Linear);
+            Assert.Equal(ColorFillKind.Linear, linear.Kind);
+            Assert.Equal("#0D47A1", linear.Stops[0].Color);
+
+            // Gradient -> another gradient keeps every stop (not only the first color)
+            var edited = ColorFill.Parse("linear-gradient(45deg, #FF0000 0%, #00FF00 30%, #0000FF 100%)");
+            var radial = edited.WithKind(ColorFillKind.Radial);
+            Assert.Equal(ColorFillKind.Radial, radial.Kind);
+            Assert.Equal(edited.Stops, radial.Stops);
+
+            var conic = radial.WithKind(ColorFillKind.Conic);
+            Assert.Equal(edited.Stops, conic.Stops);
+            Assert.Equal(ColorFill.ConicDefaultAngle, conic.Angle);
+
+            var back = conic.WithKind(ColorFillKind.Linear);
+            Assert.Equal(edited.Stops, back.Stops);
+            Assert.Equal(ColorFill.DefaultAngle, back.Angle);
+
+            // Linear <-> radial keeps the linear angle
+            Assert.Equal(45.0, edited.WithKind(ColorFillKind.Radial).WithKind(ColorFillKind.Linear).Angle);
+
+            // Back to solid: the 0 % color
+            Assert.Equal("#FF0000", conic.WithKind(ColorFillKind.Solid).ToString());
+        }
+
+        [Fact]
         public void TestSingleColorHelpersUseTheFirstColorOfAGradient()
         {
             // A gradient in a solid-only setting (hand-edited file) must still give a valid color
