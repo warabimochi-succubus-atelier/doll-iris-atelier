@@ -323,6 +323,7 @@
                                 <Grid>
                                     <controls:IrisPreviewControl Parameters="{Binding Iris}"
                                                                  PreviewMode="Pair"
+                                                                 ShowItemMarkers="{Binding IsSelected}"
                                                                  ShowEyeLabels="{Binding DataContext.IsCompareSplit, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource InverseBoolConverter}}"
                                                                  ZoomScale="{Binding DataContext.PairZoomScale, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                  ShowCutLines="{Binding DataContext.ShowCutLines, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
