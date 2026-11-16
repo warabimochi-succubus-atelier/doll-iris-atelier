@@ -345,6 +345,7 @@
 | `DollIrisCli png design.json` | 🖼️ PNG ボタンと同じ透過 PNG を、1200 DPI で `design.png` に書き出します（`--dpi 600` などで変えられます） |
 | `DollIrisCli pdf favorites.irisfav.json` | お気に入りを 1 セットずつ並べた A4 PDF を書き出します（📄 A4 PDF 出力と同じ内容） |
 | `DollIrisCli pdf favorites.irisfav.json --template 1-4 --fill` | 1/4 ドール向けテンプレートで、最後のページの空きを数量の比率で埋めます |
+| `DollIrisCli template -o mine.json` | 全項目がそろったデザインの JSON（書き始めのひな形）を `mine.json` に書き出します。`--preset サクラ` でプリセットを当てはめ、`--list` でプリセットの一覧を出します |
 
 - `svg`・`png` は `--guides` でカットラインとセンターマーク、`--spacing 5` で左右の間隔（mm）を指定できます。
 - `pdf` のテンプレートは `standard`・`1-3`・`1-4`・`1-6`・`punch`（クラフトパンチ）・`trial`（カラー見本）です。`--pairs 3` でデザインごとのセット数を指定できます。A4 シートのファイルは、その設定と数量のまま PDF にします。
