@@ -343,17 +343,34 @@ namespace DollIrisGenerator.ViewModels
                 "虹彩お気に入りファイル (*.irisfav.json)|*.irisfav.json|JSON ファイル (*.json)|*.json",
                 "お気に入り一覧をファイルから読み込み");
             if (path == null) return;
+            ImportFavoritesFromFiles(new[] { path });
+        }
 
-            try
+        /// <summary>
+        /// Adds the favorites in each file (a favorites list or a single design, as with 📥 インポート) to the list.
+        /// Used by 📥 インポート and by dropping <c>.json</c> files on the window. A file that cannot be read is
+        /// reported and skipped; the others are still imported.
+        /// </summary>
+        public void ImportFavoritesFromFiles(IReadOnlyList<string> paths)
+        {
+            if (paths.Count == 0) return;
+
+            int addedCount = 0;
+            int readFiles = 0;
+            var notes = new List<string>();
+            var errors = new List<string>();
+            foreach (string path in paths)
             {
-                var loaded = FavoritesStore.ReadImportFile(path, out string? singleDesignJson);
-                if (loaded != null)
+                try
                 {
+                    var loaded = FavoritesStore.ReadImportFile(path, out string? singleDesignJson);
+                    if (loaded == null) continue;
+                    readFiles++;
                     // A single design saved by an older version may hold an eye-sized value such as 24 mm: say it was clamped
                     string? sizeNote = singleDesignJson != null && loaded.Count == 1
                         ? DesignFileWorkflow.DescribeSizeAdjustment(singleDesignJson, loaded[0].Parameters.SizeMm)
                         : null;
-                    int addedCount = 0;
+                    if (sizeNote != null) notes.Add(paths.Count == 1 ? sizeNote : $"{Path.GetFileName(path)}: {sizeNote}");
                     foreach (var fav in loaded)
                     {
                         if (fav != null && fav.Parameters != null && !Favorites.Any(x => x.Id == fav.Id))
@@ -362,14 +379,25 @@ namespace DollIrisGenerator.ViewModels
                             addedCount++;
                         }
                     }
-                    SaveFavorites();
-                    StatusMessage = $"お気に入りファイルから {addedCount} 件を読み込みました。" +
-                                    (sizeNote == null ? "" : $" ({sizeNote})");
+                }
+                catch (Exception ex)
+                {
+                    errors.Add(paths.Count == 1 ? ex.Message : $"{Path.GetFileName(path)}: {ex.Message}");
                 }
             }
-            catch (Exception ex)
+
+            if (readFiles > 0)
             {
-                _dialogs.ShowError($"読み込みエラー: {ex.Message}", "エラー");
+                SaveFavorites();
+                string source = paths.Count == 1 ? "お気に入りファイル" : $"{readFiles} 個のファイル";
+                StatusMessage = $"{source}から {addedCount} 件を読み込みました。" +
+                                (notes.Count == 0 ? "" : $" ({string.Join(" / ", notes)})");
+            }
+            if (errors.Count > 0)
+            {
+                _dialogs.ShowError(errors.Count == 1 && paths.Count == 1
+                    ? $"読み込みエラー: {errors[0]}"
+                    : "読み込みエラー: 次のファイルは読み込めませんでした。\n\n" + string.Join("\n", errors), "エラー");
             }
         }
     }

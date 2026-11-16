@@ -13,7 +13,11 @@
         Height="880" Width="1440" MinWidth="1100" MinHeight="700"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgDark}"
-        Foreground="{StaticResource TextPrimary}">
+        Foreground="{StaticResource TextPrimary}"
+        AllowDrop="True"
+        PreviewDragEnter="OnWindowPreviewDragOver"
+        PreviewDragOver="OnWindowPreviewDragOver"
+        PreviewDrop="OnWindowPreviewDrop">
 
     <Window.DataContext>
         <vm:MainViewModel/>

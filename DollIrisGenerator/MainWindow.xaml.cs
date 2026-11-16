@@ -79,6 +79,30 @@ namespace DollIrisGenerator
         private static void ShowFavoriteName(System.Windows.Controls.TextBox box) =>
             box.GetBindingExpression(System.Windows.Controls.TextBox.TextProperty)?.UpdateTarget();
 
+        // Design / favorites JSON files dropped anywhere on the window are added to the favorites (same as 📥 インポート).
+        // Preview events: text boxes would otherwise take the drag and refuse files.
+        private void OnWindowPreviewDragOver(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            e.Effects = DroppedJsonFiles(e).Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void OnWindowPreviewDrop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            e.Handled = true;
+            var files = DroppedJsonFiles(e);
+            if (files.Count == 0 || DataContext is not MainViewModel vm) return;
+            Activate();
+            vm.ImportFavoritesFromFiles(files);
+        }
+
+        private static List<string> DroppedJsonFiles(DragEventArgs e) =>
+            (e.Data.GetData(DataFormats.FileDrop) as string[] ?? Array.Empty<string>())
+                .Where(path => path.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(path))
+                .ToList();
+
         private void OnAboutClick(object sender, RoutedEventArgs e) =>
             new Views.AboutWindow { Owner = this }.ShowDialog();
 
