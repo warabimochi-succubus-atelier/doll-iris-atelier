@@ -70,6 +70,7 @@ namespace DollIrisGenerator.Cli
                     "svg" => Svg(rest, stdout, stderr),
                     "png" => Png(rest, stdout, stderr),
                     "pdf" => Pdf(rest, stdout, stderr),
+                    "template" => Template(rest, stdout, stderr),
                     _ => Usage(stderr, $"知らないコマンドです: {args[0]}")
                 };
             }
@@ -385,6 +386,121 @@ namespace DollIrisGenerator.Cli
             return PdfTemplatePreset.All.First(p => p.Type == type);
         }
 
+        // ---- template: a design file to start from ----
+
+        private static int Template(string[] args, TextWriter stdout, TextWriter stderr)
+        {
+            string? output = null, presetName = null;
+            bool favorites = false, force = false;
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                switch (arg)
+                {
+                    case "--help" or "-h":
+                        stdout.Write(HelpText);
+                        return ExitOk;
+                    case "--list":
+                        for (int n = 0; n < ColorPresets.All.Count; n++)
+                            stdout.WriteLine($"{n + 1,3}  {ColorPresets.All[n].Name}  — {ColorPresets.All[n].Description}");
+                        return ExitOk;
+                    case "-o" or "--output":
+                        output = Value(args, ref i);
+                        break;
+                    case "--preset":
+                        presetName = Value(args, ref i);
+                        break;
+                    case "--favorites":
+                        favorites = true;
+                        break;
+                    case "--force":
+                        force = true;
+                        break;
+                    default:
+                        throw new UsageException(arg.StartsWith('-')
+                            ? $"template に {arg} という指定はありません"
+                            : $"template は入力ファイルを取りません: {arg}（書き出し先は -o で指定します）");
+                }
+            }
+
+            string json = TemplateJson(presetName == null ? null : FindPreset(presetName), favorites);
+            if (output == null || output == "-")
+            {
+                stdout.Write(json);
+                return ExitOk;
+            }
+
+            string path = Directory.Exists(output) || EndsWithSeparator(output)
+                ? Path.Combine(output, favorites ? "template.irisfav.json" : "template.json")
+                : output;
+            if (!CheckOverwrite([path], force, stderr)) return ExitError;
+            if (!TryWrite(path, temp => File.WriteAllText(temp, json), stderr)) return ExitError;
+            stdout.WriteLine(path);
+            return ExitOk;
+        }
+
+        /// <summary>
+        /// A design with every saved field written out (SPECIFICATION.md 23.8): the app's defaults, or a built-in
+        /// preset applied to them as 🎨 プリセットを適用 does. Symbols and highlights have no Id (a file without
+        /// one gets a new one when loaded), so copies of the file never share Ids.
+        /// </summary>
+        internal static string TemplateJson(PresetDefinition? preset, bool favorites)
+        {
+            var p = new IrisParameters();
+            if (preset != null)
+            {
+                ColorPresets.ApplyPreset(p, preset);
+                p.Name = preset.Name;
+            }
+
+            var design = System.Text.Json.JsonSerializer.SerializeToNode(p)!.AsObject();
+            foreach (var list in new[] { nameof(IrisParameters.Symbols), nameof(IrisParameters.Highlights) })
+            {
+                if (design[list] is System.Text.Json.Nodes.JsonArray items)
+                    foreach (var item in items) (item as System.Text.Json.Nodes.JsonObject)?.Remove("Id");
+            }
+
+            System.Text.Json.Nodes.JsonNode root = favorites
+                ? new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject
+                {
+                    ["Name"] = p.Name,
+                    ["Note"] = "",
+                    ["Parameters"] = design
+                })
+                : design;
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                // Japanese names stay readable instead of \uXXXX
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            return root.ToJsonString(options) + Environment.NewLine;
+        }
+
+        /// <summary>A built-in preset by its number in <c>template --list</c>, its full name, or a unique part of it.</summary>
+        internal static PresetDefinition FindPreset(string name)
+        {
+            var all = ColorPresets.All;
+            if (int.TryParse(name, NumberStyles.None, Inv, out int number))
+            {
+                if (number >= 1 && number <= all.Count) return all[number - 1];
+                throw new UsageException($"プリセットの番号は 1〜{all.Count} です（一覧は DollIrisCli template --list）: {name}");
+            }
+
+            var exact = all.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (exact != null) return exact;
+
+            var matches = all.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
+            return matches.Count switch
+            {
+                1 => matches[0],
+                0 => throw new UsageException($"プリセットが見つかりません（一覧は DollIrisCli template --list）: {name}"),
+                _ => throw new UsageException($"「{name}」に合うプリセットが複数あります。番号か名前で指定してください: " +
+                                              string.Join(" / ", matches.Select(p => $"{all.ToList().IndexOf(p) + 1} {p.Name}")))
+            };
+        }
+
         // ---- shared ----
 
         /// <summary>A design name usable in a file name on any OS: no path characters, not too long.</summary>
@@ -571,6 +687,12 @@ namespace DollIrisGenerator.Cli
                   --pairs <数>           デザインごとのセット数（既定 1、1〜{SheetItem.MaxPairCount}。A4 シートのファイルには使えない）
                   --fill                 最後のページの空きを、数量の比率で埋める（⚡ A4を満杯に自動配置）
                   --allow-overflow       用紙からはみ出す配置でも書き出す（既定は書き出さない）
+
+              DollIrisCli template [--preset <名前|番号>] [--favorites] [-o <出力先>] [--force]
+                  全項目がそろったデザインの JSON を出します（書き始めのひな形。省略すると標準出力）。
+                  --preset <名前|番号>   アプリの虹彩プリセットを当てはめる（例: --preset サクラ、--preset 6）
+                  --list                 プリセットの番号と名前の一覧を出す
+                  --favorites            お気に入りの一覧（.irisfav.json）の形で出す
 
               共通:
                   --force                すでにあるファイルを上書きする

@@ -60,11 +60,12 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 - 新しい版に更新するときは、同じ手順で新しい zip をダウンロードして展開し直します。お気に入りは exe とは別の場所に保存されているので、そのまま引き継がれます
 
 ### コマンドライン版（一括書き出し）
-デザインファイル（JSON）の検査と、SVG・PNG・A4 PDF の一括書き出しを、コマンドで行えます（Windows 用）。同じ Releases ページの `DollIrisAtelier-vX.Y.Z-cli-win-x64.zip` を展開して使います（.NET のインストールは不要です）。
+デザインファイル（JSON）のひな形作りと検査、SVG・PNG・A4 PDF の一括書き出しを、コマンドで行えます（Windows 用）。同じ Releases ページの `DollIrisAtelier-vX.Y.Z-cli-win-x64.zip` を展開して使います（.NET のインストールは不要です）。
 ```powershell
 .\DollIrisCli.exe validate my-design.json
 .\DollIrisCli.exe svg favorites.irisfav.json -o .\svg
 .\DollIrisCli.exe pdf favorites.irisfav.json --template 1-4
+.\DollIrisCli.exe template --preset サクラ -o sakura.json
 ```
 描画はアプリと同じ数式・同じ処理で行い（出力はアプリと同じになります）、画像生成 AI は使いません。通信もしません。使い方は `DollIrisCli.exe --help` と [USER_MANUAL.md](USER_MANUAL.md) の 5 章にあります。
 
