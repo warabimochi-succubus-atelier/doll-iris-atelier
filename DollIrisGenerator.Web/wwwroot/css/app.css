@@ -319,6 +319,12 @@ input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid v
     border-bottom: 1px solid var(--border);
 }
 .favorite .thumb img { width: 56px; height: 56px; }
+/* Odd eyes: both eyes overlapping in the same 56px box */
+.thumb-odd { position: relative; width: 56px; height: 56px; }
+.thumb-odd .thumb { position: absolute; margin: 0; }
+.thumb-odd .thumb-left { left: 0; top: 0; }
+.thumb-odd .thumb-right { right: 0; bottom: 0; }
+.favorite .thumb-odd .thumb img { width: 44px; height: 44px; display: block; }
 .favorite-text { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
 .favorite-text .field-hint { margin: 0; }
 /* The name is edited in place; the box keeps its border so it reads as editable on touch screens too */

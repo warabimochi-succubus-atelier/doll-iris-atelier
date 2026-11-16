@@ -37,7 +37,18 @@
         @foreach (var item in Favorites.Items)
         {
             <li @key="item.Id" class="favorite">
-                <IrisPreview Design="item.Parameters" SingleEye="true" Class="thumb" />
+                @if (item.Parameters.IsOddEye)
+                {
+                    @* Both eyes overlapping (left top-left, right bottom-right), so odd eyes can be told apart *@
+                    <div class="thumb-odd" title="オッドアイ (左上: 左目 / 右下: 右目)">
+                        <IrisPreview Design="item.Parameters" SingleEye="true" Class="thumb thumb-left" />
+                        <IrisPreview Design="item.Parameters" SingleEye="true" RightEye="true" Class="thumb thumb-right" />
+                    </div>
+                }
+                else
+                {
+                    <IrisPreview Design="item.Parameters" SingleEye="true" Class="thumb" />
+                }
                 <div class="favorite-text">
                     @* Saved when the box loses focus or on Enter (change event); an empty name puts the old one back *@
                     <input @key="(item.Id, _nameResets)" class="favorite-name" type="text" value="@item.Name" maxlength="100"
