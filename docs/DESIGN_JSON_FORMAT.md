@@ -216,6 +216,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Opacity` | 0〜1 | |
 | `Rotation` | -180〜180（度） | |
 | `CornerRounding` | 0〜1 | |
+| `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。図形の中心から上・下・左・右の半分ずつを伸び縮みさせる（1.0 でそのまま）。右目では左右が入れ替わり鏡像になる。例: 4芒星で上 0.7・下 1.3・左右 0.6 にすると、下の長いとがった十字になる |
 | `Enabled` | true / false | `false` にすると描かずに設定だけ残します（画面の「有効」「表示する」のチェックを外したのと同じ） |
 | `Blend` | 重ね方 | |
 
@@ -333,6 +334,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
       "Opacity": 0.85,
       "Rotation": 0.0,
       "CornerRounding": 0.0,
+      "StretchTop": 1.0,
+      "StretchBottom": 1.0,
+      "StretchLeft": 1.0,
+      "StretchRight": 1.0,
       "Enabled": true,
       "Blend": 0
     }

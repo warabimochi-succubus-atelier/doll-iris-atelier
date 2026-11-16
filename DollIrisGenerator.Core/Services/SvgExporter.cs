@@ -753,9 +753,16 @@ namespace DollIrisGenerator.Services
                     // is blended with the iris below
                     sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToFixed(2)}""{BlendStyle(symbol.Blend)}>");
 
-                    // Same outline as the screen / PDF renderer; rounded once and reused for every copy
-                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?.Rounded(symbol.CornerRounding);
+                    // Same outline as the screen / PDF renderer; rounded, then stretched (上下左右の長さ), once for every copy.
+                    // The right eye is the mirror image: the moon is mirrored as a whole after stretching, the other
+                    // symbols are drawn as they are, so their left and right lengths trade places
                     bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
+                    bool swapSides = isRightEye && !mirror;
+                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?
+                        .Rounded(symbol.CornerRounding)
+                        .Stretched(symbol.StretchTop, symbol.StretchBottom,
+                            swapSides ? symbol.StretchRight : symbol.StretchLeft,
+                            swapSides ? symbol.StretchLeft : symbol.StretchRight);
                     Rect symBounds = symOutline?.GetBounds(mirror) ?? Rect.Empty;
 
                     for (int c = 0; c < symbol.Count; c++)
