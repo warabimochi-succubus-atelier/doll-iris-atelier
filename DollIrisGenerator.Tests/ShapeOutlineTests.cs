@@ -241,6 +241,143 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestCrossIsALatinCrossWithTheLongArmBelow()
+        {
+            var cross = ShapeOutline.Cross(50.0);
+            var box = cross.GetBounds();
+            Assert.Equal(-32.5, box.Left, 6);
+            Assert.Equal(32.5, box.Right, 6);
+            Assert.Equal(-50.0, box.Top, 6);
+            Assert.Equal(50.0, box.Bottom, 6);
+
+            // The crossbar is the widest part; it sits above the center, so the lower arm is the long one
+            var bar = cross.Flatten().Where(p => Math.Abs(Math.Abs(p.X) - 32.5) < 1e-9).ToList();
+            Assert.Equal(4, bar.Count);
+            double barCenter = bar.Average(p => p.Y);
+            Assert.Equal(-20.0, barCenter, 6);
+            Assert.True(box.Bottom - barCenter > 2.0 * (barCenter - box.Top));
+        }
+
+        public static IEnumerable<object[]> StretchCases()
+        {
+            foreach (var row in AllCorneredShapes())
+            {
+                yield return new object[] { row[0], 0.7, 1.3, 0.6, 0.6 };
+                yield return new object[] { row[0], 2.0, 0.5, 1.5, 0.5 };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(StretchCases))]
+        public void TestStretchedOutlinesStayClosedAndSimple(string name, double top, double bottom, double left, double right)
+        {
+            foreach (double rounding in new[] { 0.0, 0.5, 1.0 })
+            {
+                var rounded = Build(name).Rounded(rounding);
+                var stretched = rounded.Stretched(top, bottom, left, right);
+                Assert.Equal(stretched.Start.X, stretched.Segments[^1].End.X, 9);
+                Assert.Equal(stretched.Start.Y, stretched.Segments[^1].End.Y, 9);
+
+                var pts = stretched.Flatten(48);
+                Assert.Null(FindSelfIntersection(pts));
+                Assert.Equal(Math.Sign(SignedArea(rounded.Flatten(48))), Math.Sign(SignedArea(pts)));
+
+                // Each side of the box moves out by its own length (the box is sampled: allow 1% of the size)
+                var before = rounded.GetBounds();
+                var after = stretched.GetBounds();
+                // An edge on the far side of the center (rounded moon horns) moves by that side's length
+                double tolerance = 0.01 * 50.0;
+                double X(double edge) => edge * (edge < 0 ? left : right);
+                double Y(double edge) => edge * (edge < 0 ? top : bottom);
+                Assert.Equal(Y(before.Top), after.Top, tolerance);
+                Assert.Equal(Y(before.Bottom), after.Bottom, tolerance);
+                Assert.Equal(X(before.Left), after.Left, tolerance);
+                Assert.Equal(X(before.Right), after.Right, tolerance);
+            }
+        }
+
+        [Fact]
+        public void TestStretchingByOneKeepsTheOutlineAndPointsMoveExactly()
+        {
+            var star = ShapeOutline.Star(4, 50.0, 0.28);
+            Assert.Same(star, star.Stretched(1, 1, 1, 1));
+
+            // 4芒星 → とがった十字: the tips land exactly on the stretched lengths
+            var pts = star.Stretched(0.7, 1.3, 0.6, 0.6).Flatten();
+            Assert.Contains(pts, p => Math.Abs(p.X) < 1e-9 && Math.Abs(p.Y + 35.0) < 1e-9);
+            Assert.Contains(pts, p => Math.Abs(p.X) < 1e-9 && Math.Abs(p.Y - 65.0) < 1e-9);
+            Assert.Contains(pts, p => Math.Abs(p.X + 30.0) < 1e-9 && Math.Abs(p.Y) < 1e-9);
+            Assert.Contains(pts, p => Math.Abs(p.X - 30.0) < 1e-9 && Math.Abs(p.Y) < 1e-9);
+        }
+
+        /// <summary>Box of the first path inside the symbol group, relative to the iris center (the symbol sits there).</summary>
+        private static Rect SymbolPathBox(string svg, string groupId)
+        {
+            int group = svg.IndexOf($"<g id=\"{groupId}\"", StringComparison.Ordinal);
+            Assert.True(group >= 0, groupId);
+            int at = svg.IndexOf("<path d=\"", group, StringComparison.Ordinal) + 9;
+            string d = svg.Substring(at, svg.IndexOf('"', at) - at);
+            var numbers = System.Text.RegularExpressions.Regex.Matches(d, @"-?\d+(\.\d+)?")
+                .Select(m => double.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+            var xs = numbers.Where((_, i) => i % 2 == 0).ToList();
+            var ys = numbers.Where((_, i) => i % 2 == 1).ToList();
+            return new Rect(xs.Min(), ys.Min(), xs.Max() - xs.Min(), ys.Max() - ys.Min());
+        }
+
+        [Fact]
+        public void TestRightEyeSymbolIsTheMirrorImageOfTheStretchedLeftOne()
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            p.Symbols.Clear();
+            p.Symbols.Add(new DecorativeSymbolItem
+            {
+                Type = SymbolType.Star4, Size = 0.3, PositionX = 0.1, PositionY = 0, Enabled = true,
+                StretchLeft = 2.0, StretchRight = 0.5
+            });
+            // An unstretched diamond at the same place marks the symbol's center
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Diamond, Size = 0.1, PositionX = 0.1, PositionY = 0, Enabled = true });
+
+            foreach (bool isRightEye in new[] { false, true })
+            {
+                string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+                string eye = isRightEye ? "eye_right" : "eye_left";
+                var star = SymbolPathBox(svg, $"{eye}_symbol_Star4");
+                var mark = SymbolPathBox(svg, $"{eye}_symbol_Diamond");
+                double center = (mark.Left + mark.Right) / 2.0;
+                double toLeft = center - star.Left, toRight = star.Right - center;
+                // Left eye: 4 times as far to the left as to the right; the right eye is its mirror image
+                Assert.Equal(isRightEye ? 0.25 : 4.0, toLeft / toRight, 1);
+            }
+        }
+
+        [Fact]
+        public void TestStretchIsSavedClonedClampedAndCoveredByTheMarker()
+        {
+            var s = new DecorativeSymbolItem { StretchTop = 0.7, StretchBottom = 1.3, StretchLeft = 0.6, StretchRight = 9.0 };
+            Assert.Equal(3.0, s.StretchRight); // pulled into range
+            s.StretchRight = double.NaN;
+            Assert.Equal(1.0, s.StretchRight);
+
+            var reloaded = JsonSerializer.Deserialize<DecorativeSymbolItem>(JsonSerializer.Serialize(s))!;
+            Assert.Equal((0.7, 1.3, 0.6, 1.0), (reloaded.StretchTop, reloaded.StretchBottom, reloaded.StretchLeft, reloaded.StretchRight));
+            var clone = s.Clone();
+            Assert.Equal((0.7, 1.3, 0.6, 1.0), (clone.StretchTop, clone.StretchBottom, clone.StretchLeft, clone.StretchRight));
+            Assert.DoesNotContain("MaxStretch", JsonSerializer.Serialize(s));
+
+            // Missing in a file: as drawn
+            var old = JsonSerializer.Deserialize<DecorativeSymbolItem>("{\"Type\":1}")!;
+            Assert.Equal((1.0, 1.0, 1.0, 1.0), (old.StretchTop, old.StretchBottom, old.StretchLeft, old.StretchRight));
+
+            // The selection ring reaches as far as the longest length
+            var p = new IrisParameters();
+            p.Symbols.Clear();
+            p.Symbols.Add(new DecorativeSymbolItem { Size = 0.2, Enabled = true, IsSelected = true });
+            double plain = ItemMarkers.ForEye(p, false, null)[0].Radius;
+            p.Symbols[0].StretchBottom = 2.0;
+            Assert.True(ItemMarkers.ForEye(p, false, null)[0].Radius > plain * 1.8);
+        }
+
+        [Fact]
         public void TestMoreRoundingPullsTheStarTipsInSteadily()
         {
             double previousTip = double.MaxValue;

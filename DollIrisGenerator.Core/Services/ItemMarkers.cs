@@ -41,8 +41,9 @@ namespace DollIrisGenerator.Services
                 var s = p.Symbols[i];
                 bool hovered = hoveredId != null && s.Id == hoveredId;
                 if (!s.IsSelected && !hovered) continue;
-                double r = baseR * s.Size;
-                if (s.Count > 1) r *= 1.0 + 1.4; // the copies sit on a ring of radius size × 1.4 round the position
+                // A stretched shape (上下左右の長さ) reaches up to its longest length × size from its center;
+                // the copies sit on a ring of radius size × 1.4 round the position
+                double r = baseR * s.Size * (s.MaxStretch + (s.Count > 1 ? 1.4 : 0.0));
                 result.Add(Make(MarkedItemKind.Symbol, i + 1, isRightEye ? -s.PositionX : s.PositionX, s.PositionY, r, hovered));
             }
 

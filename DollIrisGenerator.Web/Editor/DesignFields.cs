@@ -18,6 +18,11 @@ public static class DesignFields
         new("透明度", t => 1.0 - getOpacity(t), (t, v) => setOpacity(t, Math.Round(1.0 - v, 4)), 0, 1, 0.01, Fmt.Percent,
             "上げるほど透けます (0% で不透明、100% で見えない)");
 
+    /// <summary>One of a symbol's 上下左右の長さ (the same range as the desktop app's sliders).</summary>
+    private static SliderField<DecorativeSymbolItem> Stretch(string label, Func<DecorativeSymbolItem, double> get, Action<DecorativeSymbolItem, double> set) =>
+        new(label, get, set, DecorativeSymbolItem.MinStretchSlider, DecorativeSymbolItem.MaxStretchSlider, 0.01, Fmt.Percent,
+            "図形の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。右目では左右が入れ替わり、鏡像になります");
+
     public static readonly IReadOnlyList<Field<IrisParameters>> Basic = new Field<IrisParameters>[]
     {
         new TextField<IrisParameters>("デザイン名", p => p.Name, (p, v) => p.Name = v),
@@ -163,6 +168,10 @@ public static class DesignFields
         new SliderField<DecorativeSymbolItem>("位置 Y (縦)", s => s.PositionY, (s, v) => s.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<DecorativeSymbolItem>("回転角度", s => s.Rotation, (s, v) => s.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<DecorativeSymbolItem>("角の丸み", s => s.CornerRounding, (s, v) => s.CornerRounding = v, 0, 1, 0.01, Fmt.Percent),
+        Stretch("上の長さ", s => s.StretchTop, (s, v) => s.StretchTop = v),
+        Stretch("下の長さ", s => s.StretchBottom, (s, v) => s.StretchBottom = v),
+        Stretch("左の長さ", s => s.StretchLeft, (s, v) => s.StretchLeft = v),
+        Stretch("右の長さ", s => s.StretchRight, (s, v) => s.StretchRight = v),
         Transparency<DecorativeSymbolItem>(s => s.Opacity, (s, v) => s.Opacity = v),
         new ChoiceField<DecorativeSymbolItem>("重ね方", s => s.Blend, (s, v) => s.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
@@ -214,7 +223,7 @@ public static class DesignFields
 
     /// <summary>The look of the symbols 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
-        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "透明度", "重ね方");
+        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>The look of the highlights 並べて追加 makes (縦横比 for the oval).</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
