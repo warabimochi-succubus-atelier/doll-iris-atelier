@@ -97,6 +97,120 @@ namespace DollIrisGenerator.Tests
             }
         }
 
+        public static TheoryData<double, double, double, string, int> NebulaCases => new()
+        {
+            { 1.2, 0.5, 0.0, IrisParameters.DefaultNebulaColor, 12345 },
+            { IrisParameters.MinNebulaScale, 0.0, -1.0, "#80FF00AA", 1 },
+            { IrisParameters.MaxNebulaScale, 1.0, 1.0, "#B388FF", 987654 },
+            { 1.68, 0.52, -0.19, "radial-gradient(#FFFFFF 0%, #3050FF 100%)", 264374 },
+            { 2.3, 0.8, 0.45, "linear-gradient(30deg, #FF80AB 0%, #40C4FF 100%)", -7 },
+        };
+
+        [Theory]
+        [MemberData(nameof(NebulaCases))]
+        public void TestNebulaPixelsMatchTheStraightforwardCode(double scale, double density, double swirl, string color, int seed)
+        {
+            var p = new IrisParameters { NebulaOpacity = 0.8, NebulaScale = scale, NebulaDensity = density, NebulaSwirl = swirl, NebulaColor = color };
+            var reference = ReferenceNebula(p, seed);
+            Assert.Equal(reference, NebulaTexture.Rgba(p, seed, false));
+
+            // The right eye: the same pixels, each row the other way round
+            int n = NebulaTexture.Resolution;
+            var mirrored = new byte[reference.Length];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                    Array.Copy(reference, (y * n + n - 1 - x) * 4, mirrored, (y * n + x) * 4, 4);
+            Assert.Equal(mirrored, NebulaTexture.Rgba(p, seed, true));
+
+            // Another amount and color over the same clouds (the cloud shape is reused for these)
+            p.NebulaDensity = 1.0 - density;
+            p.NebulaColor = "#4000FFCC";
+            Assert.Equal(ReferenceNebula(p, seed), NebulaTexture.Rgba(p, seed, false));
+        }
+
+        // ---- NebulaTexture.Generate as it was written first (one call per noise sample) ----
+
+        private static byte[] ReferenceNebula(IrisParameters p, int seed)
+        {
+            int n = NebulaTexture.Resolution;
+            var px = new byte[n * n * 4];
+            uint s = unchecked((uint)(seed + 4000));
+            var fill = ColorFill.Parse(p.NebulaColor);
+            var colorAt = fill.IsGradient ? GradientMapping.Create(fill, new Rect(-1, -1, 2, 2)).ArgbSampler() : null;
+            (int A, int R, int G, int B) solid = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.NebulaColor, "#B388FF"));
+            double freq = 2.2 * p.NebulaScale;
+            double center = 0.66 - 0.32 * p.NebulaDensity;
+            const double Soft = 0.2;
+            double twist = p.NebulaSwirl * 2.6;
+            for (int y = 0; y < n; y++)
+            {
+                double v = (y + 0.5) / n * 2.0 - 1.0;
+                for (int x = 0; x < n; x++)
+                {
+                    double u = (x + 0.5) / n * 2.0 - 1.0;
+                    double r = Math.Sqrt(u * u + v * v);
+                    double ang = Math.Atan2(v, u) + twist * r;
+                    double su = r * Math.Cos(ang), sv = r * Math.Sin(ang);
+                    double wx = RefFbm(su * freq + 5.2, sv * freq + 1.3, s ^ 0x9E3779B9u);
+                    double wy = RefFbm(su * freq + 1.7, sv * freq + 9.2, s ^ 0x85EBCA6Bu);
+                    double cloud = RefFbm(su * freq + 1.6 * wx, sv * freq + 1.6 * wy, s);
+                    double t = RefSmoothStep(center - Soft, center + Soft, cloud);
+                    t *= 1.0 - RefSmoothStep(0.88, 1.0, r);
+                    var c = colorAt != null ? colorAt(new Point(u, v)) : solid;
+                    int i = (y * n + x) * 4;
+                    px[i] = (byte)c.R;
+                    px[i + 1] = (byte)c.G;
+                    px[i + 2] = (byte)c.B;
+                    px[i + 3] = (byte)Math.Clamp((int)Math.Round(c.A * t), 0, 255);
+                }
+            }
+            return px;
+        }
+
+        private static double RefSmoothStep(double a, double b, double x)
+        {
+            double t = Math.Clamp((x - a) / (b - a), 0.0, 1.0);
+            return t * t * (3.0 - 2.0 * t);
+        }
+
+        private static double RefFbm(double x, double y, uint seed)
+        {
+            double sum = 0, amp = 0.5, norm = 0;
+            for (int o = 0; o < 5; o++)
+            {
+                sum += amp * RefValueNoise(x, y, seed + (uint)o * 0x632BE5ABu);
+                norm += amp;
+                amp *= 0.5;
+                x *= 2.03;
+                y *= 2.03;
+            }
+            return sum / norm;
+        }
+
+        private static double RefValueNoise(double x, double y, uint seed)
+        {
+            int xi = (int)Math.Floor(x), yi = (int)Math.Floor(y);
+            double fx = x - xi, fy = y - yi;
+            double ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+            double a = RefHash(xi, yi, seed), b = RefHash(xi + 1, yi, seed);
+            double c = RefHash(xi, yi + 1, seed), d = RefHash(xi + 1, yi + 1, seed);
+            return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+        }
+
+        private static double RefHash(int x, int y, uint seed)
+        {
+            unchecked
+            {
+                uint h = (uint)x * 0x8DA6B343u ^ (uint)y * 0xD8163841u ^ seed * 0xCB1AB31Fu;
+                h ^= h >> 15;
+                h *= 0x2C1B3C6Du;
+                h ^= h >> 12;
+                h *= 0x297A2D39u;
+                h ^= h >> 15;
+                return (h & 0xFFFFFF) / 16777215.0;
+            }
+        }
+
         [Fact]
         public void TestNebulaPngBase64IsTheEncodedPng()
         {
