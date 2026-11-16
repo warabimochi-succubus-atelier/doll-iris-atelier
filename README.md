@@ -71,7 +71,7 @@ PNG (600 / 1200 DPI) and SVG export are also available for use in other tools. T
 
 ---
 
-## 🌟 主な機能と Section 20 拡張機能対応
+## 🌟 主な機能
 
 ### 1. 楕円虹彩対応 (Support for Elliptical Irises)
 - 正円（Circle）、縦長楕円（Vertical Oval）、横長楕円（Horizontal Oval）に対応。
@@ -171,10 +171,10 @@ dotnet build .\DollIrisGenerator --configuration Release
 git tag v0.16.0
 git push origin v0.16.0
 ```
-`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.16.0-win-x64.zip`（exe 1 つと LICENSE・NOTICE.md・README.md・USER_MANUAL.md）と、コマンドライン版の `DollIrisAtelier-v0.16.0-cli-win-x64.zip`（`DollIrisCli.exe` と LICENSE・NOTICE.md・README.md・DESIGN_JSON_FORMAT.md・resvg のライセンス）を、そのタグの GitHub Release に添付します。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
+`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.16.0-win-x64.zip`（`DollIrisGenerator.exe`）と、コマンドライン版の `DollIrisAtelier-v0.16.0-cli-win-x64.zip`（`DollIrisCli.exe`）を、そのタグの GitHub Release に添付します。どちらの zip にも、exe と同じ文書（利用者向けの [docs/README_DIST.md](docs/README_DIST.md) を `README.md` として、USER_MANUAL.md、docs/DESIGN_JSON_FORMAT.md、LICENSE、NOTICE.md、`third_party/resvg/` の resvg のライセンス）が入ります。文書はリポジトリと同じ配置にするので、文書の間のリンクは zip の中でもつながります。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
 
 ### 配布用ファイルの作成（手元で作る場合）
-.NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに LICENSE・NOTICE.md・README.md・USER_MANUAL.md を加えて配布します。
+.NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに、リリースの zip と同じ文書（`release.yml` の Zip の手順を参照）を加えて配布します。
 ```powershell
 dotnet publish .\DollIrisGenerator --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none --output .\dist\DollIrisAtelier
 ```

@@ -64,14 +64,19 @@ jobs:
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none
           --output "dist/$env:PACKAGE"
 
-      # Same layout as the earlier releases: a folder with the exe and the documents
+      # A folder with the exe and the documents. The documents keep their places in the repository
+      # (USER_MANUAL.md at the top, DESIGN_JSON_FORMAT.md in docs/), so the links between them work in the zip too.
+      # README.md is the one for users (docs/README_DIST.md), not the repository's one with the build steps.
       - name: Zip
         run: |
-          Copy-Item LICENSE, NOTICE.md, README.md, USER_MANUAL.md "dist/$env:PACKAGE"
+          Copy-Item LICENSE, NOTICE.md, USER_MANUAL.md "dist/$env:PACKAGE"
+          Copy-Item docs/README_DIST.md "dist/$env:PACKAGE/README.md"
+          New-Item -ItemType Directory -Force "dist/$env:PACKAGE/docs" | Out-Null
+          Copy-Item docs/DESIGN_JSON_FORMAT.md "dist/$env:PACKAGE/docs"
           # Licenses of resvg (inside the exe) and the libraries it contains, as NOTICE.md refers to them
           New-Item -ItemType Directory -Force "dist/$env:PACKAGE/third_party/resvg" | Out-Null
           Copy-Item third_party/resvg/LICENSE-MIT, third_party/resvg/LICENSE-APACHE, third_party/resvg/DEPENDENCIES.txt, third_party/resvg/THIRD-PARTY-LICENSES.txt "dist/$env:PACKAGE/third_party/resvg"
-          Get-ChildItem "dist/$env:PACKAGE" | Format-Table Name, Length
+          Get-ChildItem -Recurse "dist/$env:PACKAGE" | Format-Table FullName, Length
           Compress-Archive -Path "dist/$env:PACKAGE" -DestinationPath "dist/$env:PACKAGE.zip"
 
       # The command line tool in its own zip, so the desktop download stays the same size (SPECIFICATION.md 23.6)
@@ -83,11 +88,15 @@ jobs:
 
       - name: Zip command line tool
         run: |
-          Copy-Item LICENSE, NOTICE.md, README.md, docs/DESIGN_JSON_FORMAT.md "dist/$env:CLI_PACKAGE"
+          # The same documents as the desktop zip (the manual's chapter 5 is about the command line tool)
+          Copy-Item LICENSE, NOTICE.md, USER_MANUAL.md "dist/$env:CLI_PACKAGE"
+          Copy-Item docs/README_DIST.md "dist/$env:CLI_PACKAGE/README.md"
+          New-Item -ItemType Directory -Force "dist/$env:CLI_PACKAGE/docs" | Out-Null
+          Copy-Item docs/DESIGN_JSON_FORMAT.md "dist/$env:CLI_PACKAGE/docs"
           # resvg is inside this exe too (SPECIFICATION.md 23.7)
           New-Item -ItemType Directory -Force "dist/$env:CLI_PACKAGE/third_party/resvg" | Out-Null
           Copy-Item third_party/resvg/LICENSE-MIT, third_party/resvg/LICENSE-APACHE, third_party/resvg/DEPENDENCIES.txt, third_party/resvg/THIRD-PARTY-LICENSES.txt "dist/$env:CLI_PACKAGE/third_party/resvg"
-          Get-ChildItem "dist/$env:CLI_PACKAGE" | Format-Table Name, Length
+          Get-ChildItem -Recurse "dist/$env:CLI_PACKAGE" | Format-Table FullName, Length
           Compress-Archive -Path "dist/$env:CLI_PACKAGE" -DestinationPath "dist/$env:CLI_PACKAGE.zip"
 
       # 0.x versions are pre-releases, like v0.9.0 and v0.10.0. Re-running replaces the zips of an existing release.
