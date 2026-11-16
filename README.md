@@ -8,7 +8,7 @@
 
 - **Parametric, not AI**: every iris is drawn from geometry and a random seed. The same parameters and seed always give the same result. It works fully offline.
 - **Real millimetres**: you set the iris diameter (4–20 mm). The A4 PDF is accurate to ±0.1 mm and has a 1 cm scale on each page, so you can check the print with a ruler.
-- **Rich design controls**: color presets and gradients (linear, radial, conic), pupil shapes (round, cat slit, heart, star, gem cut), radial fibers, limbal ring, glitter, aurora and nebula layers, lens-style rings, decorative symbols, highlights, oval / tilted irises, and odd eyes. The right eye is always the mirror image of the left.
+- **Rich design controls**: color presets and gradients (linear, radial, conic), pupil shapes (round, oval, cat slit, heart, star) with optional gem-cut facets, radial fibers, limbal ring, glitter, aurora and nebula layers, lens-style rings, decorative symbols, highlights, oval / tilted irises, and odd eyes. The right eye is always the mirror image of the left.
 - **Compare side by side**: split the preview into up to 9 cells, each with its own design and its own undo history.
 
 ### Basic workflow

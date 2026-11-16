@@ -20,7 +20,7 @@ Copyright (c) 2026 わらびもちサキュバス工房. All rights reserved.
 
 # 同梱しているサードパーティのソフトウェア
 
-デスクトップ版は、SVG を画像にするために [resvg](https://github.com/linebender/resvg)（`third_party/resvg/win-x64/resvg.dll`）を同梱しています。
+デスクトップ版とコマンドライン版は、SVG を画像にするために [resvg](https://github.com/linebender/resvg) を exe に組み込んでいます（ソースコードでは `third_party/resvg/win-x64/resvg.dll`）。
 
 - resvg: Copyright 2017 the Resvg Authors. Apache License 2.0 または MIT License（本ソフトウェアは MIT License を選びます）。ライセンス文は `third_party/resvg/LICENSE-MIT` と `third_party/resvg/LICENSE-APACHE` にあります。
-- resvg.dll には、resvg が使うほかのライブラリ（tiny-skia: BSD-3-Clause、arrayref: BSD-2-Clause など。どれも許諾型のライセンス）も含まれます。各ライブラリの著作権表示とライセンスの全文は `third_party/resvg/THIRD-PARTY-LICENSES.txt` に、ライブラリとライセンスの一覧は `third_party/resvg/DEPENDENCIES.txt` にあります。どちらもリリースの zip に入っています。
+- 組み込んでいる resvg には、resvg が使うほかのライブラリ（tiny-skia: BSD-3-Clause、arrayref: BSD-2-Clause など。どれも許諾型のライセンス）も含まれます。各ライブラリの著作権表示とライセンスの全文は `third_party/resvg/THIRD-PARTY-LICENSES.txt` に、ライブラリとライセンスの一覧は `third_party/resvg/DEPENDENCIES.txt` にあります。どちらもリリースの zip に入っています。
