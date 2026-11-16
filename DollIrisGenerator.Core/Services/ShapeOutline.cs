@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
@@ -89,15 +90,22 @@ namespace DollIrisGenerator.Services
             new Point(0, -radiusY), new Point(radiusX, 0), new Point(0, radiusY), new Point(-radiusX, 0)
         });
 
-        public static ShapeOutline Cross(double radius, double barThickness = 0.32)
+        /// <summary>
+        /// Latin cross: a vertical bar from −r to +r (0.32r thick) and a shorter crossbar (±0.65r, 0.32r thick)
+        /// centered 0.4r above the middle, so the lower arm is the long one. The outline is centered at (0, 0).
+        /// </summary>
+        public static ShapeOutline Cross(double radius)
         {
             double r = radius;
-            double w = radius * barThickness;
+            double w = r * 0.16;            // half the bar thickness
+            double arm = r * 0.65;          // crossbar half length
+            double barTop = -r * 0.56;      // crossbar from y = −0.56r ...
+            double barBottom = -r * 0.24;   // ... to y = −0.24r (center −0.4r)
             return Polygon(new[]
             {
-                new Point(-w, -r), new Point(w, -r), new Point(w, -w), new Point(r, -w),
-                new Point(r, w), new Point(w, w), new Point(w, r), new Point(-w, r),
-                new Point(-w, w), new Point(-r, w), new Point(-r, -w), new Point(-w, -w)
+                new Point(-w, -r), new Point(w, -r), new Point(w, barTop), new Point(arm, barTop),
+                new Point(arm, barBottom), new Point(w, barBottom), new Point(w, r), new Point(-w, r),
+                new Point(-w, barBottom), new Point(-arm, barBottom), new Point(-arm, barTop), new Point(-w, barTop)
             });
         }
 
@@ -323,6 +331,50 @@ namespace DollIrisGenerator.Services
             return new ShapeOutline(start, segments);
         }
 
+        // ------------------------------------------------------------------
+        // Stretching (上下左右の長さ)
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns this outline with each half stretched from the center (0, 0): the part above the center by
+        /// <paramref name="top"/>, below by <paramref name="bottom"/>, left of it by <paramref name="left"/> and right of
+        /// it by <paramref name="right"/> (1 = unchanged). Curves that cross the center lines are split there first, so
+        /// every piece lies in one quarter and is scaled exactly. Returns this outline when all four are 1.
+        /// </summary>
+        public ShapeOutline Stretched(double top, double bottom, double left, double right)
+        {
+            if (top == 1.0 && bottom == 1.0 && left == 1.0 && right == 1.0) return this;
+
+            Point Map(Point p, Point quarter) => new(
+                p.X * (quarter.X < 0 ? left : right),
+                p.Y * (quarter.Y < 0 ? top : bottom));
+
+            var segments = new List<OutlineSegment>(Segments.Count * 2);
+            Point p0 = Start;
+            foreach (var seg in Segments)
+            {
+                var curve = new Cubic(p0, seg);
+                var cuts = new List<double> { 0.0 };
+                cuts.AddRange(curve.CenterLineCrossings());
+                cuts.Add(1.0);
+                cuts.Sort();
+                for (int i = 0; i + 1 < cuts.Count; i++)
+                {
+                    if (cuts[i + 1] - cuts[i] < 1e-9) continue;
+                    var piece = curve.Sub(cuts[i], cuts[i + 1]);
+                    Point quarter = piece.PointAt(0.5);
+                    segments.Add(new OutlineSegment(Map(piece.P1, quarter), Map(piece.P2, quarter), Map(piece.P3, quarter), piece.IsLine));
+                }
+                p0 = seg.End;
+            }
+
+            // Points on a center line keep that coordinate at 0, so the start maps the same from either side
+            Point start = Map(Start, Start);
+            var last = segments[^1];
+            segments[^1] = new OutlineSegment(last.C1, last.C2, start, last.IsLine);
+            return new ShapeOutline(start, segments);
+        }
+
         /// <summary>
         /// Curve from <paramref name="a"/> (leaving along <paramref name="tA"/>) to <paramref name="b"/> (arriving along
         /// <paramref name="tB"/>). Uses the point where both tangent lines meet as the (quadratic) control point, which
@@ -540,6 +592,48 @@ namespace DollIrisGenerator.Services
                     }
                 }
                 return double.PositiveInfinity;
+            }
+
+            /// <summary>
+            /// Parameters strictly inside (0, 1) where the curve crosses x = 0 or y = 0 (from one side to the other;
+            /// touching a line or ending on it is not a crossing).
+            /// </summary>
+            public List<double> CenterLineCrossings()
+            {
+                var result = new List<double>();
+                double scale = Math.Max(1.0, new[] { P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y }.Max(Math.Abs));
+                double eps = scale * 1e-9;
+                var self = this;
+                AddCrossings(t => self.PointAt(t).X);
+                AddCrossings(t => self.PointAt(t).Y);
+                return result;
+
+                void AddCrossings(Func<double, double> f)
+                {
+                    const int samples = 48;
+                    double lastT = 0.0;
+                    int lastSign = 0;
+                    for (int k = 0; k <= samples; k++)
+                    {
+                        double t = (double)k / samples;
+                        double v = f(t);
+                        int sign = Math.Abs(v) < eps ? 0 : Math.Sign(v);
+                        if (sign == 0) continue;
+                        if (lastSign != 0 && sign != lastSign)
+                        {
+                            double lo = lastT, hi = t;
+                            for (int i = 0; i < 60; i++)
+                            {
+                                double mid = (lo + hi) * 0.5;
+                                if (Math.Sign(f(mid)) == lastSign) lo = mid; else hi = mid;
+                            }
+                            double root = (lo + hi) * 0.5;
+                            if (root > 1e-9 && root < 1.0 - 1e-9) result.Add(root);
+                        }
+                        lastSign = sign;
+                        lastT = t;
+                    }
+                }
             }
 
             /// <summary>The part of this curve between parameters u0 and u1.</summary>

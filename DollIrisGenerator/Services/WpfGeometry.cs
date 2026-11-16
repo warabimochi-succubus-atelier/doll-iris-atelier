@@ -61,9 +61,9 @@ namespace DollIrisGenerator.Services
         public static PathGeometry CreateSakuraPetalGeometry(double radius) =>
             ShapeOutline.SakuraPetal(radius).ToPathGeometry();
 
-        /// <summary>Cross.</summary>
-        public static PathGeometry CreateCrossGeometry(double radius, double barThickness = 0.32) =>
-            ShapeOutline.Cross(radius, barThickness).ToPathGeometry();
+        /// <summary>Latin cross (the lower arm is the long one).</summary>
+        public static PathGeometry CreateCrossGeometry(double radius) =>
+            ShapeOutline.Cross(radius).ToPathGeometry();
 
         /// <summary>Diamond / rhombus.</summary>
         public static PathGeometry CreateDiamondGeometry(double radiusX, double radiusY) =>
