@@ -34,6 +34,8 @@ html, body {
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
 }
+/* No double-tap zoom (two quick taps on a button or slider zoomed the whole app); pinch zoom still works */
+html { touch-action: manipulation; }
 
 button, input, select { font: inherit; color: inherit; }
 
@@ -340,6 +342,8 @@ code { color: var(--accent); }
 /* Touch screens: every control at least 44px high (Apple's minimum touch target). A mouse keeps the compact sizes. */
 @media (pointer: coarse) {
     button, .button-like, input[type=text], input[type=number], select { min-height: 44px; }
+    /* iOS zooms the whole app into a text field under 16px when it is tapped, and does not zoom back out */
+    input[type=text], input[type=number], select { font-size: 16px; }
     .tab, .choice, .choices.small .choice { min-height: 44px; }
     .choices.small .choice { padding: 2px 10px; }
     .field-toggle { min-height: 44px; }
