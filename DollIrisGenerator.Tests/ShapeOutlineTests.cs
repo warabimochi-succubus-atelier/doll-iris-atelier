@@ -213,6 +213,34 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestHeartHasRoundLobesAVisibleCleftAndIsCentered()
+        {
+            var heart = ShapeOutline.Heart(50.0);
+            var pts = heart.Flatten(64);
+            var box = heart.GetBounds();
+
+            // Centered on the symbol position, ±0.8r across and ±0.656r up and down
+            Assert.Equal(-40.0, box.Left, 0);
+            Assert.Equal(40.0, box.Right, 0);
+            Assert.Equal(-32.8, box.Top, 0);
+            Assert.Equal(32.8, box.Bottom, 0);
+
+            // The cleft sits clearly below the lobe tops (not a flat top)
+            double cleftY = pts.Where(p => Math.Abs(p.X) < 0.5).Min(p => p.Y);
+            Assert.True(cleftY - box.Top > 50.0 * 0.15, $"cleft only {cleftY - box.Top:F2} below the lobes");
+
+            // Only the tip and the cleft are corners; the lobes join the sides smoothly
+            int corners = 0;
+            for (int i = 0; i < heart.Segments.Count; i++)
+            {
+                var seg = heart.Segments[i];
+                var next = heart.Segments[(i + 1) % heart.Segments.Count];
+                if (Math.Abs(Vector.AngleBetween(seg.End - seg.C2, next.C1 - seg.End)) >= 2.0) corners++;
+            }
+            Assert.Equal(2, corners);
+        }
+
+        [Fact]
         public void TestMoreRoundingPullsTheStarTipsInSteadily()
         {
             double previousTip = double.MaxValue;
