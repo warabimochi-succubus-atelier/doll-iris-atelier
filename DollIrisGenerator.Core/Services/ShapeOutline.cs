@@ -109,19 +109,31 @@ namespace DollIrisGenerator.Services
             });
         }
 
+        /// <summary>
+        /// Plump heart centered at (0, 0): each side is a curve from the tip up to the widest point, a round lobe,
+        /// and a short curve down into the cleft. The lobes join smoothly, so only the tip and the cleft are corners.
+        /// The outline spans ±0.8r across and ±0.656r up and down.
+        /// </summary>
         public static ShapeOutline Heart(double radius)
         {
-            double topY = -radius * 0.45;
-            double bottomY = radius * 0.85;
-            double leftX = -radius * 0.95;
-            double rightX = radius * 0.95;
+            // Designed on a ±1 grid (tip at y = 0.80, lobe tops at y = −0.84), shifted to center it and scaled to 0.8r
+            double k = radius * 0.8;
+            Point P(double x, double y) => new(x * k, (y + 0.02) * k);
 
-            var bottom = new Point(0, bottomY);
-            var top = new Point(0, topY);
-            return new ShapeOutline(bottom, new[]
+            var tip = P(0, 0.80);
+            var leftSide = P(-1.00, -0.25);
+            var leftTop = P(-0.48, -0.84);
+            var cleft = P(0, -0.56);
+            var rightTop = P(0.48, -0.84);
+            var rightSide = P(1.00, -0.25);
+            return new ShapeOutline(tip, new[]
             {
-                new OutlineSegment(new Point(leftX * 1.05, bottomY * 0.2), new Point(leftX, topY * 1.3), top),
-                new OutlineSegment(new Point(rightX, topY * 1.3), new Point(rightX * 1.05, bottomY * 0.2), bottom)
+                new OutlineSegment(P(-0.40, 0.55), P(-1.00, 0.22), leftSide),
+                new OutlineSegment(P(-1.00, -0.62), P(-0.75, -0.84), leftTop),
+                new OutlineSegment(P(-0.25, -0.84), P(-0.08, -0.70), cleft),
+                new OutlineSegment(P(0.08, -0.70), P(0.25, -0.84), rightTop),
+                new OutlineSegment(P(0.75, -0.84), P(1.00, -0.62), rightSide),
+                new OutlineSegment(P(1.00, 0.22), P(0.40, 0.55), tip)
             });
         }
 
