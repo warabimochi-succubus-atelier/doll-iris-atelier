@@ -12,6 +12,7 @@ namespace DollIrisGenerator.Tests
     /// The preview's rings round the ticked / pointed-at symbols and highlights (SPECIFICATION 13.2): they must sit
     /// where SvgExporter draws the items, in both eyes.
     /// </summary>
+    [Collection(ItemHoverCollection.Name)]
     public class ItemMarkersTests
     {
         private static IrisParameters Design()
@@ -133,6 +134,65 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestOnlyTheOpenTabsListIsRinged()
+        {
+            var p = Design();
+            Assert.All(ItemMarkers.ForEye(p, false, null, MarkedItemKind.Symbol), m => Assert.Equal(MarkedItemKind.Symbol, m.Kind));
+            Assert.All(ItemMarkers.ForEye(p, false, null, MarkedItemKind.Highlight), m => Assert.Equal(MarkedItemKind.Highlight, m.Kind));
+            Assert.Single(ItemMarkers.ForEye(p, false, null, MarkedItemKind.Symbol));
+            Assert.Single(ItemMarkers.ForEye(p, false, null, MarkedItemKind.Highlight));
+            // A pointed-at symbol is not ringed on the highlight tab either
+            Assert.Single(ItemMarkers.ForEye(p, false, p.Symbols[0].Id, MarkedItemKind.Highlight));
+        }
+
+        /// <summary>
+        /// Opening the 記号 / ハイライト・対称性 tab shows that list's rings; any other tab shows none. Selection
+        /// inside a tab (a combo box) does not count as switching tabs.
+        /// </summary>
+        [Fact]
+        public void TestSwitchingTabsChoosesTheRingedList() => StaRunner.Run(() =>
+        {
+            var tabs = new System.Windows.Controls.TabControl();
+            var basic = new System.Windows.Controls.TabItem { Header = "基本" };
+            var combo = new System.Windows.Controls.ComboBox { ItemsSource = new[] { "a", "b" } };
+            var symbols = new System.Windows.Controls.TabItem { Header = "記号", Content = combo };
+            var highlights = new System.Windows.Controls.TabItem { Header = "ハイライト・対称性" };
+            ItemHover.SetMarkersFor(symbols, MarkedItemKind.Symbol);
+            ItemHover.SetMarkersFor(highlights, MarkedItemKind.Highlight);
+            tabs.Items.Add(basic);
+            tabs.Items.Add(symbols);
+            tabs.Items.Add(highlights);
+            var window = new System.Windows.Window { Content = tabs, Width = 300, Height = 200, ShowInTaskbar = false, WindowStyle = System.Windows.WindowStyle.None, Left = -10000 };
+            try
+            {
+                window.Show();
+                tabs.SelectedItem = basic;
+                Assert.Null(ItemHover.ShownKind);
+
+                tabs.SelectedItem = symbols;
+                Assert.Equal(MarkedItemKind.Symbol, ItemHover.ShownKind);
+                window.UpdateLayout();
+                ItemHover.SetCurrent("abc");
+                combo.SelectedIndex = 1; // bubbles Selector.Selected through the tab
+                Assert.Equal(MarkedItemKind.Symbol, ItemHover.ShownKind);
+                Assert.Equal("abc", ItemHover.CurrentId);
+
+                tabs.SelectedItem = highlights;
+                Assert.Equal(MarkedItemKind.Highlight, ItemHover.ShownKind);
+                Assert.Null(ItemHover.CurrentId); // the card went away with the tab
+
+                tabs.SelectedItem = basic;
+                Assert.Null(ItemHover.ShownKind);
+            }
+            finally
+            {
+                window.Close();
+                ItemHover.SetCurrent(null);
+                ItemHover.SetShownKind(null);
+            }
+        });
+
+        [Fact]
         public void TestPointedAtCardIsTrackedForThePreview()
         {
             int changes = 0;
@@ -153,5 +213,12 @@ namespace DollIrisGenerator.Tests
                 ItemHover.SetCurrent(null);
             }
         }
+    }
+
+    /// <summary>Tests that use <see cref="ItemHover"/>'s shared (static) state run one at a time.</summary>
+    [CollectionDefinition(Name)]
+    public class ItemHoverCollection
+    {
+        public const string Name = "ItemHover";
     }
 }

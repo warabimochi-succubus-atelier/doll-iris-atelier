@@ -565,7 +565,9 @@ namespace DollIrisGenerator.Controls
         /// </summary>
         private void DrawItemMarkers(DrawingContext dc, IrisParameters p, bool isRight, Point eyeCenter, double pixelsPerMm)
         {
-            var markers = ItemMarkers.ForEye(p, isRight, ItemHover.CurrentId);
+            // Only the open tab's list (記号 or ハイライト・対称性); none on the other tabs
+            if (ItemHover.ShownKind is not { } kind) return;
+            var markers = ItemMarkers.ForEye(p, isRight, ItemHover.CurrentId, kind);
             if (markers.Count == 0) return;
             double pixelsPerDip = PixelsPerDip;
             // Hovered last, so it is on top
