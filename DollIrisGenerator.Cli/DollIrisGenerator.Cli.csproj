@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Command line tool of Doll Iris Atelier (SPECIFICATION.md 23): checks design JSON files and writes SVG, with the
-    same design core (DollIrisGenerator.Core) as the apps. No WPF, so it builds for any OS .NET runs on.
+    Command line tool of Doll Iris Atelier (SPECIFICATION.md 23): checks design JSON files and writes SVG, PNG and
+    the A4 PDF with the same code as the desktop app (DollIrisGenerator.Rendering, which uses WPF), so it is
+    Windows only like the app.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>DollIrisGenerator.Cli</RootNamespace>
@@ -26,7 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
+    <!-- PNG / A4 PDF output shared with the app; brings Core and resvg.dll with it -->
+    <ProjectReference Include="..\DollIrisGenerator.Rendering\DollIrisGenerator.Rendering.csproj" />
   </ItemGroup>
 
 </Project>

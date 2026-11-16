@@ -24,15 +24,30 @@ namespace DollIrisGenerator.Services
     /// <param name="Name">The name the app shows: the favorite's name in a list, the design's own name otherwise.</param>
     /// <param name="Label">How the report names the design: its name, and its position in a favorites list.</param>
     /// <param name="Path">Where the design is in the file (empty for a single design, <c>[1].Parameters</c> in a list).</param>
-    public sealed record ValidatedDesign(string Name, string Label, string Path, IrisParameters Parameters);
+    /// <param name="PairCount">Pairs on the A4 sheet (from an A4 sheet file; 1 otherwise).</param>
+    public sealed record ValidatedDesign(string Name, string Label, string Path, IrisParameters Parameters, int PairCount = 1);
+
+    public enum DesignFileKind
+    {
+        /// <summary>One design (<c>{ ... }</c>), e.g. a template written by hand.</summary>
+        Design,
+
+        /// <summary>A favorites list (<c>[ ... ]</c>, <c>*.irisfav.json</c>).</summary>
+        Favorites,
+
+        /// <summary>The A4 sheet (<c>print-sheet.json</c>: <c>{ "Config": ..., "Items": [ ... ] }</c>).</summary>
+        Sheet
+    }
 
     public sealed class DesignFileReport
     {
-        public DesignFileReport(IReadOnlyList<ValidatedDesign> designs, IReadOnlyList<DesignIssue> issues, bool isList)
+        public DesignFileReport(IReadOnlyList<ValidatedDesign> designs, IReadOnlyList<DesignIssue> issues, DesignFileKind kind,
+            PrintSheetState? sheet = null)
         {
             Designs = designs;
             Issues = issues;
-            IsList = isList;
+            Kind = kind;
+            Sheet = sheet;
         }
 
         /// <summary>The designs as the app loads them (empty when the file has an error).</summary>
@@ -40,8 +55,13 @@ namespace DollIrisGenerator.Services
 
         public IReadOnlyList<DesignIssue> Issues { get; }
 
-        /// <summary>True for a favorites list (<c>[ ... ]</c>), false for a single design (<c>{ ... }</c>).</summary>
-        public bool IsList { get; }
+        public DesignFileKind Kind { get; }
+
+        /// <summary>True when the file holds a list of designs (favorites or an A4 sheet), not one design.</summary>
+        public bool IsList => Kind != DesignFileKind.Design;
+
+        /// <summary>For an A4 sheet file: the sheet as the app loads it (<see cref="PrintSheetStore.Normalize"/>).</summary>
+        public PrintSheetState? Sheet { get; }
 
         public bool HasErrors => Issues.Any(i => i.Level == DesignIssueLevel.Error);
 
@@ -98,16 +118,21 @@ namespace DollIrisGenerator.Services
             {
                 issues.Add(new DesignIssue(DesignIssueLevel.Error, "",
                     $"JSON として読めません（{Where(ex)}）。コメント、末尾のカンマ、閉じ忘れの括弧や引用符がないか確認してください"));
-                return new DesignFileReport(designs, issues, false);
+                return new DesignFileReport(designs, issues, DesignFileKind.Design);
             }
 
             if (root is not JsonObject && root is not JsonArray)
             {
                 issues.Add(new DesignIssue(DesignIssueLevel.Error, "",
                     "デザイン（{ ... }）か、お気に入りの一覧（[ ... ]）を書いてください"));
-                return new DesignFileReport(designs, issues, false);
+                return new DesignFileReport(designs, issues, DesignFileKind.Design);
             }
-            bool isList = root is JsonArray;
+
+            // A design has no "Items"; the A4 sheet always has it
+            if (root is JsonObject sheetRoot && sheetRoot.ContainsKey(nameof(PrintSheetState.Items)))
+                return ValidateSheet(sheetRoot, json);
+
+            var kind = root is JsonArray ? DesignFileKind.Favorites : DesignFileKind.Design;
 
             List<FavoriteItem>? items;
             try
@@ -118,17 +143,17 @@ namespace DollIrisGenerator.Services
             {
                 issues.Add(new DesignIssue(DesignIssueLevel.Error, PathOf(ex.Path),
                     $"値の種類が違います（{Where(ex)}）。数値は引用符で囲まず、選択肢は数値、真偽値は true / false、色は \"#RRGGBB\" で書きます"));
-                return new DesignFileReport(designs, issues, isList);
+                return new DesignFileReport(designs, issues, kind);
             }
             catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or FormatException)
             {
                 issues.Add(new DesignIssue(DesignIssueLevel.Error, "", $"読み込めません: {ex.Message}"));
-                return new DesignFileReport(designs, issues, isList);
+                return new DesignFileReport(designs, issues, kind);
             }
             if (items == null)
             {
                 issues.Add(new DesignIssue(DesignIssueLevel.Error, "", "中身が空（null）です"));
-                return new DesignFileReport(designs, issues, isList);
+                return new DesignFileReport(designs, issues, kind);
             }
 
             if (root is JsonObject single)
@@ -168,7 +193,95 @@ namespace DollIrisGenerator.Services
                 }
             }
 
-            return new DesignFileReport(designs, issues, isList);
+            return new DesignFileReport(designs, issues, kind);
+        }
+
+        /// <summary>
+        /// The A4 sheet (print-sheet.json), read like the app reads it at startup: the sheet settings and each
+        /// row's design and quantity are pulled into range (<see cref="PrintSheetStore.Normalize"/>).
+        /// </summary>
+        private static DesignFileReport ValidateSheet(JsonObject root, string json)
+        {
+            var issues = new List<DesignIssue>();
+            var designs = new List<ValidatedDesign>();
+
+            PrintSheetState? raw;
+            try
+            {
+                raw = JsonSerializer.Deserialize<PrintSheetState>(json);
+            }
+            catch (JsonException ex)
+            {
+                issues.Add(new DesignIssue(DesignIssueLevel.Error, PathOf(ex.Path),
+                    $"値の種類が違います（{Where(ex)}）。数値は引用符で囲まず、選択肢は数値、真偽値は true / false、色は \"#RRGGBB\" で書きます"));
+                return new DesignFileReport(designs, issues, DesignFileKind.Sheet);
+            }
+            if (raw == null)
+            {
+                issues.Add(new DesignIssue(DesignIssueLevel.Error, "", "中身が空（null）です"));
+                return new DesignFileReport(designs, issues, DesignFileKind.Sheet);
+            }
+            var sheet = PrintSheetStore.Normalize(raw);
+
+            // Names at the top; the settings and rows are compared one by one below
+            var known = ToNode(new PrintSheetState());
+            foreach (var (name, _) in root)
+            {
+                if (!known.ContainsKey(name))
+                    issues.Add(new DesignIssue(DesignIssueLevel.Warning, name, "知らない項目名です（無視されます）"));
+            }
+
+            if (root[nameof(PrintSheetState.Config)] is JsonObject config)
+            {
+                CompareObject(config, ToNode(sheet.Config!), nameof(PrintSheetState.Config), typeof(PrintSheetConfig), null, issues);
+            }
+            else
+            {
+                issues.Add(new DesignIssue(DesignIssueLevel.Note, nameof(PrintSheetState.Config),
+                    "シートの設定（Config）が書かれていません。既定の設定になります"));
+            }
+
+            var rows = root[nameof(PrintSheetState.Items)] as JsonArray;
+            if (rows == null || rows.Count == 0)
+            {
+                issues.Add(new DesignIssue(DesignIssueLevel.Warning, nameof(PrintSheetState.Items),
+                    "シートにデザインがありません"));
+                return new DesignFileReport(designs, issues, DesignFileKind.Sheet, sheet);
+            }
+
+            var rowNames = ToNode(new PrintSheetItemState());
+            for (int i = 0; i < rows.Count; i++)
+            {
+                string at = $"{nameof(PrintSheetState.Items)}[{i}]";
+                var item = i < raw.Items!.Count ? raw.Items[i] : null;
+                if (rows[i] is not JsonObject row || item?.Parameters == null)
+                {
+                    issues.Add(new DesignIssue(DesignIssueLevel.Warning, at,
+                        "デザイン（Parameters）がない行です。読み込みでは飛ばされます"));
+                    continue;
+                }
+
+                foreach (var (name, value) in row)
+                {
+                    if (!rowNames.ContainsKey(name))
+                        issues.Add(new DesignIssue(DesignIssueLevel.Warning, $"{at}.{name}", "知らない項目名です（無視されます）"));
+                }
+
+                // The same correction as PrintSheetStore.Normalize
+                int pairs = Math.Clamp(item.PairCount, 1, SheetItem.MaxPairCount);
+                if (pairs != item.PairCount)
+                {
+                    issues.Add(new DesignIssue(DesignIssueLevel.Warning, $"{at}.{nameof(PrintSheetItemState.PairCount)}",
+                        $"{item.PairCount} は範囲外です。{pairs} として読み込まれます"));
+                }
+
+                var p = item.Parameters;
+                if (row[nameof(PrintSheetItemState.Parameters)] is JsonObject design)
+                    CompareObject(design, ToNode(p), $"{at}.Parameters", typeof(IrisParameters), null, issues);
+                designs.Add(new ValidatedDesign(p.Name, $"{i + 1} 行目「{p.Name}」", $"{at}.Parameters", p, pairs));
+            }
+
+            return new DesignFileReport(designs, issues, DesignFileKind.Sheet, sheet);
         }
 
         /// <summary>The object as the app saves it, to compare names and values with what the file says.</summary>
