@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -137,6 +138,43 @@ namespace DollIrisGenerator.Tests
 
             var c = PixelAt(ctrl, at);
             Assert.True(c.R < 40 && c.G < 40 && c.B < 40, $"pupil expected black on the sheet, got {c}");
+        });
+
+        /// <summary>
+        /// The symbol whose card is pointed at gets a solid amber ring in both eyes (the right one mirrored);
+        /// nothing is drawn round it otherwise.
+        /// </summary>
+        [Fact]
+        public void PointedAtSymbolIsRingedInBothEyes() => StaRunner.Run(() =>
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            p.Symbols.Clear();
+            var symbol = new DecorativeSymbolItem { PositionX = 0.0, PositionY = -0.5, Size = 0.15, Enabled = true };
+            p.Symbols.Add(symbol);
+            var ctrl = Create(p);
+            PumpUntil(() => ctrl.EyePicturesInProgress == 0);
+
+            var marker = ItemMarkers.ForEye(p, false, symbol.Id).Single();
+            double ppm = IrisPreviewControl.ScreenDipsPerMm * Zoom;
+            var eye = LeftEyeCenter(p);
+            double r = Math.Max(marker.Radius * ppm, IrisPreviewControl.MinMarkerRadiusDip);
+            // Left side of the ring (x = 0 in both eyes, so the right eye's ring is the same shape mirrored)
+            var onRing = new Point(eye.X + marker.X * ppm - r, eye.Y + marker.Y * ppm);
+            var rightOnRing = new Point(ViewW - onRing.X, onRing.Y);
+
+            static bool Amber(Color c) => c.R > 200 && c.G > 170 && c.B < 140;
+            Assert.False(Amber(PixelAt(ctrl, onRing)), "no ring before the card is pointed at");
+            try
+            {
+                ItemHover.SetCurrent(symbol.Id);
+                Assert.True(Amber(PixelAt(ctrl, onRing)), $"left ring expected, got {PixelAt(ctrl, onRing)}");
+                Assert.True(Amber(PixelAt(ctrl, rightOnRing)), $"right ring expected, got {PixelAt(ctrl, rightOnRing)}");
+            }
+            finally
+            {
+                ItemHover.SetCurrent(null);
+            }
+            Assert.False(Amber(PixelAt(ctrl, onRing)), "ring gone once the pointer leaves the card");
         });
     }
 

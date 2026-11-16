@@ -123,6 +123,17 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestFormStartsWithThreeSymbolsOrTwoHighlights()
+        {
+            var vm = IsolatedViewModel.Create();
+            Assert.Equal(3, vm.SymbolTools.Editor.Layout.Count);
+            Assert.Equal(2, vm.HighlightTools.Editor.Layout.Count);
+            // The browser app builds its editors with the same constants
+            Assert.Equal(3, new ItemListEditor<DecorativeSymbolItem>(() => new DecorativeSymbolItem(), ItemLayoutSettings.DefaultSymbolCount).Layout.Count);
+            Assert.Equal(2, new ItemListEditor<HighlightItem>(() => new HighlightItem(), ItemLayoutSettings.DefaultHighlightCount).Layout.Count);
+        }
+
+        [Fact]
         public void TestArrangedItemsCopyTheTemplateLook()
         {
             var template = new DecorativeSymbolItem

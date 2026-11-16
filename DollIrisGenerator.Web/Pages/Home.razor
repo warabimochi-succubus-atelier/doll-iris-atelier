@@ -29,7 +29,7 @@
 
         <main class="workspace">
             <div class="preview-pane">
-                <IrisPreview Design="Session.Current" Version="Session.Version" />
+                <IrisPreview Design="Session.Current" Version="Session.Version" ShowItemMarkers="true" HoveredItemId="@_hoveredItemId" />
                 <p class="preview-caption">@Session.Current.Name ・ 虹彩 @Fmt.Mm(Session.Current.SizeMm) ・ シード @Session.Current.Seed</p>
             </div>
 
@@ -38,7 +38,7 @@
                     @foreach (var tab in Tabs)
                     {
                         <button type="button" role="tab" aria-selected="@(_tab == tab ? "true" : "false")"
-                                class="tab @(_tab == tab ? "selected" : "")" @onclick="() => _tab = tab">@tab</button>
+                                class="tab @(_tab == tab ? "selected" : "")" @onclick="() => { _tab = tab; _hoveredItemId = null; }">@tab</button>
                     }
                 </nav>
 
@@ -78,7 +78,7 @@
                         case "記号":
                             <ItemList T="DecorativeSymbolItem" Noun="装飾記号" Items="Session.Current.Symbols" Editor="_symbols"
                                       Fields="DesignFields.Symbol" BulkFields="DesignFields.SymbolBulk" OnMessage="ShowMessage"
-                                      TemplateFields="DesignFields.SymbolTemplate" />
+                                      TemplateFields="DesignFields.SymbolTemplate" OnHover="id => _hoveredItemId = id" />
                             break;
                         case "レンズ・オッドアイ":
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
@@ -98,7 +98,7 @@
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
                             <ItemList T="HighlightItem" Noun="ハイライト" Items="Session.Current.Highlights" Editor="_highlights"
                                       Fields="DesignFields.Highlight" BulkFields="DesignFields.HighlightBulk" OnMessage="ShowMessage"
-                                      TemplateFields="DesignFields.HighlightTemplate" />
+                                      TemplateFields="DesignFields.HighlightTemplate" OnHover="id => _hoveredItemId = id" />
                             break;
                         case "お気に入り":
                             <FavoritesPanel OnMessage="ShowMessage" />
@@ -117,13 +117,17 @@
 
     private string _tab = Tabs[0];
     private string _message = "";
-    private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol);
-    private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight);
+    private string? _hoveredItemId; // the symbol / highlight whose card is pointed at or being edited (ringed in the preview)
+    private readonly ItemListEditor<DecorativeSymbolItem> _symbols = new(DesignFields.NewSymbol, ItemLayoutSettings.DefaultSymbolCount);
+    private readonly ItemListEditor<HighlightItem> _highlights = new(DesignFields.NewHighlight, ItemLayoutSettings.DefaultHighlightCount);
 
     protected override async Task OnInitializedAsync()
     {
         Session.Changed += OnSessionChanged;
         Favorites.Changed += OnSessionChanged;
+        // Ticking items only moves the preview's rings
+        _symbols.SelectionChanged += OnSessionChanged;
+        _highlights.SelectionChanged += OnSessionChanged;
 
         string? problem = await Favorites.LoadAsync();
         if (problem != null) _message = problem;
@@ -194,5 +198,7 @@
     {
         Session.Changed -= OnSessionChanged;
         Favorites.Changed -= OnSessionChanged;
+        _symbols.SelectionChanged -= OnSessionChanged;
+        _highlights.SelectionChanged -= OnSessionChanged;
     }
 }

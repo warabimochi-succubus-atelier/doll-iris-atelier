@@ -168,7 +168,28 @@ namespace DollIrisGenerator.Controls
             MouseMove += OnMouseMove;
             MouseUp += OnMouseUp;
             MouseWheel += OnMouseWheel;
+            // The ring round the item whose card is pointed at; let go while the preview is off screen
+            // (a cell of the split view that is removed), taken up again when it comes back
+            ListenToItemHover();
+            Loaded += (_, _) => ListenToItemHover();
+            Unloaded += (_, _) => ItemHover.Changed -= OnItemHoverChanged;
         }
+
+        private void ListenToItemHover()
+        {
+            ItemHover.Changed -= OnItemHoverChanged;
+            ItemHover.Changed += OnItemHoverChanged;
+        }
+
+        private void OnItemHoverChanged(object? sender, EventArgs e)
+        {
+            // ItemHover is shared by every preview; redraw on this control's own thread
+            if (Dispatcher.CheckAccess()) InvalidateVisual();
+            else Dispatcher.BeginInvoke(InvalidateVisual);
+        }
+
+        // Ticking an item only moves the markers: redraw without rebuilding the eyes' SVG
+        private void OnItemSelectionChanged(object? sender, EventArgs e) => InvalidateVisual();
 
         // Auto-refresh: sliders mutate the same IrisParameters instance, so the DependencyProperty never sees
         // a new value. Listen to the model and redraw on any change (IrisParameters also reports
@@ -179,6 +200,8 @@ namespace DollIrisGenerator.Controls
             ctrl._modelVersion++;
             if (e.OldValue is INotifyPropertyChanged oldP) oldP.PropertyChanged -= ctrl.OnModelPropertyChanged;
             if (e.NewValue is INotifyPropertyChanged newP) newP.PropertyChanged += ctrl.OnModelPropertyChanged;
+            if (e.OldValue is IrisParameters oldIris) oldIris.ItemSelectionChanged -= ctrl.OnItemSelectionChanged;
+            if (e.NewValue is IrisParameters newIris) newIris.ItemSelectionChanged += ctrl.OnItemSelectionChanged;
         }
 
         private static void OnSheetConfigChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -339,6 +362,10 @@ namespace DollIrisGenerator.Controls
                     // Right Eye (Mirrored)
                     _eyes.Draw(dc, p, isRight: true, rightCenter, pixelsPerMm, PixelsPerDip, ShowCutLines, ShowCenterMarks, _modelVersion);
                     if (ShowEyeLabels) DrawEyeLabel(dc, "R (右・鏡像)", new Point(rightCenter.X, rightCenter.Y + (irisH_Mm / 2.0) * pixelsPerMm + 16));
+
+                    // Rings round the ticked / pointed-at symbols and highlights (screen only, never exported)
+                    DrawItemMarkers(dc, p, isRight: false, leftCenter, pixelsPerMm);
+                    DrawItemMarkers(dc, p, isRight: true, rightCenter, pixelsPerMm);
                     break;
             }
         }
@@ -514,6 +541,56 @@ namespace DollIrisGenerator.Controls
             }
 
             dc.DrawText(formattedText, location);
+        }
+
+        // Marker colors: symbols in the app's light blue, highlights in pink, the pointed-at item in amber
+        private static readonly Brush SymbolMarkerBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x80, 0xD8, 0xFF)));
+        private static readonly Brush HighlightMarkerBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x80, 0xAB)));
+        private static readonly Brush HoverMarkerBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xD5, 0x4F)));
+        private static readonly Brush MarkerShadowBrush = Frozen(new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)));
+        private static readonly Brush MarkerLabelBackground = Frozen(new SolidColorBrush(Color.FromArgb(210, 20, 24, 32)));
+
+        private static T Frozen<T>(T freezable) where T : Freezable
+        {
+            freezable.Freeze();
+            return freezable;
+        }
+
+        /// <summary>Smallest ring on screen (DIP), so a tiny item can still be found.</summary>
+        public const double MinMarkerRadiusDip = 7.0;
+
+        /// <summary>
+        /// Rings round the ticked items (dashed: light blue for symbols, pink for highlights) and the item whose card
+        /// is pointed at or being edited (solid amber), each with its number in the list (ItemMarkers).
+        /// </summary>
+        private void DrawItemMarkers(DrawingContext dc, IrisParameters p, bool isRight, Point eyeCenter, double pixelsPerMm)
+        {
+            var markers = ItemMarkers.ForEye(p, isRight, ItemHover.CurrentId);
+            if (markers.Count == 0) return;
+            double pixelsPerDip = PixelsPerDip;
+            // Hovered last, so it is on top
+            foreach (var m in markers.OrderBy(m => m.Hovered))
+            {
+                var c = new Point(eyeCenter.X + m.X * pixelsPerMm, eyeCenter.Y + m.Y * pixelsPerMm);
+                double r = Math.Max(m.Radius * pixelsPerMm, MinMarkerRadiusDip);
+                var brush = m.Hovered ? HoverMarkerBrush : m.Kind == MarkedItemKind.Symbol ? SymbolMarkerBrush : HighlightMarkerBrush;
+                double thickness = m.Hovered ? 2.4 : 1.6;
+
+                dc.DrawEllipse(null, new Pen(MarkerShadowBrush, thickness + 2.0), c, r, r);
+                var pen = new Pen(brush, thickness);
+                if (!m.Hovered) pen.DashStyle = new DashStyle(new[] { 3.0, 2.0 }, 0);
+                dc.DrawEllipse(null, pen, c, r, r);
+
+                var text = new FormattedText(m.Number.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                    new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
+                    10, brush, pixelsPerDip);
+                // Number at the ring's upper right
+                var at = new Point(c.X + r * 0.71, c.Y - r * 0.71 - text.Height);
+                var box = new Rect(at.X - 2, at.Y, text.Width + 4, text.Height);
+                dc.DrawRoundedRectangle(MarkerLabelBackground, null, box, 3, 3);
+                dc.DrawText(text, at);
+            }
         }
     }
 }

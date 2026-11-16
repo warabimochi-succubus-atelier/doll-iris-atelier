@@ -15,7 +15,11 @@ namespace DollIrisGenerator.Models
         public const int MaxCount = 24;
         public const double MaxRadius = 0.85; // the items' position sliders
 
-        private int _count = 8;
+        /// <summary>The form's starting 個数 for decorative symbols / highlights.</summary>
+        public const int DefaultSymbolCount = 3;
+        public const int DefaultHighlightCount = 2;
+
+        private int _count = DefaultSymbolCount;
         private double _innerRadius = 0.3;
         private double _outerRadius = 0.75;
         private bool _randomRotation = true;

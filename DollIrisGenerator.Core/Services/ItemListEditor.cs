@@ -24,9 +24,11 @@ namespace DollIrisGenerator.Services
         private bool _loadingBulk;
 
         /// <param name="newItem">What 「➕ 追加」 adds; also the starting look of the 並べて追加 form.</param>
-        public ItemListEditor(Func<T> newItem)
+        /// <param name="arrangeCount">The 並べて追加 form's starting 個数.</param>
+        public ItemListEditor(Func<T> newItem, int arrangeCount = ItemLayoutSettings.DefaultSymbolCount)
         {
             _newItem = newItem;
+            Layout.Count = arrangeCount;
             Template = newItem();
             Bulk = newItem();
             Bulk.PropertyChanged += OnBulkPropertyChanged;

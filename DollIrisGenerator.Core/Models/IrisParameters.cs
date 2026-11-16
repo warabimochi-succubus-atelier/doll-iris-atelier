@@ -652,6 +652,12 @@ namespace DollIrisGenerator.Models
         public const string NestedItemsChangedName = "NestedItems";
 
         /// <summary>
+        /// A highlight / symbol was ticked or unticked (選択). Not a change of the design: the previews only redraw
+        /// their selection markers (<see cref="Services.ItemMarkers"/>).
+        /// </summary>
+        public event EventHandler? ItemSelectionChanged;
+
+        /// <summary>
         /// Upper bound on highlights / symbols accepted from a loaded file (JSON, favorites, shared files),
         /// so a crafted file cannot make every render loop over millions of items.
         /// </summary>
@@ -688,8 +694,13 @@ namespace DollIrisGenerator.Models
 
         private void OnNestedItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Ticking an item for まとめて変更 is not an edit of the design (no redraw, undo step or history)
-            if (e.PropertyName == nameof(IArrangeableItem.IsSelected)) return;
+            // Ticking an item for まとめて変更 is not an edit of the design (no redraw, undo step or history);
+            // only the preview's selection markers change
+            if (e.PropertyName == nameof(IArrangeableItem.IsSelected))
+            {
+                ItemSelectionChanged?.Invoke(this, EventArgs.Empty);
+                return;
+            }
             OnPropertyChanged(NestedItemsChangedName);
         }
 

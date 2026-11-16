@@ -14,9 +14,9 @@ namespace DollIrisGenerator.ViewModels
     {
         /// <param name="noun">「装飾記号」 / 「ハイライト」, for history entries and messages.</param>
         /// <param name="run">Runs a change of the design as one undo step: (history entry, change returning the status message).</param>
-        public ItemListTools(string noun, Func<T> newItem, Action<string, Func<string>> run)
+        public ItemListTools(string noun, Func<T> newItem, int arrangeCount, Action<string, Func<string>> run)
         {
-            Editor = new ItemListEditor<T>(newItem);
+            Editor = new ItemListEditor<T>(newItem, arrangeCount);
             string full = $"これ以上追加できません ({noun}は {IrisParameters.MaxNestedItems} 個まで)。";
 
             ArrangeCommand = new RelayCommand(() =>
