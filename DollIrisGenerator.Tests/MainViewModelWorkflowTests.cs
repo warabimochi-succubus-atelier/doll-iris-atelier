@@ -70,6 +70,35 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestDroppedFilesAreAllImportedAndUnreadableOnesReported()
+        {
+            File.WriteAllText(PathIn("a.json"), "{\"Name\": \"A\"}");
+            File.WriteAllText(PathIn("b.json"), "{\"Name\": \"B\"}");
+            File.WriteAllText(PathIn("broken.json"), "{ not json");
+
+            _vm.ImportFavoritesFromFiles(new[] { PathIn("a.json"), PathIn("broken.json"), PathIn("b.json") });
+
+            Assert.Equal(new[] { "A", "B" }, _vm.Favorites.Select(f => f.Name));
+            Assert.Contains("2 個のファイルから 2 件を読み込みました", _vm.StatusMessage);
+            string error = Assert.Single(_dialogs.Errors);
+            Assert.Contains("broken.json", error);
+            Assert.DoesNotContain("a.json", error);
+            Assert.True(File.Exists(FavoritesPath)); // saved right away, as with 📥 インポート
+        }
+
+        [Fact]
+        public void TestDroppingOneDesignFileReadsLikeImport()
+        {
+            File.WriteAllText(PathIn("one.json"), "{\"Name\": \"ひとつ\"}");
+
+            _vm.ImportFavoritesFromFiles(new[] { PathIn("one.json") });
+
+            Assert.Equal("ひとつ", Assert.Single(_vm.Favorites).Name);
+            Assert.Equal("お気に入りファイルから 1 件を読み込みました。", _vm.StatusMessage);
+            Assert.Empty(_dialogs.Errors);
+        }
+
+        [Fact]
         public void TestCancelledFileDialogsDoNothing()
         {
             string before = _vm.StatusMessage;
