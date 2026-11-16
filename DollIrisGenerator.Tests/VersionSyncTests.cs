@@ -32,5 +32,15 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(desktop, web);
             Assert.Equal("v" + desktop, AppInfo.VersionLabel);
         }
+
+        [Fact]
+        public void TestCliVersionMatchesDesktopApp()
+        {
+            // DollIrisCli --version and the release zip name use it
+            string desktop = ProjectVersion(RepoFile("DollIrisGenerator", "DollIrisGenerator.csproj"));
+            string cli = ProjectVersion(RepoFile("DollIrisGenerator.Cli", "DollIrisGenerator.Cli.csproj"));
+            Assert.Equal(desktop, cli);
+            Assert.Equal(desktop, Cli.CliApp.Version);
+        }
     }
 }
