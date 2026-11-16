@@ -779,7 +779,7 @@ WPF の `ScrollViewer` は、ホイールの回転量 (`Delta`) にかかわら�
 
 ### 23.6 実装（段階 1）
 - **プロジェクト・実行ファイル**: `DollIrisGenerator.Cli`（段階 1 では `net10.0` で Core だけを参照していた。段階 2 で `net10.0-windows` になった。23.7）。実行ファイル名は `DollIrisCli`。`<Version>` はデスクトップ版と同じにする（`VersionSyncTests` が確かめる）。
-- **配布**: リリースでは、デスクトップ版の zip とは別に `DollIrisAtelier-<タグ>-cli-win-x64.zip`（.NET 不要の exe 1 つと LICENSE・NOTICE.md・README.md・`docs/DESIGN_JSON_FORMAT.md`、resvg のライセンス）を添付する。デスクトップ版だけを使う人のダウンロードを増やさないため、同梱しない。
+- **配布**: リリースでは、デスクトップ版の zip とは別に `DollIrisAtelier-<タグ>-cli-win-x64.zip`（.NET 不要の exe 1 つと、デスクトップ版の zip と同じ文書）を添付する。どちらの zip も文書はリポジトリと同じ配置（`USER_MANUAL.md`、`docs/DESIGN_JSON_FORMAT.md`、LICENSE、NOTICE.md、`third_party/resvg` の resvg のライセンス）で、README.md には利用者向けの `docs/README_DIST.md` を入れる。文書の間の相対リンクが zip の中でもつながるようにするため（`DistributionDocsTests` で確かめる）。デスクトップ版だけを使う人のダウンロードを増やさないため、同梱しない。
 - **共通**: メッセージは日本語。標準出力は UTF-8。入力ファイルに `-` を書くと標準入力から読む。読み込みは 📥 インポートと同じ（`SafeFileReader` の 10 MB 上限、`FavoritesStore.ParseImportText`）。`--help` には「描画はアプリと同じ数式で行い、画像生成 AI は使わない。通信もしない」と書く。
 - **終了コード**: 0 = 成功（`validate` では警告なし）、1 = `validate` で警告あり、2 = 読み込めない・書き出せない・コマンドの書き方の誤り。
 
