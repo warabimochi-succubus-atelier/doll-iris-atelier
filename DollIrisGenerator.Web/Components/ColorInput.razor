@@ -136,10 +136,8 @@
     private async Task SetKind(ColorFillKind kind)
     {
         if (kind == _fill.Kind) return;
-        string value = kind == ColorFillKind.Solid
-            ? _fill.PrimaryColor
-            : ColorFill.DefaultGradientFrom(_fill.PrimaryColor, kind).ToString();
-        await OnPreview.InvokeAsync(value);
+        // Same as the desktop app: the colors carry over (a gradient keeps every stop when its kind changes)
+        await OnPreview.InvokeAsync(_fill.WithKind(kind).ToString());
         await OnCommit.InvokeAsync();
     }
 
