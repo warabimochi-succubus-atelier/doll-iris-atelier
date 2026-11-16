@@ -18,16 +18,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DollIrisGenerator.Core\DollIrisGenerator.Core.csproj" />
+    <!-- Picture output (resvg, PNG, A4 PDF), shared with the command line tool; brings Core and resvg.dll with it -->
+    <ProjectReference Include="..\DollIrisGenerator.Rendering\DollIrisGenerator.Rendering.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="DollIrisGenerator.Tests" />
-  </ItemGroup>
-
-  <!-- SVG rasterizer (resvg C API, see third_party/resvg/README.md); bundled into the single-file exe on publish -->
-  <ItemGroup>
-    <None Include="..\third_party\resvg\win-x64\resvg.dll" Link="resvg.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

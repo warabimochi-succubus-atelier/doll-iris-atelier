@@ -333,15 +333,22 @@
 - あわせて、定規でカットラインの直径を測り、指定サイズと一致しているか確認
 
 ### コマンドラインでの検査・書き出し（DollIrisCli）
-たくさんのデザインをまとめて SVG にしたいときや、手やスクリプトで書いた JSON を確かめたいときは、コマンドライン版 `DollIrisCli.exe` を使えます（Releases の `DollIrisAtelier-vX.Y.Z-cli-win-x64.zip`）。描画はアプリと同じ数式で、同じファイルからはアプリと同じ SVG になります。画像生成 AI は使わず、通信もしません。
+たくさんのデザインをまとめて SVG・PNG・PDF にしたいときや、手やスクリプトで書いた JSON を確かめたいときは、コマンドライン版 `DollIrisCli.exe` を使えます（Releases の `DollIrisAtelier-vX.Y.Z-cli-win-x64.zip`。Windows 用）。描画はアプリと同じ処理で、同じファイルからはアプリと同じ SVG・PNG・PDF になります。画像生成 AI は使わず、通信もしません。
+
+読めるファイルは、デザイン 1 つの JSON、お気に入りの一覧（`.irisfav.json`）、A4 シート（アプリが保存している `print-sheet.json` と同じ形）です。
 
 | コマンド | すること |
 |---|---|
 | `DollIrisCli validate design.json` | アプリで読み込んだときと同じように読み、書いたとおりにならない所（範囲外の値・知らない項目名・読めない色など）を一覧にします |
 | `DollIrisCli svg design.json` | 💾 SVG 保存と同じ SVG を `design.svg` に書き出します |
 | `DollIrisCli svg favorites.irisfav.json -o .\svg` | お気に入りの一覧を、1 件ずつ `svg` フォルダーに書き出します（`favorites-01-<名前>.svg` …） |
+| `DollIrisCli png design.json` | 🖼️ PNG ボタンと同じ透過 PNG を、1200 DPI で `design.png` に書き出します（`--dpi 600` などで変えられます） |
+| `DollIrisCli pdf favorites.irisfav.json` | お気に入りを 1 セットずつ並べた A4 PDF を書き出します（📄 A4 PDF 出力と同じ内容） |
+| `DollIrisCli pdf favorites.irisfav.json --template 1-4 --fill` | 1/4 ドール向けテンプレートで、最後のページの空きを数量の比率で埋めます |
 
-- `--guides` でカットラインとセンターマーク、`--spacing 5` で左右の間隔（mm）を指定できます。
+- `svg`・`png` は `--guides` でカットラインとセンターマーク、`--spacing 5` で左右の間隔（mm）を指定できます。
+- `pdf` のテンプレートは `standard`・`1-3`・`1-4`・`1-6`・`punch`（クラフトパンチ）・`trial`（カラー見本）です。`--pairs 3` でデザインごとのセット数を指定できます。A4 シートのファイルは、その設定と数量のまま PDF にします。
+- `pdf` は、用紙からはみ出す配置のときは書き出しません（アプリの確認で「いいえ」を選んだときと同じ）。そのまま書き出すには `--allow-overflow` を付けます。PDF は必ず「実際のサイズ（100%）」で印刷してください。
 - すでにあるファイルは上書きしません。上書きするときは `--force` を付けます。
 - 終了コードは、0 = 成功、1 = `validate` で警告あり、2 = 読み込めない・書き出せない、です。バッチファイルやスクリプトで結果を判断できます。
 - JSON の書き方は [デザインファイル（JSON）の書き方](https://github.com/warabimochi-succubus-atelier/doll-iris-atelier/blob/main/docs/DESIGN_JSON_FORMAT.md) を見てください。すべての指定は `DollIrisCli --help` で表示できます。

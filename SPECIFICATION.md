@@ -76,8 +76,9 @@
 | プロジェクト | ターゲット | 内容 |
 |---|---|---|
 | `DollIrisGenerator.Core` | `net10.0`（WPF なし） | デザインモデル (`IrisParameters`・プリセット・JSON)、ランダム生成、記号・ハイライトの並べて追加・まとめて変更 (`ItemLayout` / `ItemListEditor`、13.2)、輪郭・模様・グラデーション配置の計算 (`ShapeOutline` / `IrisPatterns` / `GradientMapping`)、SVG 出力、星雲テクスチャ、お気に入り・A4 シートの保存形式、デザインファイルの検査 (`DesignFileValidator`、23.6) |
-| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、プレビュー (`IrisPreviewControl`・`PreviewEyeImages`)、SVG のラスタライズ (`ResvgRasterizer`、resvg)、PNG・A4 PDF 出力、ダイアログ・ウィンドウ設定 |
-| `DollIrisGenerator.Cli` | `net10.0` | コマンドライン `DollIrisCli`（23 章）。デザインファイルの検査と SVG 書き出し |
+| `DollIrisGenerator.Rendering` | `net10.0-windows`（WPF） | 画像の出力。SVG のラスタライズ (`ResvgRasterizer`、resvg)、PNG (`RasterExporter`)・A4 PDF (`PdfExporter`) 出力。アプリと CLI が共有する（23.7） |
+| `DollIrisGenerator` | `net10.0-windows`（WPF） | 画面 (MVVM)、プレビュー (`IrisPreviewControl`・`PreviewEyeImages`)、ダイアログ・ウィンドウ設定 |
+| `DollIrisGenerator.Cli` | `net10.0-windows`（WPF） | コマンドライン `DollIrisCli`（23 章）。デザインファイルの検査と SVG・PNG・A4 PDF の書き出し |
 | `DollIrisGenerator.Web` | `net10.0`（Blazor WebAssembly） | ブラウザ版 (PWA)。デザインの編集とお気に入りのみ（2.4） |
 | `DollIrisGenerator.Tests` | `net10.0-windows` | xUnit テスト |
 
@@ -741,7 +742,7 @@ WPF の `ScrollViewer` は、ホイールの回転量 (`Delta`) にかかわら�
 
 ## 23. コマンドライン (CLI) の方針
 
-**状態**: 段階 1（`validate`・`svg`）を実装済み（23.6）。段階 2・3 は未実装。23.1〜23.5 は、コマンドを足すときにも守る方針。
+**状態**: 段階 1（`validate`・`svg`、23.6）と段階 2（`png`・`pdf`、23.7）を実装済み。段階 3 は未実装。23.1〜23.5 は、コマンドを足すときにも守る方針。
 
 ### 23.1 位置づけ
 - CLI は、一括書き出し・量産・形式チェックのための **汎用の自動化機能** として提供する。「AI 用」とはうたわない。
@@ -764,7 +765,7 @@ WPF の `ScrollViewer` は、ホイールの回転量 (`Delta`) にかかわら�
 | 3 | `template` | 全項目がそろったテンプレート JSON を出力する |
 
 - 結果は終了コード（成功 0、失敗は 0 以外）と標準出力・標準エラー出力で分かるようにする。警告は一覧で出す。
-- 段階 1 は `DollIrisGenerator.Core`（2.3）だけで作った（実装済み）。段階 2 の PNG・PDF 出力は今はデスクトップ版（`net10.0-windows`）にあるため、着手する前に Core へ移すか、Windows 専用の CLI にするかを決める。
+- 段階 1 は `DollIrisGenerator.Core`（2.3）だけで作った（実装済み）。段階 2 は、出力をアプリと完全に同じにするため、Windows 専用の CLI にした（23.7）。
 
 ### 23.4 入れないもの
 - AI サービスの呼び出し、API キーの設定、プロンプトの内蔵。
@@ -777,8 +778,8 @@ WPF の `ScrollViewer` は、ホイールの回転量 (`Delta`) にかかわら�
 - 項目や範囲の説明は `docs/DESIGN_JSON_FORMAT.md` を正本とし、CLI の説明に同じ表を複製しない。
 
 ### 23.6 実装（段階 1）
-- **プロジェクト・実行ファイル**: `DollIrisGenerator.Cli`（`net10.0`、Core だけを参照）。実行ファイル名は `DollIrisCli`。`<Version>` はデスクトップ版と同じにする（`VersionSyncTests` が確かめる）。
-- **配布**: リリースでは、デスクトップ版の zip とは別に `DollIrisAtelier-<タグ>-cli-win-x64.zip`（.NET 不要の exe 1 つと LICENSE・NOTICE.md・README.md・`docs/DESIGN_JSON_FORMAT.md`）を添付する。デスクトップ版だけを使う人のダウンロードを増やさないため、同梱しない。
+- **プロジェクト・実行ファイル**: `DollIrisGenerator.Cli`（段階 1 では `net10.0` で Core だけを参照していた。段階 2 で `net10.0-windows` になった。23.7）。実行ファイル名は `DollIrisCli`。`<Version>` はデスクトップ版と同じにする（`VersionSyncTests` が確かめる）。
+- **配布**: リリースでは、デスクトップ版の zip とは別に `DollIrisAtelier-<タグ>-cli-win-x64.zip`（.NET 不要の exe 1 つと LICENSE・NOTICE.md・README.md・`docs/DESIGN_JSON_FORMAT.md`、resvg のライセンス）を添付する。デスクトップ版だけを使う人のダウンロードを増やさないため、同梱しない。
 - **共通**: メッセージは日本語。標準出力は UTF-8。入力ファイルに `-` を書くと標準入力から読む。読み込みは 📥 インポートと同じ（`SafeFileReader` の 10 MB 上限、`FavoritesStore.ParseImportText`）。`--help` には「描画はアプリと同じ数式で行い、画像生成 AI は使わない。通信もしない」と書く。
 - **終了コード**: 0 = 成功（`validate` では警告なし）、1 = `validate` で警告あり、2 = 読み込めない・書き出せない・コマンドの書き方の誤り。
 
@@ -808,3 +809,24 @@ WPF の `ScrollViewer` は、ホイールの回転量 (`Delta`) にかかわら�
   - 書き出したファイルのパスを 1 行ずつ標準出力に出す。
 - すでにあるファイルは、`--force` がない限り上書きしない。1 つでもあれば何も書かずにエラーにする。ファイルは `AtomicFileWriter` で書く。
 - 警告は標準エラー出力に出し、そのまま書き出す（アプリの 📥 インポートと同じ結果になる）。エラーのときは何も書き出さない。
+
+### 23.7 実装（段階 2）
+- **Windows 専用にした理由**: PNG・PDF の出力は WPF（`BitmapSource`、PNG / JPEG の書き出し、日本語ラベルの文字描画）と、win-x64 版しかない resvg を使う。Windows 以外で動かすには、PDF の目の画像の形式やラベルの描き方を変える必要があり、デスクトップ版の PDF も変わってしまう。そこで、出力がアプリと完全に同じになることを優先し、CLI も Windows 専用にした。Windows 以外での出力は、要望が出たときに改めて検討する。
+- **共有ライブラリ**: `ResvgRasterizer`・`RasterExporter`・`PdfExporter` をアプリから `DollIrisGenerator.Rendering`（`net10.0-windows`、WPF）に移し、アプリと CLI の両方から使う。名前空間は変えない（`DollIrisGenerator.Services`）。`resvg.dll` はこのライブラリが出力先へコピーするので、参照するアプリ・CLI・テストに届く。
+- **CLI**: `DollIrisGenerator.Cli` は `net10.0-windows`（`UseWPF`）で、Rendering を参照する。WPF の文字描画 (`RenderTargetBitmap`) のため、`Main` は `[STAThread]`。配布の exe は、resvg と WPF のネイティブ DLL を中に入れた単一ファイル（`IncludeNativeLibrariesForSelfExtract`）。zip には resvg のライセンス（デスクトップ版の zip と同じ `third_party/resvg` の 4 ファイル）も入れる。
+- **読めるファイル**: 段階 1 の 2 つに加え、A4 シート（`print-sheet.json` と同じ形。`Items` を持つオブジェクト）も、すべてのコマンドで読む。`validate` はシートの設定 (`Config`)・各行の数量 (`PairCount`)・各行のデザインを、アプリの起動時と同じ補正 (`PrintSheetStore.Normalize`) と比べて報告する。`svg` / `png` では 1 行を 1 つのデザインとして書き出す。
+- **ファイルの書き方**: どのコマンドも、同じフォルダーの一時ファイルに書いてから置き換える（途中で失敗しても、壊れたファイルや前のファイルの壊れた状態を残さない）。
+
+#### `png <ファイル> [-o <出力先>] [--dpi <DPI>] [--guides] [--spacing <mm>] [--force]`
+- 🖼️ PNG ボタンと同じ呼び出し（`RasterExporter.RenderPairToBitmap` → `SaveBitmapToPngBytes`）。既定は 1200 DPI（19 章の推奨基準）、間隔 3.0mm、カットライン・センターマークなし。`--dpi` は 72〜2400。
+- 出力先の決め方・上書きの扱いは `svg` と同じ。標準出力には書けない。
+
+#### `pdf <ファイル> [-o <出力先>] [--template <名前>] [--pairs <数>] [--fill] [--allow-overflow] [--force]`
+- 📄 A4 PDF 出力と同じ `PdfExporter.ExportA4SheetToPdf` で、1 つの PDF を書く。出力先は省略すると入力と同じ名前の `.pdf`（`-o` にファイル名かフォルダー）。
+- **シートの作り方**:
+  - A4 シートのファイル: その設定と数量のまま（`--pairs` は使えない）。
+  - デザイン・お気に入りの一覧: 既定の設定 (`new PrintSheetConfig()`) のシートに、1 つのデザインを 1 行・`--pairs` セット（既定 1、1〜100）で並べる。同じデザイン（記号・ハイライトの `Id` を除いて同じ JSON）が 2 回出てきたら、行を増やさず数量を足す（🖨️ 選択したお気に入りをA4シートに追加 と同じ。上限 100）。
+- `--template`: アプリのテンプレート (`PdfTemplatePreset`) を設定に当てはめる。名前は `standard`（標準レイアウト）・`1-3`・`1-4`・`1-6`・`punch`（クラフトパンチ）・`trial`（カラー見本）か、`PdfTemplateType` の名前。A4 シートのファイルにも使え、その設定を上書きする。
+- `--fill`: ⚡ A4を満杯に自動配置 と同じく、最後のページの空きを数量の比率で配る（`SheetFill`）。CLI では今のデザインを加えることはしない。
+- **用紙からはみ出す配置**（`SheetLayout.FitsOnPage` が false）: アプリは確認して既定で中止するので、CLI も既定では何も書かずにエラーにする。`--allow-overflow` で警告を出して書き出す。
+- 書き出したら、パスとページ数・セット数・列 × 行と、「実際のサイズ (100%)」で印刷する注意を出す。

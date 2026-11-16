@@ -78,12 +78,15 @@ jobs:
       - name: Publish command line tool
         run: >
           dotnet publish DollIrisGenerator.Cli --configuration Release --runtime win-x64 --self-contained true
-          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
           --output "dist/$env:CLI_PACKAGE"
 
       - name: Zip command line tool
         run: |
           Copy-Item LICENSE, NOTICE.md, README.md, docs/DESIGN_JSON_FORMAT.md "dist/$env:CLI_PACKAGE"
+          # resvg is inside this exe too (SPECIFICATION.md 23.7)
+          New-Item -ItemType Directory -Force "dist/$env:CLI_PACKAGE/third_party/resvg" | Out-Null
+          Copy-Item third_party/resvg/LICENSE-MIT, third_party/resvg/LICENSE-APACHE, third_party/resvg/DEPENDENCIES.txt, third_party/resvg/THIRD-PARTY-LICENSES.txt "dist/$env:CLI_PACKAGE/third_party/resvg"
           Get-ChildItem "dist/$env:CLI_PACKAGE" | Format-Table Name, Length
           Compress-Archive -Path "dist/$env:CLI_PACKAGE" -DestinationPath "dist/$env:CLI_PACKAGE.zip"
 

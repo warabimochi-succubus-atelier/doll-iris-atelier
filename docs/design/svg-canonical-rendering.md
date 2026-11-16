@@ -74,8 +74,8 @@ WPF に残すのは、虹彩の外側のものだけにする。用紙・余白�
   - `third_party/resvg/LICENSE-*`（resvg のライセンスは Apache-2.0 / MIT。`NOTICE.md` に追記する）
   - `third_party/resvg/VERSION.txt`（タグ・コミット・DLL の SHA-256）
   - `third_party/resvg/DEPENDENCIES.txt`（DLL に入るクレートとライセンスの一覧。リリースの zip にも入れる）
-- **配布**: アプリの csproj で `resvg.dll` を出力先へコピーする。リリースは今の `PublishSingleFile` と `IncludeNativeLibrariesForSelfExtract` で exe に同梱する。テストのプロジェクトはアプリを参照しているので、同じ DLL が届く。
-- **ラッパー** `DollIrisGenerator/Services/ResvgRasterizer.cs`:
+- **配布**: `DollIrisGenerator.Rendering` の csproj で `resvg.dll` を出力先へコピーする（参照するアプリ・コマンドライン版・テストに届く）。リリースは `PublishSingleFile` と `IncludeNativeLibrariesForSelfExtract` で exe に同梱する。
+- **ラッパー** `DollIrisGenerator.Rendering/ResvgRasterizer.cs`（アプリとコマンドライン版が共有する。SPECIFICATION.md 23.7）:
   - 呼ぶ関数: `resvg_options_create`、`resvg_parse_tree_from_data`、`resvg_render`（変換行列で mm → ピクセルの拡大と平行移動を渡す）、`resvg_tree_destroy`、`resvg_options_destroy`
   - `Rasterize(string svg, int widthPx, int heightPx, Matrix viewToPixel, Color? background)` が `BitmapSource` を返す（Pbgra32、凍結済み）。resvg が返すのは乗算済みの RGBA なので、R と B を入れ替えるだけで済む。
   - **UI スレッドの外から呼べる**。`RenderTargetBitmap` と違って STA が要らないので、プレビューは裏で描き、PDF は片目ずつ並列に描ける。

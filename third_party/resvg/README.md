@@ -1,6 +1,6 @@
 # resvg
 
-アプリは、虹彩の SVG（`SvgExporter` が作るもの）を [resvg](https://github.com/linebender/resvg) で画像にする（`DollIrisGenerator/Services/ResvgRasterizer.cs`）。設計は [docs/design/svg-canonical-rendering.md](../../docs/design/svg-canonical-rendering.md) を参照。
+アプリは、虹彩の SVG（`SvgExporter` が作るもの）を [resvg](https://github.com/linebender/resvg) で画像にする（`DollIrisGenerator.Rendering/ResvgRasterizer.cs`。デスクトップ版とコマンドライン版が共有する）。設計は [docs/design/svg-canonical-rendering.md](../../docs/design/svg-canonical-rendering.md) を参照。
 
 | ファイル | 内容 |
 |---|---|
