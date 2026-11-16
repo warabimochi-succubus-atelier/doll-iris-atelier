@@ -171,6 +171,7 @@ namespace DollIrisGenerator.Tests
             var symbol = new DecorativeSymbolItem { PositionX = 0.0, PositionY = -0.5, Size = 0.15, Enabled = true };
             p.Symbols.Add(symbol);
             var ctrl = Create(p);
+            ctrl.ShowItemMarkers = true; // the cell being edited
             PumpUntil(() => ctrl.EyePicturesInProgress == 0);
 
             var marker = ItemMarkers.ForEye(p, false, symbol.Id).Single();
@@ -201,6 +202,12 @@ namespace DollIrisGenerator.Tests
                 Assert.Equal(bare, PixelsOnRing(ctrl, center, r)); // no symbol ring on the ハイライト tab
                 ItemHover.SetShownKind(null);
                 Assert.Equal(bare, PixelsOnRing(ctrl, center, r)); // none on the other tabs
+
+                // Another cell of the split preview (not the design being edited) shows no rings
+                ItemHover.SetShownKind(MarkedItemKind.Symbol);
+                Assert.NotEqual(bare, PixelsOnRing(ctrl, center, r));
+                ctrl.ShowItemMarkers = false;
+                Assert.Equal(bare, PixelsOnRing(ctrl, center, r));
             }
             finally
             {

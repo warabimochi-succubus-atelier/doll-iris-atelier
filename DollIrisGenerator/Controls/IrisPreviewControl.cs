@@ -58,6 +58,18 @@ namespace DollIrisGenerator.Controls
             set => SetValue(ShowEyeLabelsProperty, value);
         }
 
+        // Rings round the ticked / pointed-at symbols and highlights. Only the cell being edited shows them: the
+        // other cells' designs are not the one whose lists are open (and may hold ticks of their own).
+        public static readonly DependencyProperty ShowItemMarkersProperty =
+            DependencyProperty.Register(nameof(ShowItemMarkers), typeof(bool), typeof(IrisPreviewControl),
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool ShowItemMarkers
+        {
+            get => (bool)GetValue(ShowItemMarkersProperty);
+            set => SetValue(ShowItemMarkersProperty, value);
+        }
+
         public static readonly DependencyProperty SheetConfigProperty =
             DependencyProperty.Register(nameof(SheetConfig), typeof(PrintSheetConfig), typeof(IrisPreviewControl),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnSheetConfigChanged));
@@ -565,8 +577,8 @@ namespace DollIrisGenerator.Controls
         /// </summary>
         private void DrawItemMarkers(DrawingContext dc, IrisParameters p, bool isRight, Point eyeCenter, double pixelsPerMm)
         {
-            // Only the open tab's list (記号 or ハイライト・対称性); none on the other tabs
-            if (ItemHover.ShownKind is not { } kind) return;
+            // Only in the cell being edited, and only the open tab's list (記号 or ハイライト・対称性)
+            if (!ShowItemMarkers || ItemHover.ShownKind is not { } kind) return;
             var markers = ItemMarkers.ForEye(p, isRight, ItemHover.CurrentId, kind);
             if (markers.Count == 0) return;
             double pixelsPerDip = PixelsPerDip;
