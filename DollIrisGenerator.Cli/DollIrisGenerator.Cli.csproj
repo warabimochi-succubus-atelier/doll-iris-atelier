@@ -14,7 +14,7 @@
     <RootNamespace>DollIrisGenerator.Cli</RootNamespace>
     <AssemblyName>DollIrisCli</AssemblyName>
     <!-- Keep in step with <Version> in DollIrisGenerator.csproj (VersionSyncTests checks it) -->
-    <Version>0.17.0</Version>
+    <Version>0.18.0</Version>
     <Product>Doll Iris Atelier</Product>
     <Title>Doll Iris Atelier CLI</Title>
     <AssemblyTitle>Doll Iris Atelier CLI</AssemblyTitle>
