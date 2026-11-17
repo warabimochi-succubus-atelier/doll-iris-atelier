@@ -1598,6 +1598,13 @@
                                                         <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                     </DockPanel>
                                                     <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
+
+                                                    <!-- Same range as HighlightItem.Count (1-12); 2 or more puts the copies in a ring round the position -->
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="同じハイライトをいくつ並べるか。2 以上にすると、位置のまわりに円を描くように並びます">
+                                                        <TextBlock Text="繰り返し数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Count, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="1" Maximum="12" Value="{Binding Count}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,6"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                             <DataTemplate x:Key="HighlightStyleFieldsBottom">
@@ -1609,6 +1616,12 @@
                                                         <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
                                                     </DockPanel>
                                                     <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="4点星の先・菱形の角を丸めます。0% で従来どおりのとがった形です。正円には影響しません">
+                                                        <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
 
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1677,6 +1690,11 @@
                                                             <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="4点星の先・菱形の角を丸めます (正円には影響しません)">
+                                                            <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                            <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                        </DockPanel>
+                                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
                                                         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>

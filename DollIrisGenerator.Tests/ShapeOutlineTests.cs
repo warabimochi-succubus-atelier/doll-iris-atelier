@@ -30,14 +30,22 @@ namespace DollIrisGenerator.Tests
             {
                 yield return new object[] { $"pupil:{shape}" };
             }
+            // Highlights with corners (角の丸み); the circle has none
+            foreach (var shape in new[] { HighlightShape.Star4, HighlightShape.Rhombus })
+            {
+                yield return new object[] { $"highlight:{shape}" };
+            }
         }
 
         private static ShapeOutline Build(string name)
         {
             var parts = name.Split(':');
-            return parts[0] == "symbol"
-                ? ShapeOutline.ForSymbol(Enum.Parse<SymbolType>(parts[1]), 50.0)!
-                : ShapeOutline.ForPupil(Enum.Parse<PupilShape>(parts[1]), 30.0, 30.0)!;
+            return parts[0] switch
+            {
+                "symbol" => ShapeOutline.ForSymbol(Enum.Parse<SymbolType>(parts[1]), 50.0)!,
+                "highlight" => ShapeOutline.ForHighlight(Enum.Parse<HighlightShape>(parts[1]), 50.0),
+                _ => ShapeOutline.ForPupil(Enum.Parse<PupilShape>(parts[1]), 30.0, 30.0)!
+            };
         }
 
         private static void RunOnSta(Action body)
@@ -500,6 +508,93 @@ namespace DollIrisGenerator.Tests
             double plain = ItemMarkers.ForEye(p, false, null)[0].Radius;
             p.Highlights[0].StretchTop = 2.0;
             Assert.True(ItemMarkers.ForEye(p, false, null)[0].Radius > plain * 1.8);
+        }
+
+        /// <summary>Center of a drawn highlight element: the ellipse's (cx, cy), or the middle of the path / polygon's points.</summary>
+        private static (double X, double Y) ElementCenter(string element)
+        {
+            if (element.StartsWith("<ellipse", StringComparison.Ordinal)) return (Attr(element, "cx"), Attr(element, "cy"));
+            string pts = System.Text.RegularExpressions.Regex.Match(element, "(?:d|points)=\"([^\"]*)\"").Groups[1].Value;
+            var n = System.Text.RegularExpressions.Regex.Matches(pts, @"-?\d+(\.\d+)?")
+                .Select(m => double.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+            var xs = n.Where((_, i) => i % 2 == 0).ToList();
+            var ys = n.Where((_, i) => i % 2 == 1).ToList();
+            return ((xs.Min() + xs.Max()) / 2.0, (ys.Min() + ys.Max()) / 2.0);
+        }
+
+        [Theory]
+        [InlineData(HighlightShape.Circle, true)]
+        [InlineData(HighlightShape.Star4, true)]
+        [InlineData(HighlightShape.Rhombus, false)]
+        public void TestHighlightCopiesSitOnARingAndFollowTheMirrorSetting(HighlightShape shape, bool mirror)
+        {
+            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = mirror };
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = shape, Count = 5, Size = 0.1, PositionX = 0.3, PositionY = -0.2, Blend = LayerBlend.Screen });
+            // The same highlight with one copy marks the ring's center
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Count = 1, Size = 0.02, PositionX = 0.3, PositionY = -0.2 });
+
+            foreach (bool isRightEye in new[] { false, true })
+            {
+                var e = HighlightElements(p, isRightEye);
+                Assert.Equal(6, e.Count);
+                var center = ElementCenter(e[5]);
+                double r = Attr(e[5], "rx") / 0.02 * 0.1; // the copies' radius (size 0.1), from the marker's 0.02
+                var offsets = e.Take(5).Select(ElementCenter).Select(c => (c.X - center.X, c.Y - center.Y)).ToList();
+                foreach (var (dx, dy) in offsets) Assert.Equal(r * 1.4, Math.Sqrt(dx * dx + dy * dy), 2);
+                // Each copy carries the highlight's own 重ね方 (no group of its own)
+                Assert.All(e.Take(5), x => Assert.Contains("mix-blend-mode:screen", x));
+
+                // The first copy is to the right of the position; in a mirrored right eye it is to the left
+                double expectedSide = isRightEye && mirror ? -1.0 : 1.0;
+                Assert.Equal(expectedSide * r * 1.4, offsets[0].Item1, 2);
+                Assert.Equal(0.0, offsets[0].Item2, 2);
+            }
+        }
+
+        [Fact]
+        public void TestHighlightCornerRoundingRoundsTheSparkleAndRhombusButNotTheCircle()
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, CornerRounding = 0.8 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, CornerRounding = 0.8 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus, CornerRounding = 0.8 });
+            var rounded = HighlightElements(p);
+
+            foreach (var h in p.Highlights) h.CornerRounding = 0.0;
+            var sharp = HighlightElements(p);
+
+            Assert.Equal(sharp[0], rounded[0]);            // a circle has no corners: the same ellipse
+            Assert.StartsWith("<polygon", sharp[1]);
+            Assert.StartsWith("<path", rounded[1]);
+            Assert.Contains(" C ", rounded[1]);             // the tips became curves
+            Assert.StartsWith("<path", rounded[2]);
+            Assert.Contains(" C ", rounded[2]);
+            Assert.All(rounded, x => Assert.Contains("opacity=", x));
+        }
+
+        [Fact]
+        public void TestHighlightCountAndRoundingAreSavedClonedClampedAndRinged()
+        {
+            var h = new HighlightItem { Count = 99, CornerRounding = 5.0 };
+            Assert.Equal((12, 1.0), (h.Count, h.CornerRounding)); // pulled into range
+            h.Count = 3;
+            h.CornerRounding = 0.4;
+            var back = JsonSerializer.Deserialize<HighlightItem>(JsonSerializer.Serialize(h))!;
+            Assert.Equal((3, 0.4), (back.Count, back.CornerRounding));
+            Assert.Equal((3, 0.4), (h.Clone().Count, h.Clone().CornerRounding));
+            var old = JsonSerializer.Deserialize<HighlightItem>("{\"Shape\":2}")!;
+            Assert.Equal((1, 0.0), (old.Count, old.CornerRounding));
+
+            // The selection ring takes in the ring of copies (as the symbols' does)
+            var p = new IrisParameters();
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Size = 0.2, IsSelected = true });
+            double single = ItemMarkers.ForEye(p, false, null)[0].Radius;
+            p.Highlights[0].Count = 6;
+            double ring = ItemMarkers.ForEye(p, false, null)[0].Radius;
+            Assert.True(ring > single * 2.2, $"{ring} vs {single}");
         }
 
         [Fact]

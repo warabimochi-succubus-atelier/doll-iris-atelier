@@ -187,6 +187,8 @@ public static class DesignFields
         }),
         new ColorField<HighlightItem>("色", h => h.Color, (h, v) => h.Color = v, AllowGradient: true),
         new SliderField<HighlightItem>("サイズ", h => h.Size, (h, v) => h.Size = v, 0.05, 0.45, 0.01, Fmt.Percent),
+        new SliderField<HighlightItem>("繰り返し数", h => h.Count, (h, v) => h.Count = Int(v), 1, 12, 1, v => Fmt.Count(v, "個"),
+            "同じハイライトをいくつ並べるか。2 以上にすると、位置のまわりに円を描くように並びます"),
         new SliderField<HighlightItem>("位置 X (横)", h => h.PositionX, (h, v) => h.PositionX = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<HighlightItem>("位置 Y (縦)", h => h.PositionY, (h, v) => h.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         Stretch<HighlightItem>("上の長さ", h => h.StretchTop, (h, v) => h.StretchTop = v),
@@ -194,6 +196,8 @@ public static class DesignFields
         Stretch<HighlightItem>("左の長さ", h => h.StretchLeft, (h, v) => h.StretchLeft = v),
         Stretch<HighlightItem>("右の長さ", h => h.StretchRight, (h, v) => h.StretchRight = v),
         new SliderField<HighlightItem>("回転角度", h => h.Rotation, (h, v) => h.Rotation = v, -180, 180, 1, Fmt.Deg),
+        new SliderField<HighlightItem>("角の丸み", h => h.CornerRounding, (h, v) => h.CornerRounding = v, 0, 1, 0.01, Fmt.Percent,
+            "4点星の先・菱形の角を丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
         Transparency<HighlightItem>(h => h.Opacity, (h, v) => h.Opacity = v),
         new ChoiceField<HighlightItem>("重ね方", h => h.Blend, (h, v) => h.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
@@ -230,7 +234,7 @@ public static class DesignFields
 
     /// <summary>The look of the highlights 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
-        Pick(Highlight, "形状", "色", "サイズ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Highlight, "形状", "色", "サイズ", "角の丸み", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
     public static DecorativeSymbolItem NewSymbol() => new()

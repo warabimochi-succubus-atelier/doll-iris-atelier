@@ -13,6 +13,8 @@ namespace DollIrisGenerator.Models
         private double _positionX = -0.35; // -1.0 to 1.0 (relative to iris radius)
         private double _positionY = -0.35; // -1.0 to 1.0
         private double _size = 0.22;       // relative to radius
+        private int _count = 1;            // 繰り返し数: copies on a ring round the position (as the symbols' Count)
+        private double _cornerRounding = 0.0; // 角の丸み of the 4点星 / 菱形 (a circle has no corners)
         private double _rotation = 0.0;    // degrees
         private string _color = "#FFFFFF";
         private double _opacity = 0.90;
@@ -74,6 +76,23 @@ namespace DollIrisGenerator.Models
         }
 
         /// <summary>
+        /// 繰り返し数: 1 to <see cref="DecorativeSymbolItem.MaxCount"/>. With 2 or more, the copies sit evenly on a circle
+        /// of radius size × 1.4 round the position (mirrored with the highlight), as the decorative symbols' copies do.
+        /// </summary>
+        public int Count
+        {
+            get => _count;
+            set { _count = Math.Clamp(value, 1, DecorativeSymbolItem.MaxCount); OnPropertyChanged(); } // bounded: drawing loops over this
+        }
+
+        /// <summary>How much the tips / corners of the 4点星 and 菱形 are rounded: 0 = sharp (as before) to 1 = fully rounded.</summary>
+        public double CornerRounding
+        {
+            get => _cornerRounding;
+            set { _cornerRounding = IrisParameters.ClampCornerRounding(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>
         /// 上の長さ: the part of the shape above its center, stretched by this (1 = as drawn). When the right eye's
         /// highlights are mirrored (<see cref="IrisParameters.MirrorHighlightsWithIris"/>), 左 and 右 trade places there.
         /// </summary>
@@ -127,9 +146,9 @@ namespace DollIrisGenerator.Models
 
         public static IReadOnlyList<string> BulkSettingNames { get; } = new[]
         {
-            nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size),
+            nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size), nameof(Count),
             nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
-            nameof(Rotation), nameof(Opacity), nameof(Blend)
+            nameof(Rotation), nameof(CornerRounding), nameof(Opacity), nameof(Blend)
         };
 
         public bool CopySettingTo(HighlightItem target, string propertyName)
@@ -140,6 +159,8 @@ namespace DollIrisGenerator.Models
                 case nameof(Shape): target.Shape = Shape; return true;
                 case nameof(Color): target.Color = Color; return true;
                 case nameof(Size): target.Size = Size; return true;
+                case nameof(Count): target.Count = Count; return true;
+                case nameof(CornerRounding): target.CornerRounding = CornerRounding; return true;
                 case nameof(StretchTop): target.StretchTop = StretchTop; return true;
                 case nameof(StretchBottom): target.StretchBottom = StretchBottom; return true;
                 case nameof(StretchLeft): target.StretchLeft = StretchLeft; return true;
@@ -160,6 +181,8 @@ namespace DollIrisGenerator.Models
                 PositionX = this.PositionX,
                 PositionY = this.PositionY,
                 Size = this.Size,
+                Count = this.Count,
+                CornerRounding = this.CornerRounding,
                 StretchTop = this.StretchTop,
                 StretchBottom = this.StretchBottom,
                 StretchLeft = this.StretchLeft,

@@ -53,7 +53,8 @@ namespace DollIrisGenerator.Services
                 var h = p.Highlights[i];
                 bool hovered = hoveredId != null && h.Id == hoveredId;
                 if (!h.IsSelected && !hovered) continue;
-                double r = baseR * h.Size * ShapeStretch.Max(h); // reaches as far as its longest length
+                // As the symbols: up to its longest length from its center, plus the ring of copies
+                double r = baseR * h.Size * (ShapeStretch.Max(h) + (h.Count > 1 ? 1.4 : 0.0));
                 result.Add(Make(MarkedItemKind.Highlight, i + 1, mirrorHighlights ? -h.PositionX : h.PositionX, h.PositionY, r, hovered));
             }
             return result;

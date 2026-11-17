@@ -824,44 +824,58 @@ namespace DollIrisGenerator.Services
                     double hRadius = baseR * h.Size;
                     // A mirrored highlight is drawn as it is, so its left and right lengths trade places
                     bool mirrorHighlight = isRightEye && p.MirrorHighlightsWithIris;
-                    // Gradient across the highlight's own box around (hx, hy), turned with it (as on screen)
-                    var hBox = IrisStyle.HighlightBox(h, hRadius, mirrorHighlight);
-                    hBox.Offset(hx, hy);
-                    string safeHColor = Paint(sb, "      ", $"{idPrefix}_highlight{highlightIndex}_fill", h.Color, "#FFFFFF", hBox,
-                        mirrorHighlight);
 
-                    string rotAttr = Math.Abs(rot) > 0.1 ? $@" transform=""rotate({rot.ToFixed(1)}, {hx.ToFixed(3)}, {hy.ToFixed(3)})""" : "";
-                    // Each highlight's own 重ね方, on its shape (the group is not isolated, so it blends with the eye below)
-                    string attrs = rotAttr + BlendStyle(h.Blend);
+                    // How the shape is written. A circle whose up / down and left / right lengths are equal is an
+                    // ellipse (a plain circle too; corner rounding does nothing to it). The sparkle and rhombus are the
+                    // same polygons as before while neither stretched nor rounded. Anything else is drawn from its
+                    // outline: rounded (角の丸み), then stretched (上下左右の長さ), as the decorative symbols
+                    bool ellipse = h.Shape == HighlightShape.Circle
+                        && h.StretchTop == h.StretchBottom && h.StretchLeft == h.StretchRight;
+                    bool polygon = !ellipse && ShapeStretch.IsNone(h) && h.CornerRounding <= 0.0;
+                    ShapeOutline? hOutline = ellipse || polygon
+                        ? null
+                        : ShapeOutline.ForHighlight(h.Shape, hRadius).Rounded(h.CornerRounding).Stretched(h, mirrorHighlight);
+                    // Gradient across the highlight's own box (each copy its own), turned with it (as on screen)
+                    Rect localBox = hOutline?.GetBounds() ?? IrisStyle.HighlightBox(h, hRadius, mirrorHighlight);
 
-                    // 上下左右の長さ: a circle stretched the same both ways along each axis stays an ellipse; any other
-                    // stretched shape is drawn from its stretched outline. Unstretched shapes are written as before
-                    bool stretched = !ShapeStretch.IsNone(h);
-                    if (stretched && h.Shape == HighlightShape.Circle
-                        && h.StretchTop == h.StretchBottom && h.StretchLeft == h.StretchRight)
+                    for (int c = 0; c < h.Count; c++)
                     {
-                        sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{(hRadius * h.StretchLeft).ToFixed(3)}"" ry=""{(hRadius * h.StretchTop).ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
-                        continue;
-                    }
-                    if (stretched)
-                    {
-                        var hOutline = ShapeOutline.ForHighlight(h.Shape, hRadius).Stretched(h, mirrorHighlight);
-                        AppendPath(sb, "      <path d=\"", hOutline, hx, hy, $"\" fill=\"{safeHColor}\" opacity=\"{h.Opacity.ToFixed(2)}\"{attrs} />");
-                        continue;
-                    }
+                        double curX = hx, curY = hy;
+                        if (h.Count > 1)
+                        {
+                            // 繰り返し数: evenly on a ring of radius size × 1.4 round the position, mirrored with the highlight
+                            double offsetAngle = 2.0 * Math.PI * c / h.Count;
+                            if (mirrorHighlight) offsetAngle = Math.PI - offsetAngle;
+                            curX += hRadius * 1.4 * Math.Cos(offsetAngle);
+                            curY += hRadius * 1.4 * Math.Sin(offsetAngle);
+                        }
 
-                    switch (h.Shape)
-                    {
-                        case HighlightShape.Star4:
-                            sb.AppendLine(BuildSvgStar4(hx, hy, hRadius, 0.22, attrs, safeHColor, h.Opacity));
-                            break;
-                        case HighlightShape.Rhombus:
-                            sb.AppendLine(BuildSvgDiamond(hx, hy, hRadius * 0.65, hRadius, attrs, safeHColor, h.Opacity));
-                            break;
-                        case HighlightShape.Circle:
-                        default:
-                            sb.AppendLine($@"      <ellipse cx=""{hx.ToFixed(3)}"" cy=""{hy.ToFixed(3)}"" rx=""{hRadius.ToFixed(3)}"" ry=""{hRadius.ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
-                            break;
+                        var hBox = localBox;
+                        hBox.Offset(curX, curY);
+                        string fillId = h.Count > 1 ? $"{idPrefix}_highlight{highlightIndex}_{c}_fill" : $"{idPrefix}_highlight{highlightIndex}_fill";
+                        string safeHColor = Paint(sb, "      ", fillId, h.Color, "#FFFFFF", hBox, mirrorHighlight);
+
+                        string rotAttr = Math.Abs(rot) > 0.1 ? $@" transform=""rotate({rot.ToFixed(1)}, {curX.ToFixed(3)}, {curY.ToFixed(3)})""" : "";
+                        // Each copy carries the highlight's opacity and 重ね方 itself (the group is not isolated, so every
+                        // shape blends with the eye below, as separate highlights do)
+                        string attrs = rotAttr + BlendStyle(h.Blend);
+
+                        if (hOutline != null)
+                        {
+                            AppendPath(sb, "      <path d=\"", hOutline, curX, curY, $"\" fill=\"{safeHColor}\" opacity=\"{h.Opacity.ToFixed(2)}\"{attrs} />");
+                        }
+                        else if (ellipse)
+                        {
+                            sb.AppendLine($@"      <ellipse cx=""{curX.ToFixed(3)}"" cy=""{curY.ToFixed(3)}"" rx=""{(hRadius * h.StretchLeft).ToFixed(3)}"" ry=""{(hRadius * h.StretchTop).ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
+                        }
+                        else if (h.Shape == HighlightShape.Star4)
+                        {
+                            sb.AppendLine(BuildSvgStar4(curX, curY, hRadius, 0.22, attrs, safeHColor, h.Opacity));
+                        }
+                        else
+                        {
+                            sb.AppendLine(BuildSvgDiamond(curX, curY, hRadius * 0.65, hRadius, attrs, safeHColor, h.Opacity));
+                        }
                     }
                 }
                 sb.AppendLine("    </g>");
