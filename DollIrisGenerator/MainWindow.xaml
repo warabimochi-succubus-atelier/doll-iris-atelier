@@ -1356,6 +1356,8 @@
                                             <Button Content="➕ 装飾記号追加" Command="{Binding AddSymbolCommand}"
                                                     HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
                                         </DockPanel>
+                                        <TextBlock Text="一覧の下にある記号ほど手前 (上) に描かれます。重なりは各カードの「↑ 奥へ」「↓ 手前へ」で変えられます。"
+                                                   Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
                                         <TextBlock Text="装飾記号はありません。「➕ 装飾記号追加」で追加できます。" Foreground="{StaticResource TextMuted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6">
                                             <TextBlock.Style>
@@ -1482,6 +1484,12 @@
                                                                 <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
                                                                           ToolTip="選んだ記号は「まとめて変更」でそろえて変えられます"/>
                                                                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                                                    <Button Content="↑ 奥へ" Command="{Binding DataContext.SymbolTools.MoveBackwardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,4,0" Background="#2A2F3A" Foreground="#C5CAD6" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="この記号を 1 つ奥に移します (一覧では 1 つ上。上の記号の下に描かれます)"/>
+                                                                    <Button Content="↓ 手前へ" Command="{Binding DataContext.SymbolTools.MoveForwardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#2A2F3A" Foreground="#C5CAD6" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="この記号を 1 つ手前に移します (一覧では 1 つ下。下の記号の上に描かれます)"/>
                                                                     <Button Content="⧉ 複製" Command="{Binding DataContext.SymbolTools.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                             CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#1E3A5F" Foreground="#80D8FF" BorderThickness="0" FontSize="11"
                                                                             ToolTip="同じ設定の記号を、少しずらしてすぐ下に追加します"/>
@@ -1720,6 +1728,8 @@
                                             <Button Content="➕ ハイライト追加" Command="{Binding AddHighlightCommand}"
                                                     HorizontalAlignment="Right" Padding="8,4" Background="#1E3A5F" Foreground="#80D8FF" BorderBrush="{StaticResource BorderDark}"/>
                                         </DockPanel>
+                                        <TextBlock Text="一覧の下にあるハイライトほど手前 (上) に描かれます。重なりは各カードの「↑ 奥へ」「↓ 手前へ」で変えられます。"
+                                                   Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
                                         <Expander Margin="0,0,0,8" Foreground="{StaticResource TextPrimary}"
                                                   ToolTip="ハイライトを虹彩の中にランダムにまとめて追加します。追加したハイライトは 1 つずつ別のハイライトになるので、あとから個別にも動かせます">
@@ -1833,6 +1843,12 @@
                                                                 <CheckBox Content="選択" IsChecked="{Binding IsSelected}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
                                                                           ToolTip="選んだハイライトは「まとめて変更」でそろえて変えられます"/>
                                                                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                                                    <Button Content="↑ 奥へ" Command="{Binding DataContext.HighlightTools.MoveBackwardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,4,0" Background="#2A2F3A" Foreground="#C5CAD6" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="このハイライトを 1 つ奥に移します (一覧では 1 つ上。上のハイライトの下に描かれます)"/>
+                                                                    <Button Content="↓ 手前へ" Command="{Binding DataContext.HighlightTools.MoveForwardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#2A2F3A" Foreground="#C5CAD6" BorderThickness="0" FontSize="11"
+                                                                            ToolTip="このハイライトを 1 つ手前に移します (一覧では 1 つ下。下のハイライトの上に描かれます)"/>
                                                                     <Button Content="⧉ 複製" Command="{Binding DataContext.HighlightTools.DuplicateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                             CommandParameter="{Binding}" Padding="6,2" Margin="0,0,6,0" Background="#1E3A5F" Foreground="#80D8FF" BorderThickness="0" FontSize="11"
                                                                             ToolTip="同じ設定のハイライトを、少しずらしてすぐ下に追加します"/>
