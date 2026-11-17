@@ -27,7 +27,7 @@ namespace DollIrisGenerator.Tests
                 // Every shape with corners (the circle has none)
                 if (type != SymbolType.None && type != SymbolType.Circle) yield return new object[] { $"symbol:{type}" };
             }
-            foreach (var shape in new[] { PupilShape.CatSlit, PupilShape.Heart, PupilShape.Star })
+            foreach (var shape in new[] { PupilShape.CatSlit, PupilShape.Heart, PupilShape.Star5 })
             {
                 yield return new object[] { $"pupil:{shape}" };
             }
@@ -701,6 +701,112 @@ namespace DollIrisGenerator.Tests
             Assert.True(CenterX(true) > HornX(true));   // not mirrored: the same moon in both eyes
         }
 
+        /// <summary>The pupil's own shape element (inside its group), for one eye.</summary>
+        private static string PupilElement(IrisParameters p, bool isRightEye = false)
+        {
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+            Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
+            string eye = isRightEye ? "eye_right" : "eye_left";
+            int start = svg.IndexOf($"<g id=\"{eye}_pupil\"", StringComparison.Ordinal);
+            Assert.True(start >= 0);
+            return System.Text.RegularExpressions.Regex.Match(svg[start..], "<(ellipse|path)[^>]*/>").Value;
+        }
+
+        [Fact]
+        public void TestPupilsOfferTheSameShapesAndKeepTheirFileNumbers()
+        {
+            var all = Enum.GetValues<ShapeKind>().OrderBy(k => k).ToArray();
+            Assert.Equal(all, Enum.GetValues<PupilShape>().Select(ShapeKinds.Of).OrderBy(k => k).ToArray());
+            Assert.Equal((0, 2, 3, 4), ((int)PupilShape.Round, (int)PupilShape.CatSlit, (int)PupilShape.Heart, (int)PupilShape.Star5));
+            foreach (string number in new[] { "1", "42" }) // 1 was the vertical oval
+                Assert.Equal(PupilShape.Round, JsonSerializer.Deserialize<IrisParameters>($"{{\"PupilShape\":{number}}}")!.PupilShape);
+
+            // Every shape draws as a pupil, also blurred (the sharp core) and with gem-cut facets (clipped to it), in both eyes
+            foreach (var shape in Enum.GetValues<PupilShape>())
+            {
+                var p = new IrisParameters { SizeMm = 10.0, PupilShape = shape, PupilSoftness = 0.2, PupilFacetIntensity = 0.7, PupilStretchBottom = 1.4 };
+                foreach (bool isRightEye in new[] { false, true })
+                {
+                    string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+                    Assert.True(SvgValidator.IsWellFormed(svg, out var error), $"{shape}: {error}");
+                    Assert.Contains("_pupil_core_clip", svg);
+                    Assert.Contains("_pupil_facet_clip", svg);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestRoundPupilStaysAnEllipseAndTheOldOvalIsAStretchedCircle()
+        {
+            var p = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Round };
+            string round = PupilElement(p);
+            Assert.StartsWith("<ellipse", round);
+            Assert.Equal(Attr(round, "rx"), Attr(round, "ry"), 6);
+
+            // The former vertical oval: 0.75 as wide, 1.25 as tall
+            p.PupilStretchLeft = p.PupilStretchRight = 0.75;
+            p.PupilStretchTop = p.PupilStretchBottom = 1.25;
+            string oval = PupilElement(p);
+            Assert.StartsWith("<ellipse", oval);
+            Assert.Equal(Attr(round, "rx") * 0.75, Attr(oval, "rx"), 2);
+            Assert.Equal(Attr(round, "ry") * 1.25, Attr(oval, "ry"), 2);
+
+            // Up and down different: no longer an ellipse
+            p.PupilStretchBottom = 1.6;
+            Assert.StartsWith("<path", PupilElement(p));
+
+            // The 雰囲気 preset that used the vertical oval keeps the same shape
+            var mood = ColorPresets.All.Single(x => x.Name.StartsWith("雰囲気: D.", StringComparison.Ordinal));
+            var q = new IrisParameters();
+            ColorPresets.ApplyPreset(q, mood);
+            Assert.Equal((PupilShape.Round, 0.75, 0.75, 1.25, 1.25), (q.PupilShape, q.PupilStretchLeft, q.PupilStretchRight, q.PupilStretchTop, q.PupilStretchBottom));
+            // ... and the next preset puts the pupil back to as drawn
+            ColorPresets.ApplyPreset(q, ColorPresets.All.First(x => x != mood && x.PupilStretchLeft == null));
+            Assert.Equal((1.0, 1.0, 1.0, 1.0, 1.0), (q.PupilStretchLeft, q.PupilStretchRight, q.PupilStretchTop, q.PupilStretchBottom, q.PupilStarCoreScale));
+        }
+
+        [Fact]
+        public void TestRightEyePupilIsTheMirrorImage()
+        {
+            // A heart pupil stretched to the left: the right eye stretches it to the right
+            var p = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Heart, PupilStretchLeft = 2.0, PupilStretchRight = 0.5 };
+            double LeftOverRight(bool isRightEye)
+            {
+                var e = PupilElement(p, isRightEye);
+                string d = System.Text.RegularExpressions.Regex.Match(e, "d=\"([^\"]*)\"").Groups[1].Value;
+                var xs = System.Text.RegularExpressions.Regex.Matches(d, @"-?\d+(\.\d+)?")
+                    .Select(m => double.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture)).Where((_, i) => i % 2 == 0).ToList();
+                double cx = xs[0]; // the heart starts at its tip, straight below the center
+                return (cx - xs.Min()) / (xs.Max() - cx);
+            }
+            Assert.Equal(4.0, LeftOverRight(false), 1);
+            Assert.Equal(0.25, LeftOverRight(true), 1);
+
+            // The moon pupil faces the other way in the right eye
+            var m = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Moon };
+            double HornX(bool isRightEye) => double.Parse(
+                System.Text.RegularExpressions.Regex.Match(PupilElement(m, isRightEye), "d=\"M ([-0-9.]+),").Groups[1].Value,
+                System.Globalization.CultureInfo.InvariantCulture);
+            Assert.True(ElementCenter(PupilElement(m, false)).X > HornX(false));
+            Assert.True(ElementCenter(PupilElement(m, true)).X < HornX(true));
+        }
+
+        [Fact]
+        public void TestPupilStarCoreAndLengthsAreSavedClonedAndClamped()
+        {
+            Assert.Equal(4.0, StarCoreRadius(ShapeOutline.ForPupil(PupilShape.Star5, 10.0, 10.0)) / 1.05, 6); // 0.40 of 10.5
+            Assert.Equal(2.0 * 4.0, StarCoreRadius(ShapeOutline.ForPupil(PupilShape.Star5, 10.0, 10.0, 2.0)) / 1.05, 6);
+
+            var p = new IrisParameters { PupilStarCoreScale = 0.7, PupilStretchTop = 1.3, PupilStretchBottom = 9.0, PupilStretchLeft = 0.6, PupilStretchRight = double.NaN };
+            Assert.Equal((3.0, 1.0), (p.PupilStretchBottom, p.PupilStretchRight));
+            var back = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(p))!;
+            var clone = p.Clone();
+            foreach (var x in new[] { back, clone })
+                Assert.Equal((0.7, 1.3, 3.0, 0.6, 1.0), (x.PupilStarCoreScale, x.PupilStretchTop, x.PupilStretchBottom, x.PupilStretchLeft, x.PupilStretchRight));
+            var old = JsonSerializer.Deserialize<IrisParameters>("{\"PupilShape\":3}")!;
+            Assert.Equal((1.0, 1.0, 1.0, 1.0, 1.0), (old.PupilStarCoreScale, old.PupilStretchTop, old.PupilStretchBottom, old.PupilStretchLeft, old.PupilStretchRight));
+        }
+
         [Fact]
         public void TestMoreRoundingPullsTheStarTipsInSteadily()
         {
@@ -734,7 +840,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestRoundingSurvivesSaveCloneAndSymbolClone()
         {
-            var p = new IrisParameters { PupilShape = PupilShape.Star, PupilCornerRounding = 0.6 };
+            var p = new IrisParameters { PupilShape = PupilShape.Star5, PupilCornerRounding = 0.6 };
             p.Symbols.Clear();
             p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Star5, CornerRounding = 0.35, Enabled = true });
 
@@ -769,17 +875,17 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestSvgUsesTheSameRoundedOutlineAsTheScreen()
         {
-            var p = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Star, PupilCornerRounding = 0.5 };
+            var p = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Star5, PupilCornerRounding = 0.5 };
             p.Symbols.Clear();
             p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Star4, CornerRounding = 0.8, Enabled = true, Rotation = 0 });
 
-            string sharpSvg = SvgExporter.GenerateSingleEyeSvg(new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Star }, isRightEye: false);
+            string sharpSvg = SvgExporter.GenerateSingleEyeSvg(new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Star5 }, isRightEye: false);
             string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye: false);
             Assert.True(SvgValidator.IsWellFormed(svg, out _));
             Assert.NotEqual(sharpSvg, svg);
 
             // The pupil path is the shared outline, rounded, moved to the iris center
-            var pupilOutline = ShapeOutline.ForPupil(PupilShape.Star, 1, 1)!; // only checks the command structure
+            var pupilOutline = ShapeOutline.ForPupil(PupilShape.Star5, 1, 1)!; // only checks the command structure
             string pupilPathStart = "<path d=\"M ";
             int pupilAt = svg.IndexOf("_pupil", StringComparison.Ordinal);
             Assert.True(pupilAt >= 0);

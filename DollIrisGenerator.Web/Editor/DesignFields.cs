@@ -32,6 +32,14 @@ public static class DesignFields
     private static SymbolType SymbolOf(ShapeKind kind) =>
         Enum.GetValues<SymbolType>().Single(t => ShapeKinds.Of(t) == kind);
 
+    private static PupilShape PupilOf(ShapeKind kind) =>
+        Enum.GetValues<PupilShape>().Single(x => ShapeKinds.Of(x) == kind);
+
+    /// <summary>One of the pupil's 上下左右の長さ (the same range as the desktop app's sliders).</summary>
+    private static SliderField<IrisParameters> PupilStretch(string label, Func<IrisParameters, double> get, Action<IrisParameters, double> set) =>
+        new(label, get, set, ShapeStretch.MinSlider, ShapeStretch.MaxSlider, 0.01, Fmt.Percent,
+            "瞳孔の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。正円の上下を伸ばすと縦長の楕円になります。右目は鏡像なので、左右の長さが入れ替わります");
+
     private static HighlightShape HighlightOf(ShapeKind kind) =>
         Enum.GetValues<HighlightShape>().Single(h => ShapeKinds.Of(h) == kind);
 
@@ -95,17 +103,19 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays = new Field<IrisParameters>[]
     {
         new HeadingField<IrisParameters>("瞳孔模様"),
-        new ChoiceField<IrisParameters>("瞳孔形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, new (string, object)[]
-        {
-            ("正円", PupilShape.Round), ("縦長楕円", PupilShape.VerticalOval), ("猫目スリット", PupilShape.CatSlit),
-            ("ハート型", PupilShape.Heart), ("星型", PupilShape.Star)
-        }),
+        new ChoiceField<IrisParameters>("瞳孔形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, Shapes(PupilOf)),
         new SliderField<IrisParameters>("瞳孔サイズ (直径比率)", p => p.PupilSizeRatio, (p, v) => p.PupilSizeRatio = v, 0.10, 0.60, 0.01, Fmt.Percent),
         new ColorField<IrisParameters>("瞳孔色", p => p.PupilColor, (p, v) => p.PupilColor = v, AllowGradient: true),
         Transparency<IrisParameters>(p => p.PupilOpacity, (p, v) => p.PupilOpacity = v),
         new SliderField<IrisParameters>("輪郭の柔らかさ (ぼかし)", p => p.PupilSoftness, (p, v) => p.PupilSoftness = v, 0, 0.30, 0.01, Fmt.Percent),
-        new SliderField<IrisParameters>("角の丸み (猫目・ハート・星)", p => p.PupilCornerRounding, (p, v) => p.PupilCornerRounding = v, 0, 1, 0.01, Fmt.Percent,
-            "とがった角を丸めます。正円・縦長楕円には影響しません"),
+        new SliderField<IrisParameters>("角の丸み", p => p.PupilCornerRounding, (p, v) => p.PupilCornerRounding = v, 0, 1, 0.01, Fmt.Percent,
+            "猫目スリット・ハート・星などのとがった角を丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
+        new SliderField<IrisParameters>("星の芯の太さ", p => p.PupilStarCoreScale, (p, v) => p.PupilStarCoreScale = v, StarCore.MinSlider, StarCore.MaxSlider, 0.01, Fmt.Percent,
+            "5芒星・4芒星の瞳孔の芯 (くびれ) の太さです。100% で標準。ほかの形には影響しません"),
+        PupilStretch("上の長さ", p => p.PupilStretchTop, (p, v) => p.PupilStretchTop = v),
+        PupilStretch("下の長さ", p => p.PupilStretchBottom, (p, v) => p.PupilStretchBottom = v),
+        PupilStretch("左の長さ", p => p.PupilStretchLeft, (p, v) => p.PupilStretchLeft = v),
+        PupilStretch("右の長さ", p => p.PupilStretchRight, (p, v) => p.PupilStretchRight = v),
         new SliderField<IrisParameters>("宝石カット", p => p.PupilFacetIntensity, (p, v) => p.PupilFacetIntensity = v, 0, 1, 0.01, Fmt.Percent,
             "瞳孔の中に宝石のカット面のような明暗の面を入れます。0% でオフ"),
         new SliderField<IrisParameters>("カット面の数", p => p.PupilFacetCount, (p, v) => p.PupilFacetCount = Int(v),

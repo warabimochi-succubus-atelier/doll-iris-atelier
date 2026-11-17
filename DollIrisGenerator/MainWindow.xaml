@@ -689,11 +689,15 @@
                                         <!-- Pupil Shape -->
                                         <TextBlock Text="瞳孔形状:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
                                         <WrapPanel Margin="0,0,0,8">
-                                            <RadioButton Content="正円" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
-                                            <RadioButton Content="縦長楕円" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=VerticalOval}"/>
+                                            <RadioButton Content="正円 (●)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
+                                            <RadioButton Content="4芒星 (★)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                            <RadioButton Content="5芒星 (星型)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                            <RadioButton Content="ハート (♥)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                            <RadioButton Content="三日月 (🌙)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
+                                            <RadioButton Content="クロス (✝)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
+                                            <RadioButton Content="ダイヤ (◆)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                            <RadioButton Content="桜の花びら (🌸)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                             <RadioButton Content="猫目スリット" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
-                                            <RadioButton Content="ハート型" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
-                                            <RadioButton Content="星型" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star}"/>
                                         </WrapPanel>
 
                                         <!-- Pupil Size -->
@@ -724,11 +728,37 @@
                                         <Slider Minimum="0.0" Maximum="0.30" Value="{Binding CurrentIris.PupilSoftness}" Margin="0,0,0,6"/>
 
                                         <!-- Pupil Corner Rounding -->
-                                        <DockPanel Margin="0,0,0,4" ToolTip="猫目スリット・ハート型・星型の、とがった角を丸めます。0% で従来どおりのとがった形です。正円・縦長楕円には影響しません。">
-                                            <TextBlock Text="角の丸み (猫目・ハート・星):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="猫目スリット・ハート・星などのとがった角を丸めます。0% で従来どおりのとがった形です。正円には影響しません。">
+                                            <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilCornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilCornerRounding}" Margin="0,0,0,10"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilCornerRounding}" Margin="0,0,0,6"/>
+                                        <!-- 星の芯の太さ / 上下左右の長さ (the same ranges as the decorative symbols' sliders) -->
+                                        <DockPanel Margin="0,0,0,4" ToolTip="5芒星・4芒星の瞳孔の芯 (くびれ) の太さです。100% で標準。ほかの形には影響しません。">
+                                            <TextBlock Text="星の芯の太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilStarCoreScale, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStarCoreScale}" Margin="0,0,0,6"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。正円の上下を伸ばすと縦長の楕円になります。右目は鏡像なので、左右の長さが入れ替わります。">
+                                            <TextBlock Text="上の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilStretchTop, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStretchTop}" Margin="0,0,0,6"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。正円の上下を伸ばすと縦長の楕円になります。右目は鏡像なので、左右の長さが入れ替わります。">
+                                            <TextBlock Text="下の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilStretchBottom, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStretchBottom}" Margin="0,0,0,6"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。正円の上下を伸ばすと縦長の楕円になります。右目は鏡像なので、左右の長さが入れ替わります。">
+                                            <TextBlock Text="左の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilStretchLeft, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStretchLeft}" Margin="0,0,0,6"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。正円の上下を伸ばすと縦長の楕円になります。右目は鏡像なので、左右の長さが入れ替わります。">
+                                            <TextBlock Text="右の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilStretchRight, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStretchRight}" Margin="0,0,0,10"/>
 
                                         <!-- Gem cut (宝石カット) -->
                                         <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中に、宝石のカット面のような明暗の面を入れます。0% でオフ。ハート型・星型と組み合わせると宝石風になります">

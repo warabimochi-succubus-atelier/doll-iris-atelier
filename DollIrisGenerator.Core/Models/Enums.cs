@@ -9,13 +9,22 @@ namespace DollIrisGenerator.Models
         HorizontalOval  // 横楕円
     }
 
+    /// <summary>
+    /// Pupil shapes: the same list as the decorative symbols and highlights (<see cref="ShapeKind"/>). The numbers are
+    /// what design files store, so they differ from the others'; 1 was the vertical oval, which is now a circle with
+    /// 上下左右の長さ (IrisParameters.PupilStretch*), so it is left out and reads as a circle.
+    /// </summary>
     public enum PupilShape
     {
-        Round,          // 正円
-        VerticalOval,   // 縦長楕円
-        CatSlit,        // 猫目スリット
-        Heart,          // ハート型
-        Star            // 星型
+        Round = 0,          // 正円
+        CatSlit = 2,        // 猫目スリット
+        Heart = 3,          // ハート型
+        Star5 = 4,          // 星型 (5芒星)
+        Star4 = 5,          // 4芒星
+        Moon = 6,           // 三日月
+        Cross = 7,          // クロス
+        Diamond = 8,        // ダイヤ
+        SakuraPetal = 9     // 桜の花びら
     }
 
     /// <summary>
@@ -109,6 +118,20 @@ namespace DollIrisGenerator.Models
             HighlightShape.Cross => ShapeKind.Cross,
             HighlightShape.SakuraPetal => ShapeKind.SakuraPetal,
             HighlightShape.CatSlit => ShapeKind.CatSlit,
+            _ => ShapeKind.Circle
+        };
+
+        /// <summary>The shape a pupil draws (unknown numbers: the circle).</summary>
+        public static ShapeKind Of(PupilShape shape) => shape switch
+        {
+            PupilShape.CatSlit => ShapeKind.CatSlit,
+            PupilShape.Heart => ShapeKind.Heart,
+            PupilShape.Star5 => ShapeKind.Star5,
+            PupilShape.Star4 => ShapeKind.Star4,
+            PupilShape.Moon => ShapeKind.Moon,
+            PupilShape.Cross => ShapeKind.Cross,
+            PupilShape.Diamond => ShapeKind.Diamond,
+            PupilShape.SakuraPetal => ShapeKind.SakuraPetal,
             _ => ShapeKind.Circle
         };
 

@@ -29,7 +29,8 @@ namespace DollIrisGenerator.Tests
                 p.LightAngle, p.LightStrength, p.FiberNoise, p.FiberNoiseScale),
             RandomizeLocks.Seed => p.Seed.ToString(),
             RandomizeLocks.Pupil => string.Join("|", p.PupilShape, p.PupilSizeRatio, p.PupilOpacity, p.PupilSoftness, p.PupilColor,
-                p.PupilFacetIntensity, p.PupilFacetCount, p.PupilCornerRounding),
+                p.PupilFacetIntensity, p.PupilFacetCount, p.PupilCornerRounding, p.PupilStarCoreScale,
+                p.PupilStretchTop, p.PupilStretchBottom, p.PupilStretchLeft, p.PupilStretchRight),
             RandomizeLocks.Rays => string.Join("|", p.RayCount, p.RayThickness, p.RayLengthRatio, p.RayIntensity,
                 p.RayRandomness, p.RayInnerRadiusRatio, p.RayColor,
                 p.RayTaper, p.RayWidthVariation, p.RayCurve, p.RayFineLayer),
@@ -72,7 +73,7 @@ namespace DollIrisGenerator.Tests
                 LimbalRingColor = "#111111",
                 LimbalRingOpacity = 0.1,
                 LimbalRingSoftness = 0.9,
-                PupilShape = PupilShape.Star,
+                PupilShape = PupilShape.Star5,
                 PupilSizeRatio = 0.7,
                 PupilColor = "#222222",
                 PupilOpacity = 0.3,
@@ -283,7 +284,7 @@ namespace DollIrisGenerator.Tests
             var vm = NewViewModel();
             vm.CurrentIris.BaseColor = "#123456";
             vm.CurrentIris.RayColor = "#333333";
-            vm.CurrentIris.PupilShape = PupilShape.Star;
+            vm.CurrentIris.PupilShape = PupilShape.Star5;
             vm.CurrentIris.PupilSizeRatio = 0.7;
             vm.LockColors = true;
             var before = vm.CurrentIris.Clone();

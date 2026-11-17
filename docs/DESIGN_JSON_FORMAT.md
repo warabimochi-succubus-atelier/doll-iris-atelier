@@ -142,12 +142,14 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 | 項目 | 範囲・値 | 説明 |
 |---|---|---|
-| `PupilShape` | 0 正円, 1 縦長楕円, 2 猫目スリット, 3 ハート, 4 星 | |
+| `PupilShape` | 0 正円, 2 猫目スリット, 3 ハート, 4 5芒星（星）, 5 4芒星, 6 三日月, 7 クロス, 8 ダイヤ, 9 桜の花びら | 装飾記号と同じ形の一覧（番号は記号・ハイライトと違う）。1 は使わない（以前の縦長楕円。正円として読み込まれる）。縦長の瞳孔は正円の上下左右の長さで作る（左右 0.75・上下 1.25 が以前の縦長楕円） |
 | `PupilSizeRatio` | 0.10〜0.60 | 瞳孔の直径の比率（0.25〜0.40 が一般的） |
 | `PupilColor` | 色（グラデ可） | 通常は黒に近い色 |
 | `PupilOpacity` | 0〜1 | 1 で不透明 |
 | `PupilSoftness` | 0〜0.30 | 輪郭のぼかし |
-| `PupilCornerRounding` | 0〜1 | 猫目・ハート・星の角の丸み |
+| `PupilCornerRounding` | 0〜1 | 猫目・ハート・星などの角の丸み |
+| `PupilStarCoreScale` | 0.5〜2.0（省略時 1.0） | 5芒星・4芒星の瞳孔の芯（くびれ）の太さ |
+| `PupilStretchTop`, `PupilStretchBottom`, `PupilStretchLeft`, `PupilStretchRight` | 0.5〜2.0（省略時 1.0） | 瞳孔の上下左右の長さ（装飾記号と同じ）。右目は左右が入れ替わり鏡像になる |
 | `PupilFacetIntensity` | 0〜1 | 宝石のカット面（0 でオフ） |
 | `PupilFacetCount` | 4〜24 | カット面の数 |
 
@@ -294,6 +296,11 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilOpacity": 1.0,
   "PupilSoftness": 0.08,
   "PupilCornerRounding": 0.0,
+  "PupilStarCoreScale": 1.0,
+  "PupilStretchTop": 1.0,
+  "PupilStretchBottom": 1.0,
+  "PupilStretchLeft": 1.0,
+  "PupilStretchRight": 1.0,
   "PupilFacetIntensity": 0.0,
   "PupilFacetCount": 10,
   "RayCount": 48,

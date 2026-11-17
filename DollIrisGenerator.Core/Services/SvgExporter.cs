@@ -588,14 +588,35 @@ namespace DollIrisGenerator.Services
                 if (p.Shape == IrisShape.VerticalOval) pry *= p.AspectRatio;
                 else if (p.Shape == IrisShape.HorizontalOval) prx *= p.AspectRatio;
 
-                // Cat slit / heart / star: same outline as the screen / PDF renderer.
+                // 上下左右の長さ of the pupil. The right eye is the mirror image: the pupil is drawn as it is, so its left and
+                // right lengths trade places, except the moon, which is mirrored as a whole after stretching (as the symbols)
+                bool mirrorPupil = isRightEye && ShapeKinds.IsAsymmetric(ShapeKinds.Of(p.PupilShape));
+                bool swapPupil = isRightEye && !mirrorPupil;
+                double pTop = p.PupilStretchTop, pBottom = p.PupilStretchBottom;
+                double pLeft = swapPupil ? p.PupilStretchRight : p.PupilStretchLeft;
+                double pRight = swapPupil ? p.PupilStretchLeft : p.PupilStretchRight;
+
+                // A round pupil whose up / down and left / right lengths are equal stays an ellipse; every other pupil is
+                // its outline (the same outline as the screen / PDF renderer), rounded, then stretched.
                 // A gradient spans the pupil's own bounding box (as on screen).
-                var pupilOutline = ShapeOutline.ForPupil(p.PupilShape, prx, pry)?.Rounded(p.PupilCornerRounding);
-                Rect pupilBox;
-                if (pupilOutline != null) pupilBox = pupilOutline.GetBounds();
-                else if (p.PupilShape == PupilShape.VerticalOval) pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx * 0.75, pry * 1.25);
-                else pupilBox = GradientMapping.EllipseBox(new Point(0, 0), prx, pry);
+                bool pupilEllipse = p.PupilShape == PupilShape.Round && pTop == pBottom && pLeft == pRight;
+                double erx = prx * pLeft, ery = pry * pTop;
+                ShapeOutline? pupilOutline = pupilEllipse
+                    ? null
+                    : ShapeOutline.ForPupil(p.PupilShape, prx, pry, p.PupilStarCoreScale)
+                        .Rounded(p.PupilCornerRounding)
+                        .Stretched(pTop, pBottom, pLeft, pRight);
+                Rect pupilBox = pupilOutline?.GetBounds(mirrorPupil) ?? GradientMapping.EllipseBox(new Point(0, 0), erx, ery);
                 pupilBox.Offset(cx, cy);
+
+                // The pupil shape (its outline or ellipse) at the eye center, with extra attributes (the core's transform)
+                void AppendPupilShape(string indent, string extra)
+                {
+                    if (pupilOutline != null)
+                        AppendPath(sb, indent + "<path d=\"", pupilOutline, cx, cy, "\"" + extra + " />", mirrorPupil);
+                    else
+                        sb.AppendLine($@"{indent}<ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(erx)}"" ry=""{F(ery)}""{extra} />");
+                }
 
                 string pupilPaint = Paint(sb, "      ", $"{idPrefix}_pupil_fill", p.PupilColor, "#060A18", pupilBox, isRightEye);
 
@@ -610,18 +631,7 @@ namespace DollIrisGenerator.Services
                     pupilBlur = $@" filter=""url(#{blurId})""";
                 }
                 sb.AppendLine($@"      <g id=""{idPrefix}_pupil"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}""{pupilBlur}>");
-                if (pupilOutline != null)
-                {
-                    AppendPath(sb, "        <path d=\"", pupilOutline, cx, cy, "\" />");
-                }
-                else if (p.PupilShape == PupilShape.VerticalOval)
-                {
-                    sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{(prx * 0.75).ToFixed(3)}"" ry=""{(pry * 1.25).ToFixed(3)}"" />");
-                }
-                else
-                {
-                    sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{prx.ToFixed(3)}"" ry=""{pry.ToFixed(3)}"" />");
-                }
+                AppendPupilShape("        ", "");
                 sb.AppendLine("      </g>");
 
                 // Sharp core over the blurred pupil: the same pupil, cut to its outline shrunk inward by 2.5 deviations.
@@ -629,19 +639,15 @@ namespace DollIrisGenerator.Services
                 // a little see-through; the core fills it, while the soft edge stays as the blur drew it.
                 if (pupilSigma > 0)
                 {
-                    double core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / Math.Min(prx, pry));
+                    double narrowest = Math.Min(prx * Math.Min(pLeft, pRight), pry * Math.Min(pTop, pBottom));
+                    double core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / narrowest);
                     if (core > 0.05)
                     {
                         string coreClip = $"{idPrefix}_pupil_core_clip";
                         string coreTransform = $@" transform=""translate({F(cx)} {F(cy)}) scale({F(core, 5)}) translate({F(-cx)} {F(-cy)})""";
                         sb.AppendLine("      <defs>");
                         sb.AppendLine($@"        <clipPath id=""{coreClip}"">");
-                        if (pupilOutline != null)
-                            AppendPath(sb, "          <path d=\"", pupilOutline, cx, cy, $"\"{coreTransform} />");
-                        else if (p.PupilShape == PupilShape.VerticalOval)
-                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}""{coreTransform} />");
-                        else
-                            sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}""{coreTransform} />");
+                        AppendPupilShape("          ", coreTransform);
                         sb.AppendLine("        </clipPath>");
                         sb.AppendLine("      </defs>");
                         sb.AppendLine($@"      <rect id=""{idPrefix}_pupil_core"" x=""{F(pupilBox.X)}"" y=""{F(pupilBox.Y)}"" width=""{F(pupilBox.Width)}"" height=""{F(pupilBox.Height)}"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"" clip-path=""url(#{coreClip})"" />");
@@ -654,16 +660,11 @@ namespace DollIrisGenerator.Services
                     string facetClip = $"{idPrefix}_pupil_facet_clip";
                     sb.AppendLine("      <defs>");
                     sb.AppendLine($@"        <clipPath id=""{facetClip}"">");
-                    if (pupilOutline != null)
-                        AppendPath(sb, "          <path d=\"", pupilOutline, cx, cy, "\" />");
-                    else if (p.PupilShape == PupilShape.VerticalOval)
-                        sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx * 0.75)}"" ry=""{F(pry * 1.25)}"" />");
-                    else
-                        sb.AppendLine($@"          <ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(prx)}"" ry=""{F(pry)}"" />");
+                    AppendPupilShape("          ", "");
                     sb.AppendLine("        </clipPath>");
                     sb.AppendLine("      </defs>");
                     sb.AppendLine($@"      <g id=""{idPrefix}_pupil_facets"" clip-path=""url(#{facetClip})"">");
-                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx, pry, p.PupilFacetCount, effectiveSeed, isRightEye))
+                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx * (pLeft + pRight) / 2.0, pry * (pTop + pBottom) / 2.0, p.PupilFacetCount, effectiveSeed, isRightEye))
                     {
                         double alpha = p.PupilOpacity * p.PupilFacetIntensity * IrisPatterns.MaxFacetAlpha * Math.Abs(shade);
                         string color = shade >= 0 ? "#FFFFFF" : "#000000";

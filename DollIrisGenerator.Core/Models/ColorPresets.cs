@@ -74,6 +74,11 @@ namespace DollIrisGenerator.Models
         public double? PupilOpacity { get; set; }
         public double? PupilSoftness { get; set; }
         public double? PupilCornerRounding { get; set; }
+        public double? PupilStretchTop { get; set; }
+        public double? PupilStretchBottom { get; set; }
+        public double? PupilStretchLeft { get; set; }
+        public double? PupilStretchRight { get; set; }
+        public double? PupilStarCoreScale { get; set; }
         public double? NebulaScale { get; set; }
         public double? RayThickness { get; set; }
         public double? RayLengthRatio { get; set; }
@@ -238,7 +243,7 @@ namespace DollIrisGenerator.Models
                 "#7A5BA8", "#C9B5E6", "#2E1F4D", "#E6DCF2", "#170F29", "#0F0A1C", "#DCCFEE", particles: 40, glow: 0.45, rays: 0.4),
             Mood("D. つんでれ (レッド系)", "強気なのに甘さもある鮮やかなレッド",
                 "#E8364F", "#FF9AA8", "#7A0A1E", "#FFE0E4", "#3B0510", "#24030A", "#FFD1D8", particles: 80, glow: 0.7,
-                pupil: PupilShape.VerticalOval),
+                pupilStretchX: 0.75, pupilStretchY: 1.25), // the former vertical oval pupil
             Mood("E. 小悪魔 (赤紫系)", "ハートの瞳孔がのぞく、あやしい赤紫",
                 "#C2185B", "#F06292", "#4A0628", "#FFD6E8", "#2A0216", "#1A010D", "#F8BBD0", particles: 90, glow: 0.8,
                 pupil: PupilShape.Heart, facets: 0.6),
@@ -266,13 +271,15 @@ namespace DollIrisGenerator.Models
         private static PresetDefinition Mood(string name, string description, string baseColor, string inner, string outer,
             string bottom, string limbal, string pupilColor, string ray, int particles, double glow, double rays = 0.6,
             PupilShape pupil = PupilShape.Round, double pupilSize = 0.32, double facets = 0.0,
-            string? aurora = null, double auroraOpacity = 0.0) => new()
+            string? aurora = null, double auroraOpacity = 0.0, double pupilStretchX = 1.0, double pupilStretchY = 1.0) => new()
         {
             Name = "雰囲気: " + name,
             Description = description,
             BaseColor = baseColor, InnerColor = inner, OuterColor = outer, BottomHighlightColor = bottom,
             LimbalRingColor = limbal, PupilColor = pupilColor, RayColor = ray, ParticleColor = "#FFFFFF",
             PupilShape = pupil, PupilSizeRatio = pupilSize, PupilFacetIntensity = facets, PupilFacetCount = 8,
+            PupilStretchLeft = pupilStretchX, PupilStretchRight = pupilStretchX,
+            PupilStretchTop = pupilStretchY, PupilStretchBottom = pupilStretchY,
             AuroraColor = aurora, AuroraOpacity = auroraOpacity,
             RayCount = 60, RayIntensity = rays, ParticleCount = particles, ParticleRadiusRatio = 0.8,
             ParticleGlow = glow, ParticleFlareRatio = 0.12
@@ -329,6 +336,11 @@ namespace DollIrisGenerator.Models
             target.PupilOpacity = preset.PupilOpacity ?? d.PupilOpacity;
             target.PupilSoftness = preset.PupilSoftness ?? d.PupilSoftness;
             target.PupilCornerRounding = preset.PupilCornerRounding ?? d.PupilCornerRounding;
+            target.PupilStretchTop = preset.PupilStretchTop ?? d.PupilStretchTop;
+            target.PupilStretchBottom = preset.PupilStretchBottom ?? d.PupilStretchBottom;
+            target.PupilStretchLeft = preset.PupilStretchLeft ?? d.PupilStretchLeft;
+            target.PupilStretchRight = preset.PupilStretchRight ?? d.PupilStretchRight;
+            target.PupilStarCoreScale = preset.PupilStarCoreScale ?? d.PupilStarCoreScale;
             target.NebulaScale = preset.NebulaScale ?? d.NebulaScale;
             target.RayThickness = preset.RayThickness ?? d.RayThickness;
             target.RayLengthRatio = preset.RayLengthRatio ?? d.RayLengthRatio;
@@ -460,6 +472,11 @@ namespace DollIrisGenerator.Models
                 PupilOpacity = design.PupilOpacity,
                 PupilSoftness = design.PupilSoftness,
                 PupilCornerRounding = design.PupilCornerRounding,
+                PupilStretchTop = design.PupilStretchTop,
+                PupilStretchBottom = design.PupilStretchBottom,
+                PupilStretchLeft = design.PupilStretchLeft,
+                PupilStretchRight = design.PupilStretchRight,
+                PupilStarCoreScale = design.PupilStarCoreScale,
                 NebulaScale = design.NebulaScale,
                 RayThickness = design.RayThickness,
                 RayLengthRatio = design.RayLengthRatio,

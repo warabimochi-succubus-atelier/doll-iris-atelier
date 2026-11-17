@@ -80,6 +80,11 @@ namespace DollIrisGenerator.Models
         private string _pupilColor = "#060A18";
         private double _pupilOpacity = 1.0;
         private double _pupilSoftness = 0.08;
+        private double _pupilStretchTop = 1.0;    // 瞳孔の上下左右の長さ (1 = as drawn)
+        private double _pupilStretchBottom = 1.0;
+        private double _pupilStretchLeft = 1.0;
+        private double _pupilStretchRight = 1.0;
+        private double _pupilStarCoreScale = 1.0; // 瞳孔の星の芯の太さ
         private double _pupilCornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0)
         private double _pupilFacetIntensity = 0.0; // 宝石カット: strength of the light / dark facets inside the pupil. 0 = off
         private int _pupilFacetCount = 10;          // facets round the pupil
@@ -299,10 +304,11 @@ namespace DollIrisGenerator.Models
         }
 
         // Pupil
+        /// <summary>Unknown numbers from a file (such as 1, the vertical oval that is now a stretched circle) become a circle.</summary>
         public PupilShape PupilShape
         {
             get => _pupilShape;
-            set { _pupilShape = value; OnPropertyChanged(); }
+            set { _pupilShape = Enum.IsDefined(value) ? value : PupilShape.Round; OnPropertyChanged(); }
         }
 
         public double PupilSizeRatio
@@ -429,6 +435,44 @@ namespace DollIrisGenerator.Models
         {
             get => _pupilCornerRounding;
             set { _pupilCornerRounding = ClampCornerRounding(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 瞳孔の上の長さ: the part of the pupil above its center, stretched by this (1 = as drawn), as the decorative
+        /// symbols' 上下左右の長さ. The right eye is the mirror image, so there 左 and 右 trade places.
+        /// </summary>
+        public double PupilStretchTop
+        {
+            get => _pupilStretchTop;
+            set { _pupilStretchTop = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の下の長さ (see <see cref="PupilStretchTop"/>).</summary>
+        public double PupilStretchBottom
+        {
+            get => _pupilStretchBottom;
+            set { _pupilStretchBottom = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の左の長さ (see <see cref="PupilStretchTop"/>).</summary>
+        public double PupilStretchLeft
+        {
+            get => _pupilStretchLeft;
+            set { _pupilStretchLeft = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の右の長さ (see <see cref="PupilStretchTop"/>).</summary>
+        public double PupilStretchRight
+        {
+            get => _pupilStretchRight;
+            set { _pupilStretchRight = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の星の芯の太さ: the 星型 / 4芒星 pupil's inner radius as a share of the standard one (1 = as before).</summary>
+        public double PupilStarCoreScale
+        {
+            get => _pupilStarCoreScale;
+            set { _pupilStarCoreScale = StarCore.Clamp(value); OnPropertyChanged(); }
         }
 
         /// <summary>Corner rounding is 0..1; NaN / infinity from a hand-edited file become 0 (sharp).</summary>
