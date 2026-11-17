@@ -413,11 +413,12 @@ namespace DollIrisGenerator.Services
                     });
                     p.Highlights.Add(new HighlightItem
                     {
-                        Shape = HighlightShape.Oval,
+                        Shape = HighlightShape.Circle, // an oval: 1.35 times as wide as it is tall
                         PositionX = 0.32,
                         PositionY = 0.28,
                         Size = 0.16,
-                        AspectRatio = 1.35,
+                        StretchLeft = 1.35,
+                        StretchRight = 1.35,
                         Rotation = 25.0,
                         Color = "#FFFFFF",
                         Opacity = 0.75,
@@ -430,11 +431,12 @@ namespace DollIrisGenerator.Services
                     // Oval stylized anime eye
                     p.Highlights.Add(new HighlightItem
                     {
-                        Shape = HighlightShape.Oval,
+                        Shape = HighlightShape.Circle, // an oval: 0.85 times as wide as it is tall
                         PositionX = -0.30,
                         PositionY = -0.32,
                         Size = 0.26,
-                        AspectRatio = 0.85,
+                        StretchLeft = 0.85,
+                        StretchRight = 0.85,
                         Rotation = -15.0,
                         Color = "#FFFFFF",
                         Opacity = 0.95,

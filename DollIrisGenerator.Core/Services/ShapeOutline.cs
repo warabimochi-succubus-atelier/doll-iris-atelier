@@ -204,6 +204,27 @@ namespace DollIrisGenerator.Services
             _ => null
         };
 
+        /// <summary>Circle of the given radius as four quarter arcs, starting at the top and going clockwise.</summary>
+        public static ShapeOutline Circle(double radius)
+        {
+            var segments = new List<OutlineSegment>(4);
+            AppendArc(segments, new Point(0, 0), radius, radius, -Math.PI / 2.0, 2.0 * Math.PI);
+            var top = new Point(0, -radius);
+            segments[^1] = new OutlineSegment(segments[^1].C1, segments[^1].C2, top); // close exactly
+            return new ShapeOutline(top, segments);
+        }
+
+        /// <summary>
+        /// Outline of a highlight of the given size: a circle, the thin 4-pointed sparkle (inner ratio 0.22) or the
+        /// rhombus (0.65r across). The same shapes the SVG draws as an ellipse / polygon when not stretched.
+        /// </summary>
+        public static ShapeOutline ForHighlight(HighlightShape shape, double radius) => shape switch
+        {
+            HighlightShape.Star4 => Star(4, radius, 0.22),
+            HighlightShape.Rhombus => Diamond(radius * 0.65, radius),
+            _ => Circle(radius)
+        };
+
         /// <summary>
         /// Outline of a pupil with corners (cat slit / heart / star), centered at (0, 0).
         /// Returns null for the round and oval pupils, which are drawn as ellipses and have no corners.
@@ -346,6 +367,15 @@ namespace DollIrisGenerator.Services
         // ------------------------------------------------------------------
         // Stretching (上下左右の長さ)
         // ------------------------------------------------------------------
+
+        /// <summary>
+        /// <see cref="Stretched(double, double, double, double)"/> by an item's 上下左右の長さ; with
+        /// <paramref name="swapSides"/> its left and right lengths trade places (the right eye, drawn as a mirror image).
+        /// </summary>
+        public ShapeOutline Stretched(IStretchable s, bool swapSides = false) => Stretched(
+            s.StretchTop, s.StretchBottom,
+            swapSides ? s.StretchRight : s.StretchLeft,
+            swapSides ? s.StretchLeft : s.StretchRight);
 
         /// <summary>
         /// Returns this outline with each half stretched from the center (0, 0): the part above the center by

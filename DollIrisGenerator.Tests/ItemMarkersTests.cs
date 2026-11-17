@@ -22,7 +22,7 @@ namespace DollIrisGenerator.Tests
             p.Highlights.Clear();
             p.Symbols.Add(new DecorativeSymbolItem { PositionX = 0.5, PositionY = -0.2, Size = 0.1 });
             p.Symbols.Add(new DecorativeSymbolItem { PositionX = -0.4, PositionY = 0.3, Size = 0.2, Count = 3, IsSelected = true });
-            p.Highlights.Add(new HighlightItem { PositionX = 0.3, PositionY = 0.4, Size = 0.1, Shape = HighlightShape.Oval, AspectRatio = 2.0, IsSelected = true });
+            p.Highlights.Add(new HighlightItem { PositionX = 0.3, PositionY = 0.4, Size = 0.1, Shape = HighlightShape.Circle, StretchLeft = 2.0, StretchRight = 2.0, IsSelected = true });
             return p;
         }
 

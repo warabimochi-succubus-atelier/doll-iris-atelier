@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace DollIrisGenerator.Models
 {
-    public class DecorativeSymbolItem : IArrangeableItem<DecorativeSymbolItem>
+    public class DecorativeSymbolItem : IArrangeableItem<DecorativeSymbolItem>, IStretchable
     {
         public const int MaxCount = 12;
 
@@ -26,9 +26,6 @@ namespace DollIrisGenerator.Models
         private double _stretchRight = 1.0;
         private bool _enabled = false;
         private LayerBlend _blend = LayerBlend.Normal;
-
-        /// <summary>The slider range of the four lengths (上下左右の長さ); files may go further, up to <see cref="ClampStretch"/>.</summary>
-        public const double MinStretchSlider = 0.5, MaxStretchSlider = 2.0;
         private bool _isSelected;
 
         public string Id
@@ -99,36 +96,30 @@ namespace DollIrisGenerator.Models
         public double StretchTop
         {
             get => _stretchTop;
-            set { _stretchTop = ClampStretch(value); OnPropertyChanged(); }
+            set { _stretchTop = ShapeStretch.Clamp(value); OnPropertyChanged(); }
         }
 
         /// <summary>下の長さ (see <see cref="StretchTop"/>).</summary>
         public double StretchBottom
         {
             get => _stretchBottom;
-            set { _stretchBottom = ClampStretch(value); OnPropertyChanged(); }
+            set { _stretchBottom = ShapeStretch.Clamp(value); OnPropertyChanged(); }
         }
 
         /// <summary>左の長さ (see <see cref="StretchTop"/>).</summary>
         public double StretchLeft
         {
             get => _stretchLeft;
-            set { _stretchLeft = ClampStretch(value); OnPropertyChanged(); }
+            set { _stretchLeft = ShapeStretch.Clamp(value); OnPropertyChanged(); }
         }
 
         /// <summary>右の長さ (see <see cref="StretchTop"/>).</summary>
         public double StretchRight
         {
             get => _stretchRight;
-            set { _stretchRight = ClampStretch(value); OnPropertyChanged(); }
+            set { _stretchRight = ShapeStretch.Clamp(value); OnPropertyChanged(); }
         }
 
-        /// <summary>The longest of the four lengths: how far past its size the shape can reach.</summary>
-        [JsonIgnore]
-        public double MaxStretch => Math.Max(Math.Max(StretchTop, StretchBottom), Math.Max(StretchLeft, StretchRight));
-
-        /// <summary>0.25 to 3 (NaN becomes 1). Wider than the sliders, as with the other settings.</summary>
-        public static double ClampStretch(double value) => double.IsNaN(value) ? 1.0 : Math.Clamp(value, 0.25, 3.0);
 
         public bool Enabled
         {

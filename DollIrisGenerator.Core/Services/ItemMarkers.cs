@@ -43,7 +43,7 @@ namespace DollIrisGenerator.Services
                 if (!s.IsSelected && !hovered) continue;
                 // A stretched shape (上下左右の長さ) reaches up to its longest length × size from its center;
                 // the copies sit on a ring of radius size × 1.4 round the position
-                double r = baseR * s.Size * (s.MaxStretch + (s.Count > 1 ? 1.4 : 0.0));
+                double r = baseR * s.Size * (ShapeStretch.Max(s) + (s.Count > 1 ? 1.4 : 0.0));
                 result.Add(Make(MarkedItemKind.Symbol, i + 1, isRightEye ? -s.PositionX : s.PositionX, s.PositionY, r, hovered));
             }
 
@@ -53,8 +53,7 @@ namespace DollIrisGenerator.Services
                 var h = p.Highlights[i];
                 bool hovered = hoveredId != null && h.Id == hoveredId;
                 if (!h.IsSelected && !hovered) continue;
-                double r = baseR * h.Size;
-                if (h.Shape == HighlightShape.Oval) r *= Math.Max(1.0, h.AspectRatio);
+                double r = baseR * h.Size * ShapeStretch.Max(h); // reaches as far as its longest length
                 result.Add(Make(MarkedItemKind.Highlight, i + 1, mirrorHighlights ? -h.PositionX : h.PositionX, h.PositionY, r, hovered));
             }
             return result;

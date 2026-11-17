@@ -377,6 +377,131 @@ namespace DollIrisGenerator.Tests
             Assert.True(ItemMarkers.ForEye(p, false, null)[0].Radius > plain * 1.8);
         }
 
+        public static IEnumerable<object[]> HighlightStretchCases()
+        {
+            foreach (var shape in Enum.GetValues<HighlightShape>())
+            {
+                yield return new object[] { shape, 1.0, 1.0, 1.35, 1.35 }; // the former oval
+                yield return new object[] { shape, 0.5, 2.0, 0.7, 1.6 };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(HighlightStretchCases))]
+        public void TestStretchedHighlightOutlinesAreSimpleAndFillTheirGradientBox(HighlightShape shape, double top, double bottom, double left, double right)
+        {
+            var h = new HighlightItem { Shape = shape, StretchTop = top, StretchBottom = bottom, StretchLeft = left, StretchRight = right };
+            foreach (bool swap in new[] { false, true })
+            {
+                var outline = ShapeOutline.ForHighlight(shape, 20.0).Stretched(h, swap);
+                Assert.Equal(outline.Start.X, outline.Segments[^1].End.X, 9);
+                Assert.Equal(outline.Start.Y, outline.Segments[^1].End.Y, 9);
+                Assert.Null(FindSelfIntersection(outline.Flatten(48)));
+
+                // The gradient is laid across exactly the drawn shape
+                var drawn = outline.GetBounds();
+                var box = IrisStyle.HighlightBox(h, 20.0, swap);
+                Assert.Equal(drawn.Left, box.Left, 6);
+                Assert.Equal(drawn.Right, box.Right, 6);
+                Assert.Equal(drawn.Top, box.Top, 6);
+                Assert.Equal(drawn.Bottom, box.Bottom, 6);
+            }
+        }
+
+        /// <summary>The drawing elements inside the left eye's highlight group.</summary>
+        private static List<string> HighlightElements(IrisParameters p, bool isRightEye = false)
+        {
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+            Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
+            string eye = isRightEye ? "eye_right" : "eye_left";
+            int start = svg.IndexOf($"<g id=\"{eye}_highlights\">", StringComparison.Ordinal);
+            string group = svg.Substring(start, svg.IndexOf("</g>", start, StringComparison.Ordinal) - start);
+            return System.Text.RegularExpressions.Regex.Matches(group, "<(ellipse|polygon|path)[^>]*/>").Select(m => m.Value).ToList();
+        }
+
+        private static double Attr(string element, string name) => double.Parse(
+            System.Text.RegularExpressions.Regex.Match(element, $" {name}=\"([-0-9.]+)\"").Groups[1].Value,
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        [Fact]
+        public void TestHighlightsAreDrawnAsBeforeUntilStretchedAndAnEvenCircleStaysAnEllipse()
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Size = 0.2 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Size = 0.2, StretchLeft = 1.35, StretchRight = 1.35 }); // oval
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, StretchBottom = 1.6 });  // egg: no longer an ellipse
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, StretchBottom = 1.6 });
+
+            var e = HighlightElements(p);
+            Assert.Equal(6, e.Count);
+            Assert.StartsWith("<ellipse", e[0]);
+            Assert.Equal(Attr(e[0], "rx"), Attr(e[0], "ry"), 6);
+            Assert.StartsWith("<polygon", e[1]);
+            Assert.StartsWith("<polygon", e[2]);
+            Assert.StartsWith("<ellipse", e[3]);
+            Assert.Equal(Attr(e[0], "rx") * 1.35, Attr(e[3], "rx"), 2);
+            Assert.Equal(Attr(e[0], "ry"), Attr(e[3], "ry"), 6);
+            Assert.StartsWith("<path", e[4]);
+            Assert.StartsWith("<path", e[5]);
+            Assert.All(e, x => Assert.Contains("opacity=", x));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TestRightEyeHighlightLengthsSwapOnlyWhenTheHighlightsAreMirrored(bool mirror)
+        {
+            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = mirror };
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, PositionX = 0, PositionY = 0, Size = 0.2, StretchLeft = 2.0, StretchRight = 0.5, StretchBottom = 1.3 });
+
+            double LeftOverRight(bool isRightEye)
+            {
+                string d = System.Text.RegularExpressions.Regex.Match(HighlightElements(p, isRightEye)[0], "d=\"([^\"]*)\"").Groups[1].Value;
+                var n = System.Text.RegularExpressions.Regex.Matches(d, @"-?\d+(\.\d+)?")
+                    .Select(m => double.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+                var xs = n.Where((_, i) => i % 2 == 0).ToList();
+                double cx = xs[0]; // the outline starts at the top, straight above the center
+                return (cx - xs.Min()) / (xs.Max() - cx);
+            }
+
+            Assert.Equal(4.0, LeftOverRight(false), 1);
+            Assert.Equal(mirror ? 0.25 : 4.0, LeftOverRight(true), 1);
+        }
+
+        [Fact]
+        public void TestHighlightLengthsAreSavedAndTheOldOvalReadsAsACircle()
+        {
+            var h = new HighlightItem { Shape = HighlightShape.Star4, StretchTop = 0.7, StretchBottom = 1.3, StretchLeft = 9.0, StretchRight = double.NaN };
+            Assert.Equal((3.0, 1.0), (h.StretchLeft, h.StretchRight)); // pulled into range
+            string json = JsonSerializer.Serialize(h);
+            Assert.DoesNotContain("AspectRatio", json);
+            var back = JsonSerializer.Deserialize<HighlightItem>(json)!;
+            Assert.Equal((HighlightShape.Star4, 0.7, 1.3, 3.0, 1.0), (back.Shape, back.StretchTop, back.StretchBottom, back.StretchLeft, back.StretchRight));
+            var clone = h.Clone();
+            Assert.Equal((0.7, 1.3, 3.0, 1.0), (clone.StretchTop, clone.StretchBottom, clone.StretchLeft, clone.StretchRight));
+
+            // The file numbers of the other shapes stay; 1 (the oval) and unknown numbers become a circle
+            Assert.Equal(new[] { 0, 2, 3 }, Enum.GetValues<HighlightShape>().Select(s => (int)s));
+            foreach (string shape in new[] { "1", "9" })
+            {
+                var old = JsonSerializer.Deserialize<HighlightItem>($"{{\"Shape\":{shape},\"AspectRatio\":1.6}}")!;
+                Assert.Equal(HighlightShape.Circle, old.Shape);
+                Assert.Equal((1.0, 1.0, 1.0, 1.0), (old.StretchTop, old.StretchBottom, old.StretchLeft, old.StretchRight));
+            }
+
+            // The selection ring reaches as far as the longest length
+            var p = new IrisParameters();
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Size = 0.2, IsSelected = true });
+            double plain = ItemMarkers.ForEye(p, false, null)[0].Radius;
+            p.Highlights[0].StretchTop = 2.0;
+            Assert.True(ItemMarkers.ForEye(p, false, null)[0].Radius > plain * 1.8);
+        }
+
         [Fact]
         public void TestMoreRoundingPullsTheStarTipsInSteadily()
         {

@@ -88,7 +88,7 @@ namespace DollIrisGenerator.Tests
             var p = new IrisParameters();
             p.Highlights.Clear();
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Blend = LayerBlend.Screen });
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Oval, AspectRatio = 1.4 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, StretchLeft = 1.4, StretchRight = 1.4 }); // an oval
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, Rotation = 20, Blend = LayerBlend.ColorDodge });
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus, Blend = LayerBlend.SoftLight });
 
