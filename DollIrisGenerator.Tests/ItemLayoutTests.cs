@@ -230,7 +230,7 @@ namespace DollIrisGenerator.Tests
             }, () => new DecorativeSymbolItem());
             AssertBulkCoversSavedSettings(new HighlightItem
             {
-                Shape = HighlightShape.Rhombus, Size = 0.3, Count = 4, CornerRounding = 0.6, StretchTop = 1.2, StretchBottom = 0.8, StretchLeft = 1.8, StretchRight = 0.6, Rotation = 20, Color = "#FFEEAA",
+                Shape = HighlightShape.Diamond, Size = 0.3, Count = 4, CornerRounding = 0.6, StretchTop = 1.2, StretchBottom = 0.8, StretchLeft = 1.8, StretchRight = 0.6, Rotation = 20, Color = "#FFEEAA",
                 Opacity = 0.5, Enabled = false, Blend = LayerBlend.ColorDodge
             }, () => new HighlightItem());
         }
@@ -307,7 +307,7 @@ namespace DollIrisGenerator.Tests
 
             var second = new ObservableCollection<HighlightItem>
             {
-                new() { Shape = HighlightShape.Rhombus, Color = "#AACCFF", IsSelected = true },
+                new() { Shape = HighlightShape.Diamond, Color = "#AACCFF", IsSelected = true },
             };
             editor.Attach(second);
             Assert.True(editor.HasSelection);
@@ -322,7 +322,7 @@ namespace DollIrisGenerator.Tests
             Assert.All(added, h => { Assert.Equal(HighlightShape.Star4, h.Shape); Assert.Equal("#FFAA00", h.Color); });
             Assert.Equal(4, second.Count);
             Assert.Single(first);
-            Assert.Equal(HighlightShape.Rhombus, second[0].Shape); // the ticked item is not touched
+            Assert.Equal(HighlightShape.Diamond, second[0].Shape); // the ticked item is not touched
         }
 
         [Fact]

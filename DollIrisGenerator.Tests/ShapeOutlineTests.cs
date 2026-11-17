@@ -24,14 +24,15 @@ namespace DollIrisGenerator.Tests
         {
             foreach (SymbolType type in Enum.GetValues<SymbolType>())
             {
-                if (type != SymbolType.None) yield return new object[] { $"symbol:{type}" };
+                // Every shape with corners (the circle has none)
+                if (type != SymbolType.None && type != SymbolType.Circle) yield return new object[] { $"symbol:{type}" };
             }
             foreach (var shape in new[] { PupilShape.CatSlit, PupilShape.Heart, PupilShape.Star })
             {
                 yield return new object[] { $"pupil:{shape}" };
             }
             // Highlights with corners (角の丸み); the circle has none
-            foreach (var shape in new[] { HighlightShape.Star4, HighlightShape.Rhombus })
+            foreach (var shape in new[] { HighlightShape.Star4, HighlightShape.Diamond }) // the shapes highlights draw differently
             {
                 yield return new object[] { $"highlight:{shape}" };
             }
@@ -406,7 +407,9 @@ namespace DollIrisGenerator.Tests
                 Assert.Equal(outline.Start.Y, outline.Segments[^1].End.Y, 9);
                 Assert.Null(FindSelfIntersection(outline.Flatten(48)));
 
-                // The gradient is laid across exactly the drawn shape
+                // The quick box of the shapes written as an ellipse / polygon is exactly the drawn shape
+                // (the SVG measures the outline of every other shape)
+                if (shape is not (HighlightShape.Circle or HighlightShape.Star4 or HighlightShape.Diamond)) continue;
                 var drawn = outline.GetBounds();
                 var box = IrisStyle.HighlightBox(h, 20.0, swap);
                 Assert.Equal(drawn.Left, box.Left, 6);
@@ -438,7 +441,7 @@ namespace DollIrisGenerator.Tests
             p.Highlights.Clear();
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Size = 0.2 });
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4 });
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Diamond });
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Size = 0.2, StretchLeft = 1.35, StretchRight = 1.35 }); // oval
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, StretchBottom = 1.6 });  // egg: no longer an ellipse
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, StretchBottom = 1.6 });
@@ -493,8 +496,8 @@ namespace DollIrisGenerator.Tests
             Assert.Equal((0.7, 1.3, 3.0, 1.0), (clone.StretchTop, clone.StretchBottom, clone.StretchLeft, clone.StretchRight));
 
             // The file numbers of the other shapes stay; 1 (the oval) and unknown numbers become a circle
-            Assert.Equal(new[] { 0, 2, 3 }, Enum.GetValues<HighlightShape>().Select(s => (int)s));
-            foreach (string shape in new[] { "1", "9" })
+            Assert.Equal(new[] { 0, 2, 3, 4, 5, 6, 7, 8, 9 }, Enum.GetValues<HighlightShape>().Select(s => (int)s).OrderBy(n => n));
+            foreach (string shape in new[] { "1", "99" })
             {
                 var old = JsonSerializer.Deserialize<HighlightItem>($"{{\"Shape\":{shape},\"AspectRatio\":1.6}}")!;
                 Assert.Equal(HighlightShape.Circle, old.Shape);
@@ -525,7 +528,7 @@ namespace DollIrisGenerator.Tests
         [Theory]
         [InlineData(HighlightShape.Circle, true)]
         [InlineData(HighlightShape.Star4, true)]
-        [InlineData(HighlightShape.Rhombus, false)]
+        [InlineData(HighlightShape.Diamond, false)]
         public void TestHighlightCopiesSitOnARingAndFollowTheMirrorSetting(HighlightShape shape, bool mirror)
         {
             var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = mirror };
@@ -559,7 +562,7 @@ namespace DollIrisGenerator.Tests
             p.Highlights.Clear();
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, CornerRounding = 0.8 });
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4, CornerRounding = 0.8 });
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Rhombus, CornerRounding = 0.8 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Diamond, CornerRounding = 0.8 });
             var rounded = HighlightElements(p);
 
             foreach (var h in p.Highlights) h.CornerRounding = 0.0;
@@ -595,6 +598,107 @@ namespace DollIrisGenerator.Tests
             p.Highlights[0].Count = 6;
             double ring = ItemMarkers.ForEye(p, false, null)[0].Radius;
             Assert.True(ring > single * 2.2, $"{ring} vs {single}");
+        }
+
+        [Fact]
+        public void TestSymbolsAndHighlightsOfferTheSameShapes()
+        {
+            var all = Enum.GetValues<ShapeKind>().OrderBy(k => k).ToArray();
+            var fromSymbols = Enum.GetValues<SymbolType>().Select(ShapeKinds.Of).Where(k => k != null).Select(k => k!.Value).OrderBy(k => k).ToArray();
+            var fromHighlights = Enum.GetValues<HighlightShape>().Select(ShapeKinds.Of).OrderBy(k => k).ToArray();
+            Assert.Equal(all, fromSymbols);     // every shape once
+            Assert.Equal(all, fromHighlights);
+
+            // The numbers the files have always stored keep their meaning; new shapes come after them
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9), ((int)SymbolType.Star4, (int)SymbolType.Star5, (int)SymbolType.Heart, (int)SymbolType.Moon,
+                (int)SymbolType.Cross, (int)SymbolType.Diamond, (int)SymbolType.SakuraPetal, (int)SymbolType.Circle, (int)SymbolType.CatSlit));
+            Assert.Equal((0, 2, 3), ((int)HighlightShape.Circle, (int)HighlightShape.Star4, (int)HighlightShape.Diamond));
+            Assert.Equal(SymbolType.None, JsonSerializer.Deserialize<DecorativeSymbolItem>("{\"Type\":42}")!.Type);
+
+            // The same outline for both, except the highlight's thinner sparkle and narrower diamond (as before)
+            foreach (var kind in all)
+            {
+                var symbol = ShapeOutline.ForShape(kind, 10.0).GetBounds();
+                var highlight = ShapeOutline.ForShape(kind, 10.0, highlight: true).GetBounds();
+                if (kind == ShapeKind.Diamond) Assert.Equal(13.0, highlight.Width, 6); // ±0.65r
+                else Assert.Equal(symbol, highlight);
+            }
+            Assert.Equal(14.0, ShapeOutline.ForShape(ShapeKind.Diamond, 10.0).GetBounds().Width, 6); // ±0.7r
+        }
+
+        /// <summary>Distance of the star's valley points from its center.</summary>
+        private static double StarCoreRadius(ShapeOutline star) => star.Flatten().Min(p => Math.Sqrt(p.X * p.X + p.Y * p.Y));
+
+        [Fact]
+        public void TestStarCoreScaleSetsTheStarsInnerRadius()
+        {
+            Assert.Equal(2.8, StarCoreRadius(ShapeOutline.ForShape(ShapeKind.Star4, 10.0)), 6);
+            Assert.Equal(2.2, StarCoreRadius(ShapeOutline.ForShape(ShapeKind.Star4, 10.0, highlight: true)), 6);
+            Assert.Equal(1.4, StarCoreRadius(ShapeOutline.ForShape(ShapeKind.Star4, 10.0, starCore: 0.5)), 6);
+            Assert.Equal(8.4, StarCoreRadius(ShapeOutline.ForShape(ShapeKind.Star5, 10.0, starCore: 2.0)), 6);
+            Assert.Equal(9.5, StarCoreRadius(ShapeOutline.ForShape(ShapeKind.Star5, 10.0, starCore: 3.0)), 6); // kept inside the tips
+            // Other shapes ignore it
+            Assert.Equal(ShapeOutline.ForShape(ShapeKind.Heart, 10.0).GetBounds(), ShapeOutline.ForShape(ShapeKind.Heart, 10.0, starCore: 2.0).GetBounds());
+
+            var s = new DecorativeSymbolItem { StarCoreScale = 9.0 };
+            Assert.Equal(3.0, s.StarCoreScale);
+            s.StarCoreScale = 0.6;
+            Assert.Equal(0.6, JsonSerializer.Deserialize<DecorativeSymbolItem>(JsonSerializer.Serialize(s))!.StarCoreScale);
+            Assert.Equal(0.6, s.Clone().StarCoreScale);
+            var h = new HighlightItem { StarCoreScale = double.NaN };
+            Assert.Equal(1.0, h.StarCoreScale);
+            h.StarCoreScale = 1.7;
+            Assert.Equal(1.7, JsonSerializer.Deserialize<HighlightItem>(JsonSerializer.Serialize(h))!.StarCoreScale);
+            Assert.Equal(1.7, h.Clone().StarCoreScale);
+            Assert.Equal(1.0, JsonSerializer.Deserialize<HighlightItem>("{\"Shape\":2}")!.StarCoreScale);
+        }
+
+        [Fact]
+        public void TestEveryShapeDrawsAsASymbolAndAsAHighlight()
+        {
+            foreach (var kind in Enum.GetValues<ShapeKind>())
+            {
+                var p = new IrisParameters { SizeMm = 10.0 };
+                p.Symbols.Clear();
+                p.Highlights.Clear();
+                var type = Enum.GetValues<SymbolType>().Single(t => ShapeKinds.Of(t) == kind);
+                var shape = Enum.GetValues<HighlightShape>().Single(x => ShapeKinds.Of(x) == kind);
+                p.Symbols.Add(new DecorativeSymbolItem { Type = type, Enabled = true, Opacity = 0.9 });
+                p.Highlights.Add(new HighlightItem { Shape = shape });
+
+                string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
+                Assert.True(SvgValidator.IsWellFormed(svg, out var error), $"{kind}: {error}");
+                Assert.Contains($"<g id=\"eye_left_symbol_{type}\"", svg);
+                Assert.Single(HighlightElements(p));
+            }
+
+            // Unchanged settings keep the old SVG elements: the plain sparkle is still the polygon
+            var q = new IrisParameters { SizeMm = 10.0 };
+            q.Highlights.Clear();
+            q.Highlights.Add(new HighlightItem { Shape = HighlightShape.Star4 });
+            Assert.StartsWith("<polygon", HighlightElements(q)[0]);
+            q.Highlights[0].StarCoreScale = 0.6;
+            Assert.StartsWith("<path", HighlightElements(q)[0]);
+        }
+
+        [Fact]
+        public void TestMirroredMoonHighlightFacesTheOtherWayInTheRightEye()
+        {
+            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = true };
+            p.Highlights.Clear();
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Moon, PositionX = 0, PositionY = 0, Size = 0.3 });
+            // The moon's horns point left (its outer arc is on the right); the start point is the upper horn tip
+            double HornX(bool isRightEye)
+            {
+                string d = System.Text.RegularExpressions.Regex.Match(HighlightElements(p, isRightEye)[0], "d=\"M ([-0-9.]+),").Groups[1].Value;
+                return double.Parse(d, System.Globalization.CultureInfo.InvariantCulture);
+            }
+            double CenterX(bool isRightEye) => ElementCenter(HighlightElements(p, isRightEye)[0]).X;
+
+            Assert.True(CenterX(false) > HornX(false)); // left eye: bulge to the right of the horns
+            Assert.True(CenterX(true) < HornX(true));   // right eye: mirrored, bulge to the left
+            p.MirrorHighlightsWithIris = false;
+            Assert.True(CenterX(true) > HornX(true));   // not mirrored: the same moon in both eyes
         }
 
         [Fact]

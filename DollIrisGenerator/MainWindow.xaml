@@ -122,6 +122,16 @@
                 <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchRight}" Margin="0,0,0,6"/>
             </StackPanel>
         </DataTemplate>
+        <!-- 星の芯の太さ (StarCore.MinSlider .. MaxSlider): the stars' inner radius as a share of the standard one (symbols and highlights) -->
+        <DataTemplate x:Key="StarCoreFields">
+            <StackPanel ToolTip="4芒星・5芒星の芯 (くびれ) の太さです。100% で標準、下げると細くとがったきらめき、上げると太い星になります。ほかの形には影響しません。">
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="星の芯の太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding StarCoreScale, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StarCoreScale}" Margin="0,0,0,6"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <!-- Text boxes keep their own Ctrl+Z (text undo); everywhere else these drive design undo/redo -->
@@ -1218,6 +1228,7 @@
                                                     <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                     <WrapPanel Margin="0,0,0,6">
                                                         <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                                                        <RadioButton Content="正円 (●)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
                                                         <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
                                                         <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
                                                         <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
@@ -1225,6 +1236,7 @@
                                                         <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
                                                         <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                         <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                        <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
@@ -1259,6 +1271,7 @@
                                                         <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                     </DockPanel>
                                                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
 
                                                     <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
 
@@ -1329,6 +1342,7 @@
                                                     <StackPanel DataContext="{Binding SymbolTools.Editor.Template}">
                                                         <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                         <WrapPanel Margin="0,0,0,6">
+                                                            <RadioButton Content="正円 (●)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
                                                             <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
                                                             <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
                                                             <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
@@ -1336,6 +1350,7 @@
                                                             <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
                                                             <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                             <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                            <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
                                                             <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
@@ -1351,6 +1366,7 @@
                                                             <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
                                                         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1583,9 +1599,15 @@
                                                 <StackPanel>
                                                     <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
                                                     <WrapPanel Margin="0,0,0,6">
-                                                        <RadioButton Content="正円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                        <RadioButton Content="4点星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                        <RadioButton Content="菱形" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
+                                                        <RadioButton Content="正円 (●)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                        <RadioButton Content="4芒星 (★)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                        <RadioButton Content="5芒星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                        <RadioButton Content="ハート (♥)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                        <RadioButton Content="三日月 (🌙)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
+                                                        <RadioButton Content="クロス (✝)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
+                                                        <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                        <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                        <RadioButton Content="猫目スリット" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
@@ -1617,11 +1639,12 @@
                                                     </DockPanel>
                                                     <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,0,0,6"/>
 
-                                                    <DockPanel Margin="0,0,0,4" ToolTip="4点星の先・菱形の角を丸めます。0% で従来どおりのとがった形です。正円には影響しません">
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="星の先・ダイヤの角などを丸めます。0% で従来どおりのとがった形です。正円には影響しません">
                                                         <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                     </DockPanel>
                                                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
 
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1677,9 +1700,15 @@
                                                     <StackPanel DataContext="{Binding HighlightTools.Editor.Template}">
                                                         <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                         <WrapPanel Margin="0,0,0,6">
-                                                            <RadioButton Content="正円" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                            <RadioButton Content="4点星" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
-                                                            <RadioButton Content="菱形" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
+                                                            <RadioButton Content="正円 (●)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                            <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                            <RadioButton Content="5芒星" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                            <RadioButton Content="ハート (♥)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                            <RadioButton Content="三日月 (🌙)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Moon}"/>
+                                                            <RadioButton Content="クロス (✝)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cross}"/>
+                                                            <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                            <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                                            <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
                                                             <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
@@ -1690,11 +1719,12 @@
                                                             <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
-                                                        <DockPanel Margin="0,0,0,2" ToolTip="4点星の先・菱形の角を丸めます (正円には影響しません)">
+                                                        <DockPanel Margin="0,0,0,2" ToolTip="星の先・ダイヤの角などを丸めます (正円には影響しません)">
                                                             <TextBlock Text="角の丸み:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                             <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
                                                         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>

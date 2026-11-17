@@ -31,4 +31,18 @@ namespace DollIrisGenerator.Models
         public static bool IsNone(IStretchable s) =>
             s.StretchTop == 1.0 && s.StretchBottom == 1.0 && s.StretchLeft == 1.0 && s.StretchRight == 1.0;
     }
+
+    /// <summary>
+    /// 星の芯の太さ of a decorative symbol or highlight: the stars' inner (valley) radius as a share of the standard one
+    /// for that star (1 = standard: 0.28 / 0.42 of the radius for the symbols' 4芒星 / 5芒星, 0.22 for the highlights' 4芒星).
+    /// The other shapes ignore it.
+    /// </summary>
+    public static class StarCore
+    {
+        /// <summary>The slider range (50% to 200%); files may go further, up to <see cref="Clamp"/>.</summary>
+        public const double MinSlider = 0.5, MaxSlider = 2.0;
+
+        /// <summary>0.25 to 3 (NaN becomes 1).</summary>
+        public static double Clamp(double value) => double.IsNaN(value) ? 1.0 : Math.Clamp(value, 0.25, 3.0);
+    }
 }

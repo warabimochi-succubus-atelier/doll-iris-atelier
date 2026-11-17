@@ -758,7 +758,7 @@ namespace DollIrisGenerator.Services
                     // symbols are drawn as they are, so their left and right lengths trade places
                     bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
                     bool swapSides = isRightEye && !mirror;
-                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius)?
+                    var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius, symbol.StarCoreScale)?
                         .Rounded(symbol.CornerRounding)
                         .Stretched(symbol, swapSides);
                     Rect symBounds = symOutline?.GetBounds(mirror) ?? Rect.Empty;
@@ -822,8 +822,11 @@ namespace DollIrisGenerator.Services
                     double hx = cx + posX * rx;
                     double hy = cy + h.PositionY * ry;
                     double hRadius = baseR * h.Size;
-                    // A mirrored highlight is drawn as it is, so its left and right lengths trade places
+                    // A mirrored highlight is drawn as it is, so its left and right lengths trade places; the moon is not
+                    // the same mirrored, so it is mirrored as a whole after stretching instead (as the symbols' moon)
                     bool mirrorHighlight = isRightEye && p.MirrorHighlightsWithIris;
+                    bool mirrorShape = mirrorHighlight && ShapeKinds.IsAsymmetric(ShapeKinds.Of(h.Shape));
+                    bool swapSides = mirrorHighlight && !mirrorShape;
 
                     // How the shape is written. A circle whose up / down and left / right lengths are equal is an
                     // ellipse (a plain circle too; corner rounding does nothing to it). The sparkle and rhombus are the
@@ -831,12 +834,13 @@ namespace DollIrisGenerator.Services
                     // outline: rounded (角の丸み), then stretched (上下左右の長さ), as the decorative symbols
                     bool ellipse = h.Shape == HighlightShape.Circle
                         && h.StretchTop == h.StretchBottom && h.StretchLeft == h.StretchRight;
-                    bool polygon = !ellipse && ShapeStretch.IsNone(h) && h.CornerRounding <= 0.0;
+                    bool polygon = (h.Shape == HighlightShape.Star4 || h.Shape == HighlightShape.Diamond)
+                        && ShapeStretch.IsNone(h) && h.CornerRounding <= 0.0 && h.StarCoreScale == 1.0;
                     ShapeOutline? hOutline = ellipse || polygon
                         ? null
-                        : ShapeOutline.ForHighlight(h.Shape, hRadius).Rounded(h.CornerRounding).Stretched(h, mirrorHighlight);
+                        : ShapeOutline.ForHighlight(h.Shape, hRadius, h.StarCoreScale).Rounded(h.CornerRounding).Stretched(h, swapSides);
                     // Gradient across the highlight's own box (each copy its own), turned with it (as on screen)
-                    Rect localBox = hOutline?.GetBounds() ?? IrisStyle.HighlightBox(h, hRadius, mirrorHighlight);
+                    Rect localBox = hOutline?.GetBounds(mirrorShape) ?? IrisStyle.HighlightBox(h, hRadius, mirrorHighlight);
 
                     for (int c = 0; c < h.Count; c++)
                     {
@@ -862,7 +866,7 @@ namespace DollIrisGenerator.Services
 
                         if (hOutline != null)
                         {
-                            AppendPath(sb, "      <path d=\"", hOutline, curX, curY, $"\" fill=\"{safeHColor}\" opacity=\"{h.Opacity.ToFixed(2)}\"{attrs} />");
+                            AppendPath(sb, "      <path d=\"", hOutline, curX, curY, $"\" fill=\"{safeHColor}\" opacity=\"{h.Opacity.ToFixed(2)}\"{attrs} />", mirrorShape);
                         }
                         else if (ellipse)
                         {
