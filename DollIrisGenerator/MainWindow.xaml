@@ -687,7 +687,7 @@
                                     </GroupBox.Header>
                                     <StackPanel>
                                         <!-- Pupil Shape -->
-                                        <TextBlock Text="瞳孔形状:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBlock Text="形状:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
                                         <WrapPanel Margin="0,0,0,8">
                                             <RadioButton Content="正円 (●)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
                                             <RadioButton Content="4芒星 (★)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
@@ -702,13 +702,13 @@
 
                                         <!-- Pupil Color -->
                                         <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="瞳孔色:" VerticalAlignment="Center" Width="110"/>
+                                            <TextBlock Text="色:" VerticalAlignment="Center" Width="110"/>
                                             <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.PupilColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <!-- Pupil Size -->
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="瞳孔サイズ (直径比率):" Foreground="{StaticResource TextPrimary}"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="虹彩の直径に対する、瞳孔の直径の比率です">
+                                            <TextBlock Text="サイズ:" Foreground="{StaticResource TextPrimary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilSizeRatio, Converter={StaticResource DoubleToPercentConverter}}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.10" Maximum="0.60" Value="{Binding CurrentIris.PupilSizeRatio}" Margin="0,0,0,8"/>
@@ -1255,7 +1255,7 @@
                                         <StackPanel.Resources>
                                             <DataTemplate x:Key="SymbolStyleFieldsTop">
                                                 <StackPanel>
-                                                    <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                                    <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                     <WrapPanel Margin="0,0,0,6">
                                                         <RadioButton Content="なし" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
                                                         <RadioButton Content="正円 (●)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
@@ -1270,7 +1270,7 @@
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
-                                                        <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
+                                                        <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
                                                         <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
                                                     </DockPanel>
 
@@ -1370,7 +1370,7 @@
                                                     </StackPanel>
                                                     <TextBlock Text="追加する記号:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                                     <StackPanel DataContext="{Binding SymbolTools.Editor.Template}">
-                                                        <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                                        <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                         <WrapPanel Margin="0,0,0,6">
                                                             <RadioButton Content="正円 (●)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
                                                             <RadioButton Content="4芒星 (★)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
@@ -1383,7 +1383,7 @@
                                                             <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
-                                                            <TextBlock Text="記号色:" VerticalAlignment="Center" Width="90"/>
+                                                            <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
                                                             <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding Color, Mode=TwoWay}"/>
                                                         </DockPanel>
                                                         <DockPanel Margin="0,0,0,2">
@@ -1438,7 +1438,7 @@
                                                 </TextBlock>
                                                 <TextBlock Text="動かした項目だけが、選んだ記号すべてに同じ値で入ります (位置は変わりません)。最初に表示されるのは、選んだ中で一番上の記号の値です。"
                                                            Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding SymbolTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                                <CheckBox Content="表示する" IsChecked="{Binding SymbolTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
                                                 <ContentControl Content="{Binding SymbolTools.Editor.Bulk}" ContentTemplate="{StaticResource SymbolStyleFieldsTop}" Focusable="False"/>
                                                 <ContentControl Content="{Binding SymbolTools.Editor.Bulk}" ContentTemplate="{StaticResource SymbolStyleFieldsBottom}" Focusable="False"/>
                                             </StackPanel>
@@ -1459,7 +1459,7 @@
                                                                     <Button Content="✕ 削除" Command="{Binding DataContext.RemoveSymbolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                             CommandParameter="{Binding}" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
                                                                 </StackPanel>
-                                                                <CheckBox Content="装飾記号を表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                <CheckBox Content="表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
                                                             </DockPanel>
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SymbolStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">
@@ -1795,7 +1795,7 @@
                                                 </TextBlock>
                                                 <TextBlock Text="動かした項目だけが、選んだハイライトすべてに同じ値で入ります (位置は変わりません)。最初に表示されるのは、選んだ中で一番上のハイライトの値です。"
                                                            Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                                <CheckBox Content="有効" IsChecked="{Binding HighlightTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                                <CheckBox Content="表示する" IsChecked="{Binding HighlightTools.Editor.Bulk.Enabled}" FontWeight="Bold" Margin="0,0,0,6"/>
                                                 <ContentControl Content="{Binding HighlightTools.Editor.Bulk}" ContentTemplate="{StaticResource HighlightStyleFieldsTop}" Focusable="False"/>
                                                 <ContentControl Content="{Binding HighlightTools.Editor.Bulk}" ContentTemplate="{StaticResource HighlightStyleFieldsBottom}" Focusable="False"/>
                                             </StackPanel>
@@ -1816,7 +1816,7 @@
                                                                     <Button Content="✕ 削除" Command="{Binding DataContext.RemoveHighlightCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                             CommandParameter="{Binding}" Padding="6,2" Background="#4A2020" Foreground="#FF8A80" BorderThickness="0" FontSize="11"/>
                                                                 </StackPanel>
-                                                                <CheckBox Content="有効" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                                <CheckBox Content="表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
                                                             </DockPanel>
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HighlightStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">

@@ -103,9 +103,9 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays = new Field<IrisParameters>[]
     {
         new HeadingField<IrisParameters>("瞳孔模様"),
-        new ChoiceField<IrisParameters>("瞳孔形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, Shapes(PupilOf)),
-        new ColorField<IrisParameters>("瞳孔色", p => p.PupilColor, (p, v) => p.PupilColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("瞳孔サイズ (直径比率)", p => p.PupilSizeRatio, (p, v) => p.PupilSizeRatio = v, 0.10, 0.60, 0.01, Fmt.Percent),
+        new ChoiceField<IrisParameters>("形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, Shapes(PupilOf)),
+        new ColorField<IrisParameters>("色", p => p.PupilColor, (p, v) => p.PupilColor = v, AllowGradient: true),
+        new SliderField<IrisParameters>("サイズ", p => p.PupilSizeRatio, (p, v) => p.PupilSizeRatio = v, 0.10, 0.60, 0.01, Fmt.Percent, "虹彩の直径に対する、瞳孔の直径の比率です"),
         new SliderField<IrisParameters>("角の丸み", p => p.PupilCornerRounding, (p, v) => p.PupilCornerRounding = v, 0, 1, 0.01, Fmt.Percent,
             "猫目スリット・ハート・星などのとがった角を丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
         new SliderField<IrisParameters>("星の芯の太さ", p => p.PupilStarCoreScale, (p, v) => p.PupilStarCoreScale = v, StarCore.MinSlider, StarCore.MaxSlider, 0.01, Fmt.Percent,
@@ -187,10 +187,10 @@ public static class DesignFields
 
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> Symbol = new Field<DecorativeSymbolItem>[]
     {
-        new ToggleField<DecorativeSymbolItem>("装飾記号を表示する", s => s.Enabled, (s, v) => s.Enabled = v),
-        new ChoiceField<DecorativeSymbolItem>("図形種類", s => s.Type, (s, v) => s.Type = (SymbolType)v,
+        new ToggleField<DecorativeSymbolItem>("表示する", s => s.Enabled, (s, v) => s.Enabled = v),
+        new ChoiceField<DecorativeSymbolItem>("形状", s => s.Type, (s, v) => s.Type = (SymbolType)v,
             new (string, object)[] { ("なし", SymbolType.None) }.Concat(Shapes(SymbolOf)).ToArray()),
-        new ColorField<DecorativeSymbolItem>("記号色", s => s.Color, (s, v) => s.Color = v, AllowGradient: true),
+        new ColorField<DecorativeSymbolItem>("色", s => s.Color, (s, v) => s.Color = v, AllowGradient: true),
         new SliderField<DecorativeSymbolItem>("サイズ", s => s.Size, (s, v) => s.Size = v, 0.05, 0.40, 0.01, Fmt.Percent),
         new SliderField<DecorativeSymbolItem>("繰り返し数", s => s.Count, (s, v) => s.Count = Int(v), 1, 12, 1, v => Fmt.Count(v, "個")),
         new SliderField<DecorativeSymbolItem>("位置 X (横)", s => s.PositionX, (s, v) => s.PositionX = v, -0.85, 0.85, 0.01, Fmt.F2),
@@ -210,7 +210,7 @@ public static class DesignFields
 
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]
     {
-        new ToggleField<HighlightItem>("有効", h => h.Enabled, (h, v) => h.Enabled = v),
+        new ToggleField<HighlightItem>("表示する", h => h.Enabled, (h, v) => h.Enabled = v),
         new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v, Shapes(HighlightOf)),
         new ColorField<HighlightItem>("色", h => h.Color, (h, v) => h.Color = v, AllowGradient: true),
         new SliderField<HighlightItem>("サイズ", h => h.Size, (h, v) => h.Size = v, 0.05, 0.45, 0.01, Fmt.Percent),
@@ -258,7 +258,7 @@ public static class DesignFields
 
     /// <summary>The look of the symbols 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
-        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Symbol, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>The look of the highlights 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
