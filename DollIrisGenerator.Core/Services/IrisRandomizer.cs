@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using DollIrisGenerator.Models;
 
@@ -344,6 +345,9 @@ namespace DollIrisGenerator.Services
 
         private static void GenerateRandomHighlights(IrisParameters p, Random rng)
         {
+            // 右目の反転 is how the pair is built, not part of the look the randomizer makes up (as the global setting it
+            // replaced, which the randomizer kept): the new highlights take the first current highlight's
+            var flip = p.Highlights.FirstOrDefault()?.RightEyeFlip ?? RightEyeFlip.Mirror;
             p.Highlights.Clear();
             int style = rng.Next(4);
 
@@ -359,7 +363,8 @@ namespace DollIrisGenerator.Services
                         Size = Math.Round(0.24 + rng.NextDouble() * 0.08, 2),
                         Color = "#FFFFFF",
                         Opacity = 0.95,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     p.Highlights.Add(new HighlightItem
                     {
@@ -369,7 +374,8 @@ namespace DollIrisGenerator.Services
                         Size = Math.Round(0.12 + rng.NextDouble() * 0.06, 2),
                         Color = "#FFFFFF",
                         Opacity = 0.75,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     break;
 
@@ -384,7 +390,8 @@ namespace DollIrisGenerator.Services
                         Rotation = Math.Round(rng.NextDouble() * 45.0, 1),
                         Color = "#FFFFFF",
                         Opacity = 0.95,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     p.Highlights.Add(new HighlightItem
                     {
@@ -394,7 +401,8 @@ namespace DollIrisGenerator.Services
                         Size = 0.14,
                         Color = "#FFFFFF",
                         Opacity = 0.70,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     break;
 
@@ -408,7 +416,8 @@ namespace DollIrisGenerator.Services
                         Size = 0.25,
                         Color = "#FFFFFF",
                         Opacity = 0.96,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     p.Highlights.Add(new HighlightItem
                     {
@@ -418,7 +427,8 @@ namespace DollIrisGenerator.Services
                         Size = 0.10,
                         Color = "#FFFFFF",
                         Opacity = 0.85,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     p.Highlights.Add(new HighlightItem
                     {
@@ -431,7 +441,8 @@ namespace DollIrisGenerator.Services
                         Rotation = 25.0,
                         Color = "#FFFFFF",
                         Opacity = 0.75,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     break;
 
@@ -449,7 +460,8 @@ namespace DollIrisGenerator.Services
                         Rotation = -15.0,
                         Color = "#FFFFFF",
                         Opacity = 0.95,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     p.Highlights.Add(new HighlightItem
                     {
@@ -459,7 +471,8 @@ namespace DollIrisGenerator.Services
                         Size = 0.13,
                         Color = "#FFFFFF",
                         Opacity = 0.80,
-                        Enabled = true
+                        Enabled = true,
+                        RightEyeFlip = flip
                     });
                     break;
             }

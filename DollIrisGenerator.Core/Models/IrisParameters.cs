@@ -147,7 +147,8 @@ namespace DollIrisGenerator.Models
         private ObservableCollection<HighlightItem> _highlights = new();
 
         // Symmetry & Lighting
-        private bool _mirrorHighlightsWithIris = true; // Section 13
+        private RightEyeFlip _pupilRightEyeFlip = RightEyeFlip.Mirror;
+        private RightEyeFlip _lightRightEyeFlip = RightEyeFlip.Mirror;
 
         // Odd-Eye Mode (オッドアイ対応)
         private bool _isOddEye = false;
@@ -748,10 +749,24 @@ namespace DollIrisGenerator.Models
             OnPropertyChanged(NestedItemsChangedName);
         }
 
-        public bool MirrorHighlightsWithIris
+        /// <summary>
+        /// 瞳孔の右目の反転: 鏡像 (as before: a moon pupil faces the other way, the left / right lengths and the
+        /// gem-cut facets are mirrored) or 反転しない (the same pupil in both eyes).
+        /// </summary>
+        public RightEyeFlip PupilRightEyeFlip
         {
-            get => _mirrorHighlightsWithIris;
-            set { _mirrorHighlightsWithIris = value; OnPropertyChanged(); }
+            get => _pupilRightEyeFlip;
+            set { _pupilRightEyeFlip = RightEyeFlips.ValidCentered(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 光の向きの右目の反転: 鏡像 (the light comes from the mirrored side, as the mirrored highlights) or 反転しない
+        /// (from the same side in both eyes: a light source that stays where it is, with highlights set to 反転しない).
+        /// </summary>
+        public RightEyeFlip LightRightEyeFlip
+        {
+            get => _lightRightEyeFlip;
+            set { _lightRightEyeFlip = RightEyeFlips.ValidCentered(value); OnPropertyChanged(); }
         }
 
         // Odd-Eye Mode

@@ -112,6 +112,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `BottomHighlightIntensity` | 0〜1 | 照り返しの強さ |
 | `LightStrength` | 0〜1 | 明るい場所を光の向きへずらす（0 でオフ） |
 | `LightAngle` | 0〜360 | 光の来る向き（270 = 上、225 前後 = 左上） |
+| `LightRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目で光の向きを左右反転するか。2 にすると両目で同じ向きから光が入る（ハイライトも 2 にすると、光源が固定された自然な光） |
 
 ### オーロラ層（虹彩全体に重ねる色）
 
@@ -150,6 +151,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilCornerRounding` | 0〜1 | 猫目・ハート・星などの角の丸み |
 | `PupilStarCoreScale` | 0.5〜2.0（省略時 1.0） | 5芒星・4芒星の瞳孔の芯（くびれ）の太さ |
 | `PupilStretchTop`, `PupilStretchBottom`, `PupilStretchLeft`, `PupilStretchRight` | 0.5〜2.0（省略時 1.0） | 瞳孔の上下左右の長さ（装飾記号と同じ）。右目は左右が入れ替わり鏡像になる |
+| `PupilRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目の瞳孔を左右反転するか（三日月の向き・左右の長さ・宝石カット） |
 | `PupilFacetIntensity` | 0〜1 | 宝石のカット面（0 でオフ） |
 | `PupilFacetCount` | 4〜24 | カット面の数 |
 
@@ -219,9 +221,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Rotation` | -180〜180（度） | |
 | `CornerRounding` | 0〜1 | |
 | `StarCoreScale` | 0.5〜2.0（省略時 1.0） | 星の芯の太さ。4芒星・5芒星の芯（くびれ）の太さを標準の何倍にするか。ほかの形では使わない |
-| `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。図形の中心から上・下・左・右の半分ずつを伸び縮みさせる（1.0 でそのまま）。右目では左右が入れ替わり鏡像になる。例: 4芒星で上 0.7・下 1.3・左右 0.6 にすると、下の長いとがった十字になる |
+| `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。図形の中心から上・下・左・右の半分ずつを伸び縮みさせる（1.0 でそのまま）。右目の反転が鏡像なら、右目では左右が入れ替わる。例: 4芒星で上 0.7・下 1.3・左右 0.6 にすると、下の長いとがった十字になる |
 | `Enabled` | true / false | `false` にすると描かずに設定だけ残します（画面の「表示する」のチェックを外したのと同じ） |
 | `Blend` | 重ね方 | |
+| `RightEyeFlip` | 0 鏡像, 1 位置だけ反転, 2 反転しない（省略時 0） | 右目での描き方。0: 位置も形の向きも左右反転。1: 位置は反転、形の向き（回転・三日月・左右の長さ・写しの並び）はそのまま。2: 両目で同じ |
 
 ### ハイライト `Highlights`（配列。1〜3 個が一般的。最大 64 個）
 
@@ -233,7 +236,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PositionX`, `PositionY` | -0.85〜0.85 | 左上が自然 |
 | `Size` | 0.05〜0.45 | |
 | `Count` | 1〜12（省略時 1） | 2 以上は位置を中心に円形に並ぶ（半径はサイズ × 1.4）。装飾記号と同じ |
-| `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。装飾記号と同じ。正円で左右を 1.35 にすると横長の楕円、上下を 1.35 にすると縦長の楕円。右目は「ハイライトも左右反転する」がオンのときだけ左右が入れ替わる |
+| `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。装飾記号と同じ。正円で左右を 1.35 にすると横長の楕円、上下を 1.35 にすると縦長の楕円。右目の反転が鏡像のときだけ、右目で左右が入れ替わる |
 | `Rotation` | -180〜180 | |
 | `CornerRounding` | 0〜1（省略時 0） | 星の先・ダイヤの角などの丸み。正円には影響しない |
 | `StarCoreScale` | 0.5〜2.0（省略時 1.0） | 星の芯の太さ（装飾記号と同じ） |
@@ -241,8 +244,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Opacity` | 0〜1 | |
 | `Enabled` | true / false | `false` にすると描かずに設定だけ残します（画面の「表示する」のチェックを外したのと同じ） |
 | `Blend` | 重ね方 | |
+| `RightEyeFlip` | 0 鏡像, 1 位置だけ反転, 2 反転しない（省略時 0） | 右目での描き方。0: 位置も形の向きも左右反転。1: 位置は反転、形の向き（回転・三日月・左右の長さ・写しの並び）はそのまま。2: 両目で同じ |
 
-デザイン全体の項目 `MirrorHighlightsWithIris`: `true` で右目のハイライトも左右反転、`false` で両目とも同じ側（光源が固定された自然な見え方）。
+右目のハイライトを反転しない（光源が固定された自然な見え方）ときは、各ハイライトの `RightEyeFlip` を 2 にし、`LightRightEyeFlip` も 2 にします（以前のデザイン全体の項目 `MirrorHighlightsWithIris` はなくなりました）。
 
 ### オッドアイ（左右で色を変える）
 
@@ -279,6 +283,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "OuterGradientRadius": 0.95,
   "BottomHighlightIntensity": 0.4,
   "LightAngle": 270.0,
+  "LightRightEyeFlip": 0,
   "LightStrength": 0.0,
   "AuroraColor": "conic-gradient(from 270deg, #FF80AB 0%, #80D8FF 30%, #B388FF 55%, #A7FFEB 80%, #FF80AB 100%)",
   "AuroraOpacity": 0.0,
@@ -301,6 +306,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilStretchBottom": 1.0,
   "PupilStretchLeft": 1.0,
   "PupilStretchRight": 1.0,
+  "PupilRightEyeFlip": 0,
   "PupilFacetIntensity": 0.0,
   "PupilFacetCount": 10,
   "RayCount": 48,
@@ -351,7 +357,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
       "StretchLeft": 1.0,
       "StretchRight": 1.0,
       "Enabled": true,
-      "Blend": 0
+      "Blend": 0,
+      "RightEyeFlip": 0
     }
   ],
   "Highlights": [
@@ -371,10 +378,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
       "Color": "#FFFFFF",
       "Opacity": 0.95,
       "Enabled": true,
-      "Blend": 0
+      "Blend": 0,
+      "RightEyeFlip": 0
     }
   ],
-  "MirrorHighlightsWithIris": true,
   "IsOddEye": false,
   "OddEyeBaseColor": "#FFB300",
   "OddEyeInnerColor": "#FFE082",

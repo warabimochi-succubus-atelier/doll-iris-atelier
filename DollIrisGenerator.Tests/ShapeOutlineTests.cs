@@ -465,9 +465,10 @@ namespace DollIrisGenerator.Tests
         [InlineData(false)]
         public void TestRightEyeHighlightLengthsSwapOnlyWhenTheHighlightsAreMirrored(bool mirror)
         {
-            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = mirror };
+            var p = new IrisParameters { SizeMm = 10.0 };
             p.Highlights.Clear();
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, PositionX = 0, PositionY = 0, Size = 0.2, StretchLeft = 2.0, StretchRight = 0.5, StretchBottom = 1.3 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, PositionX = 0, PositionY = 0, Size = 0.2, StretchLeft = 2.0, StretchRight = 0.5, StretchBottom = 1.3,
+                RightEyeFlip = mirror ? RightEyeFlip.Mirror : RightEyeFlip.None });
 
             double LeftOverRight(bool isRightEye)
             {
@@ -531,11 +532,12 @@ namespace DollIrisGenerator.Tests
         [InlineData(HighlightShape.Diamond, false)]
         public void TestHighlightCopiesSitOnARingAndFollowTheMirrorSetting(HighlightShape shape, bool mirror)
         {
-            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = mirror };
+            var flip = mirror ? RightEyeFlip.Mirror : RightEyeFlip.None;
+            var p = new IrisParameters { SizeMm = 10.0 };
             p.Highlights.Clear();
-            p.Highlights.Add(new HighlightItem { Shape = shape, Count = 5, Size = 0.1, PositionX = 0.3, PositionY = -0.2, Blend = LayerBlend.Screen });
+            p.Highlights.Add(new HighlightItem { Shape = shape, Count = 5, Size = 0.1, PositionX = 0.3, PositionY = -0.2, Blend = LayerBlend.Screen, RightEyeFlip = flip });
             // The same highlight with one copy marks the ring's center
-            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Count = 1, Size = 0.02, PositionX = 0.3, PositionY = -0.2 });
+            p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Circle, Count = 1, Size = 0.02, PositionX = 0.3, PositionY = -0.2, RightEyeFlip = flip });
 
             foreach (bool isRightEye in new[] { false, true })
             {
@@ -684,7 +686,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestMirroredMoonHighlightFacesTheOtherWayInTheRightEye()
         {
-            var p = new IrisParameters { SizeMm = 10.0, MirrorHighlightsWithIris = true };
+            var p = new IrisParameters { SizeMm = 10.0 };
             p.Highlights.Clear();
             p.Highlights.Add(new HighlightItem { Shape = HighlightShape.Moon, PositionX = 0, PositionY = 0, Size = 0.3 });
             // The moon's horns point left (its outer arc is on the right); the start point is the upper horn tip
@@ -697,8 +699,10 @@ namespace DollIrisGenerator.Tests
 
             Assert.True(CenterX(false) > HornX(false)); // left eye: bulge to the right of the horns
             Assert.True(CenterX(true) < HornX(true));   // right eye: mirrored, bulge to the left
-            p.MirrorHighlightsWithIris = false;
-            Assert.True(CenterX(true) > HornX(true));   // not mirrored: the same moon in both eyes
+            p.Highlights[0].RightEyeFlip = RightEyeFlip.PositionOnly;
+            Assert.True(CenterX(true) > HornX(true));   // 位置だけ反転: the moon faces the same way in both eyes
+            p.Highlights[0].RightEyeFlip = RightEyeFlip.None;
+            Assert.True(CenterX(true) > HornX(true));   // 反転しない: the same moon in both eyes
         }
 
         /// <summary>The pupil's own shape element (inside its group), for one eye.</summary>
@@ -805,6 +809,125 @@ namespace DollIrisGenerator.Tests
                 Assert.Equal((0.7, 1.3, 3.0, 0.6, 1.0), (x.PupilStarCoreScale, x.PupilStretchTop, x.PupilStretchBottom, x.PupilStretchLeft, x.PupilStretchRight));
             var old = JsonSerializer.Deserialize<IrisParameters>("{\"PupilShape\":3}")!;
             Assert.Equal((1.0, 1.0, 1.0, 1.0, 1.0), (old.PupilStarCoreScale, old.PupilStretchTop, old.PupilStretchBottom, old.PupilStretchLeft, old.PupilStretchRight));
+        }
+
+        /// <summary>The symbol group's first path: its start point (the moon's upper horn tip) and its box's middle.</summary>
+        private static (double StartX, double CenterX) SymbolPathStartAndCenter(IrisParameters p, bool isRightEye, string type)
+        {
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+            string eye = isRightEye ? "eye_right" : "eye_left";
+            int g = svg.IndexOf($"<g id=\"{eye}_symbol_{type}\"", StringComparison.Ordinal);
+            string element = System.Text.RegularExpressions.Regex.Match(svg[g..], "<path[^>]*/>").Value;
+            double start = double.Parse(System.Text.RegularExpressions.Regex.Match(element, "d=\"M ([-0-9.]+),").Groups[1].Value,
+                System.Globalization.CultureInfo.InvariantCulture);
+            return (start, ElementCenter(element).X);
+        }
+
+        [Fact]
+        public void TestSymbolRightEyeFlipSeparatesThePositionFromTheDirection()
+        {
+            var p = new IrisParameters { SizeMm = 10.0 };
+            p.Symbols.Clear();
+            p.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, PositionX = 0.4, PositionY = 0, Size = 0.2, Rotation = 20, Enabled = true });
+            var (leftStart, leftCenter) = SymbolPathStartAndCenter(p, false, "Moon");
+            double leftBulge = leftCenter - leftStart; // > 0: the moon bulges to the right of its horns
+
+            // The eye's own center: an unrotated, unmoved circle symbol marks it
+            double EyeCenter(bool isRightEye)
+            {
+                var q = new IrisParameters { SizeMm = 10.0 };
+                q.Symbols.Clear();
+                q.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Circle, PositionX = 0, PositionY = 0, Size = 0.05, Enabled = true });
+                return SymbolPathStartAndCenter(q, isRightEye, "Circle").CenterX;
+            }
+            // The moon's outline starts at its upper horn tip, straight above the symbol's position
+            double leftOffset = leftStart - EyeCenter(false);
+            Assert.True(leftOffset > 0 && leftBulge > 0);
+
+            foreach (var (flip, mirroredPlace, mirroredShape) in new[]
+            {
+                (RightEyeFlip.Mirror, true, true), (RightEyeFlip.PositionOnly, true, false), (RightEyeFlip.None, false, false)
+            })
+            {
+                p.Symbols[0].RightEyeFlip = flip;
+                var (start, center) = SymbolPathStartAndCenter(p, true, "Moon");
+                double offset = start - EyeCenter(true);
+                Assert.Equal(mirroredPlace ? -leftOffset : leftOffset, offset, 1);                 // where it is
+                Assert.Equal(mirroredShape ? -leftBulge : leftBulge, center - start, 1);          // which way it faces (and its tilt)
+                string svg = SvgExporter.GenerateSingleEyeSvg(p, true);
+                Assert.Contains(mirroredShape ? "rotate(-20.0" : "rotate(20.0", svg);
+                // The selection ring follows the position
+                p.Symbols[0].IsSelected = true;
+                var ring = ItemMarkers.ForEye(p, true, null).Single();
+                var leftRing = ItemMarkers.ForEye(p, false, null).Single();
+                Assert.Equal(mirroredPlace ? -leftRing.X : leftRing.X, ring.X, 6);
+                p.Symbols[0].IsSelected = false;
+            }
+        }
+
+        [Fact]
+        public void TestPupilRightEyeFlipNoneDrawsTheSamePupilInBothEyes()
+        {
+            var p = new IrisParameters { SizeMm = 10.0, PupilShape = PupilShape.Heart, PupilStretchLeft = 2.0, PupilStretchRight = 0.5, PupilRightEyeFlip = RightEyeFlip.None };
+            string Relative(bool isRightEye)
+            {
+                // The pupil path with the eye center taken out, so both eyes compare
+                string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye);
+                var e = PupilElement(p, isRightEye);
+                var nums = System.Text.RegularExpressions.Regex.Matches(System.Text.RegularExpressions.Regex.Match(e, "d=\"([^\"]*)\"").Groups[1].Value, @"-?\d+(\.\d+)?")
+                    .Select(m => double.Parse(m.Value, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+                double x0 = nums[0], y0 = nums[1];
+                return string.Join(",", nums.Select((v, i) => Math.Round(v - (i % 2 == 0 ? x0 : y0), 2)));
+            }
+            Assert.Equal(Relative(false), Relative(true));
+
+            p.PupilRightEyeFlip = RightEyeFlip.Mirror;
+            Assert.NotEqual(Relative(false), Relative(true));
+
+            // 位置だけ反転 means nothing for a centered pupil: it reads as 反転しない
+            p.PupilRightEyeFlip = RightEyeFlip.PositionOnly;
+            Assert.Equal(RightEyeFlip.None, p.PupilRightEyeFlip);
+            p.LightRightEyeFlip = RightEyeFlip.PositionOnly;
+            Assert.Equal(RightEyeFlip.None, p.LightRightEyeFlip);
+        }
+
+        [Fact]
+        public void TestRightEyeFlipIsSavedClonedAndUnknownNumbersMirror()
+        {
+            var s = new DecorativeSymbolItem { RightEyeFlip = RightEyeFlip.PositionOnly };
+            var h = new HighlightItem { RightEyeFlip = RightEyeFlip.None };
+            Assert.Equal(RightEyeFlip.PositionOnly, JsonSerializer.Deserialize<DecorativeSymbolItem>(JsonSerializer.Serialize(s))!.RightEyeFlip);
+            Assert.Equal(RightEyeFlip.None, JsonSerializer.Deserialize<HighlightItem>(JsonSerializer.Serialize(h))!.RightEyeFlip);
+            Assert.Equal(RightEyeFlip.PositionOnly, s.Clone().RightEyeFlip);
+            Assert.Equal(RightEyeFlip.None, h.Clone().RightEyeFlip);
+            Assert.Equal(RightEyeFlip.Mirror, JsonSerializer.Deserialize<HighlightItem>("{\"RightEyeFlip\":7}")!.RightEyeFlip);
+            Assert.Equal(RightEyeFlip.Mirror, JsonSerializer.Deserialize<DecorativeSymbolItem>("{\"Type\":1}")!.RightEyeFlip);
+            var p = JsonSerializer.Deserialize<IrisParameters>("{\"PupilRightEyeFlip\":2,\"LightRightEyeFlip\":2}")!;
+            Assert.Equal((RightEyeFlip.None, RightEyeFlip.None), (p.PupilRightEyeFlip, p.LightRightEyeFlip));
+            Assert.Equal((RightEyeFlip.None, RightEyeFlip.None), (p.Clone().PupilRightEyeFlip, p.Clone().LightRightEyeFlip));
+        }
+
+        [Fact]
+        public void TestRandomHighlightsKeepTheFirstHighlightsFlipAndPresetsCarryThePupilAndLightFlips()
+        {
+            for (int seed = 0; seed < 10; seed++)
+            {
+                var p = new IrisParameters();
+                foreach (var h in p.Highlights) h.RightEyeFlip = RightEyeFlip.None;
+                p.PupilRightEyeFlip = RightEyeFlip.None;
+                IrisRandomizer.RandomizeAttributes(p, new Random(seed));
+                Assert.NotEmpty(p.Highlights);
+                Assert.All(p.Highlights, h => Assert.Equal(RightEyeFlip.None, h.RightEyeFlip));
+                Assert.Equal(RightEyeFlip.None, p.PupilRightEyeFlip); // not part of the randomized look
+            }
+
+            var design = new IrisParameters { PupilRightEyeFlip = RightEyeFlip.None, LightRightEyeFlip = RightEyeFlip.None };
+            var preset = ColorPresets.FromDesign(design, "テスト", "");
+            var target = new IrisParameters();
+            ColorPresets.ApplyPreset(target, preset);
+            Assert.Equal((RightEyeFlip.None, RightEyeFlip.None), (target.PupilRightEyeFlip, target.LightRightEyeFlip));
+            ColorPresets.ApplyPreset(target, ColorPresets.All[0]); // a built-in one leaves them out: back to 鏡像
+            Assert.Equal((RightEyeFlip.Mirror, RightEyeFlip.Mirror), (target.PupilRightEyeFlip, target.LightRightEyeFlip));
         }
 
         [Fact]

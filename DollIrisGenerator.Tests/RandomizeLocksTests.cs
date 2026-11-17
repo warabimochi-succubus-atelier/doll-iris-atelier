@@ -213,7 +213,7 @@ namespace DollIrisGenerator.Tests
         private static readonly HashSet<string> AlwaysKept = new()
         {
             nameof(IrisParameters.SizeMm), nameof(IrisParameters.Shape), nameof(IrisParameters.AspectRatio),
-            nameof(IrisParameters.TiltAngle), nameof(IrisParameters.MirrorHighlightsWithIris)
+            nameof(IrisParameters.TiltAngle), nameof(IrisParameters.PupilRightEyeFlip), nameof(IrisParameters.LightRightEyeFlip)
         };
 
         private static string ValueOf(System.Reflection.PropertyInfo prop, IrisParameters p) =>

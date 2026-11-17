@@ -101,7 +101,9 @@ namespace DollIrisGenerator.Models
 
         // Highlights: null = the app's default highlights
         public List<HighlightItem>? Highlights { get; set; }
-        public bool? MirrorHighlightsWithIris { get; set; }
+        // 右目の反転 of the pupil and the light (each highlight carries its own in the list): null = 鏡像
+        public RightEyeFlip? PupilRightEyeFlip { get; set; }
+        public RightEyeFlip? LightRightEyeFlip { get; set; }
 
         // Lens pattern
         public bool? LensPatternEnabled { get; set; }
@@ -357,7 +359,8 @@ namespace DollIrisGenerator.Models
 
             // Highlights (replaced in place, so the list on screen stays bound)
             ReplaceItems(target.Highlights, preset.Highlights ?? d.Highlights.ToList(), h => h.Clone());
-            target.MirrorHighlightsWithIris = preset.MirrorHighlightsWithIris ?? d.MirrorHighlightsWithIris;
+            target.PupilRightEyeFlip = preset.PupilRightEyeFlip ?? d.PupilRightEyeFlip;
+            target.LightRightEyeFlip = preset.LightRightEyeFlip ?? d.LightRightEyeFlip;
 
             // Lens pattern
             target.LensPatternEnabled = preset.LensPatternEnabled ?? d.LensPatternEnabled;
@@ -492,7 +495,8 @@ namespace DollIrisGenerator.Models
                 ParticleFlareLength = design.ParticleFlareLength,
 
                 Highlights = design.Highlights.Select(h => h.Clone()).ToList(),
-                MirrorHighlightsWithIris = design.MirrorHighlightsWithIris,
+                PupilRightEyeFlip = design.PupilRightEyeFlip,
+                LightRightEyeFlip = design.LightRightEyeFlip,
 
                 LensPatternEnabled = design.LensPatternEnabled,
                 LensRingCount = design.LensRingCount,

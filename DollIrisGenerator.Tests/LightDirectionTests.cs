@@ -51,14 +51,15 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(42.0 - 20.0, fy, 2);
         }
 
-        /// <summary>The right eye mirrors the light only when it mirrors the highlights.</summary>
+        /// <summary>The right eye mirrors the light unless the light is set to 反転しない (光の向きの右目の反転).</summary>
         [Fact]
-        public void RightEyeFollowsTheHighlightMirroring()
+        public void RightEyeFollowsTheLightsOwnFlip()
         {
-            var p = new IrisParameters { LightStrength = 1.0, LightAngle = 0, MirrorHighlightsWithIris = true };
+            var p = new IrisParameters { LightStrength = 1.0, LightAngle = 0 };
+            Assert.Equal(RightEyeFlip.Mirror, p.LightRightEyeFlip);
             Assert.Equal(10.0, Focus(SvgExporter.GenerateSingleEyeSvg(p, true), "eye_right").Fx, 3);
 
-            p.MirrorHighlightsWithIris = false;
+            p.LightRightEyeFlip = RightEyeFlip.None;
             Assert.Equal(90.0, Focus(SvgExporter.GenerateSingleEyeSvg(p, true), "eye_right").Fx, 3);
         }
 

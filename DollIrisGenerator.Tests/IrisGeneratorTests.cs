@@ -83,8 +83,7 @@ namespace DollIrisGenerator.Tests
                 ParticleMaxSize = 3.0,
                 ParticleOpacity = 0.90,
                 ParticleColor = "#FFFFFF",
-                ParticleRadiusRatio = 0.82,
-                MirrorHighlightsWithIris = true
+                ParticleRadiusRatio = 0.82
             };
 
             original.Highlights.Add(new HighlightItem

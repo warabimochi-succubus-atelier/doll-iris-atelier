@@ -27,6 +27,7 @@ namespace DollIrisGenerator.Models
         private double _stretchRight = 1.0;
         private bool _enabled = false;
         private LayerBlend _blend = LayerBlend.Normal;
+        private RightEyeFlip _rightEyeFlip = RightEyeFlip.Mirror; // 右目の反転
         private bool _isSelected;
 
         public string Id
@@ -148,6 +149,16 @@ namespace DollIrisGenerator.Models
             set { _blend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// 右目の反転: 鏡像 (position and direction mirrored, as before), 位置だけ反転 (placed mirrored, facing the same
+        /// way — a moon looks the same in both eyes) or 反転しない (the same as in the left eye). Unknown numbers: 鏡像.
+        /// </summary>
+        public RightEyeFlip RightEyeFlip
+        {
+            get => _rightEyeFlip;
+            set { _rightEyeFlip = RightEyeFlips.Valid(value); OnPropertyChanged(); }
+        }
+
         /// <inheritdoc cref="IArrangeableItem.IsSelected"/>
         [JsonIgnore]
         public bool IsSelected
@@ -161,7 +172,7 @@ namespace DollIrisGenerator.Models
             nameof(Enabled), nameof(Type), nameof(Color), nameof(Size), nameof(Count),
             nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale),
             nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
-            nameof(Opacity), nameof(Blend)
+            nameof(Opacity), nameof(Blend), nameof(RightEyeFlip)
         };
 
         public bool CopySettingTo(DecorativeSymbolItem target, string propertyName)
@@ -182,6 +193,7 @@ namespace DollIrisGenerator.Models
                 case nameof(StretchRight): target.StretchRight = StretchRight; return true;
                 case nameof(Opacity): target.Opacity = Opacity; return true;
                 case nameof(Blend): target.Blend = Blend; return true;
+                case nameof(RightEyeFlip): target.RightEyeFlip = RightEyeFlip; return true;
                 default: return false;
             }
         }
@@ -206,7 +218,8 @@ namespace DollIrisGenerator.Models
                 StretchLeft = this.StretchLeft,
                 StretchRight = this.StretchRight,
                 Enabled = this.Enabled,
-                Blend = this.Blend
+                Blend = this.Blend,
+                RightEyeFlip = this.RightEyeFlip
             };
         }
 
