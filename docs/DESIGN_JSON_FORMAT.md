@@ -229,8 +229,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Shape` | 0 正円, 2 4点星（キラキラ）, 3 菱形 | 1 は使わない（以前の楕円。正円として読み込まれる）。楕円は正円の上下左右の長さで作る |
 | `PositionX`, `PositionY` | -0.85〜0.85 | 左上が自然 |
 | `Size` | 0.05〜0.45 | |
+| `Count` | 1〜12（省略時 1） | 2 以上は位置を中心に円形に並ぶ（半径はサイズ × 1.4）。装飾記号と同じ |
 | `StretchTop`, `StretchBottom`, `StretchLeft`, `StretchRight` | 0.5〜2.0（省略時 1.0） | 上下左右の長さ。装飾記号と同じ。正円で左右を 1.35 にすると横長の楕円、上下を 1.35 にすると縦長の楕円。右目は「ハイライトも左右反転する」がオンのときだけ左右が入れ替わる |
 | `Rotation` | -180〜180 | |
+| `CornerRounding` | 0〜1（省略時 0） | 4点星の先・菱形の角の丸み。正円には影響しない |
 | `Color` | 色（グラデ可） | 通常は白 |
 | `Opacity` | 0〜1 | |
 | `Enabled` | true / false | `false` にすると描かずに設定だけ残します（画面の「有効」「表示する」のチェックを外したのと同じ） |
@@ -348,11 +350,13 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
       "PositionX": -0.32,
       "PositionY": -0.32,
       "Size": 0.26,
+      "Count": 1,
       "StretchTop": 1.0,
       "StretchBottom": 1.0,
       "StretchLeft": 1.0,
       "StretchRight": 1.0,
       "Rotation": 0.0,
+      "CornerRounding": 0.0,
       "Color": "#FFFFFF",
       "Opacity": 0.95,
       "Enabled": true,

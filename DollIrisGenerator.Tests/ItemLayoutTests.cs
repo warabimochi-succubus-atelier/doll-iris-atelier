@@ -230,7 +230,7 @@ namespace DollIrisGenerator.Tests
             }, () => new DecorativeSymbolItem());
             AssertBulkCoversSavedSettings(new HighlightItem
             {
-                Shape = HighlightShape.Rhombus, Size = 0.3, StretchTop = 1.2, StretchBottom = 0.8, StretchLeft = 1.8, StretchRight = 0.6, Rotation = 20, Color = "#FFEEAA",
+                Shape = HighlightShape.Rhombus, Size = 0.3, Count = 4, CornerRounding = 0.6, StretchTop = 1.2, StretchBottom = 0.8, StretchLeft = 1.8, StretchRight = 0.6, Rotation = 20, Color = "#FFEEAA",
                 Opacity = 0.5, Enabled = false, Blend = LayerBlend.ColorDodge
             }, () => new HighlightItem());
         }
