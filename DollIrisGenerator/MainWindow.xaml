@@ -700,32 +700,18 @@
                                             <RadioButton Content="猫目スリット" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                         </WrapPanel>
 
-                                        <!-- Pupil Size -->
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="瞳孔サイズ (直径比率):" Foreground="{StaticResource TextPrimary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.PupilSizeRatio, Converter={StaticResource DoubleToPercentConverter}}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.10" Maximum="0.60" Value="{Binding CurrentIris.PupilSizeRatio}" Margin="0,0,0,8"/>
-
                                         <!-- Pupil Color -->
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="瞳孔色:" VerticalAlignment="Center" Width="110"/>
                                             <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.PupilColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
-                                        <!-- Pupil Opacity -->
+                                        <!-- Pupil Size -->
                                         <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="瞳孔サイズ (直径比率):" Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilSizeRatio, Converter={StaticResource DoubleToPercentConverter}}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,6"/>
-
-                                        <!-- Pupil Softness -->
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="輪郭の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.PupilSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="0.30" Value="{Binding CurrentIris.PupilSoftness}" Margin="0,0,0,6"/>
+                                        <Slider Minimum="0.10" Maximum="0.60" Value="{Binding CurrentIris.PupilSizeRatio}" Margin="0,0,0,8"/>
 
                                         <!-- Pupil Corner Rounding -->
                                         <DockPanel Margin="0,0,0,4" ToolTip="猫目スリット・ハート・星などのとがった角を丸めます。0% で従来どおりのとがった形です。正円には影響しません。">
@@ -759,6 +745,20 @@
                                             <TextBlock Text="{Binding CurrentIris.PupilStretchRight, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.5" Maximum="2.0" Value="{Binding CurrentIris.PupilStretchRight}" Margin="0,0,0,10"/>
+
+                                        <!-- Pupil Opacity -->
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,6"/>
+
+                                        <!-- Pupil Softness -->
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="輪郭の柔らかさ (ぼかし):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="0.30" Value="{Binding CurrentIris.PupilSoftness}" Margin="0,0,0,6"/>
 
                                         <!-- Gem cut (宝石カット) -->
                                         <DockPanel Margin="0,0,0,4" ToolTip="瞳孔の中に、宝石のカット面のような明暗の面を入れます。0% でオフ。ハート型・星型と組み合わせると宝石風になります">
@@ -1661,8 +1661,6 @@
                                             </DataTemplate>
                                             <DataTemplate x:Key="HighlightStyleFieldsBottom">
                                                 <StackPanel>
-                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
-
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock Text="{Binding Rotation, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
@@ -1675,6 +1673,7 @@
                                                     </DockPanel>
                                                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
                                                     <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
 
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
