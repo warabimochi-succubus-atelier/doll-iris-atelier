@@ -42,12 +42,15 @@ namespace DollIrisGenerator.Models
         SoftLight = 4   // ソフトライト (オーバーレイの弱いもの)
     }
 
+    /// <summary>
+    /// Highlight shapes. The numbers are what design files store; 1 was the oval, which is now a circle with
+    /// 上下左右の長さ (HighlightItem.StretchLeft / StretchRight), so it is left out and reads as a circle.
+    /// </summary>
     public enum HighlightShape
     {
-        Circle,         // 正円
-        Oval,           // 楕円
-        Star4,          // 4芒星 / キラキラ
-        Rhombus         // 菱形
+        Circle = 0,     // 正円
+        Star4 = 2,      // 4芒星 / キラキラ
+        Rhombus = 3     // 菱形
     }
 
     public enum EyeSide

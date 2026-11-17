@@ -6,17 +6,20 @@ using System.Text.Json.Serialization;
 
 namespace DollIrisGenerator.Models
 {
-    public class HighlightItem : IArrangeableItem<HighlightItem>
+    public class HighlightItem : IArrangeableItem<HighlightItem>, IStretchable
     {
         private string _id = Guid.NewGuid().ToString("N");
         private HighlightShape _shape = HighlightShape.Circle;
         private double _positionX = -0.35; // -1.0 to 1.0 (relative to iris radius)
         private double _positionY = -0.35; // -1.0 to 1.0
         private double _size = 0.22;       // relative to radius
-        private double _aspectRatio = 1.0; // width/height for oval
         private double _rotation = 0.0;    // degrees
         private string _color = "#FFFFFF";
         private double _opacity = 0.90;
+        private double _stretchTop = 1.0;    // 上下左右の長さ (1 = as drawn); an oval is a circle stretched sideways
+        private double _stretchBottom = 1.0;
+        private double _stretchLeft = 1.0;
+        private double _stretchRight = 1.0;
         private bool _enabled = true;
         private LayerBlend _blend = LayerBlend.Normal;
         private bool _isSelected;
@@ -27,10 +30,11 @@ namespace DollIrisGenerator.Models
             set { _id = value; OnPropertyChanged(); }
         }
 
+        /// <summary>Unknown numbers from a file (such as 1, the oval that is now a stretched circle) become a circle.</summary>
         public HighlightShape Shape
         {
             get => _shape;
-            set { _shape = value; OnPropertyChanged(); }
+            set { _shape = Enum.IsDefined(value) ? value : HighlightShape.Circle; OnPropertyChanged(); }
         }
 
         public double PositionX
@@ -51,12 +55,6 @@ namespace DollIrisGenerator.Models
             set { _size = Math.Clamp(value, 0.01, 1.0); OnPropertyChanged(); }
         }
 
-        public double AspectRatio
-        {
-            get => _aspectRatio;
-            set { _aspectRatio = Math.Clamp(value, 0.1, 5.0); OnPropertyChanged(); }
-        }
-
         public double Rotation
         {
             get => _rotation;
@@ -73,6 +71,37 @@ namespace DollIrisGenerator.Models
         {
             get => _opacity;
             set { _opacity = Math.Clamp(value, 0.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 上の長さ: the part of the shape above its center, stretched by this (1 = as drawn). When the right eye's
+        /// highlights are mirrored (<see cref="IrisParameters.MirrorHighlightsWithIris"/>), 左 and 右 trade places there.
+        /// </summary>
+        public double StretchTop
+        {
+            get => _stretchTop;
+            set { _stretchTop = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>下の長さ (see <see cref="StretchTop"/>).</summary>
+        public double StretchBottom
+        {
+            get => _stretchBottom;
+            set { _stretchBottom = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>左の長さ (see <see cref="StretchTop"/>).</summary>
+        public double StretchLeft
+        {
+            get => _stretchLeft;
+            set { _stretchLeft = ShapeStretch.Clamp(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>右の長さ (see <see cref="StretchTop"/>).</summary>
+        public double StretchRight
+        {
+            get => _stretchRight;
+            set { _stretchRight = ShapeStretch.Clamp(value); OnPropertyChanged(); }
         }
 
         public bool Enabled
@@ -98,7 +127,8 @@ namespace DollIrisGenerator.Models
 
         public static IReadOnlyList<string> BulkSettingNames { get; } = new[]
         {
-            nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size), nameof(AspectRatio),
+            nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size),
+            nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
             nameof(Rotation), nameof(Opacity), nameof(Blend)
         };
 
@@ -110,7 +140,10 @@ namespace DollIrisGenerator.Models
                 case nameof(Shape): target.Shape = Shape; return true;
                 case nameof(Color): target.Color = Color; return true;
                 case nameof(Size): target.Size = Size; return true;
-                case nameof(AspectRatio): target.AspectRatio = AspectRatio; return true;
+                case nameof(StretchTop): target.StretchTop = StretchTop; return true;
+                case nameof(StretchBottom): target.StretchBottom = StretchBottom; return true;
+                case nameof(StretchLeft): target.StretchLeft = StretchLeft; return true;
+                case nameof(StretchRight): target.StretchRight = StretchRight; return true;
                 case nameof(Rotation): target.Rotation = Rotation; return true;
                 case nameof(Opacity): target.Opacity = Opacity; return true;
                 case nameof(Blend): target.Blend = Blend; return true;
@@ -127,7 +160,10 @@ namespace DollIrisGenerator.Models
                 PositionX = this.PositionX,
                 PositionY = this.PositionY,
                 Size = this.Size,
-                AspectRatio = this.AspectRatio,
+                StretchTop = this.StretchTop,
+                StretchBottom = this.StretchBottom,
+                StretchLeft = this.StretchLeft,
+                StretchRight = this.StretchRight,
                 Rotation = this.Rotation,
                 Color = this.Color,
                 Opacity = this.Opacity,

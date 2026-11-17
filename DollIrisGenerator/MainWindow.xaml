@@ -97,6 +97,31 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- 上下左右の長さ (ShapeStretch.MinSlider .. MaxSlider): each half of the shape stretched from its center (decorative symbols and highlights) -->
+        <DataTemplate x:Key="StretchFields">
+            <StackPanel ToolTip="図形の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。右目を鏡像にするときは、左右の長さも入れ替わります。">
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="上の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding StretchTop, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchTop}" Margin="0,0,0,6"/>
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="下の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding StretchBottom, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchBottom}" Margin="0,0,0,6"/>
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="左の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding StretchLeft, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchLeft}" Margin="0,0,0,6"/>
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="右の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding StretchRight, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchRight}" Margin="0,0,0,6"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <!-- Text boxes keep their own Ctrl+Z (text undo); everywhere else these drive design undo/redo -->
@@ -1188,31 +1213,6 @@
                                     </GroupBox.Header>
                                     <StackPanel>
                                         <StackPanel.Resources>
-                                            <!-- 上下左右の長さ (DecorativeSymbolItem.MinStretchSlider .. MaxStretchSlider): each half of the shape stretched from its center -->
-                                            <DataTemplate x:Key="SymbolStretchFields">
-                                                <StackPanel ToolTip="図形の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。右目では左右が入れ替わり、鏡像になります。">
-                                                    <DockPanel Margin="0,0,0,4">
-                                                        <TextBlock Text="上の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                        <TextBlock Text="{Binding StretchTop, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                    </DockPanel>
-                                                    <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchTop}" Margin="0,0,0,6"/>
-                                                    <DockPanel Margin="0,0,0,4">
-                                                        <TextBlock Text="下の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                        <TextBlock Text="{Binding StretchBottom, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                    </DockPanel>
-                                                    <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchBottom}" Margin="0,0,0,6"/>
-                                                    <DockPanel Margin="0,0,0,4">
-                                                        <TextBlock Text="左の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                        <TextBlock Text="{Binding StretchLeft, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                    </DockPanel>
-                                                    <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchLeft}" Margin="0,0,0,6"/>
-                                                    <DockPanel Margin="0,0,0,4">
-                                                        <TextBlock Text="右の長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                        <TextBlock Text="{Binding StretchRight, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
-                                                    </DockPanel>
-                                                    <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StretchRight}" Margin="0,0,0,6"/>
-                                                </StackPanel>
-                                            </DataTemplate>
                                             <DataTemplate x:Key="SymbolStyleFieldsTop">
                                                 <StackPanel>
                                                     <TextBlock Text="図形種類:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
@@ -1260,7 +1260,7 @@
                                                     </DockPanel>
                                                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
 
-                                                    <ContentControl Content="{Binding}" ContentTemplate="{DynamicResource SymbolStretchFields}"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
 
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1351,7 +1351,7 @@
                                                             <TextBlock Text="{Binding CornerRounding, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
-                                                        <ContentControl Content="{Binding}" ContentTemplate="{DynamicResource SymbolStretchFields}"/>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                             <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
@@ -1584,7 +1584,6 @@
                                                     <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,2"/>
                                                     <WrapPanel Margin="0,0,0,6">
                                                         <RadioButton Content="正円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                        <RadioButton Content="楕円" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
                                                         <RadioButton Content="4点星" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
                                                         <RadioButton Content="菱形" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
                                                     </WrapPanel>
@@ -1603,11 +1602,7 @@
                                             </DataTemplate>
                                             <DataTemplate x:Key="HighlightStyleFieldsBottom">
                                                 <StackPanel>
-                                                    <DockPanel Margin="0,0,0,4">
-                                                        <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                        <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                    </DockPanel>
-                                                    <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
 
                                                     <DockPanel Margin="0,0,0,4">
                                                         <TextBlock Text="回転角度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
@@ -1670,7 +1665,6 @@
                                                         <TextBlock Text="形状:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
                                                         <WrapPanel Margin="0,0,0,6">
                                                             <RadioButton Content="正円" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
-                                                            <RadioButton Content="楕円" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Oval}"/>
                                                             <RadioButton Content="4点星" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
                                                             <RadioButton Content="菱形" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rhombus}"/>
                                                         </WrapPanel>
@@ -1683,11 +1677,7 @@
                                                             <TextBlock Text="{Binding Size, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                         </DockPanel>
                                                         <Slider Minimum="0.05" Maximum="0.45" Value="{Binding Size}" Margin="0,0,0,6"/>
-                                                        <DockPanel Margin="0,0,0,2" ToolTip="形状が楕円のときの横幅 ÷ 高さ">
-                                                            <TextBlock Text="楕円 縦横比:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                                            <TextBlock Text="{Binding AspectRatio, StringFormat='{}{0:F2}'}" FontSize="11" HorizontalAlignment="Right"/>
-                                                        </DockPanel>
-                                                        <Slider Minimum="0.3" Maximum="2.5" Value="{Binding AspectRatio}" Margin="0,0,0,6"/>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                             <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>

@@ -18,10 +18,10 @@ public static class DesignFields
         new("透明度", t => 1.0 - getOpacity(t), (t, v) => setOpacity(t, Math.Round(1.0 - v, 4)), 0, 1, 0.01, Fmt.Percent,
             "上げるほど透けます (0% で不透明、100% で見えない)");
 
-    /// <summary>One of a symbol's 上下左右の長さ (the same range as the desktop app's sliders).</summary>
-    private static SliderField<DecorativeSymbolItem> Stretch(string label, Func<DecorativeSymbolItem, double> get, Action<DecorativeSymbolItem, double> set) =>
-        new(label, get, set, DecorativeSymbolItem.MinStretchSlider, DecorativeSymbolItem.MaxStretchSlider, 0.01, Fmt.Percent,
-            "図形の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。右目では左右が入れ替わり、鏡像になります");
+    /// <summary>One of a symbol's or highlight's 上下左右の長さ (the same range as the desktop app's sliders).</summary>
+    private static SliderField<T> Stretch<T>(string label, Func<T, double> get, Action<T, double> set) =>
+        new(label, get, set, ShapeStretch.MinSlider, ShapeStretch.MaxSlider, 0.01, Fmt.Percent,
+            "図形の中心から上・下・左・右の半分ずつを伸び縮みさせます (100% でそのまま)。右目を鏡像にするときは、左右の長さも入れ替わります");
 
     public static readonly IReadOnlyList<Field<IrisParameters>> Basic = new Field<IrisParameters>[]
     {
@@ -168,10 +168,10 @@ public static class DesignFields
         new SliderField<DecorativeSymbolItem>("位置 Y (縦)", s => s.PositionY, (s, v) => s.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<DecorativeSymbolItem>("回転角度", s => s.Rotation, (s, v) => s.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<DecorativeSymbolItem>("角の丸み", s => s.CornerRounding, (s, v) => s.CornerRounding = v, 0, 1, 0.01, Fmt.Percent),
-        Stretch("上の長さ", s => s.StretchTop, (s, v) => s.StretchTop = v),
-        Stretch("下の長さ", s => s.StretchBottom, (s, v) => s.StretchBottom = v),
-        Stretch("左の長さ", s => s.StretchLeft, (s, v) => s.StretchLeft = v),
-        Stretch("右の長さ", s => s.StretchRight, (s, v) => s.StretchRight = v),
+        Stretch<DecorativeSymbolItem>("上の長さ", s => s.StretchTop, (s, v) => s.StretchTop = v),
+        Stretch<DecorativeSymbolItem>("下の長さ", s => s.StretchBottom, (s, v) => s.StretchBottom = v),
+        Stretch<DecorativeSymbolItem>("左の長さ", s => s.StretchLeft, (s, v) => s.StretchLeft = v),
+        Stretch<DecorativeSymbolItem>("右の長さ", s => s.StretchRight, (s, v) => s.StretchRight = v),
         Transparency<DecorativeSymbolItem>(s => s.Opacity, (s, v) => s.Opacity = v),
         new ChoiceField<DecorativeSymbolItem>("重ね方", s => s.Blend, (s, v) => s.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
@@ -183,13 +183,16 @@ public static class DesignFields
         new ToggleField<HighlightItem>("有効", h => h.Enabled, (h, v) => h.Enabled = v),
         new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v, new (string, object)[]
         {
-            ("正円", HighlightShape.Circle), ("楕円", HighlightShape.Oval), ("4点星", HighlightShape.Star4), ("菱形", HighlightShape.Rhombus)
+            ("正円", HighlightShape.Circle), ("4点星", HighlightShape.Star4), ("菱形", HighlightShape.Rhombus)
         }),
         new ColorField<HighlightItem>("色", h => h.Color, (h, v) => h.Color = v, AllowGradient: true),
         new SliderField<HighlightItem>("サイズ", h => h.Size, (h, v) => h.Size = v, 0.05, 0.45, 0.01, Fmt.Percent),
         new SliderField<HighlightItem>("位置 X (横)", h => h.PositionX, (h, v) => h.PositionX = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<HighlightItem>("位置 Y (縦)", h => h.PositionY, (h, v) => h.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
-        new SliderField<HighlightItem>("楕円 縦横比", h => h.AspectRatio, (h, v) => h.AspectRatio = v, 0.3, 2.5, 0.01, Fmt.F2),
+        Stretch<HighlightItem>("上の長さ", h => h.StretchTop, (h, v) => h.StretchTop = v),
+        Stretch<HighlightItem>("下の長さ", h => h.StretchBottom, (h, v) => h.StretchBottom = v),
+        Stretch<HighlightItem>("左の長さ", h => h.StretchLeft, (h, v) => h.StretchLeft = v),
+        Stretch<HighlightItem>("右の長さ", h => h.StretchRight, (h, v) => h.StretchRight = v),
         new SliderField<HighlightItem>("回転角度", h => h.Rotation, (h, v) => h.Rotation = v, -180, 180, 1, Fmt.Deg),
         Transparency<HighlightItem>(h => h.Opacity, (h, v) => h.Opacity = v),
         new ChoiceField<HighlightItem>("重ね方", h => h.Blend, (h, v) => h.Blend = (LayerBlend)v,
@@ -225,9 +228,9 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
         Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
-    /// <summary>The look of the highlights 並べて追加 makes (縦横比 for the oval).</summary>
+    /// <summary>The look of the highlights 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
-        Pick(Highlight, "形状", "色", "サイズ", "楕円 縦横比", "透明度", "重ね方");
+        Pick(Highlight, "形状", "色", "サイズ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
     public static DecorativeSymbolItem NewSymbol() => new()

@@ -32,14 +32,17 @@ namespace DollIrisGenerator.Services
             return new Point(c.X + r * Math.Cos(rad), c.Y + r * Math.Sin(rad));
         }
 
-        /// <summary>Local box (around 0, 0) of a highlight shape, the area its gradient is laid across.</summary>
-        public static Rect HighlightBox(HighlightItem h, double radius) => h.Shape switch
+        /// <summary>
+        /// Local box (around 0, 0) of a highlight shape after its 上下左右の長さ, the area its gradient is laid across.
+        /// <paramref name="swapSides"/>: the highlight is mirrored (its left and right lengths trade places).
+        /// </summary>
+        public static Rect HighlightBox(HighlightItem h, double radius, bool swapSides = false)
         {
-            HighlightShape.Oval => new Rect(-radius * HighlightAspect(h), -radius, 2.0 * radius * HighlightAspect(h), 2.0 * radius),
-            HighlightShape.Rhombus => new Rect(-radius * 0.65, -radius, 1.3 * radius, 2.0 * radius),
-            _ => new Rect(-radius, -radius, 2.0 * radius, 2.0 * radius)
-        };
-
-        private static double HighlightAspect(HighlightItem h) => h.AspectRatio > 0 ? h.AspectRatio : 1.0;
+            double top = radius * h.StretchTop, bottom = radius * h.StretchBottom;
+            double left = radius * (swapSides ? h.StretchRight : h.StretchLeft);
+            double right = radius * (swapSides ? h.StretchLeft : h.StretchRight);
+            if (h.Shape == HighlightShape.Rhombus) { left *= 0.65; right *= 0.65; }
+            return new Rect(-left, -top, left + right, top + bottom);
+        }
     }
 }
