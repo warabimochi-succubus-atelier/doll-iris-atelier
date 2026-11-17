@@ -192,17 +192,31 @@ namespace DollIrisGenerator.Services
         /// Outline of a decorative symbol of the given size (shared by the WPF renderer and the SVG exporter).
         /// Returns null for <see cref="SymbolType.None"/>.
         /// </summary>
-        public static ShapeOutline? ForSymbol(SymbolType type, double radius) => type switch
+        public static ShapeOutline? ForSymbol(SymbolType type, double radius, double starCore = 1.0) =>
+            ShapeKinds.Of(type) is ShapeKind kind ? ForShape(kind, radius, highlight: false, starCore) : null;
+
+        /// <summary>
+        /// Outline of one of the shared shapes (装飾記号 and ハイライト) of the given size, centered at (0, 0).
+        /// The highlight's 4芒星 is the thinner sparkle (core 0.22 instead of 0.28) and its ダイヤ a little narrower
+        /// (0.65r across instead of 0.7r), as they always were. <paramref name="starCore"/> scales the stars' core
+        /// (星の芯の太さ, 1 = standard).
+        /// </summary>
+        public static ShapeOutline ForShape(ShapeKind kind, double radius, bool highlight = false, double starCore = 1.0)
         {
-            SymbolType.Star4 => Star(4, radius, 0.28),
-            SymbolType.Star5 => Star(5, radius, 0.42),
-            SymbolType.Heart => Heart(radius),
-            SymbolType.Moon => Moon(radius),
-            SymbolType.Cross => Cross(radius),
-            SymbolType.Diamond => Diamond(radius * 0.7, radius),
-            SymbolType.SakuraPetal => SakuraPetal(radius),
-            _ => null
-        };
+            double Core(double standard) => Math.Clamp(standard * starCore, 0.05, 0.95);
+            return kind switch
+            {
+                ShapeKind.Star4 => Star(4, radius, Core(highlight ? 0.22 : 0.28)),
+                ShapeKind.Star5 => Star(5, radius, Core(0.42)),
+                ShapeKind.Heart => Heart(radius),
+                ShapeKind.Moon => Moon(radius),
+                ShapeKind.Cross => Cross(radius),
+                ShapeKind.Diamond => Diamond(radius * (highlight ? 0.65 : 0.7), radius),
+                ShapeKind.SakuraPetal => SakuraPetal(radius),
+                ShapeKind.CatSlit => CatSlit(radius * 0.45, radius),
+                _ => Circle(radius)
+            };
+        }
 
         /// <summary>Circle of the given radius as four quarter arcs, starting at the top and going clockwise.</summary>
         public static ShapeOutline Circle(double radius)
@@ -215,15 +229,11 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>
-        /// Outline of a highlight of the given size: a circle, the thin 4-pointed sparkle (inner ratio 0.22) or the
-        /// rhombus (0.65r across). The same shapes the SVG draws as an ellipse / polygon when not stretched.
+        /// Outline of a highlight of the given size: the shared shapes (<see cref="ForShape"/>). When not stretched or
+        /// rounded, the circle, sparkle and rhombus are the same shapes the SVG writes as an ellipse / polygon.
         /// </summary>
-        public static ShapeOutline ForHighlight(HighlightShape shape, double radius) => shape switch
-        {
-            HighlightShape.Star4 => Star(4, radius, 0.22),
-            HighlightShape.Rhombus => Diamond(radius * 0.65, radius),
-            _ => Circle(radius)
-        };
+        public static ShapeOutline ForHighlight(HighlightShape shape, double radius, double starCore = 1.0) =>
+            ForShape(ShapeKinds.Of(shape), radius, highlight: true, starCore);
 
         /// <summary>
         /// Outline of a pupil with corners (cat slit / heart / star), centered at (0, 0).

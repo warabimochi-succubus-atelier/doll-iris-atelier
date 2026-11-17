@@ -33,7 +33,8 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>
-        /// Local box (around 0, 0) of a highlight shape after its 上下左右の長さ, the area its gradient is laid across.
+        /// Local box (around 0, 0) of a circle, sparkle or rhombus highlight that is not rounded, after its 上下左右の長さ:
+        /// the area its gradient is laid across (the SVG measures every other highlight's outline instead).
         /// <paramref name="swapSides"/>: the highlight is mirrored (its left and right lengths trade places).
         /// </summary>
         public static Rect HighlightBox(HighlightItem h, double radius, bool swapSides = false)
@@ -41,7 +42,7 @@ namespace DollIrisGenerator.Services
             double top = radius * h.StretchTop, bottom = radius * h.StretchBottom;
             double left = radius * (swapSides ? h.StretchRight : h.StretchLeft);
             double right = radius * (swapSides ? h.StretchLeft : h.StretchRight);
-            if (h.Shape == HighlightShape.Rhombus) { left *= 0.65; right *= 0.65; }
+            if (h.Shape == HighlightShape.Diamond) { left *= 0.65; right *= 0.65; }
             return new Rect(-left, -top, left + right, top + bottom);
         }
     }

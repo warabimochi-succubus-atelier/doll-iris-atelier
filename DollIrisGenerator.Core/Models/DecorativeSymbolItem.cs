@@ -19,6 +19,7 @@ namespace DollIrisGenerator.Models
         private string _color = "#FFFFFF";
         private double _opacity = 0.85;
         private double _rotation = 0.0;    // degrees
+        private double _starCoreScale = 1.0; // 星の芯の太さ (1 = the standard star)
         private double _cornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0) .. 1 = fully rounded
         private double _stretchTop = 1.0;    // 上下左右の長さ: each half of the shape stretched from its center (1 = as drawn)
         private double _stretchBottom = 1.0;
@@ -34,10 +35,11 @@ namespace DollIrisGenerator.Models
             set { _id = value; OnPropertyChanged(); }
         }
 
+        /// <summary>Unknown numbers from a file become <see cref="SymbolType.None"/> (nothing drawn).</summary>
         public SymbolType Type
         {
             get => _type;
-            set { _type = value; OnPropertyChanged(); }
+            set { _type = Enum.IsDefined(value) ? value : SymbolType.None; OnPropertyChanged(); }
         }
 
         public int Count
@@ -87,6 +89,16 @@ namespace DollIrisGenerator.Models
         {
             get => _cornerRounding;
             set { _cornerRounding = IrisParameters.ClampCornerRounding(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 星の芯の太さ: the 4芒星 / 5芒星's inner radius as a share of the standard one (1 = as before); other shapes
+        /// ignore it. See <see cref="StarCore"/>.
+        /// </summary>
+        public double StarCoreScale
+        {
+            get => _starCoreScale;
+            set { _starCoreScale = StarCore.Clamp(value); OnPropertyChanged(); }
         }
 
         /// <summary>
@@ -147,7 +159,7 @@ namespace DollIrisGenerator.Models
         public static IReadOnlyList<string> BulkSettingNames { get; } = new[]
         {
             nameof(Enabled), nameof(Type), nameof(Color), nameof(Size), nameof(Count),
-            nameof(Rotation), nameof(CornerRounding),
+            nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale),
             nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
             nameof(Opacity), nameof(Blend)
         };
@@ -163,6 +175,7 @@ namespace DollIrisGenerator.Models
                 case nameof(Count): target.Count = Count; return true;
                 case nameof(Rotation): target.Rotation = Rotation; return true;
                 case nameof(CornerRounding): target.CornerRounding = CornerRounding; return true;
+                case nameof(StarCoreScale): target.StarCoreScale = StarCoreScale; return true;
                 case nameof(StretchTop): target.StretchTop = StretchTop; return true;
                 case nameof(StretchBottom): target.StretchBottom = StretchBottom; return true;
                 case nameof(StretchLeft): target.StretchLeft = StretchLeft; return true;
@@ -187,6 +200,7 @@ namespace DollIrisGenerator.Models
                 Opacity = this.Opacity,
                 Rotation = this.Rotation,
                 CornerRounding = this.CornerRounding,
+                StarCoreScale = this.StarCoreScale,
                 StretchTop = this.StretchTop,
                 StretchBottom = this.StretchBottom,
                 StretchLeft = this.StretchLeft,

@@ -18,6 +18,28 @@ public static class DesignFields
         new("透明度", t => 1.0 - getOpacity(t), (t, v) => setOpacity(t, Math.Round(1.0 - v, 4)), 0, 1, 0.01, Fmt.Percent,
             "上げるほど透けます (0% で不透明、100% で見えない)");
 
+    /// <summary>
+    /// The shared shapes of the decorative symbols and highlights, in the same order and with the same names as the
+    /// desktop app (each item's own enum, whose numbers are what the files store).
+    /// </summary>
+    private static (string, object)[] Shapes<TEnum>(Func<ShapeKind, TEnum> of) where TEnum : notnull => new (string, ShapeKind)[]
+    {
+        ("正円", ShapeKind.Circle), ("4芒星", ShapeKind.Star4), ("5芒星", ShapeKind.Star5), ("ハート", ShapeKind.Heart),
+        ("三日月", ShapeKind.Moon), ("クロス", ShapeKind.Cross), ("ダイヤ", ShapeKind.Diamond), ("桜の花びら", ShapeKind.SakuraPetal),
+        ("猫目スリット", ShapeKind.CatSlit)
+    }.Select(x => (x.Item1, (object)of(x.Item2))).ToArray();
+
+    private static SymbolType SymbolOf(ShapeKind kind) =>
+        Enum.GetValues<SymbolType>().Single(t => ShapeKinds.Of(t) == kind);
+
+    private static HighlightShape HighlightOf(ShapeKind kind) =>
+        Enum.GetValues<HighlightShape>().Single(h => ShapeKinds.Of(h) == kind);
+
+    /// <summary>星の芯の太さ (the same range as the desktop app's slider).</summary>
+    private static SliderField<T> StarCoreField<T>(Func<T, double> get, Action<T, double> set) =>
+        new("星の芯の太さ", get, set, StarCore.MinSlider, StarCore.MaxSlider, 0.01, Fmt.Percent,
+            "4芒星・5芒星の芯 (くびれ) の太さです。100% で標準、下げると細くとがったきらめき、上げると太い星になります。ほかの形には影響しません");
+
     /// <summary>One of a symbol's or highlight's 上下左右の長さ (the same range as the desktop app's sliders).</summary>
     private static SliderField<T> Stretch<T>(string label, Func<T, double> get, Action<T, double> set) =>
         new(label, get, set, ShapeStretch.MinSlider, ShapeStretch.MaxSlider, 0.01, Fmt.Percent,
@@ -156,11 +178,8 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> Symbol = new Field<DecorativeSymbolItem>[]
     {
         new ToggleField<DecorativeSymbolItem>("装飾記号を表示する", s => s.Enabled, (s, v) => s.Enabled = v),
-        new ChoiceField<DecorativeSymbolItem>("図形種類", s => s.Type, (s, v) => s.Type = (SymbolType)v, new (string, object)[]
-        {
-            ("なし", SymbolType.None), ("4芒星", SymbolType.Star4), ("5芒星", SymbolType.Star5), ("ハート", SymbolType.Heart),
-            ("三日月", SymbolType.Moon), ("クロス", SymbolType.Cross), ("ダイヤ", SymbolType.Diamond), ("桜の花びら", SymbolType.SakuraPetal)
-        }),
+        new ChoiceField<DecorativeSymbolItem>("図形種類", s => s.Type, (s, v) => s.Type = (SymbolType)v,
+            new (string, object)[] { ("なし", SymbolType.None) }.Concat(Shapes(SymbolOf)).ToArray()),
         new ColorField<DecorativeSymbolItem>("記号色", s => s.Color, (s, v) => s.Color = v, AllowGradient: true),
         new SliderField<DecorativeSymbolItem>("サイズ", s => s.Size, (s, v) => s.Size = v, 0.05, 0.40, 0.01, Fmt.Percent),
         new SliderField<DecorativeSymbolItem>("繰り返し数", s => s.Count, (s, v) => s.Count = Int(v), 1, 12, 1, v => Fmt.Count(v, "個")),
@@ -168,6 +187,7 @@ public static class DesignFields
         new SliderField<DecorativeSymbolItem>("位置 Y (縦)", s => s.PositionY, (s, v) => s.PositionY = v, -0.85, 0.85, 0.01, Fmt.F2),
         new SliderField<DecorativeSymbolItem>("回転角度", s => s.Rotation, (s, v) => s.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<DecorativeSymbolItem>("角の丸み", s => s.CornerRounding, (s, v) => s.CornerRounding = v, 0, 1, 0.01, Fmt.Percent),
+        StarCoreField<DecorativeSymbolItem>(s => s.StarCoreScale, (s, v) => s.StarCoreScale = v),
         Stretch<DecorativeSymbolItem>("上の長さ", s => s.StretchTop, (s, v) => s.StretchTop = v),
         Stretch<DecorativeSymbolItem>("下の長さ", s => s.StretchBottom, (s, v) => s.StretchBottom = v),
         Stretch<DecorativeSymbolItem>("左の長さ", s => s.StretchLeft, (s, v) => s.StretchLeft = v),
@@ -181,10 +201,7 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]
     {
         new ToggleField<HighlightItem>("有効", h => h.Enabled, (h, v) => h.Enabled = v),
-        new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v, new (string, object)[]
-        {
-            ("正円", HighlightShape.Circle), ("4点星", HighlightShape.Star4), ("菱形", HighlightShape.Rhombus)
-        }),
+        new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v, Shapes(HighlightOf)),
         new ColorField<HighlightItem>("色", h => h.Color, (h, v) => h.Color = v, AllowGradient: true),
         new SliderField<HighlightItem>("サイズ", h => h.Size, (h, v) => h.Size = v, 0.05, 0.45, 0.01, Fmt.Percent),
         new SliderField<HighlightItem>("繰り返し数", h => h.Count, (h, v) => h.Count = Int(v), 1, 12, 1, v => Fmt.Count(v, "個"),
@@ -197,7 +214,8 @@ public static class DesignFields
         Stretch<HighlightItem>("右の長さ", h => h.StretchRight, (h, v) => h.StretchRight = v),
         new SliderField<HighlightItem>("回転角度", h => h.Rotation, (h, v) => h.Rotation = v, -180, 180, 1, Fmt.Deg),
         new SliderField<HighlightItem>("角の丸み", h => h.CornerRounding, (h, v) => h.CornerRounding = v, 0, 1, 0.01, Fmt.Percent,
-            "4点星の先・菱形の角を丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
+            "星の先・ダイヤの角などを丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
+        StarCoreField<HighlightItem>(h => h.StarCoreScale, (h, v) => h.StarCoreScale = v),
         Transparency<HighlightItem>(h => h.Opacity, (h, v) => h.Opacity = v),
         new ChoiceField<HighlightItem>("重ね方", h => h.Blend, (h, v) => h.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
@@ -230,11 +248,11 @@ public static class DesignFields
 
     /// <summary>The look of the symbols 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
-        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Symbol, "図形種類", "記号色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>The look of the highlights 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
-        Pick(Highlight, "形状", "色", "サイズ", "角の丸み", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Highlight, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
     public static DecorativeSymbolItem NewSymbol() => new()
