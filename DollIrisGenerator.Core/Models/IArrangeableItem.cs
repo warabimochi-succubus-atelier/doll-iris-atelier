@@ -15,6 +15,9 @@ namespace DollIrisGenerator.Models
         double Rotation { get; set; }
         double Size { get; set; }
 
+        /// <summary>表示する: drawn when on. When off the settings stay (and the editor folds the item's card).</summary>
+        bool Enabled { get; set; }
+
         /// <summary>
         /// Ticked for まとめて変更. Screen-only state: not saved, not copied by Clone, and not an edit of the design
         /// (<see cref="IrisParameters"/> does not pass it on as a change).
