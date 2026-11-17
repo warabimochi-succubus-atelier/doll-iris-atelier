@@ -104,12 +104,15 @@ namespace DollIrisGenerator.Services
                 int pupilRoll = rng.Next(10);
                 p.PupilShape = pupilRoll switch
                 {
-                    < 6 => PupilShape.Round,
-                    6 => PupilShape.VerticalOval,
+                    < 7 => PupilShape.Round,
                     7 => PupilShape.CatSlit,
                     8 => PupilShape.Heart,
-                    _ => PupilShape.Star
+                    _ => PupilShape.Star5
                 };
+                // Roll 6 was the vertical oval pupil: now the circle, 0.75 as wide and 1.25 as tall (the same shape)
+                bool ovalPupil = pupilRoll == 6;
+                p.PupilStretchLeft = p.PupilStretchRight = ovalPupil ? 0.75 : 1.0;
+                p.PupilStretchTop = p.PupilStretchBottom = ovalPupil ? 1.25 : 1.0;
                 p.PupilSizeRatio = Math.Round(0.24 + rng.NextDouble() * 0.18, 2);
                 p.PupilOpacity = Math.Round(0.92 + rng.NextDouble() * 0.08, 2);
                 p.PupilSoftness = Math.Round(0.03 + rng.NextDouble() * 0.12, 2);
@@ -260,7 +263,7 @@ namespace DollIrisGenerator.Services
             // Gem cut: mostly with heart / star pupils, where it reads as a jewel
             if (!Locked(RandomizeLocks.Pupil))
             {
-                bool jewelShape = p.PupilShape is PupilShape.Heart or PupilShape.Star;
+                bool jewelShape = p.PupilShape is PupilShape.Heart or PupilShape.Star5;
                 double roll = rng.NextDouble(), facet = rng.NextDouble(), count = rng.NextDouble();
                 bool facets = roll < (jewelShape ? 0.6 : 0.1);
                 p.PupilFacetIntensity = facets ? Math.Round(0.45 + facet * 0.45, 2) : 0.0;
@@ -324,6 +327,12 @@ namespace DollIrisGenerator.Services
                 {
                     s.Blend = rng.Next(10) < 6 ? LayerBlend.Normal : LayerBlend.Screen;
                 }
+            }
+
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                // 星の芯の太さ: only shows on the star pupil; drawn last so the earlier draws stay as they were
+                p.PupilStarCoreScale = Math.Round(0.85 + rng.NextDouble() * 0.3, 2);
             }
 
             // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)

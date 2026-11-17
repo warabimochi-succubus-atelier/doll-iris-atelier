@@ -158,7 +158,7 @@ namespace DollIrisGenerator.Tests
         {
             RunOnSta(() =>
             {
-                var p = new IrisParameters { NebulaOpacity = 0.8, PupilShape = PupilShape.Star, PupilFacetIntensity = 0.9, IsOddEye = true };
+                var p = new IrisParameters { NebulaOpacity = 0.8, PupilShape = PupilShape.Star5, PupilFacetIntensity = 0.9, IsOddEye = true };
                 var left = RasterExporter.RenderSingleToBitmap(p, isRightEye: false, dpi: 200.0, showCutLines: false, showCenterMarks: false);
                 var right = RasterExporter.RenderSingleToBitmap(p, isRightEye: true, dpi: 200.0, showCutLines: false, showCenterMarks: false);
                 Assert.True(left.PixelWidth > 0 && right.PixelWidth > 0);

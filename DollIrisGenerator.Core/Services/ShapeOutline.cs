@@ -236,16 +236,24 @@ namespace DollIrisGenerator.Services
             ForShape(ShapeKinds.Of(shape), radius, highlight: true, starCore);
 
         /// <summary>
-        /// Outline of a pupil with corners (cat slit / heart / star), centered at (0, 0).
-        /// Returns null for the round and oval pupils, which are drawn as ellipses and have no corners.
+        /// Outline of a pupil of radius <paramref name="prx"/> × <paramref name="pry"/> (they differ in an oval iris),
+        /// centered at (0, 0), before its 上下左右の長さ. Each shape is sized so that it reads about as large as the round
+        /// pupil (the cat slit, heart and star as they always were); the round pupil is the ellipse prx × pry.
+        /// <paramref name="starCore"/>: 星の芯の太さ (1 = standard: 0.40 for the 星型, 0.28 for the 4芒星).
         /// </summary>
-        public static ShapeOutline? ForPupil(PupilShape shape, double prx, double pry) => shape switch
+        public static ShapeOutline ForPupil(PupilShape shape, double prx, double pry, double starCore = 1.0)
         {
-            PupilShape.CatSlit => CatSlit(prx * 0.45, pry * 1.15),
-            PupilShape.Heart => Heart(prx * 0.95),
-            PupilShape.Star => Star(5, prx * 1.05, 0.40),
-            _ => null
-        };
+            double Core(double standard) => Math.Clamp(standard * starCore, 0.05, 0.95);
+            return shape switch
+            {
+                PupilShape.CatSlit => CatSlit(prx * 0.45, pry * 1.15),
+                PupilShape.Heart => Heart(prx * 0.95),
+                PupilShape.Star5 => Star(5, prx * 1.05, Core(0.40)),
+                PupilShape.Star4 => Star(4, prx * 1.05, Core(0.28)),
+                PupilShape.Round => Circle(prx).Stretched(pry / prx, pry / prx, 1.0, 1.0),
+                _ => ForShape(ShapeKinds.Of(shape), prx)
+            };
+        }
 
         /// <summary>Closed outline through <paramref name="vertices"/> with straight edges.</summary>
         public static ShapeOutline Polygon(IReadOnlyList<Point> vertices)
