@@ -577,7 +577,7 @@ namespace DollIrisGenerator.Controls
         /// </summary>
         private void DrawItemMarkers(DrawingContext dc, IrisParameters p, bool isRight, Point eyeCenter, double pixelsPerMm)
         {
-            // Only in the cell being edited, and only the open tab's list (記号 or ハイライト・対称性)
+            // Only in the cell being edited, and only the open tab's list (記号 or ハイライト)
             if (!ShowItemMarkers || ItemHover.ShownKind is not { } kind) return;
             var markers = ItemMarkers.ForEye(p, isRight, ItemHover.CurrentId, kind);
             if (markers.Count == 0) return;

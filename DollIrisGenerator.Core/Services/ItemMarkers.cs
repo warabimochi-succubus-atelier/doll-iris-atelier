@@ -21,7 +21,7 @@ namespace DollIrisGenerator.Services
     /// <summary>
     /// Where the selected / hovered items are in each eye, for the preview's markers (screen only: never in the SVG,
     /// PNG or PDF). Uses the same placement as <see cref="SvgExporter"/>: position × the iris's half width / height,
-    /// mirrored in the right eye (highlights only with 「ハイライトも左右反転する」), then turned with the iris's tilt.
+    /// mirrored in the right eye (unless the item's 右目の反転 is 反転しない), then turned with the iris's tilt.
     /// </summary>
     public static class ItemMarkers
     {
@@ -44,10 +44,9 @@ namespace DollIrisGenerator.Services
                 // A stretched shape (上下左右の長さ) reaches up to its longest length × size from its center;
                 // the copies sit on a ring of radius size × 1.4 round the position
                 double r = baseR * s.Size * (ShapeStretch.Max(s) + (s.Count > 1 ? 1.4 : 0.0));
-                result.Add(Make(MarkedItemKind.Symbol, i + 1, isRightEye ? -s.PositionX : s.PositionX, s.PositionY, r, hovered));
+                result.Add(Make(MarkedItemKind.Symbol, i + 1, RightEyeFlips.MirrorsPosition(s.RightEyeFlip, isRightEye) ? -s.PositionX : s.PositionX, s.PositionY, r, hovered));
             }
 
-            bool mirrorHighlights = isRightEye && p.MirrorHighlightsWithIris;
             for (int i = 0; only != MarkedItemKind.Symbol && i < p.Highlights.Count; i++)
             {
                 var h = p.Highlights[i];
@@ -55,7 +54,7 @@ namespace DollIrisGenerator.Services
                 if (!h.IsSelected && !hovered) continue;
                 // As the symbols: up to its longest length from its center, plus the ring of copies
                 double r = baseR * h.Size * (ShapeStretch.Max(h) + (h.Count > 1 ? 1.4 : 0.0));
-                result.Add(Make(MarkedItemKind.Highlight, i + 1, mirrorHighlights ? -h.PositionX : h.PositionX, h.PositionY, r, hovered));
+                result.Add(Make(MarkedItemKind.Highlight, i + 1, RightEyeFlips.MirrorsPosition(h.RightEyeFlip, isRightEye) ? -h.PositionX : h.PositionX, h.PositionY, r, hovered));
             }
             return result;
 

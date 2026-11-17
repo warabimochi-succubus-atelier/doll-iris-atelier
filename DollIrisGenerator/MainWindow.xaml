@@ -132,6 +132,17 @@
                 <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StarCoreScale}" Margin="0,0,0,6"/>
             </StackPanel>
         </DataTemplate>
+        <!-- 右目の反転 of a decorative symbol or highlight (RightEyeFlip) -->
+        <DataTemplate x:Key="RightEyeFlipFields">
+            <DockPanel Margin="0,6,0,0" ToolTip="右目での描き方。鏡像: 位置も形の向きも左右反転 (左右対称)。位置だけ反転: 置く場所は左右対称で、形の向きはそのまま (三日月などが両目で同じ向き)。反転しない: 両目でまったく同じ (光源が固定された自然な光)">
+                <TextBlock Text="右目の反転:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
+                <WrapPanel>
+                    <RadioButton Content="鏡像" Margin="0,0,8,2" IsChecked="{Binding RightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}"/>
+                    <RadioButton Content="位置だけ反転" Margin="0,0,8,2" IsChecked="{Binding RightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PositionOnly}"/>
+                    <RadioButton Content="反転しない" Margin="0,0,8,2" IsChecked="{Binding RightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                </WrapPanel>
+            </DockPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <!-- Text boxes keep their own Ctrl+Z (text undo); everywhere else these drive design undo/redo -->
@@ -610,6 +621,13 @@
                                             <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.LightAngle, StringFormat='{}{0:F0}°'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
                                             <Slider Value="{Binding CurrentIris.LightAngle}" Minimum="0" Maximum="360" SmallChange="1" LargeChange="15"/>
                                         </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="右目での光の向き。鏡像: 左右反転した向きから光が入る。反転しない: 両目で同じ向きから光が入る (ハイライトも「反転しない」にすると、光源が固定された自然な光になります)">
+                                            <TextBlock Text="光の向きの右目の反転:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="鏡像" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.LightRightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}"/>
+                                                <RadioButton Content="反転しない" Margin="0,0,8,0" IsChecked="{Binding CurrentIris.LightRightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
 
                                         <!-- Aurora layer (オーロラ層) -->
                                         <DockPanel Margin="0,8,0,4" ToolTip="虹彩全体に重ねる色。グラデーションの「円周」にすると、中心の周りで色が移り変わるオーロラ風になります">
@@ -752,6 +770,15 @@
                                             <TextBlock Text="{Binding CurrentIris.PupilOpacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOpacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,6"/>
+
+                                        <!-- Pupil right-eye flip (右目の反転) -->
+                                        <DockPanel Margin="0,0,0,8" ToolTip="右目での瞳孔の描き方。鏡像: 左右反転 (三日月や左右の長さ・宝石カットも反転)。反転しない: 両目でまったく同じ">
+                                            <TextBlock Text="右目の反転:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="110"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="鏡像" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.PupilRightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}"/>
+                                                <RadioButton Content="反転しない" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.PupilRightEyeFlip, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=None}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
 
                                         <!-- Pupil Softness -->
                                         <DockPanel Margin="0,0,0,4">
@@ -1320,6 +1347,7 @@
                                                             <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                                         </WrapPanel>
                                                     </DockPanel>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RightEyeFlipFields}"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </StackPanel.Resources>
@@ -1411,6 +1439,7 @@
                                                             <RadioButton Content="オーバーレイ" Margin="0,0,8,4" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
                                                             <RadioButton Content="ソフトライト" Margin="0,0,8,4" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                                         </WrapPanel>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RightEyeFlipFields}"/>
                                                     </StackPanel>
                                                     <TextBlock Text="範囲の中に、なるべく重ならないように散らします。一覧には左上から右下の順 (上の行から、同じ行は左から) に入ります。押すたびに違う並びになります (気に入らなければ ↩ 元に戻す で戻して押し直してください)。"
                                                                Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,6,0,6"/>
@@ -1601,19 +1630,11 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 9 (下段): ハイライト & 左右対称 -->
+                    <!-- TAB 9 (下段): ハイライト -->
                     <!-- ======================================================== -->
-                    <TabItem Header="ハイライト・対称性" controls:TabRowsPanel.Row="1" controls:ItemHover.MarkersFor="Highlight">
+                    <TabItem Header="ハイライト" controls:TabRowsPanel.Row="1" controls:ItemHover.MarkersFor="Highlight">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
-                                <GroupBox Header="左右対称設定" Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
-                                    <StackPanel>
-                                        <CheckBox Content="ハイライトも左右反転する (完全鏡像)"
-                                                  IsChecked="{Binding CurrentIris.MirrorHighlightsWithIris}"
-                                                  FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBlock Text="※チェックを外すと、光源位置が固定された自然なライティングになります。" Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </GroupBox>
 
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
@@ -1690,6 +1711,7 @@
                                                             <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                                         </WrapPanel>
                                                     </DockPanel>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RightEyeFlipFields}"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </StackPanel.Resources>
@@ -1768,6 +1790,7 @@
                                                             <RadioButton Content="オーバーレイ" Margin="0,0,8,4" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
                                                             <RadioButton Content="ソフトライト" Margin="0,0,8,4" IsChecked="{Binding Blend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                                         </WrapPanel>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RightEyeFlipFields}"/>
                                                     </StackPanel>
                                                     <TextBlock Text="範囲の中に、なるべく重ならないように散らします。一覧には左上から右下の順 (上の行から、同じ行は左から) に入ります。押すたびに違う並びになります (気に入らなければ ↩ 元に戻す で戻して押し直してください)。"
                                                                Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap" Margin="0,6,0,6"/>

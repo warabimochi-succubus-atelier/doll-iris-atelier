@@ -17,7 +17,7 @@ namespace DollIrisGenerator.Tests
     {
         private static IrisParameters Design()
         {
-            var p = new IrisParameters { SizeMm = 10, Shape = IrisShape.Circle, TiltAngle = 0, MirrorHighlightsWithIris = true };
+            var p = new IrisParameters { SizeMm = 10, Shape = IrisShape.Circle, TiltAngle = 0 };
             p.Symbols.Clear();
             p.Highlights.Clear();
             p.Symbols.Add(new DecorativeSymbolItem { PositionX = 0.5, PositionY = -0.2, Size = 0.1 });
@@ -70,8 +70,8 @@ namespace DollIrisGenerator.Tests
             var right = ItemMarkers.ForEye(p, true, null);
             Assert.Equal(left.Select(m => (-m.X, m.Y)), right.Select(m => (m.X, m.Y)));
 
-            // Highlights stay put when 「ハイライトも左右反転する」 is off; symbols are always mirrored
-            p.MirrorHighlightsWithIris = false;
+            // A highlight set to 反転しない stays put; the symbols are still mirrored
+            foreach (var h in p.Highlights) h.RightEyeFlip = RightEyeFlip.None;
             right = ItemMarkers.ForEye(p, true, null);
             Assert.Equal(-left[0].X, right[0].X, 9);
             Assert.Equal(left[1].X, right[1].X, 9);
@@ -156,7 +156,7 @@ namespace DollIrisGenerator.Tests
             var basic = new System.Windows.Controls.TabItem { Header = "基本" };
             var combo = new System.Windows.Controls.ComboBox { ItemsSource = new[] { "a", "b" } };
             var symbols = new System.Windows.Controls.TabItem { Header = "記号", Content = combo };
-            var highlights = new System.Windows.Controls.TabItem { Header = "ハイライト・対称性" };
+            var highlights = new System.Windows.Controls.TabItem { Header = "ハイライト" };
             ItemHover.SetMarkersFor(symbols, MarkedItemKind.Symbol);
             ItemHover.SetMarkersFor(highlights, MarkedItemKind.Highlight);
             tabs.Items.Add(basic);

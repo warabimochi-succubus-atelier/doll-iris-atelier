@@ -95,7 +95,6 @@
                             </div>
                             break;
                         case "ハイライト":
-                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Symmetry" />
                             <ItemList T="HighlightItem" Noun="ハイライト" Items="Session.Current.Highlights" Editor="_highlights"
                                       Fields="DesignFields.Highlight" BulkFields="DesignFields.HighlightBulk" OnMessage="ShowMessage"
                                       TemplateFields="DesignFields.HighlightTemplate" OnHover="id => _hoveredItemId = id" />

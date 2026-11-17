@@ -43,6 +43,11 @@ public static class DesignFields
     private static HighlightShape HighlightOf(ShapeKind kind) =>
         Enum.GetValues<HighlightShape>().Single(h => ShapeKinds.Of(h) == kind);
 
+    /// <summary>右目の反転 of a decorative symbol or highlight, and of the pupil / light (which sit at the center).</summary>
+    private static readonly (string, object)[] ItemFlips =
+        { ("鏡像", RightEyeFlip.Mirror), ("位置だけ反転", RightEyeFlip.PositionOnly), ("反転しない", RightEyeFlip.None) };
+    private static readonly (string, object)[] CenteredFlips = { ("鏡像", RightEyeFlip.Mirror), ("反転しない", RightEyeFlip.None) };
+
     /// <summary>星の芯の太さ (the same range as the desktop app's slider).</summary>
     private static SliderField<T> StarCoreField<T>(Func<T, double> get, Action<T, double> set) =>
         new("星の芯の太さ", get, set, StarCore.MinSlider, StarCore.MaxSlider, 0.01, Fmt.Percent,
@@ -80,7 +85,9 @@ public static class DesignFields
         new SliderField<IrisParameters>("光の強さ", p => p.LightStrength, (p, v) => p.LightStrength = v, 0, 1, 0.01, Fmt.Percent,
             "虹彩のいちばん明るいところを、光の来る向きへずらします。0 でオフ"),
         new SliderField<IrisParameters>("光の向き", p => p.LightAngle, (p, v) => p.LightAngle = v, 0, 360, 1, Fmt.Deg,
-            "0° = 右、90° = 下、270° = 上。右目は「ハイライトも左右反転する」がオンのとき反転します"),
+            "0° = 右、90° = 下、270° = 上"),
+        new ChoiceField<IrisParameters>("光の向きの右目の反転", p => p.LightRightEyeFlip, (p, v) => p.LightRightEyeFlip = (RightEyeFlip)v, CenteredFlips,
+            "右目での光の向き。鏡像: 左右反転した向きから光が入る。反転しない: 両目で同じ向きから光が入る (ハイライトも「反転しない」にすると、光源が固定された自然な光になります)"),
         new HeadingField<IrisParameters>("オーロラ層", "虹彩全体に重ねる色。「円周」のグラデーションにすると、中心の周りで色が移り変わるオーロラ風になります"),
         new ColorField<IrisParameters>("オーロラ層の色", p => p.AuroraColor, (p, v) => p.AuroraColor = v, AllowGradient: true),
         new SliderField<IrisParameters>("オーロラ層の強さ", p => p.AuroraOpacity, (p, v) => p.AuroraOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
@@ -115,6 +122,8 @@ public static class DesignFields
         PupilStretch("左の長さ", p => p.PupilStretchLeft, (p, v) => p.PupilStretchLeft = v),
         PupilStretch("右の長さ", p => p.PupilStretchRight, (p, v) => p.PupilStretchRight = v),
         Transparency<IrisParameters>(p => p.PupilOpacity, (p, v) => p.PupilOpacity = v),
+        new ChoiceField<IrisParameters>("右目の反転", p => p.PupilRightEyeFlip, (p, v) => p.PupilRightEyeFlip = (RightEyeFlip)v, CenteredFlips,
+            "右目での瞳孔の描き方。鏡像: 左右反転 (三日月や左右の長さ・宝石カットも反転)。反転しない: 両目でまったく同じ"),
         new SliderField<IrisParameters>("輪郭の柔らかさ (ぼかし)", p => p.PupilSoftness, (p, v) => p.PupilSoftness = v, 0, 0.30, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("宝石カット", p => p.PupilFacetIntensity, (p, v) => p.PupilFacetIntensity = v, 0, 1, 0.01, Fmt.Percent,
             "瞳孔の中に宝石のカット面のような明暗の面を入れます。0% でオフ"),
@@ -178,13 +187,6 @@ public static class DesignFields
         new ColorField<IrisParameters>("右目反射光色", p => p.OddEyeBottomHighlightColor, (p, v) => p.OddEyeBottomHighlightColor = v),
     };
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> Symmetry = new Field<IrisParameters>[]
-    {
-        new HeadingField<IrisParameters>("左右対称設定"),
-        new ToggleField<IrisParameters>("ハイライトも左右反転する (完全鏡像)", p => p.MirrorHighlightsWithIris, (p, v) => p.MirrorHighlightsWithIris = v,
-            "オフにすると、光源位置が固定された自然なライティングになります"),
-    };
-
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> Symbol = new Field<DecorativeSymbolItem>[]
     {
         new ToggleField<DecorativeSymbolItem>("表示する", s => s.Enabled, (s, v) => s.Enabled = v),
@@ -206,6 +208,7 @@ public static class DesignFields
         new ChoiceField<DecorativeSymbolItem>("重ね方", s => s.Blend, (s, v) => s.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
             "この記号の重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
+        new ChoiceField<DecorativeSymbolItem>("右目の反転", s => s.RightEyeFlip, (s, x) => s.RightEyeFlip = (RightEyeFlip)x, ItemFlips, "右目での描き方。鏡像: 位置も形の向きも左右反転 (左右対称)。位置だけ反転: 置く場所は左右対称で、形の向きはそのまま (三日月などが両目で同じ向き)。反転しない: 両目でまったく同じ (光源が固定された自然な光)"),
     };
 
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]
@@ -230,6 +233,7 @@ public static class DesignFields
         new ChoiceField<HighlightItem>("重ね方", h => h.Blend, (h, v) => h.Blend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
             "このハイライトの重ね方。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
+        new ChoiceField<HighlightItem>("右目の反転", h => h.RightEyeFlip, (h, x) => h.RightEyeFlip = (RightEyeFlip)x, ItemFlips, "右目での描き方。鏡像: 位置も形の向きも左右反転 (左右対称)。位置だけ反転: 置く場所は左右対称で、形の向きはそのまま (三日月などが両目で同じ向き)。反転しない: 両目でまったく同じ (光源が固定された自然な光)"),
     };
 
     private static bool IsPosition<T>(Field<T> f) => f.Label.StartsWith("位置 ", StringComparison.Ordinal);
@@ -258,11 +262,11 @@ public static class DesignFields
 
     /// <summary>The look of the symbols 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<DecorativeSymbolItem>> SymbolTemplate =
-        Pick(Symbol, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Symbol, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方", "右目の反転");
 
     /// <summary>The look of the highlights 並べて追加 makes.</summary>
     public static readonly IReadOnlyList<Field<HighlightItem>> HighlightTemplate =
-        Pick(Highlight, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方");
+        Pick(Highlight, "形状", "色", "サイズ", "角の丸み", "星の芯の太さ", "上の長さ", "下の長さ", "左の長さ", "右の長さ", "透明度", "重ね方", "右目の反転");
 
     /// <summary>A new decorative symbol, as the desktop app's 「➕ 装飾記号追加」 makes it.</summary>
     public static DecorativeSymbolItem NewSymbol() => new()

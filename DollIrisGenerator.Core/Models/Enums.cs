@@ -90,6 +90,35 @@ namespace DollIrisGenerator.Models
         CatSlit = 9         // 猫目スリット
     }
 
+    /// <summary>
+    /// 右目の反転: how the right eye draws an item (decorative symbol, highlight), the pupil or the light, given that
+    /// the right eye is the left one's mirror image. The numbers are what design files store.
+    /// </summary>
+    public enum RightEyeFlip
+    {
+        Mirror = 0,         // 鏡像: the position and the shape's direction are mirrored
+        PositionOnly = 1,   // 位置だけ反転: placed mirrored, the shape faces the same way as in the left eye
+        None = 2            // 反転しない: the same as in the left eye (the light source stays where it is)
+    }
+
+    public static class RightEyeFlips
+    {
+        /// <summary>Whether this eye places the item at the mirrored position (−X).</summary>
+        public static bool MirrorsPosition(RightEyeFlip flip, bool isRightEye) => isRightEye && flip != RightEyeFlip.None;
+
+        /// <summary>
+        /// Whether this eye mirrors the shape itself: its rotation, a moon's direction, the left / right lengths, the
+        /// order of its copies and its gradient's direction.
+        /// </summary>
+        public static bool MirrorsShape(RightEyeFlip flip, bool isRightEye) => isRightEye && flip == RightEyeFlip.Mirror;
+
+        /// <summary>A known value from a file, or 鏡像 (the way every item was drawn before this setting existed).</summary>
+        public static RightEyeFlip Valid(RightEyeFlip flip) => Enum.IsDefined(flip) ? flip : RightEyeFlip.Mirror;
+
+        /// <summary>For the pupil and the light, which sit at the center: 鏡像 or 反転しない (位置だけ反転 reads as 反転しない).</summary>
+        public static RightEyeFlip ValidCentered(RightEyeFlip flip) => Valid(flip) == RightEyeFlip.Mirror ? RightEyeFlip.Mirror : RightEyeFlip.None;
+    }
+
     public static class ShapeKinds
     {
         /// <summary>The shape a symbol type draws; null for <see cref="SymbolType.None"/>.</summary>

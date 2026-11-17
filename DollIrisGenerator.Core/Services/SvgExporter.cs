@@ -382,14 +382,14 @@ namespace DollIrisGenerator.Services
         /// 光の入る向き: the base gradient's focal point (where the inner color is brightest) moved from its center
         /// toward the light, by 光の強さ × <see cref="MaxLightShift"/> of the iris box (staying inside the gradient's
         /// 55% circle). The angle is on screen: the iris's tilt is taken back out, since the gradient turns with the
-        /// iris. The right eye mirrors it when the highlights are mirrored (the highlights are the light's reflection).
+        /// iris. The right eye mirrors it unless the light is set to 反転しない (<see cref="IrisParameters.LightRightEyeFlip"/>).
         /// Nothing when the strength is 0, so such designs export exactly as before.
         /// </summary>
         private static string LightFocus(IrisParameters p, bool isRightEye, double tilt)
         {
             if (p.LightStrength < 0.005) return "";
             double angle = p.LightAngle;
-            if (isRightEye && p.MirrorHighlightsWithIris) angle = 180.0 - angle;
+            if (RightEyeFlips.MirrorsShape(p.LightRightEyeFlip, isRightEye)) angle = 180.0 - angle;
             double rad = (angle - tilt) * Math.PI / 180.0;
             double shift = p.LightStrength * MaxLightShift;
             double fx = 0.5 + Math.Cos(rad) * shift;
@@ -590,8 +590,9 @@ namespace DollIrisGenerator.Services
 
                 // 上下左右の長さ of the pupil. The right eye is the mirror image: the pupil is drawn as it is, so its left and
                 // right lengths trade places, except the moon, which is mirrored as a whole after stretching (as the symbols)
-                bool mirrorPupil = isRightEye && ShapeKinds.IsAsymmetric(ShapeKinds.Of(p.PupilShape));
-                bool swapPupil = isRightEye && !mirrorPupil;
+                bool flipPupil = RightEyeFlips.MirrorsShape(p.PupilRightEyeFlip, isRightEye); // 反転しない: the same pupil
+                bool mirrorPupil = flipPupil && ShapeKinds.IsAsymmetric(ShapeKinds.Of(p.PupilShape));
+                bool swapPupil = flipPupil && !mirrorPupil;
                 double pTop = p.PupilStretchTop, pBottom = p.PupilStretchBottom;
                 double pLeft = swapPupil ? p.PupilStretchRight : p.PupilStretchLeft;
                 double pRight = swapPupil ? p.PupilStretchLeft : p.PupilStretchRight;
@@ -618,7 +619,7 @@ namespace DollIrisGenerator.Services
                         sb.AppendLine($@"{indent}<ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(erx)}"" ry=""{F(ery)}""{extra} />");
                 }
 
-                string pupilPaint = Paint(sb, "      ", $"{idPrefix}_pupil_fill", p.PupilColor, "#060A18", pupilBox, isRightEye);
+                string pupilPaint = Paint(sb, "      ", $"{idPrefix}_pupil_fill", p.PupilColor, "#060A18", pupilBox, flipPupil);
 
                 // Soft edge (輪郭の柔らかさ): the pupil's fill blurred (the gem-cut facets stay sharp, clipped to the outline)
                 string pupilBlur = "";
@@ -664,7 +665,7 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine("        </clipPath>");
                     sb.AppendLine("      </defs>");
                     sb.AppendLine($@"      <g id=""{idPrefix}_pupil_facets"" clip-path=""url(#{facetClip})"">");
-                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx * (pLeft + pRight) / 2.0, pry * (pTop + pBottom) / 2.0, p.PupilFacetCount, effectiveSeed, isRightEye))
+                    foreach (var (poly, shade) in IrisPatterns.PupilFacets(prx * (pLeft + pRight) / 2.0, pry * (pTop + pBottom) / 2.0, p.PupilFacetCount, effectiveSeed, flipPupil))
                     {
                         double alpha = p.PupilOpacity * p.PupilFacetIntensity * IrisPatterns.MaxFacetAlpha * Math.Abs(shade);
                         string color = shade >= 0 ? "#FFFFFF" : "#000000";
@@ -735,13 +736,10 @@ namespace DollIrisGenerator.Services
                     if (!symbol.Enabled || symbol.Type == SymbolType.None || symbol.Opacity <= 0.01)
                         continue;
 
-                    double posX = symbol.PositionX;
-                    double rot = symbol.Rotation;
-                    if (isRightEye)
-                    {
-                        posX = -posX;
-                        rot = -rot;
-                    }
+                    // 右目の反転: the position (−X) and the shape (rotation, moon, lengths, copies, gradient) separately
+                    bool flipSymbol = RightEyeFlips.MirrorsShape(symbol.RightEyeFlip, isRightEye);
+                    double posX = RightEyeFlips.MirrorsPosition(symbol.RightEyeFlip, isRightEye) ? -symbol.PositionX : symbol.PositionX;
+                    double rot = flipSymbol ? -symbol.Rotation : symbol.Rotation;
 
                     double symX = cx + posX * rx;
                     double symY = cy + symbol.PositionY * ry;
@@ -755,10 +753,10 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@"      <g id=""{idPrefix}_symbol_{symbol.Type}"" fill=""{safeSymColor}"" opacity=""{symbol.Opacity.ToFixed(2)}""{BlendStyle(symbol.Blend)}>");
 
                     // Same outline as the screen / PDF renderer; rounded, then stretched (上下左右の長さ), once for every copy.
-                    // The right eye is the mirror image: the moon is mirrored as a whole after stretching, the other
-                    // symbols are drawn as they are, so their left and right lengths trade places
-                    bool mirror = symbol.Type == SymbolType.Moon && isRightEye;
-                    bool swapSides = isRightEye && !mirror;
+                    // A mirrored shape: the moon is mirrored as a whole after stretching, the other symbols are drawn as
+                    // they are, so their left and right lengths trade places
+                    bool mirror = symbol.Type == SymbolType.Moon && flipSymbol;
+                    bool swapSides = flipSymbol && !mirror;
                     var symOutline = ShapeOutline.ForSymbol(symbol.Type, symRadius, symbol.StarCoreScale)?
                         .Rounded(symbol.CornerRounding)
                         .Stretched(symbol, swapSides);
@@ -773,7 +771,7 @@ namespace DollIrisGenerator.Services
                         if (symbol.Count > 1)
                         {
                             double offsetAngle = (2.0 * Math.PI * c) / symbol.Count;
-                            if (isRightEye) offsetAngle = Math.PI - offsetAngle;
+                            if (flipSymbol) offsetAngle = Math.PI - offsetAngle;
                             curX += symRadius * 1.4 * Math.Cos(offsetAngle);
                             curY += symRadius * 1.4 * Math.Sin(offsetAngle);
                         }
@@ -787,7 +785,7 @@ namespace DollIrisGenerator.Services
                         {
                             var box = symBounds;
                             box.Offset(curX, curY);
-                            string paint = Paint(sb, "        ", $"{idPrefix}_symbol{symbolIndex}_{c}_fill", symbol.Color, "#FFFFFF", box, isRightEye);
+                            string paint = Paint(sb, "        ", $"{idPrefix}_symbol{symbolIndex}_{c}_fill", symbol.Color, "#FFFFFF", box, flipSymbol);
                             fillAttr = $@" fill=""{paint}""";
                         }
                         // The moon faces the other way in the right eye (mirrored before the rotation, as on screen)
@@ -811,21 +809,16 @@ namespace DollIrisGenerator.Services
                     if (!h.Enabled || h.Opacity <= 0.01 || h.Size <= 0.005)
                         continue;
 
-                    double posX = h.PositionX;
-                    double rot = h.Rotation;
-
-                    if (isRightEye && p.MirrorHighlightsWithIris)
-                    {
-                        posX = -posX;
-                        rot = -rot;
-                    }
+                    // 右目の反転 (反転しない: the light source stays where it is, as a natural lighting)
+                    bool mirrorHighlight = RightEyeFlips.MirrorsShape(h.RightEyeFlip, isRightEye);
+                    double posX = RightEyeFlips.MirrorsPosition(h.RightEyeFlip, isRightEye) ? -h.PositionX : h.PositionX;
+                    double rot = mirrorHighlight ? -h.Rotation : h.Rotation;
 
                     double hx = cx + posX * rx;
                     double hy = cy + h.PositionY * ry;
                     double hRadius = baseR * h.Size;
                     // A mirrored highlight is drawn as it is, so its left and right lengths trade places; the moon is not
                     // the same mirrored, so it is mirrored as a whole after stretching instead (as the symbols' moon)
-                    bool mirrorHighlight = isRightEye && p.MirrorHighlightsWithIris;
                     bool mirrorShape = mirrorHighlight && ShapeKinds.IsAsymmetric(ShapeKinds.Of(h.Shape));
                     bool swapSides = mirrorHighlight && !mirrorShape;
 
