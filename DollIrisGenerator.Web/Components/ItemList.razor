@@ -80,7 +80,12 @@ else if (Items.Count > 1)
                         aria-label="@($"{Noun} {number} を削除")"><Icon Name="close" />削除</button>
             </span>
         </div>
-        <FieldList T="T" Target="item" Fields="Fields" />
+        <FieldList T="T" Target="item" Fields="ShowFields" />
+        @if (item.Enabled)
+        {
+            @* 「表示する」がオフの項目は設定を折りたたむ (見出しと「表示する」だけ残す) *@
+            <FieldList T="T" Target="item" Fields="SettingFields" />
+        }
     </div>
 }
 
@@ -91,6 +96,9 @@ else if (Items.Count > 1)
     [Parameter, EditorRequired] public ItemListEditor<T> Editor { get; set; } = default!;
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> Fields { get; set; } = Array.Empty<Field<T>>();
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> BulkFields { get; set; } = Array.Empty<Field<T>>();
+
+    // A card always shows its 表示する check box (the item's only toggle); the other settings only while it is on
+    private IReadOnlyList<Field<T>> ShowFields = Array.Empty<Field<T>>(), SettingFields = Array.Empty<Field<T>>();
 
     /// <summary>The look settings of the 並べて追加 form (edits <see cref="ItemListEditor{T}.Template"/>).</summary>
     [Parameter, EditorRequired] public IReadOnlyList<Field<T>> TemplateFields { get; set; } = Array.Empty<Field<T>>();
@@ -117,7 +125,12 @@ else if (Items.Count > 1)
     private string Full => $"これ以上追加できません ({Noun}は {IrisParameters.MaxNestedItems} 個まで)。";
 
     // Undo, presets and restores replace the design's list: follow it
-    protected override void OnParametersSet() => Editor.Attach(Items);
+    protected override void OnParametersSet()
+    {
+        Editor.Attach(Items);
+        ShowFields = Fields.Where(f => f is ToggleField<T>).ToArray();
+        SettingFields = Fields.Where(f => f is not ToggleField<T>).ToArray();
+    }
 
     private Task Message(string text)
     {

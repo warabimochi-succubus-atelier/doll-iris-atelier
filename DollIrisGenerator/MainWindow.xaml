@@ -1498,6 +1498,8 @@
                                                                 </StackPanel>
                                                                 <CheckBox Content="表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
                                                             </DockPanel>
+                                                            <!-- 「表示する」がオフの記号は設定を折りたたむ (見出しの行だけ残す) -->
+                                                            <StackPanel Visibility="{Binding Enabled, Converter={StaticResource BoolToVisConverter}}">
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SymbolStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">
                                                                 <Grid.ColumnDefinitions>
@@ -1515,6 +1517,7 @@
                                                                 </StackPanel>
                                                             </Grid>
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SymbolStyleFieldsBottom}" Focusable="False"/>
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
@@ -1857,6 +1860,8 @@
                                                                 </StackPanel>
                                                                 <CheckBox Content="表示する" IsChecked="{Binding Enabled}" FontWeight="Bold" VerticalAlignment="Center"/>
                                                             </DockPanel>
+                                                            <!-- 「表示する」がオフのハイライトは設定を折りたたむ (見出しの行だけ残す) -->
+                                                            <StackPanel Visibility="{Binding Enabled, Converter={StaticResource BoolToVisConverter}}">
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HighlightStyleFieldsTop}" Focusable="False"/>
                                                             <Grid Margin="0,0,0,6">
                                                                 <Grid.ColumnDefinitions>
@@ -1874,6 +1879,7 @@
                                                                 </StackPanel>
                                                             </Grid>
                                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HighlightStyleFieldsBottom}" Focusable="False"/>
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
