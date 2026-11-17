@@ -289,14 +289,15 @@ input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid v
 .item-card { margin: 10px 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
 /* Number and 削除 on a row of their own, apart from the first setting (a check box) so neither is tapped by mistake */
 .item-card-header {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
     padding-bottom: 8px; border-bottom: 1px solid var(--border);
 }
 .item-card-title { color: var(--text-2); font-size: 0.9rem; font-weight: 600; }
 .item-card.selected { border-color: var(--accent); }
-.item-select { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; }
+.item-select { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
 .item-select input { width: 20px; height: 20px; margin: 0; }
-.item-card-actions { display: flex; gap: 8px; }
+/* 奥へ / 手前へ / 複製 / 削除: they wrap onto a second row on a narrow panel instead of squeezing the title */
+.item-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 /* まとめて変更: an outlined card above the list, shown while items are ticked */
 .bulk-card { border-color: var(--accent); background: #1a2a38; }
 .selection-row { margin: 8px 0; }

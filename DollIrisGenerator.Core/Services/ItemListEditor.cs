@@ -99,6 +99,27 @@ namespace DollIrisGenerator.Services
 
         public T? Duplicate(T item) => ItemLayout.DuplicateAfter(_items, item);
 
+        // 手前へ / 奥へ: the list is drawn from the top down, so an item lower in the list is drawn over the ones above it
+
+        /// <summary>手前へ: one place down the list (drawn after, so over, the item it passes). False at the end.</summary>
+        public bool MoveForward(T item) => Move(item, +1);
+
+        /// <summary>奥へ: one place up the list (drawn before, so under, the item it passes). False at the top.</summary>
+        public bool MoveBackward(T item) => Move(item, -1);
+
+        public bool CanMoveForward(T item) { int i = _items.IndexOf(item); return i >= 0 && i < _items.Count - 1; }
+
+        public bool CanMoveBackward(T item) => _items.IndexOf(item) > 0;
+
+        private bool Move(T item, int step)
+        {
+            int from = _items.IndexOf(item);
+            int to = from + step;
+            if (from < 0 || to < 0 || to >= _items.Count) return false;
+            _items.Move(from, to); // one change: the design redraws once and it is one undo step
+            return true;
+        }
+
         /// <summary>Removes the ticked items; returns how many.</summary>
         public int RemoveSelected()
         {

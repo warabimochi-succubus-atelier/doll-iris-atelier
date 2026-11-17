@@ -353,6 +353,73 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestMoveForwardAndBackwardChangeTheDrawingOrderOnePlaceAtATime()
+        {
+            var p = new IrisParameters();
+            p.Symbols.Clear();
+            var a = new DecorativeSymbolItem { Color = "#AA0000", Enabled = true };
+            var b = new DecorativeSymbolItem { Color = "#00BB00", Enabled = true };
+            var c = new DecorativeSymbolItem { Color = "#0000CC", Enabled = true };
+            foreach (var s in new[] { a, b, c }) p.Symbols.Add(s);
+            var editor = new ItemListEditor<DecorativeSymbolItem>(() => new DecorativeSymbolItem());
+            editor.Attach(p.Symbols);
+
+            int designChanges = 0;
+            p.PropertyChanged += (_, e) => { if (e.PropertyName == IrisParameters.NestedItemsChangedName) designChanges++; };
+
+            // 手前へ: one place down the list (drawn after, so over, the next one)
+            Assert.True(editor.MoveForward(a));
+            Assert.Equal(new[] { b, a, c }, p.Symbols);
+            Assert.Equal(1, designChanges); // one change: one redraw, one undo step
+
+            // 奥へ: one place up
+            Assert.True(editor.MoveBackward(c));
+            Assert.Equal(new[] { b, c, a }, p.Symbols);
+
+            // The ends: nothing to pass
+            Assert.False(editor.CanMoveBackward(b));
+            Assert.False(editor.MoveBackward(b));
+            Assert.False(editor.CanMoveForward(a));
+            Assert.False(editor.MoveForward(a));
+            Assert.False(editor.MoveForward(new DecorativeSymbolItem())); // not in the list
+            Assert.Equal(new[] { b, c, a }, p.Symbols);
+
+            // A moved item still reaches the design when edited (subscribed once, not twice)
+            designChanges = 0;
+            a.Size = 0.3;
+            Assert.Equal(1, designChanges);
+
+            // The SVG draws them in the new order: the last one is on top
+            string svg = SvgExporter.GenerateSingleEyeSvg(p, false);
+            int ib = svg.IndexOf("fill=\"#00BB00\"", StringComparison.Ordinal);
+            int ic = svg.IndexOf("fill=\"#0000CC\"", StringComparison.Ordinal);
+            int ia = svg.IndexOf("fill=\"#AA0000\"", StringComparison.Ordinal);
+            Assert.True(ib >= 0 && ib < ic && ic < ia, $"{ib} {ic} {ia}");
+        }
+
+        [Fact]
+        public void TestDesktopMoveIsOneUndoStepAndGreysOutAtTheEnds()
+        {
+            var vm = IsolatedViewModel.Create();
+            vm.CurrentIris.Highlights.Clear();
+            vm.CurrentIris.Highlights.Add(new HighlightItem { Color = "#111111" });
+            vm.CurrentIris.Highlights.Add(new HighlightItem { Color = "#222222" });
+            var first = vm.CurrentIris.Highlights[0];
+            var tools = vm.HighlightTools;
+
+            Assert.False(tools.MoveBackwardCommand.CanExecute(first));
+            Assert.True(tools.MoveForwardCommand.CanExecute(first));
+            tools.MoveForwardCommand.Execute(first);
+            Assert.Equal(new[] { "#222222", "#111111" }, vm.CurrentIris.Highlights.Select(h => h.Color));
+            Assert.StartsWith("ハイライトを手前へ ", vm.HistoryItems[0].Details);
+            Assert.Contains("手前に移しました", vm.StatusMessage);
+            Assert.False(tools.MoveForwardCommand.CanExecute(vm.CurrentIris.Highlights[^1]));
+
+            vm.UndoCommand.Execute(null);
+            Assert.Equal(new[] { "#111111", "#222222" }, vm.CurrentIris.Highlights.Select(h => h.Color));
+        }
+
+        [Fact]
         public void TestDesktopTickingIsNotAnEditButBulkChangesAre()
         {
             var vm = IsolatedViewModel.Create();

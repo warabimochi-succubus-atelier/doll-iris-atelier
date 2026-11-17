@@ -19,6 +19,10 @@
 {
     <p class="field-hint">@(Noun)はありません。「@(Noun)追加」か「並べて追加」で追加できます。</p>
 }
+else if (Items.Count > 1)
+{
+    <p class="field-hint">一覧の下にある@(Noun)ほど手前 (上) に描かれます。重なりは各カードの「↑ 奥へ」「↓ 手前へ」で変えられます。</p>
+}
 
 <details class="arrange-panel">
     <summary><Icon Name="ring" />並べて追加 (ランダムにまとめて置く)</summary>
@@ -66,6 +70,10 @@
                 <span class="item-card-title">@Noun @number</span>
             </label>
             <span class="item-card-actions">
+                <button type="button" @onclick="() => MoveBackward(item)" disabled="@(!Editor.CanMoveBackward(item))"
+                        title="この@(Noun)を 1 つ奥に移します (一覧では 1 つ上。上の@(Noun)の下に描かれます)" aria-label="@($"{Noun} {number} を奥へ")">↑ 奥へ</button>
+                <button type="button" @onclick="() => MoveForward(item)" disabled="@(!Editor.CanMoveForward(item))"
+                        title="この@(Noun)を 1 つ手前に移します (一覧では 1 つ下。下の@(Noun)の上に描かれます)" aria-label="@($"{Noun} {number} を手前へ")">↓ 手前へ</button>
                 <button type="button" @onclick="() => Duplicate(item)" disabled="@(Items.Count >= IrisParameters.MaxNestedItems)"
                         title="同じ設定の@(Noun)を、少しずらしてすぐ下に追加します" aria-label="@($"{Noun} {number} を複製")"><Icon Name="copy" />複製</button>
                 <button type="button" class="danger remove" @onclick="() => Remove(item)"
@@ -127,6 +135,21 @@
     {
         Session.Apply("", _ => Items.Remove(item));
         return Message($"{Noun}を削除しました (元に戻せます)。");
+    }
+
+    // 手前へ / 奥へ: the list is drawn from the top down, so a lower item is drawn over the ones above it
+    private Task MoveForward(T item)
+    {
+        if (!Editor.CanMoveForward(item)) return Task.CompletedTask;
+        Session.Apply("", _ => Editor.MoveForward(item));
+        return Message($"{Noun}を 1 つ手前に移しました (一覧では 1 つ下)。");
+    }
+
+    private Task MoveBackward(T item)
+    {
+        if (!Editor.CanMoveBackward(item)) return Task.CompletedTask;
+        Session.Apply("", _ => Editor.MoveBackward(item));
+        return Message($"{Noun}を 1 つ奥に移しました (一覧では 1 つ上)。");
     }
 
     private Task Duplicate(T item)

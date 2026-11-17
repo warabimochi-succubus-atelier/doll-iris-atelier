@@ -36,6 +36,17 @@ namespace DollIrisGenerator.ViewModels
                 if (Editor.Items.Count >= IrisParameters.MaxNestedItems) { run("", () => full); return; }
                 run($"{noun}を複製", () => Editor.Duplicate(item) != null ? $"{noun}を複製しました (すぐ下に追加しました)。" : full);
             });
+            // 手前へ / 奥へ (an item lower in the list is drawn over the ones above it); greyed out at the ends
+            MoveForwardCommand = new RelayCommand(param =>
+            {
+                if (param is not T item || !Editor.CanMoveForward(item)) return;
+                run($"{noun}を手前へ", () => Editor.MoveForward(item) ? $"{noun}を 1 つ手前に移しました (一覧では 1 つ下)。" : "");
+            }, param => param is T item && Editor.CanMoveForward(item));
+            MoveBackwardCommand = new RelayCommand(param =>
+            {
+                if (param is not T item || !Editor.CanMoveBackward(item)) return;
+                run($"{noun}を奥へ", () => Editor.MoveBackward(item) ? $"{noun}を 1 つ奥に移しました (一覧では 1 つ上)。" : "");
+            }, param => param is T item && Editor.CanMoveBackward(item));
             SelectAllCommand = new RelayCommand(() => Editor.SetAllSelected(true));
             ClearSelectionCommand = new RelayCommand(() => Editor.SetAllSelected(false));
             RemoveSelectedCommand = new RelayCommand(() =>
@@ -49,6 +60,8 @@ namespace DollIrisGenerator.ViewModels
 
         public ICommand ArrangeCommand { get; }
         public ICommand DuplicateCommand { get; }
+        public ICommand MoveForwardCommand { get; }
+        public ICommand MoveBackwardCommand { get; }
         public ICommand SelectAllCommand { get; }
         public ICommand ClearSelectionCommand { get; }
         public ICommand RemoveSelectedCommand { get; }
