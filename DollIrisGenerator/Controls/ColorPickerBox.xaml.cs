@@ -196,14 +196,59 @@ namespace DollIrisGenerator.Controls
             try
             {
                 HexTextBox.Text = hex;
-                var color = WpfGeometry.ParseHexColor(hex);
-                ColorSwatch.Background = new SolidColorBrush(color);
+                bool readable = WpfGeometry.TryParseHexColor(hex, out var color);
+                // An unreadable value (hand-edited file) is drawn in the field's default color, not black:
+                // show stripes and say so instead of a black swatch that looks like a real color
+                ColorSwatch.Background = readable ? new SolidColorBrush(color) : UnreadableSwatchBrush;
+                ShowUnreadable(readable ? null : hex);
                 ShowCustomSliders(color);
             }
             finally
             {
                 _isUpdating = false;
             }
+        }
+
+        /// <summary>Red stripes: the swatch of a value that is not a color.</summary>
+        private static readonly Brush UnreadableSwatchBrush = CreateUnreadableSwatchBrush();
+
+        private static Brush CreateUnreadableSwatchBrush()
+        {
+            var brush = new LinearGradientBrush
+            {
+                MappingMode = BrushMappingMode.Absolute,
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(6, 6),
+                SpreadMethod = GradientSpreadMethod.Repeat,
+            };
+            var gray = Color.FromRgb(0x3A, 0x3F, 0x4A);
+            var red = Color.FromRgb(0xE5, 0x73, 0x73);
+            brush.GradientStops.Add(new GradientStop(gray, 0.0));
+            brush.GradientStops.Add(new GradientStop(gray, 0.5));
+            brush.GradientStops.Add(new GradientStop(red, 0.5));
+            brush.GradientStops.Add(new GradientStop(red, 1.0));
+            brush.Freeze();
+            return brush;
+        }
+
+        private static readonly Brush HexBoxBorder = CreateFrozen(Color.FromRgb(0x44, 0x4A, 0x56));
+        private static readonly Brush HexBoxErrorBorder = CreateFrozen(Color.FromRgb(0xE5, 0x73, 0x73));
+
+        private static Brush CreateFrozen(Color color)
+        {
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>Marks the box when its value is not a color (<paramref name="unreadableValue"/>), or clears the mark (null).</summary>
+        private void ShowUnreadable(string? unreadableValue)
+        {
+            HexTextBox.BorderBrush = unreadableValue == null ? HexBoxBorder : HexBoxErrorBorder;
+            HexTextBox.ToolTip = unreadableValue == null ? null
+                : $"「{unreadableValue}」は色として読めません。描画では既定の色になります。#RRGGBB を入力するか、パレットから選び直してください。";
+            ColorPreviewBtn.ToolTip = unreadableValue == null ? "クリックしてカラーパレットを開く"
+                : "色として読めない値です (描画では既定の色)。クリックしてカラーパレットから選び直す";
         }
 
         /// <summary>RGB and CMYK sliders / values for a color (call with <see cref="_isUpdating"/> set).</summary>
@@ -389,6 +434,7 @@ namespace DollIrisGenerator.Controls
                     SelectedColorHex = text;
                     var color = WpfGeometry.ParseHexColor(text);
                     ColorSwatch.Background = new SolidColorBrush(color);
+                    ShowUnreadable(null);
                     ShowCustomSliders(color);
                 }
                 finally
