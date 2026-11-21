@@ -3,6 +3,8 @@ obj/
 .vs/
 dist/
 *.user
+# Claude Code's local settings and worktrees
+.claude/
 
 # Full-size image originals stay local by default...
 *_original.png

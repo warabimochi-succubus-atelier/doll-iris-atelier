@@ -66,7 +66,8 @@ namespace DollIrisGenerator.Tests
                           $" {{\"Name\": \"案2\", \"Note\": \"\", \"Parameters\": {design}}}]";
             var items = FavoritesStore.ParseImportText(json, out string? single);
             Assert.Null(single);
-            Assert.Equal(new[] { "案1", "案2" }, items!.Select(f => f.Name));
+            Assert.NotNull(items);
+            Assert.Equal(new[] { "案1", "案2" }, items.Select(f => f.Name));
             Assert.NotEqual(items[0].Id, items[1].Id);
             Assert.Equal("#2979FF", items[1].Parameters.BaseColor);
         }
