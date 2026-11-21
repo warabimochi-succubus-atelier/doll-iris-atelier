@@ -142,37 +142,38 @@ namespace DollIrisGenerator.Models
 
     public static class ColorPresets
     {
-        /// <summary>The built-in presets. The list the user sees (with the presets they added) is MainViewModel.Presets.</summary>
+        /// <summary>
+        /// The built-in presets (SPECIFICATION.md 7.2). The list the user sees (with the presets they added) is
+        /// MainViewModel.Presets. Each preset has its own highlight layout (<see cref="HighlightStyles"/>).
+        /// </summary>
         public static IReadOnlyList<PresetDefinition> All { get; } = new List<PresetDefinition>
         {
-            // ---------------- ベーシックカラー ----------------
+            // ---------------- ベーシック: one hue, round pupil, fiber rays and glitter ----------------
             // The first one is the preset selected at start-up
             Basic("クリアブルー", "澄んだ水色のガラスのようなクリアブルー",
-                "#2E86FF", "#9BE1FF", "#0A2A8A", "#CFF3FF", "#06173F", "#071030", "#C9F0FF"),
+                "#2E86FF", "#9BE1FF", "#0A2A8A", "#CFF3FF", "#06173F", "#071030", "#C9F0FF", HighlightStyle.Classic),
             Basic("アクア", "南国の海のような明るいアクアブルー",
-                "#12B5C9", "#9FF3F0", "#04506B", "#D6FFFB", "#02303C", "#03202A", "#C8FFF7"),
+                "#12B5C9", "#9FF3F0", "#04506B", "#D6FFFB", "#02303C", "#03202A", "#C8FFF7", HighlightStyle.Droplet),
             Basic("ラベンダー", "やさしく透けるラベンダーパープル",
-                "#8E63E0", "#D9C6FF", "#3B1C8C", "#EEE4FF", "#1E0E4A", "#140A33", "#E6DAFF"),
-            Basic("パープル", "神秘的で幻想的なヴァイオレットパープル",
-                "#AA00FF", "#EA80FC", "#4A148C", "#F3E5F5", "#1E053D", "#120224", "#E1BEE7"),
+                "#8E63E0", "#D9C6FF", "#3B1C8C", "#EEE4FF", "#1E0E4A", "#140A33", "#E6DAFF", HighlightStyle.Sparkle),
             Basic("ピンク", "甘く華やかなローズピンク",
-                "#F06292", "#FFC1D9", "#8E1F4F", "#FFE6F0", "#4A0A27", "#3A0A20", "#FFD6E6"),
-            Basic("サクラ", "桜の花びらが舞う春色のソフトピンク",
-                "#FF6090", "#FFB2D0", "#7A0035", "#FFF0F5", "#3B0018", "#1F000C", "#FFD6E7",
-                symbol: SymbolType.SakuraPetal, symbolColor: "#FFF5F8"),
+                "#F06292", "#FFC1D9", "#8E1F4F", "#FFE6F0", "#4A0A27", "#3A0A20", "#FFD6E6", HighlightStyle.Heart),
             Basic("レッド", "宝石のように深く輝くレッド",
-                "#E0283C", "#FF8A8A", "#6E0612", "#FFD0D0", "#3A0309", "#2A0207", "#FFC2C2"),
+                "#E0283C", "#FF8A8A", "#6E0612", "#FFD0D0", "#3A0309", "#2A0207", "#FFC2C2", HighlightStyle.Classic),
             Basic("アンバー", "蜂蜜のようにとろける琥珀色",
-                "#E08A1E", "#FFD27A", "#7A3A06", "#FFE9B8", "#3A1A03", "#2A1202", "#FFE3A8"),
+                "#E08A1E", "#FFD27A", "#7A3A06", "#FFE9B8", "#3A1A03", "#2A1202", "#FFE3A8", HighlightStyle.ThreeDots),
             Basic("グリーン", "透明感のあるエメラルドグリーン",
-                "#19A36B", "#8FF0C0", "#064D33", "#D5FFEA", "#022B1C", "#021F14", "#C6FFE3"),
+                "#19A36B", "#8FF0C0", "#064D33", "#D5FFEA", "#022B1C", "#021F14", "#C6FFE3", HighlightStyle.Droplet),
             Basic("グレー", "銀色にきらめくクールグレー",
-                "#7D8792", "#D3DAE2", "#2E343B", "#EEF2F6", "#15181C", "#0D0F12", "#E6EBF0"),
-            Basic("キャットアイ", "縦長の瞳孔を持つ、魅惑的なゴールドの猫目",
-                "#FFD600", "#AEEA00", "#BF360C", "#FFFF8D", "#260E04", "#0D0502", "#F4FF81",
-                pupilShape: PupilShape.CatSlit),
+                "#7D8792", "#D3DAE2", "#2E343B", "#EEF2F6", "#15181C", "#0D0F12", "#E6EBF0", HighlightStyle.Window),
+            Tweak(Basic("ブラウン", "あたたかく落ち着いたチョコレートブラウン",
+                "#8A5A33", "#D9A86C", "#3A2010", "#F2D2A6", "#1E0F06", "#140A04", "#F5DDB8", HighlightStyle.Classic),
+                p => { p.ParticleCount = 40; p.FiberNoise = 0.35; }),
+            Tweak(Basic("ヘーゼル", "緑から金茶へ移ろうヘーゼル",
+                "#7C7A3A", "#D6A64E", "#33350F", "#E8D9A0", "#1A1A08", "#0F0F06", "#EFE3B0", HighlightStyle.ThreeDots),
+                p => { p.ParticleCount = 45; p.FiberNoise = 0.35; p.InnerGradientRadius = 0.45; }),
 
-            // ---------------- 特殊デザイン ----------------
+            // ---------------- 特殊: layers, shaped pupils and symbols ----------------
             new PresetDefinition
             {
                 Name = "特殊: 星屑",
@@ -180,7 +181,8 @@ namespace DollIrisGenerator.Models
                 BaseColor = "#1C2C8C", InnerColor = "#4E7CFF", OuterColor = "#070D33", BottomHighlightColor = "#8FB4FF",
                 LimbalRingColor = "#03061A", PupilColor = "#02040F", RayColor = "#9FB8FF", ParticleColor = "#FFFFFF",
                 RayCount = 48, RayIntensity = 0.35, ParticleCount = 230, ParticleRadiusRatio = 0.92,
-                ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45
+                ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45,
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
             },
             new PresetDefinition
             {
@@ -189,8 +191,9 @@ namespace DollIrisGenerator.Models
                 BaseColor = "#6F7CE0", InnerColor = "#D7C8FF", OuterColor = "#2A2370", BottomHighlightColor = "#E3F6FF",
                 LimbalRingColor = "#140F3A", PupilColor = "#0B0826", ParticleColor = "#FFFFFF",
                 RayColor = "conic-gradient(from 270deg, #FFFFFF 0%, #FF80AB 33%, #80D8FF 66%, #FFFFFF 100%)",
-                AuroraColor = IrisParameters.DefaultAuroraColor, AuroraOpacity = 0.55,
-                RayCount = 64, RayIntensity = 0.65, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12
+                AuroraColor = IrisParameters.DefaultAuroraColor, AuroraOpacity = 0.55, AuroraBlend = LayerBlend.Screen,
+                RayCount = 64, RayIntensity = 0.65, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
+                Highlights = HighlightStyles.Build(HighlightStyle.Window)
             },
             new PresetDefinition
             {
@@ -200,16 +203,20 @@ namespace DollIrisGenerator.Models
                 LimbalRingColor = "#0A0420", PupilColor = "#05020F", RayColor = "#D1C4E9", ParticleColor = "#FFFFFF",
                 NebulaColor = IrisParameters.DefaultNebulaColor, NebulaOpacity = 0.85, NebulaDensity = 0.55, NebulaSwirl = 0.5,
                 RayCount = 48, RayIntensity = 0.3, ParticleCount = 170, ParticleRadiusRatio = 0.92,
-                ParticleGlow = 0.8, ParticleFlareRatio = 0.12
+                ParticleGlow = 0.8, ParticleFlareRatio = 0.12,
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
             },
             new PresetDefinition
             {
                 Name = "特殊: 夕焼け",
-                Description = "オレンジから深紅へ沈む夕焼け色",
+                Description = "オレンジから深紅へ沈む夕焼け色。光の筋は下側だけ",
                 BaseColor = "#F2683C", InnerColor = "#FFD08A", OuterColor = "#8A1E12", BottomHighlightColor = "#FFE1B0",
                 LimbalRingColor = "#3D0A05", PupilColor = "radial-gradient(#C62828 0%, #4A0505 100%)", RayColor = "#FFE0B0",
-                ParticleColor = "#FFF1D6", RayCount = 64, RayIntensity = 0.6, ParticleCount = 80, ParticleGlow = 0.6,
-                BottomHighlightIntensity = 0.55
+                ParticleColor = "#FFF1D6", RayCount = 64, RayIntensity = 0.7, ParticleCount = 80, ParticleGlow = 0.6,
+                BottomHighlightIntensity = 0.6, LightStrength = 0.35, LightAngle = 250,
+                // The light of the setting sun from below: rays on the lower side only
+                RayRangeWidth = 200, RayRangeFeather = 50,
+                Highlights = HighlightStyles.Build(HighlightStyle.Droplet)
             },
             new PresetDefinition
             {
@@ -220,17 +227,20 @@ namespace DollIrisGenerator.Models
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.3, PupilFacetIntensity = 0.35, PupilFacetCount = 8,
                 RayCount = 40, RayIntensity = 0.3, ParticleCount = 160, ParticleRadiusRatio = 0.9,
                 ParticleGlow = 0.85, ParticleFlareRatio = 0.12,
-                DefaultSymbol = SymbolType.Star4, SymbolColor = "#FFFFFF", SymbolSize = 0.12, SymbolPositionX = 0.35, SymbolPositionY = 0.25, SymbolCount = 1
+                DefaultSymbol = SymbolType.Star4, SymbolColor = "#FFFFFF", SymbolSize = 0.12, SymbolPositionX = 0.4, SymbolPositionY = -0.35, SymbolCount = 1,
+                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
             },
             new PresetDefinition
             {
                 Name = "特殊: 宝石",
-                Description = "ブルーの虹彩に、カットされた宝石のハート",
+                Description = "カットされた宝石のハートと、虹彩全体のカット面",
                 BaseColor = "#2E8FC8", InnerColor = "#9FE6FF", OuterColor = "#0B3A6A", BottomHighlightColor = "#D8F6FF",
                 LimbalRingColor = "#041A33", PupilColor = "radial-gradient(#B3F0FF 0%, #29B6F6 45%, #0B4F8A 100%)",
                 RayColor = "#D6F5FF", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.46, PupilFacetIntensity = 0.85, PupilFacetCount = 10,
-                RayCount = 56, RayIntensity = 0.55, ParticleCount = 120, ParticleGlow = 0.8, ParticleFlareRatio = 0.15
+                RayCount = 56, RayIntensity = 0.45, ParticleCount = 120, ParticleGlow = 0.8, ParticleFlareRatio = 0.15,
+                IrisFacetIntensity = 0.45, IrisFacetCount = 10, IrisFacetTableSize = 0.5,
+                Highlights = HighlightStyles.Build(HighlightStyle.Diamond)
             },
             new PresetDefinition
             {
@@ -240,7 +250,8 @@ namespace DollIrisGenerator.Models
                 LimbalRingColor = "#3B0010", PupilColor = "radial-gradient(#FF1744 0%, #8B0016 100%)",
                 RayColor = "#FFCDD2", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.5, PupilFacetIntensity = 0.8, PupilFacetCount = 10,
-                RayCount = 56, RayIntensity = 0.55, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12
+                RayCount = 56, RayIntensity = 0.55, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
+                Highlights = HighlightStyles.Build(HighlightStyle.Heart)
             },
             new PresetDefinition
             {
@@ -252,47 +263,145 @@ namespace DollIrisGenerator.Models
                 RayCount = 64, RayIntensity = 0.5, ParticleCount = 110, ParticleGlow = 0.75, ParticleFlareRatio = 0.1,
                 // A pale heart over the pupil heart leaves only its rim: an outlined heart
                 DefaultSymbol = SymbolType.Heart, SymbolColor = "#FFC1D9", SymbolSize = 0.32,
-                SymbolPositionX = 0.0, SymbolPositionY = 0.0, SymbolCount = 1, SymbolOpacity = 1.0
+                SymbolPositionX = 0.0, SymbolPositionY = 0.0, SymbolCount = 1, SymbolOpacity = 1.0,
+                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: 桜",
+                Description = "桜の花びらが舞う春色のソフトピンク",
+                BaseColor = "#FF6090", InnerColor = "#FFB2D0", OuterColor = "#7A0035", BottomHighlightColor = "#FFF0F5",
+                LimbalRingColor = "#3B0018", PupilColor = "#1F000C", RayColor = "#FFD6E7", ParticleColor = "#FFFFFF",
+                RayCount = 64, RayIntensity = 0.6, ParticleCount = 70, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
+                LightStrength = 0.25, LightAngle = 235,
+                Symbols = new List<DecorativeSymbolItem>
+                {
+                    Symbol(SymbolType.SakuraPetal, "#FFF5F8", 0.17, 0.36, -0.42, rotation: 20),
+                    Symbol(SymbolType.SakuraPetal, "#FFE3EE", 0.12, -0.40, 0.38, rotation: -35),
+                    Symbol(SymbolType.SakuraPetal, "#FFF5F8", 0.08, 0.52, -0.12, rotation: 60, opacity: 0.7)
+                },
+                Highlights = HighlightStyles.Build(HighlightStyle.Window)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: キャットアイ",
+                Description = "縦長の瞳孔を持つ、魅惑的なゴールドの猫目",
+                BaseColor = "#FFC400", InnerColor = "#C6F000", OuterColor = "#B33A0A", BottomHighlightColor = "#FFFF8D",
+                LimbalRingColor = "#260E04", PupilColor = "#0D0502", RayColor = "#F4FF81", ParticleColor = "#FFFFFF",
+                PupilShape = PupilShape.CatSlit, PupilSizeRatio = 0.42,
+                RayCount = 80, RayIntensity = 0.7, RayCurve = 0.0, ParticleCount = 40, ParticleGlow = 0.6,
+                FiberNoise = 0.4, LightStrength = 0.3, LightAngle = 240,
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: 蝶々",
+                Description = "藤色から水色へ。蝶々の瞳孔と小さな蝶",
+                BaseColor = "#7C6FE0", InnerColor = "#B8F0FF", OuterColor = "#2C1E78", BottomHighlightColor = "#C9F6FF",
+                LimbalRingColor = "#140D40", PupilColor = "radial-gradient(#3A2A8C 0%, #0A0628 100%)",
+                RayColor = "#E6F7FF", ParticleColor = "#FFFFFF",
+                PupilShape = PupilShape.Butterfly, PupilSizeRatio = 0.44,
+                RayCount = 64, RayIntensity = 0.55, ParticleCount = 90, ParticleGlow = 0.75, ParticleFlareRatio = 0.12,
+                AuroraColor = "conic-gradient(from 270deg, #B388FF 0%, #80D8FF 50%, #B388FF 100%)", AuroraOpacity = 0.3,
+                AuroraBlend = LayerBlend.Screen,
+                Symbols = new List<DecorativeSymbolItem>
+                {
+                    Symbol(SymbolType.Butterfly, "#E0F7FF", 0.13, 0.42, -0.42, rotation: 15),
+                    Symbol(SymbolType.Butterfly, "#F1E6FF", 0.09, -0.44, 0.40, rotation: -20, opacity: 0.75)
+                },
+                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: 三日月",
+                Description = "真夜中の青に、金色の光の筋と三日月",
+                BaseColor = "#1F2B6C", InnerColor = "#4A63B8", OuterColor = "#070B26", BottomHighlightColor = "#FFE7A3",
+                LimbalRingColor = "#03061A", PupilColor = "#03051A", RayColor = "#FFE7A3", ParticleColor = "#FFF1C2",
+                RayCount = 72, RayIntensity = 0.55, ParticleCount = 150, ParticleRadiusRatio = 0.9,
+                ParticleGlow = 0.85, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.5,
+                Symbols = new List<DecorativeSymbolItem>
+                {
+                    Symbol(SymbolType.Moon, "#FFE08A", 0.2, 0.40, -0.40, rotation: -20, opacity: 0.95),
+                    Symbol(SymbolType.Star4, "#FFF1C2", 0.08, 0.58, -0.12, opacity: 0.9)
+                },
+                Highlights = HighlightStyles.Build(HighlightStyle.Crescent)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: クリスタル",
+                Description = "氷のような水色に、ダイヤの瞳孔・カット面・光の輪",
+                BaseColor = "#7FC8F0", InnerColor = "#E6FAFF", OuterColor = "#24628E", BottomHighlightColor = "#F2FDFF",
+                LimbalRingColor = "#0E3250", PupilColor = "radial-gradient(#F2FDFF 0%, #6EC6F0 45%, #1A5A8A 100%)",
+                RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
+                PupilShape = PupilShape.Diamond, PupilSizeRatio = 0.4, PupilFacetIntensity = 0.8, PupilFacetCount = 8,
+                RayCount = 96, RayIntensity = 0.5, RayThickness = 0.9, ParticleCount = 100, ParticleGlow = 0.8,
+                IrisFacetIntensity = 0.55, IrisFacetCount = 12, IrisFacetTableSize = 0.4, IrisFacetBlend = LayerBlend.SoftLight,
+                LensPatternEnabled = true, LensRingCount = 5, LensRingIntensity = 0.35, LensRingColor = "#FFFFFF",
+                Highlights = HighlightStyles.Build(HighlightStyle.Diamond)
             },
 
-            // ---------------- 雰囲気別おすすめ ----------------
-            Mood("A. ナチュラル (ピンク系)", "やわらかく自然なピンク。ラメは控えめ",
-                "#E58BA7", "#FBD3DF", "#9A4762", "#FFEFF4", "#4A1A2A", "#2E1019", "#FBE0E8", particles: 40, glow: 0.5),
+            // ---------------- 雰囲気: a basic look with its own glitter, pupil and highlights ----------------
+            Tweak(Mood("A. ナチュラル (ピンク系)", "やわらかく自然なピンク。ラメは控えめ",
+                "#E58BA7", "#FBD3DF", "#9A4762", "#FFEFF4", "#4A1A2A", "#2E1019", "#FBE0E8", HighlightStyle.Classic,
+                particles: 40, glow: 0.5),
+                p => { p.FiberNoise = 0.35; }),
             Mood("B. 精霊 (ブルー系)", "光をまとったような幻想的なブルー",
-                "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", particles: 150, glow: 0.7,
+                "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", HighlightStyle.Window,
+                particles: 150, glow: 0.7,
                 aurora: "conic-gradient(from 270deg, #80D8FF 0%, #FFFFFF 33%, #82B1FF 66%, #80D8FF 100%)", auroraOpacity: 0.3),
-            Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル",
-                "#7A5BA8", "#C9B5E6", "#2E1F4D", "#E6DCF2", "#170F29", "#0F0A1C", "#DCCFEE", particles: 40, glow: 0.45, rays: 0.4),
+            Tweak(Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル。光の筋は下側だけ",
+                "#7A5BA8", "#C9B5E6", "#2E1F4D", "#E6DCF2", "#170F29", "#0F0A1C", "#DCCFEE", HighlightStyle.Droplet,
+                particles: 40, glow: 0.45, rays: 0.5),
+                p => { p.RayRangeWidth = 180; p.RayRangeFeather = 60; p.FiberNoise = 0.3; }),
             Mood("D. つんでれ (レッド系)", "強気なのに甘さもある鮮やかなレッド",
-                "#E8364F", "#FF9AA8", "#7A0A1E", "#FFE0E4", "#3B0510", "#24030A", "#FFD1D8", particles: 80, glow: 0.7,
-                pupilStretchX: 0.75, pupilStretchY: 1.25), // the former vertical oval pupil
-            Mood("E. 小悪魔 (赤紫系)", "ハートの瞳孔がのぞく、あやしい赤紫",
-                "#C2185B", "#F06292", "#4A0628", "#FFD6E8", "#2A0216", "#1A010D", "#F8BBD0", particles: 90, glow: 0.8,
+                "#E8364F", "#FF9AA8", "#7A0A1E", "#FFE0E4", "#3B0510", "#24030A", "#FFD1D8", HighlightStyle.Sparkle,
+                particles: 80, glow: 0.7,
+                pupilStretchX: 0.75, pupilStretchY: 1.25), // a tall oval pupil
+            Tweak(Mood("E. 小悪魔 (赤紫系)", "ハートの瞳孔がのぞく、あやしい赤紫",
+                "#C2185B", "#F06292", "#4A0628", "#FFD6E8", "#2A0216", "#1A010D", "#F8BBD0", HighlightStyle.Heart,
+                particles: 90, glow: 0.8,
                 pupil: PupilShape.Heart, facets: 0.6),
+                p => { p.PupilSizeRatio = 0.38; }),
             Mood("F. 無邪気 (アクア系)", "くりっとした瞳孔の明るいアクア",
-                "#22C3D6", "#B2F5FF", "#0A6B85", "#E0FDFF", "#033A48", "#022833", "#D2FBFF", particles: 80, glow: 0.7,
-                pupilSize: 0.38)
+                "#22C3D6", "#B2F5FF", "#0A6B85", "#E0FDFF", "#033A48", "#022833", "#D2FBFF", HighlightStyle.ThreeDots,
+                particles: 80, glow: 0.7,
+                pupilSize: 0.38),
+            Tweak(Mood("G. 儚げ (シルバー系)", "淡く透ける銀青色。外輪もやわらか",
+                "#A8B8CC", "#EEF4FA", "#5A6B82", "#F7FBFF", "#3A4658", "#1C2430", "#FFFFFF", HighlightStyle.Window,
+                particles: 120, glow: 0.6, rays: 0.45, pupilSize: 0.28),
+                p => { p.LimbalRingSoftness = 0.45; p.LimbalRingOpacity = 0.7; p.ParticleMinSize = 0.6; p.ParticleMaxSize = 1.6; p.LightStrength = 0.35; }),
+            Tweak(Mood("H. クール (アイス系)", "小さな瞳孔に細かな光の筋。上側にカット面",
+                "#1FA7D8", "#C8F4FF", "#073C66", "#E6FAFF", "#021C33", "#020F1C", "#E6FAFF", HighlightStyle.Sparkle,
+                particles: 50, glow: 0.6, rays: 0.75, pupilSize: 0.26),
+                p =>
+                {
+                    p.RayCount = 96; p.RayThickness = 0.9; p.RayCurve = 0.0;
+                    p.IrisFacetIntensity = 0.35; p.IrisFacetCount = 12;
+                    p.IrisFacetRangeAngle = 270; p.IrisFacetRangeWidth = 200; p.IrisFacetRangeFeather = 60;
+                })
         };
 
-        /// <summary>ベーシックカラー: fiber rays and glowing glitter in one hue, with an optional pupil shape or symbol.</summary>
+        /// <summary>
+        /// ベーシック: fiber rays, glowing glitter and a soft light from the upper left, in one hue with a round pupil.
+        /// </summary>
         private static PresetDefinition Basic(string name, string description, string baseColor, string inner, string outer,
-            string bottom, string limbal, string pupil, string ray,
-            PupilShape pupilShape = PupilShape.Round, SymbolType symbol = SymbolType.None, string symbolColor = "#FFFFFF") => new()
+            string bottom, string limbal, string pupil, string ray, HighlightStyle highlights) => new()
         {
             Name = "ベーシック: " + name,
             Description = description,
             BaseColor = baseColor, InnerColor = inner, OuterColor = outer, BottomHighlightColor = bottom,
             LimbalRingColor = limbal, PupilColor = pupil, RayColor = ray, ParticleColor = "#FFFFFF",
-            PupilShape = pupilShape, PupilSizeRatio = 0.32,
+            PupilSizeRatio = 0.32,
             RayCount = 64, RayIntensity = 0.65, ParticleCount = 75, ParticleRadiusRatio = 0.8,
             ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45,
-            DefaultSymbol = symbol, SymbolColor = symbolColor
+            FiberNoise = 0.2, LightStrength = 0.25, LightAngle = 235,
+            Highlights = HighlightStyles.Build(highlights)
         };
 
-        /// <summary>雰囲気別おすすめ: a basic look with its own glitter amount and an optional pupil / layer twist.</summary>
+        /// <summary>雰囲気: a basic look with its own glitter amount and an optional pupil / layer twist.</summary>
         private static PresetDefinition Mood(string name, string description, string baseColor, string inner, string outer,
-            string bottom, string limbal, string pupilColor, string ray, int particles, double glow, double rays = 0.6,
-            PupilShape pupil = PupilShape.Round, double pupilSize = 0.32, double facets = 0.0,
+            string bottom, string limbal, string pupilColor, string ray, HighlightStyle highlights, int particles, double glow,
+            double rays = 0.6, PupilShape pupil = PupilShape.Round, double pupilSize = 0.32, double facets = 0.0,
             string? aurora = null, double auroraOpacity = 0.0, double pupilStretchX = 1.0, double pupilStretchY = 1.0) => new()
         {
             Name = "雰囲気: " + name,
@@ -304,7 +413,23 @@ namespace DollIrisGenerator.Models
             PupilStretchTop = pupilStretchY, PupilStretchBottom = pupilStretchY,
             AuroraColor = aurora, AuroraOpacity = auroraOpacity,
             RayCount = 60, RayIntensity = rays, ParticleCount = particles, ParticleRadiusRatio = 0.8,
-            ParticleGlow = glow, ParticleFlareRatio = 0.12
+            ParticleGlow = glow, ParticleFlareRatio = 0.12, LightStrength = 0.25, LightAngle = 235,
+            Highlights = HighlightStyles.Build(highlights)
+        };
+
+        /// <summary>Changes a few settings of a preset made by <see cref="Basic"/> or <see cref="Mood"/>.</summary>
+        private static PresetDefinition Tweak(PresetDefinition preset, Action<PresetDefinition> change)
+        {
+            change(preset);
+            return preset;
+        }
+
+        /// <summary>A symbol of a preset's symbol list.</summary>
+        private static DecorativeSymbolItem Symbol(SymbolType type, string color, double size, double x, double y,
+            double rotation = 0.0, double opacity = 0.9) => new()
+        {
+            Type = type, Color = color, Size = size, PositionX = x, PositionY = y, Rotation = rotation,
+            Opacity = opacity, Count = 1, Enabled = true
         };
 
         public static void ApplyPreset(IrisParameters target, PresetDefinition preset)

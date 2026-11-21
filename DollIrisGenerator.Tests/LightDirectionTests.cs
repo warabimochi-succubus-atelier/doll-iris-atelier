@@ -96,7 +96,7 @@ namespace DollIrisGenerator.Tests
         public void PresetsResetTheLightAndKeepItWhenSaved()
         {
             var p = new IrisParameters { LightStrength = 0.6, LightAngle = 200 };
-            ColorPresets.ApplyPreset(p, ColorPresets.All[0]);
+            ColorPresets.ApplyPreset(p, ColorPresets.All.First(x => x.LightStrength == null)); // a preset that leaves it out
             Assert.Equal(0.0, p.LightStrength);
             Assert.Equal(270.0, p.LightAngle);
 

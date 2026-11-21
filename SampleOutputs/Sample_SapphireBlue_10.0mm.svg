@@ -5,7 +5,7 @@
     <clipPath id="left_eye_clip">
       <ellipse cx="8.000" cy="8.000" rx="5.000" ry="5.000" />
     </clipPath>
-    <radialGradient id="left_eye_rad_grad" cx="50%" cy="42%" r="55%">
+    <radialGradient id="left_eye_rad_grad" cx="50%" cy="42%" r="55%" fx="44.264%" fy="33.808%">
       <stop offset="0%" stop-color="#9BE1FF" />
       <stop offset="22.0%" stop-color="#9BE1FF" />
       <stop offset="55.0%" stop-color="#2E86FF" />
@@ -24,6 +24,221 @@
   <g id="left_eye">
     <g id="left_eye_clipped" clip-path="url(#left_eye_clip)">
       <ellipse id="left_eye_base" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#left_eye_rad_grad)" />
+      <defs>
+        <filter id="left_eye_fibers_f0" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="82695" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f1" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="90614" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f2" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="98533" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f3" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="6452" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f4" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="14371" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f5" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="22290" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f6" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="30209" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f7" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="38128" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f8" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="46047" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f9" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="53966" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f10" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="61885" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f11" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="69804" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f12" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="77723" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f13" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="85642" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f14" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="93561" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f15" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="1480" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f16" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="9399" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f17" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="17318" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f18" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="25237" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f19" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="33156" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f20" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="41075" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f21" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="48994" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f22" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="56913" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f23" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="64832" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f24" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="72751" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f25" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="80670" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f26" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="88589" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f27" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="96508" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f28" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="4427" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f29" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="12346" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f30" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="20265" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f31" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="28184" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f32" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="36103" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f33" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="44022" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f34" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="51941" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f35" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="59860" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f36" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="67779" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f37" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="75698" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f38" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="83617" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="left_eye_fibers_f39" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="91536" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <radialGradient id="left_eye_fibers_fade" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse">
+          <stop offset="0.288" stop-color="#FFFFFF" stop-opacity="0" />
+          <stop offset="0.470" stop-color="#FFFFFF" />
+          <stop offset="0.9" stop-color="#FFFFFF" stop-opacity="0.7" />
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+        <mask id="left_eye_fibers_mask" maskUnits="userSpaceOnUse" x="-1.1" y="-1.1" width="2.2" height="2.2">
+          <circle cx="0" cy="0" r="1" fill="url(#left_eye_fibers_fade)" />
+        </mask>
+      </defs>
+      <g id="left_eye_fibers" transform="translate(8.000 8.000) scale(5.000000 5.000000)" style="mix-blend-mode:overlay" opacity="0.160">
+        <g mask="url(#left_eye_fibers_mask)">
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f0)" transform="rotate(0.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f1)" transform="rotate(9.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f2)" transform="rotate(18.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f3)" transform="rotate(27.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f4)" transform="rotate(36.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f5)" transform="rotate(45.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f6)" transform="rotate(54.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f7)" transform="rotate(63.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f8)" transform="rotate(72.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f9)" transform="rotate(81.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f10)" transform="rotate(90.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f11)" transform="rotate(99.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f12)" transform="rotate(108.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f13)" transform="rotate(117.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f14)" transform="rotate(126.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f15)" transform="rotate(135.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f16)" transform="rotate(144.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f17)" transform="rotate(153.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f18)" transform="rotate(162.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f19)" transform="rotate(171.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f20)" transform="rotate(180.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f21)" transform="rotate(189.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f22)" transform="rotate(198.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f23)" transform="rotate(207.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f24)" transform="rotate(216.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f25)" transform="rotate(225.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f26)" transform="rotate(234.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f27)" transform="rotate(243.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f28)" transform="rotate(252.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f29)" transform="rotate(261.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f30)" transform="rotate(270.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f31)" transform="rotate(279.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f32)" transform="rotate(288.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f33)" transform="rotate(297.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f34)" transform="rotate(306.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f35)" transform="rotate(315.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f36)" transform="rotate(324.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f37)" transform="rotate(333.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f38)" transform="rotate(342.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#left_eye_fibers_f39)" transform="rotate(351.000)" />
+        </g>
+      </g>
       <ellipse id="left_eye_upper_shadow" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#left_eye_shadow_grad)" />
       <ellipse id="left_eye_bottom_glow" cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#left_eye_glow_grad)" />
       <g id="left_eye_rays" fill="#C9F0FF" opacity="0.65">
@@ -300,7 +515,7 @@
     <clipPath id="right_eye_clip">
       <ellipse cx="22.000" cy="8.000" rx="5.000" ry="5.000" />
     </clipPath>
-    <radialGradient id="right_eye_rad_grad" cx="50%" cy="42%" r="55%">
+    <radialGradient id="right_eye_rad_grad" cx="50%" cy="42%" r="55%" fx="55.736%" fy="33.808%">
       <stop offset="0%" stop-color="#9BE1FF" />
       <stop offset="22.0%" stop-color="#9BE1FF" />
       <stop offset="55.0%" stop-color="#2E86FF" />
@@ -319,6 +534,221 @@
   <g id="right_eye">
     <g id="right_eye_clipped" clip-path="url(#right_eye_clip)">
       <ellipse id="right_eye_base" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#right_eye_rad_grad)" />
+      <defs>
+        <filter id="right_eye_fibers_f0" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="82695" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f1" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="90614" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f2" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="98533" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f3" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="6452" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f4" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="14371" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f5" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="22290" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f6" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="30209" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f7" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="38128" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f8" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="46047" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f9" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="53966" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f10" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="61885" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f11" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="69804" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f12" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="77723" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f13" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="85642" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f14" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="93561" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f15" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="1480" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f16" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="9399" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f17" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="17318" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f18" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="25237" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f19" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="33156" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f20" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="41075" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f21" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="48994" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f22" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="56913" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f23" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="64832" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f24" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="72751" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f25" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="80670" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f26" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="88589" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f27" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="96508" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f28" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="4427" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f29" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="12346" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f30" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="20265" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f31" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="28184" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f32" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="36103" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f33" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="44022" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f34" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="51941" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f35" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="59860" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f36" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="67779" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f37" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="75698" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f38" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="83617" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <filter id="right_eye_fibers_f39" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="1.750 30.000" numOctaves="3" seed="91536" />
+          <feColorMatrix type="matrix" values="2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  2.5 0 0 0 -0.75  0 0 0 0 1" />
+        </filter>
+        <radialGradient id="right_eye_fibers_fade" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse">
+          <stop offset="0.288" stop-color="#FFFFFF" stop-opacity="0" />
+          <stop offset="0.470" stop-color="#FFFFFF" />
+          <stop offset="0.9" stop-color="#FFFFFF" stop-opacity="0.7" />
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+        <mask id="right_eye_fibers_mask" maskUnits="userSpaceOnUse" x="-1.1" y="-1.1" width="2.2" height="2.2">
+          <circle cx="0" cy="0" r="1" fill="url(#right_eye_fibers_fade)" />
+        </mask>
+      </defs>
+      <g id="right_eye_fibers" transform="translate(22.000 8.000) scale(-5.000000 5.000000)" style="mix-blend-mode:overlay" opacity="0.160">
+        <g mask="url(#right_eye_fibers_mask)">
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f0)" transform="rotate(0.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f1)" transform="rotate(9.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f2)" transform="rotate(18.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f3)" transform="rotate(27.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f4)" transform="rotate(36.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f5)" transform="rotate(45.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f6)" transform="rotate(54.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f7)" transform="rotate(63.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f8)" transform="rotate(72.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f9)" transform="rotate(81.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f10)" transform="rotate(90.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f11)" transform="rotate(99.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f12)" transform="rotate(108.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f13)" transform="rotate(117.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f14)" transform="rotate(126.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f15)" transform="rotate(135.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f16)" transform="rotate(144.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f17)" transform="rotate(153.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f18)" transform="rotate(162.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f19)" transform="rotate(171.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f20)" transform="rotate(180.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f21)" transform="rotate(189.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f22)" transform="rotate(198.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f23)" transform="rotate(207.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f24)" transform="rotate(216.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f25)" transform="rotate(225.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f26)" transform="rotate(234.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f27)" transform="rotate(243.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f28)" transform="rotate(252.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f29)" transform="rotate(261.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f30)" transform="rotate(270.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f31)" transform="rotate(279.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f32)" transform="rotate(288.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f33)" transform="rotate(297.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f34)" transform="rotate(306.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f35)" transform="rotate(315.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f36)" transform="rotate(324.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f37)" transform="rotate(333.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f38)" transform="rotate(342.000)" />
+          <rect x="0" y="-0.09032" width="1" height="0.18064" filter="url(#right_eye_fibers_f39)" transform="rotate(351.000)" />
+        </g>
+      </g>
       <ellipse id="right_eye_upper_shadow" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#right_eye_shadow_grad)" />
       <ellipse id="right_eye_bottom_glow" cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="url(#right_eye_glow_grad)" />
       <g id="right_eye_rays" fill="#C9F0FF" opacity="0.65">

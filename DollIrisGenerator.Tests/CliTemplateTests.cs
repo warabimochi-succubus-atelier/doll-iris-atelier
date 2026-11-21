@@ -75,11 +75,11 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestFavoritesForm()
         {
-            var result = Run("template", "--favorites", "--preset", "サクラ");
+            var result = Run("template", "--favorites", "--preset", "桜");
             var report = DesignFileValidator.Validate(result.Out);
             Assert.Equal(DesignFileKind.Favorites, report.Kind);
             Assert.Empty(report.Issues);
-            Assert.Equal("ベーシック: サクラ", report.Designs.Single().Name);
+            Assert.Equal("特殊: 桜", report.Designs.Single().Name);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace DollIrisGenerator.Tests
             Assert.Same(all[0], CliApp.FindPreset("1"));
             Assert.Same(all[^1], CliApp.FindPreset(all.Count.ToString()));
             Assert.Same(all[5], CliApp.FindPreset(all[5].Name));
-            Assert.Equal("ベーシック: キャットアイ", CliApp.FindPreset("キャットアイ").Name);
+            Assert.Equal("特殊: キャットアイ", CliApp.FindPreset("キャットアイ").Name);
 
             Assert.Equal(CliApp.ExitError, Run("template", "--preset", "0").Code);
             Assert.Equal(CliApp.ExitError, Run("template", "--preset", "そんな色").Code);

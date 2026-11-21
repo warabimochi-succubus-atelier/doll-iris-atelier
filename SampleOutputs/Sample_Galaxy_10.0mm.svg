@@ -365,8 +365,8 @@
       </g>
     </g>
     <g id="left_eye_highlights">
-      <ellipse cx="6.400" cy="6.400" rx="1.300" ry="1.300" fill="#FFFFFF" opacity="0.95" />
-      <ellipse cx="9.750" cy="9.500" rx="0.700" ry="0.700" fill="#FFFFFF" opacity="0.75" />
+        <polygon points="6.500,5.200 6.702,6.298 7.800,6.500 6.702,6.702 6.500,7.800 6.298,6.702 5.200,6.500 6.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <ellipse cx="9.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="left_eye_guides">
       <ellipse cx="8.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#999999" stroke-width="0.15" stroke-dasharray="2,2" />
@@ -738,8 +738,8 @@
       </g>
     </g>
     <g id="right_eye_highlights">
-      <ellipse cx="23.600" cy="6.400" rx="1.300" ry="1.300" fill="#FFFFFF" opacity="0.95" />
-      <ellipse cx="20.250" cy="9.500" rx="0.700" ry="0.700" fill="#FFFFFF" opacity="0.75" />
+        <polygon points="23.500,5.200 23.702,6.298 24.800,6.500 23.702,6.702 23.500,7.800 23.298,6.702 22.200,6.500 23.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <ellipse cx="20.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="right_eye_guides">
       <ellipse cx="22.000" cy="8.000" rx="5.000" ry="5.000" fill="none" stroke="#999999" stroke-width="0.15" stroke-dasharray="2,2" />
