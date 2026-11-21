@@ -45,6 +45,8 @@ namespace DollIrisGenerator.Tests
             RandomizeLocks.Lens => string.Join("|", p.LensPatternEnabled, p.LensRingCount, p.LensRingIntensity,
                 p.LensRingWidth, p.LensRefractionGlow, p.LensRingColor,
                 p.LensRangeAngle, p.LensRangeWidth, p.LensRangeFeather),
+            RandomizeLocks.IrisFacets => string.Join("|", p.IrisFacetIntensity, p.IrisFacetCount, p.IrisFacetTableSize, p.IrisFacetShadeAngle,
+                p.IrisFacetShadeBias, p.IrisFacetBlend, p.IrisFacetRangeAngle, p.IrisFacetRangeWidth, p.IrisFacetRangeFeather),
             RandomizeLocks.OddEye => string.Join("|", p.IsOddEye, p.OddEyeSeedOffset, p.OddEyeBaseColor, p.OddEyeInnerColor,
                 p.OddEyeOuterColor, p.OddEyeRayColor, p.OddEyeBottomHighlightColor),
             _ => throw new ArgumentOutOfRangeException(nameof(group))
@@ -125,6 +127,9 @@ namespace DollIrisGenerator.Tests
                 RayRangeAngle = 10, RayRangeWidth = 100, RayRangeFeather = 80,
                 ParticleRangeAngle = 20, ParticleRangeWidth = 110, ParticleRangeFeather = 81,
                 LensRangeAngle = 30, LensRangeWidth = 120, LensRangeFeather = 82,
+                IrisFacetIntensity = 0.99, IrisFacetCount = 15, IrisFacetTableSize = 0.69, IrisFacetShadeAngle = 33,
+                IrisFacetShadeBias = 0.01, IrisFacetBlend = LayerBlend.ColorDodge,
+                IrisFacetRangeAngle = 40, IrisFacetRangeWidth = 130, IrisFacetRangeFeather = 83,
                 GlitterBlend = LayerBlend.SoftLight,
                 IsOddEye = true,
                 OddEyeBaseColor = "#666666",

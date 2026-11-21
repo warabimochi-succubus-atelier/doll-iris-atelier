@@ -261,6 +261,20 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 右目のハイライトを反転しない（光源が固定された自然な見え方）ときは、各ハイライトの `RightEyeFlip` を 2 にし、`LightRightEyeFlip` も 2 にします（以前のデザイン全体の項目 `MirrorHighlightsWithIris` はなくなりました）。
 
+### 宝石カット面（虹彩全体のカット面の明暗）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `IrisFacetIntensity` | 0〜1 | 強さ。0 でオフ（既定） |
+| `IrisFacetCount` | 6〜16 | 面の数（宝石の対称の数。既定 8） |
+| `IrisFacetTableSize` | 0.2〜0.7 | 中心の平らな面の大きさ（既定 0.45） |
+| `IrisFacetShadeAngle` | 0〜360（度） | 暗くなる側の向き。270 = 上（既定）。右目は自動で鏡像 |
+| `IrisFacetShadeBias` | 0〜1 | 0 で面ごとに交互の明暗だけ。上げるほど向きによる明暗が強い（既定 0.6） |
+| `IrisFacetBlend` | 重ね方 | 既定 3（オーバーレイ）。色を残したまま明暗を付ける |
+| `IrisFacetRangeAngle` | 0〜360（度） | 見える範囲の向き（既定 90） |
+| `IrisFacetRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定） |
+| `IrisFacetRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
+
 ### オッドアイ（左右で色を変える）
 
 | 項目 | 範囲・値 | 説明 |
@@ -366,6 +380,15 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "LensRangeAngle": 90.0,
   "LensRangeWidth": 360.0,
   "LensRangeFeather": 30.0,
+  "IrisFacetIntensity": 0.0,
+  "IrisFacetCount": 8,
+  "IrisFacetTableSize": 0.45,
+  "IrisFacetShadeAngle": 270.0,
+  "IrisFacetShadeBias": 0.6,
+  "IrisFacetBlend": 3,
+  "IrisFacetRangeAngle": 90.0,
+  "IrisFacetRangeWidth": 360.0,
+  "IrisFacetRangeFeather": 30.0,
   "Symbols": [
     {
       "Type": 1,
