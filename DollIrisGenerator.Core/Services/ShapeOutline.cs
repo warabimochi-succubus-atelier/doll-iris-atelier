@@ -189,6 +189,33 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>
+        /// Butterfly (蝶々), wings only: a large upper and a smaller lower wing on each side, joined in the middle (no
+        /// body or antennae, so it reads at small sizes too). Left-right symmetric, centered at (0, 0): ±1.0r across,
+        /// about −0.82r to +0.85r up and down. Drawn on a ±100 grid and scaled to the radius.
+        /// </summary>
+        public static ShapeOutline Butterfly(double radius)
+        {
+            double k = radius / 100.0;
+            Point P(double x, double y) => new(x * k, y * k);
+            var top = P(0, -16);
+            var bottom = P(0, 34);
+            return new ShapeOutline(top, new[]
+            {
+                // The wing tips are smooth; the corners are the top and bottom of the middle and the waist notches.
+                // Right: upper wing out to its tip and back in to the waist, then the lower wing down and back to the middle
+                new OutlineSegment(P(20, -70), P(88, -96), P(98, -58)),
+                new OutlineSegment(P(108, -20), P(62, -2), P(12, 2)),
+                new OutlineSegment(P(58, 8), P(86, 38), P(72, 70)),
+                new OutlineSegment(P(60.8, 95.6), P(16, 80), bottom),
+                // Left: the mirror image, back up to the top
+                new OutlineSegment(P(-16, 80), P(-60.8, 95.6), P(-72, 70)),
+                new OutlineSegment(P(-86, 38), P(-58, 8), P(-12, 2)),
+                new OutlineSegment(P(-62, -2), P(-108, -20), P(-98, -58)),
+                new OutlineSegment(P(-88, -96), P(-20, -70), top)
+            });
+        }
+
+        /// <summary>
         /// Outline of a decorative symbol of the given size (shared by the WPF renderer and the SVG exporter).
         /// Returns null for <see cref="SymbolType.None"/>.
         /// </summary>
@@ -214,6 +241,7 @@ namespace DollIrisGenerator.Services
                 ShapeKind.Diamond => Diamond(radius * (highlight ? 0.65 : 0.7), radius),
                 ShapeKind.SakuraPetal => SakuraPetal(radius),
                 ShapeKind.CatSlit => CatSlit(radius * 0.45, radius),
+                ShapeKind.Butterfly => Butterfly(radius),
                 _ => Circle(radius)
             };
         }
@@ -235,6 +263,9 @@ namespace DollIrisGenerator.Services
         public static ShapeOutline ForHighlight(HighlightShape shape, double radius, double starCore = 1.0) =>
             ForShape(ShapeKinds.Of(shape), radius, highlight: true, starCore);
 
+        /// <summary>The butterfly pupil is drawn this much larger than the pupil radius, to read about as large as the round one.</summary>
+        public const double ButterflyPupilScale = 1.1;
+
         /// <summary>
         /// Outline of a pupil of radius <paramref name="prx"/> × <paramref name="pry"/> (they differ in an oval iris),
         /// centered at (0, 0), before its 上下左右の長さ. Each shape is sized so that it reads about as large as the round
@@ -251,6 +282,7 @@ namespace DollIrisGenerator.Services
                 PupilShape.Star5 => Star(5, prx * 1.05, Core(0.40)),
                 PupilShape.Star4 => Star(4, prx * 1.05, Core(0.28)),
                 PupilShape.Round => Circle(prx).Stretched(pry / prx, pry / prx, 1.0, 1.0),
+                PupilShape.Butterfly => Butterfly(prx * ButterflyPupilScale),
                 _ => ForShape(ShapeKinds.Of(shape), prx)
             };
         }

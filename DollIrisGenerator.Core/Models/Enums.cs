@@ -24,7 +24,8 @@ namespace DollIrisGenerator.Models
         Moon = 6,           // 三日月
         Cross = 7,          // クロス
         Diamond = 8,        // ダイヤ
-        SakuraPetal = 9     // 桜の花びら
+        SakuraPetal = 9,    // 桜の花びら
+        Butterfly = 10      // 蝶々
     }
 
     /// <summary>
@@ -42,7 +43,8 @@ namespace DollIrisGenerator.Models
         Cross,          // クロス (十字架)
         Diamond,        // ダイヤ (菱形)
         SakuraPetal,    // 桜の花びら
-        CatSlit         // 猫目スリット
+        CatSlit,        // 猫目スリット
+        Butterfly       // 蝶々 (翅だけ)
     }
 
     /// <summary>Decorative symbol types. The numbers are what design files store: new shapes are added at the end.</summary>
@@ -57,7 +59,8 @@ namespace DollIrisGenerator.Models
         Diamond = 6,        // 菱形 / ダイヤ
         SakuraPetal = 7,    // 桜の花びら (Cherry Blossom Petal)
         Circle = 8,         // 正円
-        CatSlit = 9         // 猫目スリット
+        CatSlit = 9,        // 猫目スリット
+        Butterfly = 10      // 蝶々
     }
 
     /// <summary>
@@ -87,7 +90,8 @@ namespace DollIrisGenerator.Models
         Moon = 6,           // 三日月
         Cross = 7,          // クロス
         SakuraPetal = 8,    // 桜の花びら
-        CatSlit = 9         // 猫目スリット
+        CatSlit = 9,        // 猫目スリット
+        Butterfly = 10      // 蝶々
     }
 
     /// <summary>
@@ -133,6 +137,7 @@ namespace DollIrisGenerator.Models
             SymbolType.SakuraPetal => ShapeKind.SakuraPetal,
             SymbolType.Circle => ShapeKind.Circle,
             SymbolType.CatSlit => ShapeKind.CatSlit,
+            SymbolType.Butterfly => ShapeKind.Butterfly,
             _ => null
         };
 
@@ -147,6 +152,7 @@ namespace DollIrisGenerator.Models
             HighlightShape.Cross => ShapeKind.Cross,
             HighlightShape.SakuraPetal => ShapeKind.SakuraPetal,
             HighlightShape.CatSlit => ShapeKind.CatSlit,
+            HighlightShape.Butterfly => ShapeKind.Butterfly,
             _ => ShapeKind.Circle
         };
 
@@ -161,6 +167,7 @@ namespace DollIrisGenerator.Models
             PupilShape.Cross => ShapeKind.Cross,
             PupilShape.Diamond => ShapeKind.Diamond,
             PupilShape.SakuraPetal => ShapeKind.SakuraPetal,
+            PupilShape.Butterfly => ShapeKind.Butterfly,
             _ => ShapeKind.Circle
         };
 

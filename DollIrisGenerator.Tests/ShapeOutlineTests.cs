@@ -497,7 +497,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal((0.7, 1.3, 3.0, 1.0), (clone.StretchTop, clone.StretchBottom, clone.StretchLeft, clone.StretchRight));
 
             // The file numbers of the other shapes stay; 1 (the oval) and unknown numbers become a circle
-            Assert.Equal(new[] { 0, 2, 3, 4, 5, 6, 7, 8, 9 }, Enum.GetValues<HighlightShape>().Select(s => (int)s).OrderBy(n => n));
+            Assert.Equal(new[] { 0, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, Enum.GetValues<HighlightShape>().Select(s => (int)s).OrderBy(n => n));
             foreach (string shape in new[] { "1", "99" })
             {
                 var old = JsonSerializer.Deserialize<HighlightItem>($"{{\"Shape\":{shape},\"AspectRatio\":1.6}}")!;
