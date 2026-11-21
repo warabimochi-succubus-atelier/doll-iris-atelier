@@ -19,6 +19,8 @@ namespace DollIrisGenerator.Models
         private double _rotation = 0.0;    // degrees
         private string _color = "#FFFFFF";
         private double _opacity = 0.90;
+        private double _softness = 0.0;  // 輪郭のぼかし (0 = a sharp edge)
+        private double _glow = 0.0;      // 光のにじみ (0 = no halo)
         private double _stretchTop = 1.0;    // 上下左右の長さ (1 = as drawn); an oval is a circle stretched sideways
         private double _stretchBottom = 1.0;
         private double _stretchLeft = 1.0;
@@ -75,6 +77,25 @@ namespace DollIrisGenerator.Models
         {
             get => _opacity;
             set { _opacity = Math.Clamp(value, 0.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 輪郭のぼかし: 0 (a sharp edge) to 1 (a soft blob). The highlight is blurred by a Gaussian of
+        /// size × radius × <see cref="Services.SvgExporter.HighlightSoftnessBlur"/> × this, so its edge melts into the eye.
+        /// </summary>
+        public double Softness
+        {
+            get => _softness;
+            set { _softness = Math.Clamp(value, 0.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 光のにじみ: 0 (none) to 1. A blurred, brightened copy of the highlight under it, so it looks lit from within.
+        /// </summary>
+        public double Glow
+        {
+            get => _glow;
+            set { _glow = Math.Clamp(value, 0.0, 1.0); OnPropertyChanged(); }
         }
 
         /// <summary>
@@ -170,7 +191,8 @@ namespace DollIrisGenerator.Models
         {
             nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size), nameof(Count),
             nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
-            nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale), nameof(Opacity), nameof(Blend), nameof(RightEyeFlip)
+            nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale), nameof(Opacity),
+            nameof(Softness), nameof(Glow), nameof(Blend), nameof(RightEyeFlip)
         };
 
         public bool CopySettingTo(HighlightItem target, string propertyName)
@@ -190,6 +212,8 @@ namespace DollIrisGenerator.Models
                 case nameof(StretchRight): target.StretchRight = StretchRight; return true;
                 case nameof(Rotation): target.Rotation = Rotation; return true;
                 case nameof(Opacity): target.Opacity = Opacity; return true;
+                case nameof(Softness): target.Softness = Softness; return true;
+                case nameof(Glow): target.Glow = Glow; return true;
                 case nameof(Blend): target.Blend = Blend; return true;
                 case nameof(RightEyeFlip): target.RightEyeFlip = RightEyeFlip; return true;
                 default: return false;
@@ -215,6 +239,8 @@ namespace DollIrisGenerator.Models
                 Rotation = this.Rotation,
                 Color = this.Color,
                 Opacity = this.Opacity,
+                Softness = this.Softness,
+                Glow = this.Glow,
                 Enabled = this.Enabled,
                 Blend = this.Blend,
                 RightEyeFlip = this.RightEyeFlip

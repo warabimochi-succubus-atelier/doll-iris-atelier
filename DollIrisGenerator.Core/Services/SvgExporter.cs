@@ -269,6 +269,15 @@ namespace DollIrisGenerator.Services
         /// <summary>The glow's alpha is multiplied by this (clamped) so the faint blurred edges still read as light.</summary>
         public const double GlowAlphaSlope = 2.5;
 
+        /// <summary>Blur (one deviation) of a highlight's 輪郭のぼかし at 100%, in highlight radii.</summary>
+        public const double HighlightSoftnessBlur = 0.35;
+
+        /// <summary>Blur of a highlight's 光のにじみ, in highlight radii: base + per にじみ.</summary>
+        public const double HighlightGlowBlurBase = 0.35, HighlightGlowBlurPerGlow = 0.75;
+
+        /// <summary>The highlight glow's alpha is multiplied by this (clamped), so the halo reads as light round the shape.</summary>
+        public const double HighlightGlowAlphaSlope = 2.0;
+
         /// <summary>
         /// Stops (offset 0–1 of the radius, alpha) of an edge blurred by a Gaussian of <paramref name="sigma"/>:
         /// clear inside, rising through 50% at <paramref name="edge"/>, opaque outside (the normal distribution's
@@ -961,25 +970,52 @@ namespace DollIrisGenerator.Services
                         string safeHColor = Paint(sb, "      ", fillId, h.Color, "#FFFFFF", hBox, mirrorHighlight);
 
                         string rotAttr = Math.Abs(rot) > 0.1 ? $@" transform=""rotate({rot.ToFixed(1)}, {curX.ToFixed(3)}, {curY.ToFixed(3)})""" : "";
-                        // Each copy carries the highlight's opacity and 重ね方 itself (the group is not isolated, so every
-                        // shape blends with the eye below, as separate highlights do)
-                        string attrs = rotAttr + BlendStyle(h.Blend);
+                        string blend = BlendStyle(h.Blend);
 
-                        if (hOutline != null)
+                        // The copy's shape at its place, turned, with the given opacity and extra attributes
+                        void AppendShape(string indent, double opacity, string extra)
                         {
-                            AppendPath(sb, "      <path d=\"", hOutline, curX, curY, $"\" fill=\"{safeHColor}\" opacity=\"{h.Opacity.ToFixed(2)}\"{attrs} />", mirrorShape);
+                            string attrs = rotAttr + extra;
+                            if (hOutline != null)
+                                AppendPath(sb, indent + "<path d=\"", hOutline, curX, curY, $"\" fill=\"{safeHColor}\" opacity=\"{opacity.ToFixed(2)}\"{attrs} />", mirrorShape);
+                            else if (ellipse)
+                                sb.AppendLine($@"{indent}<ellipse cx=""{curX.ToFixed(3)}"" cy=""{curY.ToFixed(3)}"" rx=""{(hRadius * h.StretchLeft).ToFixed(3)}"" ry=""{(hRadius * h.StretchTop).ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{opacity.ToFixed(2)}""{attrs} />");
+                            else if (h.Shape == HighlightShape.Star4)
+                                sb.AppendLine(indent + BuildSvgStar4(curX, curY, hRadius, 0.22, attrs, safeHColor, opacity).TrimStart());
+                            else
+                                sb.AppendLine(indent + BuildSvgDiamond(curX, curY, hRadius * 0.65, hRadius, attrs, safeHColor, opacity).TrimStart());
                         }
-                        else if (ellipse)
+
+                        // A square round the copy that holds it however it is turned (the blur filters' region)
+                        double reach = Math.Max(Math.Max(Math.Abs(localBox.Left), Math.Abs(localBox.Right)), Math.Max(Math.Abs(localBox.Top), Math.Abs(localBox.Bottom))) * Math.Sqrt(2.0);
+                        var around = new Rect(curX - reach, curY - reach, 2 * reach, 2 * reach);
+                        string copyId = h.Count > 1 ? $"{idPrefix}_highlight{highlightIndex}_{c}" : $"{idPrefix}_highlight{highlightIndex}";
+
+                        // 光のにじみ: a blurred, brightened copy under the highlight (as the glitter's glow), so it looks
+                        // lit from within. It is laid over the eye with the highlight's 重ね方
+                        if (h.Glow > 0.01)
                         {
-                            sb.AppendLine($@"      <ellipse cx=""{curX.ToFixed(3)}"" cy=""{curY.ToFixed(3)}"" rx=""{(hRadius * h.StretchLeft).ToFixed(3)}"" ry=""{(hRadius * h.StretchTop).ToFixed(3)}"" fill=""{safeHColor}"" opacity=""{h.Opacity.ToFixed(2)}""{attrs} />");
+                            double glowSigma = hRadius * (HighlightGlowBlurBase + HighlightGlowBlurPerGlow * h.Glow);
+                            AppendBlurFilter(sb, copyId + "_glow_filter", glowSigma, around, 0.0, alphaSlope: HighlightGlowAlphaSlope);
+                            sb.AppendLine($@"      <g id=""{copyId}_glow"" filter=""url(#{copyId}_glow_filter)"" opacity=""{(Math.Sqrt(h.Glow) * h.Opacity).ToFixed(2)}""{blend}>");
+                            AppendShape("        ", 1.0, "");
+                            sb.AppendLine("      </g>");
                         }
-                        else if (h.Shape == HighlightShape.Star4)
+
+                        // Each copy carries the highlight's opacity and 重ね方 itself (the group is not isolated, so every
+                        // shape blends with the eye below, as separate highlights do). 輪郭のぼかし blurs the shape in a
+                        // group that carries them instead
+                        if (h.Softness > 0.01)
                         {
-                            sb.AppendLine(BuildSvgStar4(curX, curY, hRadius, 0.22, attrs, safeHColor, h.Opacity));
+                            double softSigma = hRadius * h.Softness * HighlightSoftnessBlur;
+                            AppendBlurFilter(sb, copyId + "_soft_filter", softSigma, around, 0.0);
+                            sb.AppendLine($@"      <g id=""{copyId}_soft"" filter=""url(#{copyId}_soft_filter)"" opacity=""{h.Opacity.ToFixed(2)}""{blend}>");
+                            AppendShape("        ", 1.0, "");
+                            sb.AppendLine("      </g>");
                         }
                         else
                         {
-                            sb.AppendLine(BuildSvgDiamond(curX, curY, hRadius * 0.65, hRadius, attrs, safeHColor, h.Opacity));
+                            AppendShape("      ", h.Opacity, blend);
                         }
                     }
                 }
