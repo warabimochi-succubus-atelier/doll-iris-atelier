@@ -130,6 +130,15 @@ namespace DollIrisGenerator.Models
         public string? ToneBandOuterColor { get; set; }
         public double? ToneBandSoftness { get; set; }
         public LayerBlend? ToneBandBlend { get; set; }
+        // 斑点
+        public double? SpotIntensity { get; set; }
+        public int? SpotCount { get; set; }
+        public double? SpotSize { get; set; }
+        public double? SpotElongation { get; set; }
+        public double? SpotSoftness { get; set; }
+        public double? SpotRadiusRatio { get; set; }
+        public string? SpotColor { get; set; }
+        public LayerBlend? SpotBlend { get; set; }
         public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
@@ -477,6 +486,14 @@ namespace DollIrisGenerator.Models
             target.ToneBandOuterColor = preset.ToneBandOuterColor ?? d.ToneBandOuterColor;
             target.ToneBandSoftness = preset.ToneBandSoftness ?? d.ToneBandSoftness;
             target.ToneBandBlend = preset.ToneBandBlend ?? d.ToneBandBlend;
+            target.SpotIntensity = preset.SpotIntensity ?? d.SpotIntensity;
+            target.SpotCount = preset.SpotCount ?? d.SpotCount;
+            target.SpotSize = preset.SpotSize ?? d.SpotSize;
+            target.SpotElongation = preset.SpotElongation ?? d.SpotElongation;
+            target.SpotSoftness = preset.SpotSoftness ?? d.SpotSoftness;
+            target.SpotRadiusRatio = preset.SpotRadiusRatio ?? d.SpotRadiusRatio;
+            target.SpotColor = preset.SpotColor ?? d.SpotColor;
+            target.SpotBlend = preset.SpotBlend ?? d.SpotBlend;
             target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
@@ -645,6 +662,14 @@ namespace DollIrisGenerator.Models
                 ToneBandOuterColor = design.ToneBandOuterColor,
                 ToneBandSoftness = design.ToneBandSoftness,
                 ToneBandBlend = design.ToneBandBlend,
+                SpotIntensity = design.SpotIntensity,
+                SpotCount = design.SpotCount,
+                SpotSize = design.SpotSize,
+                SpotElongation = design.SpotElongation,
+                SpotSoftness = design.SpotSoftness,
+                SpotRadiusRatio = design.SpotRadiusRatio,
+                SpotColor = design.SpotColor,
+                SpotBlend = design.SpotBlend,
                 FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,

@@ -8,6 +8,12 @@ namespace DollIrisGenerator.Services
     /// <summary>One radial ray: its direction (radians, already mirrored for the right eye) and where it starts / ends.</summary>
     public readonly record struct RaySpec(double Angle, double InnerR, double OuterR, double WidthFactor);
 
+    /// <summary>
+    /// One 斑点: its center (iris-radius units around the iris center, x right, y down), the direction its long axis
+    /// points (radians, in the same units), its size (0.4–1 of 大きさ) and its opacity (0.6–1 of 強さ).
+    /// </summary>
+    public readonly record struct SpotSpec(Point Position, double Angle, double SizeFactor, double AlphaFactor);
+
     /// <summary>One glitter grain: where it sits, its size (drawing units), and how it is drawn.</summary>
     public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare);
 
@@ -371,6 +377,38 @@ namespace DollIrisGenerator.Services
                 for (int k = 0; k < edge.Length; k++) edge[k] = (Math.PI - edge[k].Item1, edge[k].Item2);
             }
             return edge;
+        }
+
+        private const int SpotSeedOffset = 7500;
+
+        /// <summary>
+        /// 斑点: <paramref name="count"/> spots between 1.1 × the pupil's radius and <paramref name="outer"/>, spread
+        /// evenly over the area (r = √(a² + (b² − a²) × random)), each pointing along its radius ± 15°. Every spot takes
+        /// the same five draws, so changing the count keeps the first spots where they were. <paramref name="mirror"/>
+        /// mirrors them left-right (right eye).
+        /// </summary>
+        public static List<SpotSpec> Spots(int count, double pupil, double outer, int seed, bool mirror)
+        {
+            var spots = new List<SpotSpec>(Math.Max(0, count));
+            var rng = new Random(seed + SpotSeedOffset);
+            double a = pupil * 1.1, b = Math.Max(a, outer);
+            for (int i = 0; i < count; i++)
+            {
+                double angle = rng.NextDouble() * 2.0 * Math.PI;
+                double r = Math.Sqrt(a * a + (b * b - a * a) * rng.NextDouble());
+                double size = 0.4 + 0.6 * rng.NextDouble();
+                double alpha = 0.6 + 0.4 * rng.NextDouble();
+                double tilt = (rng.NextDouble() - 0.5) * (Math.PI / 6.0);
+                double axis = angle + tilt;
+                var position = new Point(r * Math.Cos(angle), r * Math.Sin(angle));
+                if (mirror)
+                {
+                    position = new Point(-position.X, position.Y);
+                    axis = Math.PI - axis;
+                }
+                spots.Add(new SpotSpec(position, axis, size, alpha));
+            }
+            return spots;
         }
 
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>

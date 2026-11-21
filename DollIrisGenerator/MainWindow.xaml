@@ -1440,6 +1440,64 @@
                                         <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.ParticleRangeFeather}" TickFrequency="1" IsSnapToTickEnabled="True"/>
                                     </StackPanel>
                                 </GroupBox>
+
+                                <!-- 斑点 (Iris spots) -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="斑点" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockSpots}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="斑点の強さ・数・大きさ・細長さ・柔らかさ・分布範囲・色・重ね方をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="虹彩に暗い小さなしみ (そばかす) や、細長いくぼみを散らします (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="斑点の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.SpotIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotCount, StringFormat='{}{0} 個'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="1" Maximum="120" Value="{Binding CurrentIris.SpotCount}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="斑点の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.SpotColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="いちばん大きい斑点の半径。虹彩の半径に対する割合">
+                                            <TextBlock Text="大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotSize, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.01" Maximum="0.10" Value="{Binding CurrentIris.SpotSize}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0% で丸いしみ。上げるほど、中心から外へ向いた細長いくぼみになります">
+                                            <TextBlock Text="細長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotElongation, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.SpotElongation}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="縁のぼかし。0% でくっきり">
+                                            <TextBlock Text="柔らかさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.SpotSoftness}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="斑点を置くいちばん外の距離 (虹彩の半径に対する割合)">
+                                            <TextBlock Text="分布範囲 (外周比率):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.SpotRadiusRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.SpotRadiusRatio}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,2,0,0" ToolTip="斑点の重ね方。オーバーレイ・ソフトライトにすると虹彩の色になじみます">
+                                            <TextBlock Text="重ね方:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.SpotBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.SpotBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.SpotBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.SpotBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.SpotBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </GroupBox>
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>

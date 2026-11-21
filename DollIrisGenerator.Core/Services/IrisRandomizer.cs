@@ -225,6 +225,19 @@ namespace DollIrisGenerator.Services
                 p.ToneBandOuterColor = themed ? HslToHex(hue - 8.0, sat, Math.Max(0.08, lit - 0.20)) : IrisParameters.DefaultToneBandOuterColor;
                 p.ToneBandBlend = themed ? LayerBlend.Normal : LayerBlend.SoftLight;
             }
+
+            // 斑点 (after everything else): 20% of designs, dark spots of the theme's hue
+            if (!Locked(RandomizeLocks.Spots))
+            {
+                p.SpotIntensity = Chance(20) ? Range(0.30, 0.60) : 0.0;
+                p.SpotCount = rng.Next(8, 41);
+                p.SpotSize = Range(0.025, 0.05, 3);
+                p.SpotElongation = Range(0.0, 0.7);
+                p.SpotSoftness = Range(0.3, 0.7);
+                p.SpotRadiusRatio = Range(0.60, 0.85);
+                p.SpotBlend = Chance(40) ? LayerBlend.SoftLight : LayerBlend.Normal;
+            }
+            if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
         }
 
         /// <summary>

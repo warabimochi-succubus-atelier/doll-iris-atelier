@@ -31,6 +31,13 @@ namespace DollIrisGenerator.Models
         public const string DefaultToneBandInnerColor = "#FFFFFF", DefaultToneBandOuterColor = "#000000";
         public const double DefaultToneBandSoftness = 0.1;
 
+        /// <summary>斑点 (IrisPatterns.Spots): ranges and defaults.</summary>
+        public const int MinSpotCount = 1, MaxSpotCount = 120, DefaultSpotCount = 24;
+        public const double MinSpotSize = 0.01, MaxSpotSize = 0.10, DefaultSpotSize = 0.035;
+        public const double DefaultSpotElongation = 0.3, DefaultSpotSoftness = 0.5;
+        public const double MinSpotRadiusRatio = 0.30, MaxSpotRadiusRatio = 0.95, DefaultSpotRadiusRatio = 0.80;
+        public const string DefaultSpotColor = "#3E2723";
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -152,6 +159,16 @@ namespace DollIrisGenerator.Models
         private string _toneBandOuterColor = DefaultToneBandOuterColor;
         private double _toneBandSoftness = DefaultToneBandSoftness;
         private LayerBlend _toneBandBlend = LayerBlend.SoftLight;
+
+        // 斑点 (dark freckles / crypts scattered over the iris): 0 strength = off. Files saved before it existed load as off.
+        private double _spotIntensity = 0.0;
+        private int _spotCount = DefaultSpotCount;
+        private double _spotSize = DefaultSpotSize;
+        private double _spotElongation = DefaultSpotElongation;
+        private double _spotSoftness = DefaultSpotSoftness;
+        private double _spotRadiusRatio = DefaultSpotRadiusRatio;
+        private string _spotColor = DefaultSpotColor;
+        private LayerBlend _spotBlend = LayerBlend.Normal;
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -610,6 +627,62 @@ namespace DollIrisGenerator.Models
         {
             get => _toneBandBlend;
             set { _toneBandBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の強さ: the darkest spot's opacity. 0 = off.</summary>
+        public double SpotIntensity
+        {
+            get => _spotIntensity;
+            set { _spotIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の数.</summary>
+        public int SpotCount
+        {
+            get => _spotCount;
+            set { _spotCount = Math.Clamp(value, MinSpotCount, MaxSpotCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>大きさ: the largest spot's radius, as a fraction of the iris radius.</summary>
+        public double SpotSize
+        {
+            get => _spotSize;
+            set { _spotSize = ClampFinite(value, MinSpotSize, MaxSpotSize, DefaultSpotSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>細長さ: 0 = round freckles; 1 = crypts stretched along the radius (3.5 × as long as wide).</summary>
+        public double SpotElongation
+        {
+            get => _spotElongation;
+            set { _spotElongation = ClampFinite(value, 0.0, 1.0, DefaultSpotElongation); OnPropertyChanged(); }
+        }
+
+        /// <summary>柔らかさ: how softly a spot's edge fades out. 0 = crisp.</summary>
+        public double SpotSoftness
+        {
+            get => _spotSoftness;
+            set { _spotSoftness = ClampFinite(value, 0.0, 1.0, DefaultSpotSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>分布範囲: the farthest a spot sits from the center, as a fraction of the iris radius.</summary>
+        public double SpotRadiusRatio
+        {
+            get => _spotRadiusRatio;
+            set { _spotRadiusRatio = ClampFinite(value, MinSpotRadiusRatio, MaxSpotRadiusRatio, DefaultSpotRadiusRatio); OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の色 (one color).</summary>
+        public string SpotColor
+        {
+            get => _spotColor;
+            set { _spotColor = value ?? DefaultSpotColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の重ね方.</summary>
+        public LayerBlend SpotBlend
+        {
+            get => _spotBlend;
+            set { _spotBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>

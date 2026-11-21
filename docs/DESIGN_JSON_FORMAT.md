@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `SpotBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -228,6 +228,19 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `ParticleRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
+### 斑点（虹彩の暗いしみ・くぼみ）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `SpotIntensity` | 0〜1 | 強さ（濃さ）。0 でオフ（既定） |
+| `SpotCount` | 1〜120 | 斑点の数（既定 24） |
+| `SpotSize` | 0.01〜0.10 | いちばん大きい斑点の半径の比率（既定 0.035） |
+| `SpotElongation` | 0〜1 | 0 で丸いしみ。上げるほど放射方向に細長いくぼみ（既定 0.3） |
+| `SpotSoftness` | 0〜1 | 縁のぼかし。0 でくっきり（既定 0.5） |
+| `SpotRadiusRatio` | 0.30〜0.95 | 斑点を置くいちばん外の距離の比率（既定 0.80） |
+| `SpotColor` | 色（単色） | 既定 `#3E2723`（こげ茶） |
+| `SpotBlend` | 重ね方 | 既定 0（通常）。4（ソフトライト）で虹彩の色になじむ |
+
 ### レンズ風パターン（同心円の屈折リング）
 
 | 項目 | 範囲・値 | 説明 |
@@ -357,6 +370,14 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ToneBandOuterColor": "#000000",
   "ToneBandSoftness": 0.1,
   "ToneBandBlend": 4,
+  "SpotIntensity": 0.0,
+  "SpotCount": 24,
+  "SpotSize": 0.035,
+  "SpotElongation": 0.3,
+  "SpotSoftness": 0.5,
+  "SpotRadiusRatio": 0.8,
+  "SpotColor": "#3E2723",
+  "SpotBlend": 0,
   "PupilShape": 0,
   "PupilSizeRatio": 0.32,
   "PupilColor": "#060A18",

@@ -468,6 +468,47 @@ namespace DollIrisGenerator.Services
             return stops;
         }
 
+        /// <summary>Length of a 斑点 at 細長さ 1, in widths (1 + this × 細長さ).</summary>
+        public const double SpotStretchPerElongation = 2.5;
+
+        /// <summary>
+        /// 斑点: dark ellipses (<see cref="IrisPatterns.Spots"/>) in one group carrying the blend mode. Soft spots share a
+        /// bounding-box radial gradient: the color up to 1 − 柔らかさ, clear at the edge.
+        /// </summary>
+        private static void AppendSpots(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry, double baseR,
+            IrisParameters p, bool isRightEye, int seed)
+        {
+            var (rgb, colorAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.SpotColor, IrisParameters.DefaultSpotColor));
+            string fill = rgb;
+            if (p.SpotSoftness > 0.005)
+            {
+                string gradId = $"{idPrefix}_spots_grad";
+                string opacityAttr = colorAlpha < 1.0 ? $@" stop-opacity=""{colorAlpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <radialGradient id=""{gradId}"">");
+                sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{rgb}""{opacityAttr} />");
+                sb.AppendLine($@"          <stop offset=""{((1.0 - p.SpotSoftness) * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
+                sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{rgb}"" stop-opacity=""0"" />");
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine("      </defs>");
+                fill = $"url(#{gradId})";
+                colorAlpha = 1.0; // carried by the stops
+            }
+
+            double width = p.SpotSize * baseR;
+            double length = width * (1.0 + SpotStretchPerElongation * p.SpotElongation);
+            sb.AppendLine($@"      <g id=""{idPrefix}_spots"" fill=""{fill}""{BlendStyle(p.SpotBlend)}>");
+            foreach (var spot in IrisPatterns.Spots(p.SpotCount, p.PupilSizeRatio, p.SpotRadiusRatio, seed, isRightEye))
+            {
+                double x = cx + spot.Position.X * rx, y = cy + spot.Position.Y * ry;
+                // The long (vertical) axis turned to the spot's direction, as seen on the stretched iris
+                double deg = Math.Atan2(Math.Sin(spot.Angle) * ry, Math.Cos(spot.Angle) * rx) * 180.0 / Math.PI - 90.0;
+                double alpha = p.SpotIntensity * spot.AlphaFactor * colorAlpha;
+                sb.AppendLine($@"        <ellipse cx=""{F(x)}"" cy=""{F(y)}"" rx=""{F(width * spot.SizeFactor, 4)}"" ry=""{F(length * spot.SizeFactor, 4)}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" transform=""rotate({deg.ToFixed(1)}, {F(x)}, {F(y)})"" />");
+            }
+            sb.AppendLine("      </g>");
+        }
+
         /// <summary>Number of radial strips the fiber noise is made of.</summary>
         public const int FiberStripCount = 40;
 
@@ -665,6 +706,10 @@ namespace DollIrisGenerator.Services
             if (p.FiberNoise > 0.005)
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
+            }
+            if (p.SpotIntensity > 0.01)
+            {
+                AppendSpots(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
             }
             if (p.CollaretteIntensity > 0.01)
             {

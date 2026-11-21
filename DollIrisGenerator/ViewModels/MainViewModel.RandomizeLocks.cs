@@ -30,6 +30,7 @@ namespace DollIrisGenerator.ViewModels
                 OnPropertyChanged(nameof(LockHighlights));
                 OnPropertyChanged(nameof(LockLens));
                 OnPropertyChanged(nameof(LockIrisFacets));
+                OnPropertyChanged(nameof(LockSpots));
                 OnPropertyChanged(nameof(LockOddEye));
                 OnPropertyChanged(nameof(HasRandomizeLocks));
                 OnPropertyChanged(nameof(RandomizeLocksSummary));
@@ -56,6 +57,7 @@ namespace DollIrisGenerator.ViewModels
         public bool LockHighlights { get => IsLocked(RandomizeLocks.Highlights); set => SetLock(RandomizeLocks.Highlights, value); }
         public bool LockLens { get => IsLocked(RandomizeLocks.Lens); set => SetLock(RandomizeLocks.Lens, value); }
         public bool LockIrisFacets { get => IsLocked(RandomizeLocks.IrisFacets); set => SetLock(RandomizeLocks.IrisFacets, value); }
+        public bool LockSpots { get => IsLocked(RandomizeLocks.Spots); set => SetLock(RandomizeLocks.Spots, value); }
         public bool LockOddEye { get => IsLocked(RandomizeLocks.OddEye); set => SetLock(RandomizeLocks.OddEye, value); }
 
         public ICommand ClearRandomizeLocksCommand =>
