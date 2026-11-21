@@ -489,7 +489,7 @@ namespace DollIrisGenerator.Tests
                 ColorPresets.ApplyPreset(galaxy, ColorPresets.All.Single(x => x.Name == "特殊: 銀河"));
 
                 var sakura = new IrisParameters { Name = "サクラ (桜舞う春風)", SizeMm = 10.0, Seed = 56789 };
-                ColorPresets.ApplyPreset(sakura, ColorPresets.All.Single(x => x.Name == "ベーシック: サクラ")); // with the SakuraPetal symbol
+                ColorPresets.ApplyPreset(sakura, ColorPresets.All.Single(x => x.Name == "特殊: 桜")); // with the SakuraPetal symbols
 
                 // Export SVGs
                 File.WriteAllText(Path.Combine(outDir, "Sample_SapphireBlue_10.0mm.svg"), SvgExporter.GeneratePairSvg(blue, includePrintGuides: true));

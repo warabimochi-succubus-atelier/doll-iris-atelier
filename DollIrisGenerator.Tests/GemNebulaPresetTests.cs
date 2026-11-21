@@ -206,12 +206,14 @@ namespace DollIrisGenerator.Tests
 
         private static readonly string[] SampleNames =
         {
-            "ベーシック: クリアブルー", "ベーシック: アクア", "ベーシック: ラベンダー", "ベーシック: パープル",
-            "ベーシック: ピンク", "ベーシック: サクラ", "ベーシック: レッド", "ベーシック: アンバー",
-            "ベーシック: グリーン", "ベーシック: グレー", "ベーシック: キャットアイ",
+            "ベーシック: クリアブルー", "ベーシック: アクア", "ベーシック: ラベンダー", "ベーシック: ピンク",
+            "ベーシック: レッド", "ベーシック: アンバー", "ベーシック: グリーン", "ベーシック: グレー",
+            "ベーシック: ブラウン", "ベーシック: ヘーゼル",
             "特殊: 星屑", "特殊: オーロラ", "特殊: 銀河", "特殊: 夕焼け", "特殊: 夜空", "特殊: 宝石", "特殊: ハート", "特殊: 花びら",
+            "特殊: 桜", "特殊: キャットアイ", "特殊: 蝶々", "特殊: 三日月", "特殊: クリスタル",
             "雰囲気: A. ナチュラル (ピンク系)", "雰囲気: B. 精霊 (ブルー系)", "雰囲気: C. アンニュイ (パープル系)",
-            "雰囲気: D. つんでれ (レッド系)", "雰囲気: E. 小悪魔 (赤紫系)", "雰囲気: F. 無邪気 (アクア系)"
+            "雰囲気: D. つんでれ (レッド系)", "雰囲気: E. 小悪魔 (赤紫系)", "雰囲気: F. 無邪気 (アクア系)",
+            "雰囲気: G. 儚げ (シルバー系)", "雰囲気: H. クール (アイス系)"
         };
 
         private static PresetDefinition Preset(string name) => ColorPresets.All.Single(x => x.Name == name);
@@ -223,6 +225,37 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(SampleNames, ColorPresets.All.Select(x => x.Name));
             // Selected at start-up
             Assert.Equal("ベーシック: クリアブルー", ColorPresets.All[0].Name);
+        }
+
+        [Fact]
+        public void TestEveryBuiltInPresetHasItsOwnHighlightsAndADescription()
+        {
+            foreach (var preset in ColorPresets.All)
+            {
+                Assert.False(string.IsNullOrWhiteSpace(preset.Description), preset.Name);
+                Assert.NotNull(preset.Highlights);
+                Assert.True(preset.Highlights!.Count(h => h.Enabled) >= 2, preset.Name);
+            }
+            // Every highlight layout is used by some preset
+            var used = ColorPresets.All.Select(x => string.Join("|", x.Highlights!.Select(h => (h.Shape, h.PositionX, h.PositionY, h.Size)))).ToHashSet();
+            foreach (var style in HighlightStyles.All)
+            {
+                Assert.Contains(string.Join("|", HighlightStyles.Build(style).Select(h => (h.Shape, h.PositionX, h.PositionY, h.Size))), used);
+            }
+        }
+
+        [Fact]
+        public void TestSpecialPresetsShowTheShapedPupilsAndLayers()
+        {
+            var special = ColorPresets.All.Where(x => x.Name.StartsWith("特殊: ", StringComparison.Ordinal)).ToList();
+            foreach (var shape in new[] { PupilShape.Heart, PupilShape.CatSlit, PupilShape.Butterfly, PupilShape.Diamond })
+            {
+                Assert.Contains(special, x => x.PupilShape == shape);
+            }
+            Assert.Contains(special, x => x.IrisFacetIntensity > 0);
+            Assert.Contains(special, x => x.LensPatternEnabled == true);
+            Assert.Contains(special, x => x.RayRangeWidth < IrisParameters.FullRangeWidth);
+            Assert.Contains(special, x => x.Symbols?.Count >= 2);
         }
 
         [Fact]

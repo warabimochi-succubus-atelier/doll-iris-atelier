@@ -1,31 +1,73 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
 {
+    /// <summary>「属性ランダム生成」 (SPECIFICATION.md 7.4).</summary>
     public static class IrisRandomizer
     {
-        private record ColorTheme(string Name, double Hue, double Saturation, double Lightness, bool DualTone = false, double DualHue = 0);
+        /// <summary>
+        /// A color theme: the base color's hue / saturation / lightness and, for two-tone themes, the second hue
+        /// (lower glow, aurora, nebula).
+        /// </summary>
+        private record ColorTheme(string Name, double Hue, double Saturation, double Lightness, double? SecondHue = null);
 
-        private static readonly ColorTheme[] Themes = new[]
+        private static readonly ColorTheme[] Themes =
         {
-            new ColorTheme("サファイアブルー", 215, 0.90, 0.52),
-            new ColorTheme("エメラルドグリーン", 145, 0.88, 0.46),
-            new ColorTheme("ルビーレッド", 355, 0.92, 0.48),
-            new ColorTheme("アメジストパープル", 275, 0.88, 0.52),
-            new ColorTheme("アンバーゴールド", 42, 0.95, 0.50),
-            new ColorTheme("アクアマリン", 192, 0.90, 0.56),
-            new ColorTheme("ローズクォーツ", 335, 0.85, 0.58),
-            new ColorTheme("ギャラクシーネイビー", 230, 0.92, 0.42, true, 185),
-            new ColorTheme("トワイライトサンセット", 265, 0.85, 0.48, true, 35),
-            new ColorTheme("ミントシトロン", 160, 0.82, 0.52, true, 65),
-            new ColorTheme("シルバープラチナ", 210, 0.20, 0.60),
-            new ColorTheme("フォレストオリーブ", 105, 0.75, 0.42),
-            new ColorTheme("オーロラシアン", 175, 0.95, 0.50, true, 310),
-            new ColorTheme("ハニーヘーゼル", 32, 0.82, 0.44),
-            new ColorTheme("サクラブロッサム", 342, 0.86, 0.62)
+            // 宝石 (vivid)
+            new("サファイアブルー", 215, 0.90, 0.52),
+            new("エメラルドグリーン", 145, 0.85, 0.44),
+            new("ルビーレッド", 355, 0.88, 0.48),
+            new("アメジストパープル", 275, 0.80, 0.52),
+            new("アンバーゴールド", 40, 0.92, 0.50),
+            new("アクアマリン", 190, 0.85, 0.55),
+            new("ターコイズ", 176, 0.75, 0.45),
+            new("ペリドット", 82, 0.72, 0.46),
+            new("ローズクォーツ", 335, 0.78, 0.60),
+            new("サクラブロッサム", 342, 0.80, 0.64),
+            // 2 色 (two-tone)
+            new("ギャラクシーネイビー", 230, 0.85, 0.40, 185),
+            new("トワイライトサンセット", 265, 0.75, 0.48, 30),
+            new("ミントシトロン", 160, 0.75, 0.52, 65),
+            new("オーロラシアン", 175, 0.85, 0.50, 310),
+            new("ピーチソーダ", 15, 0.85, 0.62, 190),
+            new("ラベンダーミスト", 262, 0.55, 0.64, 320),
+            // ナチュラル (low saturation)
+            new("ハニーヘーゼル", 32, 0.70, 0.42),
+            new("ショコラブラウン", 22, 0.55, 0.32),
+            new("オリーブヘーゼル", 68, 0.45, 0.40, 30),
+            new("グレージュ", 35, 0.18, 0.55),
+            new("シルバープラチナ", 210, 0.20, 0.60),
+            // パステル (light)
+            new("パステルミント", 155, 0.55, 0.72),
+            new("ベビーブルー", 205, 0.65, 0.72),
+            new("ストロベリーミルク", 345, 0.70, 0.74),
+            // ダーク (deep)
+            new("ワインレッド", 345, 0.70, 0.30),
+            new("ミッドナイトブルー", 225, 0.70, 0.28),
+            new("ディープフォレスト", 150, 0.60, 0.28)
+        };
+
+        /// <summary>Pupil shapes and their weights (out of 100).</summary>
+        private static readonly (PupilShape Shape, int Weight)[] PupilShapes =
+        {
+            (PupilShape.Round, 59),
+            (PupilShape.CatSlit, 10),
+            (PupilShape.Heart, 8),
+            (PupilShape.Star5, 5),
+            (PupilShape.Star4, 5),
+            (PupilShape.Diamond, 4),
+            (PupilShape.SakuraPetal, 3),
+            (PupilShape.Butterfly, 4),
+            (PupilShape.Moon, 2)
+        };
+
+        /// <summary>Decorative symbol types (the cross is left out: in an eye it reads as a religious sign).</summary>
+        private static readonly SymbolType[] SymbolTypes =
+        {
+            SymbolType.Star4, SymbolType.Star5, SymbolType.Heart, SymbolType.Moon,
+            SymbolType.Diamond, SymbolType.SakuraPetal, SymbolType.Butterfly
         };
 
         public static void RandomizeAttributes(IrisParameters p, Random? rng = null) =>
@@ -33,9 +75,9 @@ namespace DollIrisGenerator.Services
 
         /// <summary>
         /// Randomizes the design's attributes, leaving the groups in <paramref name="locks"/> unchanged.
-        /// Size, shape, aspect ratio and tilt are always kept, and so is 「ハイライトを左右反転」 (how the pair of eyes is
-        /// built, not a look). A color is kept when either
-        /// <see cref="RandomizeLocks.Colors"/> or the part it belongs to is locked.
+        /// Size, shape, aspect ratio, tilt and outline are always kept, and so are the 右目の反転 settings (how the
+        /// pair of eyes is built, not a look). A color is kept when either <see cref="RandomizeLocks.Colors"/> or the
+        /// part it belongs to is locked.
         /// </summary>
         public static void RandomizeAttributes(IrisParameters p, RandomizeLocks locks, Random? rng = null)
         {
@@ -44,485 +86,311 @@ namespace DollIrisGenerator.Services
             bool colorsLocked = Locked(RandomizeLocks.Colors);
             // A part's color changes only when neither the palette nor that part is locked
             bool ColorFree(RandomizeLocks part) => !colorsLocked && !Locked(part);
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+            bool Chance(int percent) => rng.Next(100) < percent;
 
-            // 1. Strictly capture and preserve size and dimensions
-            double preservedSizeMm = p.SizeMm;
-            IrisShape preservedShape = p.Shape;
-            double preservedAspectRatio = p.AspectRatio;
-            double preservedTiltAngle = p.TiltAngle;
+            if (!Locked(RandomizeLocks.Seed)) p.Seed = rng.Next(1, 999999);
 
-            // 2. Random Seed
-            if (!Locked(RandomizeLocks.Seed))
-            {
-                p.Seed = rng.Next(1, 999999);
-            }
-
-            // 3. Harmonious Color Palette (the design name follows the palette's theme)
+            // Palette: always drawn, so a locked palette and a free part still get colors that go together
             var theme = Themes[rng.Next(Themes.Length)];
-            double baseHue = theme.Hue + (rng.NextDouble() * 16.0 - 8.0);
-            double baseSat = Math.Clamp(theme.Saturation + (rng.NextDouble() * 0.10 - 0.05), 0.1, 1.0);
-            double baseLit = Math.Clamp(theme.Lightness + (rng.NextDouble() * 0.10 - 0.05), 0.2, 0.8);
+            double hue = theme.Hue + Range(-8.0, 8.0, 1);
+            double sat = Math.Clamp(theme.Saturation + Range(-0.05, 0.05), 0.08, 1.0);
+            double lit = Math.Clamp(theme.Lightness + Range(-0.05, 0.05), 0.2, 0.8);
+            double secondHue = theme.SecondHue ?? hue + 40.0;
+            // Pale colors of the theme stay pale for the grey themes
+            double paleSat = Math.Min(0.75, sat + 0.15);
 
-            if (!colorsLocked)
-            {
-                p.Name = $"{theme.Name} #{rng.Next(100, 999)}";
+            RandomizeIrisColors(p, rng, theme, hue, sat, lit, secondHue, paleSat, colorsLocked);
+            if (ColorFree(RandomizeLocks.Rays)) p.RayColor = HslToHex(hue + 10.0, paleSat, 0.86);
+            if (ColorFree(RandomizeLocks.Particles)) p.ParticleColor = Chance(50) ? "#FFFFFF" : HslToHex(hue, Math.Min(0.4, sat), 0.94);
 
-                p.BaseColor = HslToHex(baseHue, baseSat, baseLit);
-                p.InnerColor = HslToHex(baseHue + (theme.DualTone ? 20.0 : 8.0), Math.Max(0.1, baseSat - 0.10), Math.Min(0.92, baseLit + 0.26));
-                p.OuterColor = HslToHex(baseHue - 8.0, Math.Min(1.0, baseSat + 0.08), Math.Max(0.12, baseLit - 0.28));
-
-                if (theme.DualTone)
-                {
-                    p.BottomHighlightColor = HslToHex(theme.DualHue, 0.85, 0.78);
-                }
-                else
-                {
-                    p.BottomHighlightColor = HslToHex(baseHue + 12.0, 0.75, 0.88);
-                }
-
-                // 4. Gradient Radii & Glow (shown with the colors in 「虹彩カラー設定」)
-                p.InnerGradientRadius = Math.Round(0.35 + rng.NextDouble() * 0.35, 2);
-                p.OuterGradientRadius = Math.Round(0.80 + rng.NextDouble() * 0.30, 2);
-                p.BottomHighlightIntensity = Math.Round(0.25 + rng.NextDouble() * 0.55, 2);
-            }
-
-            if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalRingColor = HslToHex(baseHue - 12.0, Math.Min(0.85, baseSat + 0.10), 0.08);
-            if (ColorFree(RandomizeLocks.Pupil)) p.PupilColor = HslToHex(baseHue, 0.60, 0.05);
-            if (ColorFree(RandomizeLocks.Rays)) p.RayColor = HslToHex(baseHue + 10.0, 0.70, 0.86);
-            if (ColorFree(RandomizeLocks.Particles)) p.ParticleColor = rng.Next(2) == 0 ? "#FFFFFF" : HslToHex(baseHue, 0.40, 0.94);
-
-            // 5. Limbal Ring (外輪)
+            // 外輪: dark, in the theme's hue
+            if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalRingColor = HslToHex(hue - 12.0, Math.Min(0.85, sat + 0.10), Range(0.05, 0.14));
             if (!Locked(RandomizeLocks.LimbalRing))
             {
-                p.LimbalRingThickness = Math.Round(0.04 + rng.NextDouble() * 0.11, 3);
-                p.LimbalRingOpacity = Math.Round(0.75 + rng.NextDouble() * 0.25, 2);
-                p.LimbalRingSoftness = Math.Round(0.08 + rng.NextDouble() * 0.25, 2);
+                p.LimbalRingThickness = Range(0.04, 0.15, 3);
+                p.LimbalRingOpacity = Range(0.75, 1.0);
+                p.LimbalRingSoftness = Range(0.08, 0.33);
             }
 
-            // 6. Pupil (瞳孔)
-            if (!Locked(RandomizeLocks.Pupil))
+            if (!Locked(RandomizeLocks.Pupil)) RandomizePupil(p, rng);
+            // The pupil's color after its shape, so a gem pupil can get a gem color
+            if (ColorFree(RandomizeLocks.Pupil))
             {
-                int pupilRoll = rng.Next(10);
-                p.PupilShape = pupilRoll switch
-                {
-                    < 7 => PupilShape.Round,
-                    7 => PupilShape.CatSlit,
-                    8 => PupilShape.Heart,
-                    _ => PupilShape.Star5
-                };
-                // Roll 6 was the vertical oval pupil: now the circle, 0.75 as wide and 1.25 as tall (the same shape)
-                bool ovalPupil = pupilRoll == 6;
-                p.PupilStretchLeft = p.PupilStretchRight = ovalPupil ? 0.75 : 1.0;
-                p.PupilStretchTop = p.PupilStretchBottom = ovalPupil ? 1.25 : 1.0;
-                p.PupilSizeRatio = Math.Round(0.24 + rng.NextDouble() * 0.18, 2);
-                p.PupilOpacity = Math.Round(0.92 + rng.NextDouble() * 0.08, 2);
-                p.PupilSoftness = Math.Round(0.03 + rng.NextDouble() * 0.12, 2);
+                int roll = rng.Next(100);
+                bool gem = p.PupilFacetIntensity > 0;
+                p.PupilColor = gem && roll < 50
+                    // A cut stone in the theme's color (as the preset 特殊: 宝石)
+                    ? ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
+                    {
+                        new ColorStop(HslToHex(hue, paleSat, 0.82), 0.0),
+                        new ColorStop(HslToHex(hue, Math.Max(0.5, sat), 0.50), 0.45),
+                        new ColorStop(HslToHex(hue - 10.0, Math.Max(0.5, sat), 0.22), 1.0)
+                    }).ToString()
+                    : roll < 70
+                        // A deep pupil that is a little lighter in the middle
+                        ? ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
+                        {
+                            new ColorStop(HslToHex(hue, Math.Min(0.7, sat), 0.20), 0.0),
+                            new ColorStop(HslToHex(hue, 0.6, 0.04), 1.0)
+                        }).ToString()
+                        : HslToHex(hue, 0.60, 0.05);
             }
 
-            // 7. Radial pattern (光彩・放射ライン)
-            if (!Locked(RandomizeLocks.Rays))
-            {
-                int[] rayCounts = { 24, 36, 48, 56, 64, 72, 80 };
-                p.RayCount = rayCounts[rng.Next(rayCounts.Length)];
-                p.RayThickness = Math.Round(0.8 + rng.NextDouble() * 1.2, 1);
-                p.RayLengthRatio = Math.Round(0.55 + rng.NextDouble() * 0.25, 2);
-                p.RayIntensity = Math.Round(0.40 + rng.NextDouble() * 0.45, 2);
-                p.RayRandomness = Math.Round(0.25 + rng.NextDouble() * 0.35, 2);
-                p.RayInnerRadiusRatio = Math.Round(0.26 + rng.NextDouble() * 0.14, 2);
-            }
+            if (!Locked(RandomizeLocks.Rays)) RandomizeRays(p, rng);
+            if (!Locked(RandomizeLocks.Particles)) RandomizeGlitter(p, rng);
 
-            // 8. Lens-Style Optical Pattern (フレネルリング)
             if (!Locked(RandomizeLocks.Lens))
             {
-                p.LensPatternEnabled = rng.Next(10) < 4; // 40% chance
-                if (p.LensPatternEnabled)
-                {
-                    p.LensRingCount = rng.Next(4, 11);
-                    p.LensRingIntensity = Math.Round(0.35 + rng.NextDouble() * 0.35, 2);
-                    p.LensRingWidth = Math.Round(0.6 + rng.NextDouble() * 0.8, 1);
-                    p.LensRefractionGlow = Math.Round(0.20 + rng.NextDouble() * 0.35, 2);
-                    if (!colorsLocked) p.LensRingColor = p.RayColor;
-                }
-            }
-
-            // 9. Particles / Glitter (ラメ)
-            if (!Locked(RandomizeLocks.Particles))
-            {
-                p.ParticleCount = rng.Next(10) < 7 ? rng.Next(25, 95) : 0;
-                p.ParticleMinSize = Math.Round(0.8 + rng.NextDouble() * 0.6, 1);
-                p.ParticleMaxSize = Math.Round(p.ParticleMinSize + 0.8 + rng.NextDouble() * 1.2, 1);
-                p.ParticleOpacity = Math.Round(0.65 + rng.NextDouble() * 0.30, 2);
-                p.ParticleRadiusRatio = Math.Round(0.68 + rng.NextDouble() * 0.18, 2);
-            }
-
-            // 10. Highlights (アニメ調ハイライト配置)
-            if (!Locked(RandomizeLocks.Highlights))
-            {
-                GenerateRandomHighlights(p, rng);
-            }
-
-            // 11. Decorative Symbols (装飾記号): colored like the glitter, which stays as it was when 色 is locked
-            if (!Locked(RandomizeLocks.Symbols))
-            {
-                p.Symbols.Clear();
-                if (rng.Next(10) < 4) // 40% chance of symbol
-                {
-                    SymbolType[] symbolTypes = {
-                        SymbolType.Star4, SymbolType.Star5, SymbolType.Heart,
-                        SymbolType.Moon, SymbolType.Diamond, SymbolType.SakuraPetal
-                    };
-                    var symType = symbolTypes[rng.Next(symbolTypes.Length)];
-                    p.Symbols.Add(new DecorativeSymbolItem
-                    {
-                        Type = symType,
-                        Count = rng.Next(1, 3),
-                        Size = Math.Round(0.14 + rng.NextDouble() * 0.08, 2),
-                        PositionX = Math.Round(0.18 + rng.NextDouble() * 0.22, 2),
-                        PositionY = Math.Round(-0.25 + rng.NextDouble() * 0.45, 2),
-                        Color = p.ParticleColor,
-                        Opacity = Math.Round(0.75 + rng.NextDouble() * 0.20, 2),
-                        Rotation = Math.Round(rng.NextDouble() * 60.0 - 30.0, 1),
-                        Enabled = true
-                    });
-                }
-            }
-
-            // 12. Odd-Eye Mode (オッドアイ)
-            if (!Locked(RandomizeLocks.OddEye))
-            {
-                p.IsOddEye = rng.Next(100) < 15; // 15% chance
-                if (p.IsOddEye)
-                {
-                    if (!colorsLocked)
-                    {
-                        var oddTheme = Themes[rng.Next(Themes.Length)];
-                        double oddHue = oddTheme.Hue + (rng.NextDouble() * 16.0 - 8.0);
-                        p.OddEyeBaseColor = HslToHex(oddHue, oddTheme.Saturation, oddTheme.Lightness);
-                        p.OddEyeInnerColor = HslToHex(oddHue + 8.0, Math.Max(0.1, oddTheme.Saturation - 0.10), Math.Min(0.92, oddTheme.Lightness + 0.24));
-                        p.OddEyeOuterColor = HslToHex(oddHue - 8.0, Math.Min(1.0, oddTheme.Saturation + 0.08), Math.Max(0.12, oddTheme.Lightness - 0.26));
-                        p.OddEyeRayColor = HslToHex(oddHue + 10.0, 0.70, 0.86);
-                        p.OddEyeBottomHighlightColor = HslToHex(oddHue + 12.0, 0.75, 0.88);
-                    }
-                    p.OddEyeSeedOffset = rng.Next(500, 5000);
-                }
-            }
-
-            // 13. Newer looks (fiber rays, glowing glitter, aurora): always fibers and glow, in varying amounts
-            if (!Locked(RandomizeLocks.Rays))
-            {
-                double taper = rng.NextDouble(), widthVar = rng.NextDouble(), curve = rng.NextDouble(), fine = rng.NextDouble();
-                p.RayTaper = Math.Round(0.5 + taper * 0.4, 2);
-                p.RayWidthVariation = Math.Round(0.3 + widthVar * 0.4, 2);
-                p.RayCurve = Math.Round((curve - 0.5) * 0.7, 2); // gentle swirl, either way
-                p.RayFineLayer = Math.Round(0.4 + fine * 0.4, 2);
-            }
-
-            if (!Locked(RandomizeLocks.Particles))
-            {
-                double g = rng.NextDouble(), f = rng.NextDouble(), len = rng.NextDouble();
-                p.ParticleGlow = Math.Round(0.5 + g * 0.4, 2);
-                p.ParticleFlareRatio = Math.Round(0.08 + f * 0.17, 2);
-                p.ParticleFlareLength = Math.Round(3.0 + len * 2.5, 1);
-            }
-
-            if (!colorsLocked)
-            {
-                bool aurora = rng.Next(10) < 3; // 30%: an aurora layer in the theme's hues
-                double hueShift = rng.NextDouble() * 360.0, strength = rng.NextDouble();
-                if (aurora)
-                {
-                    double h1 = baseHue, h2 = theme.DualTone ? theme.DualHue : baseHue + 60.0, h3 = hueShift;
-                    p.AuroraColor = ColorFill.Create(ColorFillKind.Conic, ColorFill.ConicDefaultAngle, new[]
-                    {
-                        new ColorStop(HslToHex(h1, 0.85, 0.70), 0.0),
-                        new ColorStop(HslToHex(h2, 0.85, 0.72), 0.33),
-                        new ColorStop(HslToHex(h3, 0.80, 0.74), 0.66),
-                        new ColorStop(HslToHex(h1, 0.85, 0.70), 1.0)
-                    }).ToString();
-                }
-                p.AuroraOpacity = aurora ? Math.Round(0.20 + strength * 0.25, 2) : 0.0;
-
-                // 20%: nebula clouds, from the theme's hue toward its second hue (or a neighbour)
-                bool nebula = rng.Next(10) < 2;
-                double nebStrength = rng.NextDouble(), nebDensity = rng.NextDouble(), nebScale = rng.NextDouble(), nebSwirl = rng.NextDouble();
-                if (nebula)
-                {
-                    double h2 = theme.DualTone ? theme.DualHue : baseHue + 40.0;
-                    p.NebulaColor = ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
-                    {
-                        new ColorStop(HslToHex(h2, 0.85, 0.66), 0.0),
-                        new ColorStop(HslToHex(baseHue, 0.85, 0.62), 0.55),
-                        new ColorStop(HslToHex(baseHue - 30.0, 0.80, 0.58), 1.0)
-                    }).ToString();
-                    p.NebulaDensity = Math.Round(0.35 + nebDensity * 0.4, 2);
-                    p.NebulaScale = Math.Round(0.9 + nebScale * 1.0, 2);
-                    p.NebulaSwirl = Math.Round((nebSwirl - 0.5) * 1.4, 2);
-                }
-                p.NebulaOpacity = nebula ? Math.Round(0.45 + nebStrength * 0.35, 2) : 0.0;
-            }
-
-            // Gem cut: mostly with heart / star pupils, where it reads as a jewel
-            if (!Locked(RandomizeLocks.Pupil))
-            {
-                bool jewelShape = p.PupilShape is PupilShape.Heart or PupilShape.Star5;
-                double roll = rng.NextDouble(), facet = rng.NextDouble(), count = rng.NextDouble();
-                bool facets = roll < (jewelShape ? 0.6 : 0.1);
-                p.PupilFacetIntensity = facets ? Math.Round(0.45 + facet * 0.45, 2) : 0.0;
-                p.PupilFacetCount = 6 + (int)(count * 10);
-            }
-
-            // 14. Settings added later (light, fiber noise, corner rounding, blend modes), each kept by the lock of
-            //     the settings box it sits in. Drawn after everything else so the values above stay as they were.
-            if (!colorsLocked)
-            {
-                // Light: half the designs lit from the upper left, where the generated highlights sit
-                bool lit = rng.Next(2) == 0;
-                double angle = rng.NextDouble(), strength = rng.NextDouble();
-                p.LightAngle = Math.Round(200.0 + angle * 70.0);
-                p.LightStrength = lit ? Math.Round(0.15 + strength * 0.35, 2) : 0.0;
-
-                // Fiber noise: on in about half the designs, kept subtle
-                bool fibers = rng.Next(2) == 0;
-                double noise = rng.NextDouble(), noiseScale = rng.NextDouble();
-                p.FiberNoise = fibers ? Math.Round(0.15 + noise * 0.30, 2) : 0.0;
-                p.FiberNoiseScale = Math.Round(0.8 + noiseScale * 0.8, 2);
-
-                // Aurora blend: the gentle modes only (覆い焼き / オーバーレイ easily wash out or darken the iris)
-                p.AuroraBlend = rng.Next(10) switch
-                {
-                    < 4 => LayerBlend.Normal,
-                    < 8 => LayerBlend.Screen,
-                    _ => LayerBlend.SoftLight
-                };
-            }
-
-            if (!Locked(RandomizeLocks.Pupil))
-            {
-                // Only shows on the cat slit / heart / star pupils
-                p.PupilCornerRounding = Math.Round(rng.NextDouble() * 0.5, 2);
-            }
-
-            if (!Locked(RandomizeLocks.Particles))
-            {
-                p.GlitterBlend = rng.Next(10) switch
-                {
-                    < 5 => LayerBlend.Normal,
-                    < 9 => LayerBlend.Screen,
-                    _ => LayerBlend.ColorDodge
-                };
-            }
-
-            if (!Locked(RandomizeLocks.Highlights))
-            {
-                // Each generated highlight gets its own 重ね方
-                foreach (var h in p.Highlights)
-                {
-                    h.Blend = rng.Next(10) < 7 ? LayerBlend.Normal : LayerBlend.Screen;
-                }
-            }
-
-            if (!Locked(RandomizeLocks.Symbols))
-            {
-                // Each generated symbol gets its own 重ね方, like the highlights
-                foreach (var s in p.Symbols)
-                {
-                    s.Blend = rng.Next(10) < 6 ? LayerBlend.Normal : LayerBlend.Screen;
-                }
-            }
-
-            if (!Locked(RandomizeLocks.Pupil))
-            {
-                // 星の芯の太さ: only shows on the star pupil; drawn last so the earlier draws stay as they were
-                p.PupilStarCoreScale = Math.Round(0.85 + rng.NextDouble() * 0.3, 2);
-            }
-
-            // 14b. 見える範囲 (drawn last, so the earlier draws stay as they were): now and then the rays or the
-            // glitter only on the lower side; the lens rings always everywhere
-            if (!Locked(RandomizeLocks.Rays))
-            {
-                bool lower = rng.Next(10) < 2; // 20%
-                double w = rng.NextDouble(), f = rng.NextDouble();
-                p.RayRangeAngle = IrisParameters.DefaultRangeAngle;
-                p.RayRangeWidth = lower ? Math.Round(160.0 + w * 60.0) : IrisParameters.FullRangeWidth;
-                p.RayRangeFeather = lower ? Math.Round(30.0 + f * 30.0) : IrisParameters.DefaultRangeFeather;
-            }
-            if (!Locked(RandomizeLocks.Particles))
-            {
-                bool lower = rng.Next(10) < 1; // 10%
-                double w = rng.NextDouble(), f = rng.NextDouble();
-                p.ParticleRangeAngle = IrisParameters.DefaultRangeAngle;
-                p.ParticleRangeWidth = lower ? Math.Round(200.0 + w * 60.0) : IrisParameters.FullRangeWidth;
-                p.ParticleRangeFeather = lower ? Math.Round(40.0 + f * 30.0) : IrisParameters.DefaultRangeFeather;
-            }
-            if (!Locked(RandomizeLocks.Lens))
-            {
+                p.LensPatternEnabled = Chance(30);
+                p.LensRingCount = rng.Next(4, 11);
+                p.LensRingIntensity = Range(0.30, 0.60);
+                p.LensRingWidth = Range(0.6, 1.4, 1);
+                p.LensRefractionGlow = Range(0.20, 0.55);
+                if (!colorsLocked) p.LensRingColor = p.RayColor;
                 p.LensRangeAngle = IrisParameters.DefaultRangeAngle;
                 p.LensRangeWidth = IrisParameters.FullRangeWidth;
                 p.LensRangeFeather = IrisParameters.DefaultRangeFeather;
             }
 
-            // 14c. 宝石カット面 (drawn after everything else, so the earlier draws stay as they were): 15% of designs,
-            // sometimes on the upper side only
-            if (!Locked(RandomizeLocks.IrisFacets))
+            if (!Locked(RandomizeLocks.Highlights))
             {
-                bool on = rng.Next(100) < 15;
-                double strength = rng.NextDouble(), table = rng.NextDouble(), bias = rng.NextDouble();
-                int[] counts = { 6, 8, 8, 10, 12 };
-                int count = counts[rng.Next(counts.Length)];
-                bool softLight = rng.Next(10) < 3;
-                bool upper = rng.Next(10) < 3;
-                double angle = rng.NextDouble();
-                p.IrisFacetIntensity = on ? Math.Round(0.35 + strength * 0.35, 2) : 0.0;
-                p.IrisFacetCount = count;
-                p.IrisFacetTableSize = Math.Round(0.35 + table * 0.2, 2);
-                p.IrisFacetShadeAngle = Math.Round(225.0 + angle * 90.0); // the dark side somewhere above
-                p.IrisFacetShadeBias = Math.Round(0.4 + bias * 0.4, 2);
-                p.IrisFacetBlend = softLight ? LayerBlend.SoftLight : LayerBlend.Overlay;
-                p.IrisFacetRangeAngle = upper ? 270.0 : IrisParameters.DefaultRangeAngle;
-                p.IrisFacetRangeWidth = upper ? 200.0 : IrisParameters.FullRangeWidth;
-                p.IrisFacetRangeFeather = upper ? 60.0 : IrisParameters.DefaultRangeFeather;
+                // 右目の反転 is how the pair is built, not part of the look: the new highlights keep the first one's
+                var flip = p.Highlights.FirstOrDefault()?.RightEyeFlip ?? RightEyeFlip.Mirror;
+                var style = HighlightStyles.All[rng.Next(HighlightStyles.All.Count)];
+                p.Highlights.Clear();
+                foreach (var h in HighlightStyles.Build(style, rng, flip))
+                {
+                    h.Blend = Chance(70) ? LayerBlend.Normal : LayerBlend.Screen;
+                    p.Highlights.Add(h);
+                }
             }
 
-            // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
-            p.SizeMm = preservedSizeMm;
-            p.Shape = preservedShape;
-            p.AspectRatio = preservedAspectRatio;
-            p.TiltAngle = preservedTiltAngle;
+            if (!Locked(RandomizeLocks.Symbols)) RandomizeSymbols(p, rng, hue, colorsLocked);
+            if (!Locked(RandomizeLocks.IrisFacets)) RandomizeIrisFacets(p, rng);
+
+            if (!Locked(RandomizeLocks.OddEye))
+            {
+                p.IsOddEye = Chance(15);
+                p.OddEyeSeedOffset = rng.Next(500, 5000);
+                if (!colorsLocked)
+                {
+                    // The other eye: another theme (never the same one)
+                    var odd = Themes[(Array.IndexOf(Themes, theme) + 1 + rng.Next(Themes.Length - 1)) % Themes.Length];
+                    double oddHue = odd.Hue + Range(-8.0, 8.0, 1);
+                    double oddPale = Math.Min(0.75, odd.Saturation + 0.15);
+                    p.OddEyeBaseColor = HslToHex(oddHue, odd.Saturation, odd.Lightness);
+                    p.OddEyeInnerColor = HslToHex(oddHue + 8.0, Math.Max(0.1, odd.Saturation - 0.10), Math.Min(0.92, odd.Lightness + 0.24));
+                    p.OddEyeOuterColor = HslToHex(oddHue - 8.0, Math.Min(1.0, odd.Saturation + 0.08), Math.Max(0.12, odd.Lightness - 0.26));
+                    p.OddEyeRayColor = HslToHex(oddHue + 10.0, oddPale, 0.86);
+                    p.OddEyeBottomHighlightColor = HslToHex(odd.SecondHue ?? oddHue + 12.0, oddPale, 0.86);
+                }
+            }
         }
 
-        private static void GenerateRandomHighlights(IrisParameters p, Random rng)
+        /// <summary>
+        /// The 「虹彩カラー設定」 box (kept by the 色 lock): the design name, the iris colors and their ranges, the lower
+        /// glow, the aurora and nebula layers, the light and the fiber noise.
+        /// </summary>
+        private static void RandomizeIrisColors(IrisParameters p, Random rng, ColorTheme theme, double hue, double sat,
+            double lit, double secondHue, double paleSat, bool colorsLocked)
         {
-            // 右目の反転 is how the pair is built, not part of the look the randomizer makes up (as the global setting it
-            // replaced, which the randomizer kept): the new highlights take the first current highlight's
-            var flip = p.Highlights.FirstOrDefault()?.RightEyeFlip ?? RightEyeFlip.Mirror;
-            p.Highlights.Clear();
-            int style = rng.Next(4);
+            if (colorsLocked) return;
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+            bool Chance(int percent) => rng.Next(100) < percent;
+            bool twoTone = theme.SecondHue != null;
 
-            switch (style)
+            p.Name = $"{theme.Name} #{rng.Next(100, 1000)}";
+            p.BaseColor = HslToHex(hue, sat, lit);
+            p.InnerColor = HslToHex(hue + (twoTone ? 20.0 : 8.0), Math.Max(0.1, sat - 0.10), Math.Min(0.92, lit + 0.26));
+            p.OuterColor = HslToHex(hue - 8.0, Math.Min(1.0, sat + 0.08), Math.Max(0.10, lit - 0.28));
+            p.BottomHighlightColor = twoTone ? HslToHex(secondHue, paleSat, 0.80) : HslToHex(hue + 12.0, paleSat, 0.88);
+            p.InnerGradientRadius = Range(0.35, 0.70);
+            p.OuterGradientRadius = Range(0.80, 1.10);
+            p.BottomHighlightIntensity = Range(0.25, 0.80);
+
+            // 30%: an aurora ring of the theme's hues and one hue picked at random
+            bool aurora = Chance(30);
+            double extraHue = rng.NextDouble() * 360.0;
+            p.AuroraColor = ColorFill.Create(ColorFillKind.Conic, ColorFill.ConicDefaultAngle, new[]
             {
-                case 0:
-                    // Classic 2-point anime highlight
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = -0.32,
-                        PositionY = -0.32,
-                        Size = Math.Round(0.24 + rng.NextDouble() * 0.08, 2),
-                        Color = "#FFFFFF",
-                        Opacity = 0.95,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = 0.34,
-                        PositionY = 0.30,
-                        Size = Math.Round(0.12 + rng.NextDouble() * 0.06, 2),
-                        Color = "#FFFFFF",
-                        Opacity = 0.75,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    break;
+                new ColorStop(HslToHex(hue, 0.85, 0.70), 0.0),
+                new ColorStop(HslToHex(twoTone ? secondHue : hue + 60.0, 0.85, 0.72), 0.33),
+                new ColorStop(HslToHex(extraHue, 0.80, 0.74), 0.66),
+                new ColorStop(HslToHex(hue, 0.85, 0.70), 1.0)
+            }).ToString();
+            p.AuroraOpacity = aurora ? Range(0.20, 0.45) : 0.0;
+            // Gentle blend modes only (覆い焼き / オーバーレイ easily wash out or darken the iris)
+            p.AuroraBlend = rng.Next(10) switch { < 4 => LayerBlend.Normal, < 8 => LayerBlend.Screen, _ => LayerBlend.SoftLight };
 
-                case 1:
-                    // Sparkle Star4 + Soft lower highlight
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Star4,
-                        PositionX = -0.30,
-                        PositionY = -0.30,
-                        Size = Math.Round(0.22 + rng.NextDouble() * 0.06, 2),
-                        Rotation = Math.Round(rng.NextDouble() * 45.0, 1),
-                        Color = "#FFFFFF",
-                        Opacity = 0.95,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = 0.30,
-                        PositionY = 0.32,
-                        Size = 0.14,
-                        Color = "#FFFFFF",
-                        Opacity = 0.70,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    break;
+            // 20%: nebula clouds, from the second hue through the theme's hue to a neighbour
+            bool nebula = Chance(20);
+            p.NebulaColor = ColorFill.Create(ColorFillKind.Radial, ColorFill.DefaultAngle, new[]
+            {
+                new ColorStop(HslToHex(secondHue, 0.85, 0.66), 0.0),
+                new ColorStop(HslToHex(hue, 0.85, 0.62), 0.55),
+                new ColorStop(HslToHex(hue - 30.0, 0.80, 0.58), 1.0)
+            }).ToString();
+            p.NebulaOpacity = nebula ? Range(0.45, 0.80) : 0.0;
+            p.NebulaDensity = Range(0.35, 0.75);
+            p.NebulaScale = Range(0.9, 1.9);
+            p.NebulaSwirl = Range(-0.7, 0.7);
 
-                case 2:
-                    // 3-point dynamic luminous highlight
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = -0.34,
-                        PositionY = -0.30,
-                        Size = 0.25,
-                        Color = "#FFFFFF",
-                        Opacity = 0.96,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = -0.15,
-                        PositionY = -0.42,
-                        Size = 0.10,
-                        Color = "#FFFFFF",
-                        Opacity = 0.85,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle, // an oval: 1.35 times as wide as it is tall
-                        PositionX = 0.32,
-                        PositionY = 0.28,
-                        Size = 0.16,
-                        StretchLeft = 1.35,
-                        StretchRight = 1.35,
-                        Rotation = 25.0,
-                        Color = "#FFFFFF",
-                        Opacity = 0.75,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    break;
+            // Light: in 6 designs out of 10, from the upper left where the highlights are
+            p.LightAngle = Math.Round(Range(200.0, 270.0));
+            p.LightStrength = Chance(60) ? Range(0.15, 0.50) : 0.0;
 
-                case 3:
-                default:
-                    // Oval stylized anime eye
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle, // an oval: 0.85 times as wide as it is tall
-                        PositionX = -0.30,
-                        PositionY = -0.32,
-                        Size = 0.26,
-                        StretchLeft = 0.85,
-                        StretchRight = 0.85,
-                        Rotation = -15.0,
-                        Color = "#FFFFFF",
-                        Opacity = 0.95,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    p.Highlights.Add(new HighlightItem
-                    {
-                        Shape = HighlightShape.Circle,
-                        PositionX = 0.28,
-                        PositionY = 0.26,
-                        Size = 0.13,
-                        Color = "#FFFFFF",
-                        Opacity = 0.80,
-                        Enabled = true,
-                        RightEyeFlip = flip
-                    });
-                    break;
+            // Fiber noise: in half the designs, kept subtle
+            p.FiberNoise = Chance(50) ? Range(0.15, 0.45) : 0.0;
+            p.FiberNoiseScale = Range(0.8, 1.6);
+        }
+
+        private static void RandomizePupil(IrisParameters p, Random rng)
+        {
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+
+            int roll = rng.Next(100);
+            var shape = PupilShape.Round;
+            foreach (var (s, weight) in PupilShapes)
+            {
+                if (roll < weight) { shape = s; break; }
+                roll -= weight;
             }
+            p.PupilShape = shape;
+
+            // A round pupil is sometimes a tall oval (左右 75%・上下 125%)
+            bool oval = shape == PupilShape.Round && rng.Next(100) < 15;
+            p.PupilStretchLeft = p.PupilStretchRight = oval ? 0.75 : 1.0;
+            p.PupilStretchTop = p.PupilStretchBottom = oval ? 1.25 : 1.0;
+
+            // Shapes with a thin outline need more room to read
+            bool figure = shape is not (PupilShape.Round or PupilShape.CatSlit);
+            p.PupilSizeRatio = figure ? Range(0.34, 0.46) : Range(0.24, 0.42);
+            p.PupilOpacity = Range(0.92, 1.0);
+            p.PupilSoftness = Range(0.03, 0.15);
+            p.PupilCornerRounding = Range(0.0, 0.5);
+            p.PupilStarCoreScale = Range(0.85, 1.15);
+
+            // 宝石カット: mostly on the shapes that read as a cut stone
+            bool jewel = shape is PupilShape.Heart or PupilShape.Star5 or PupilShape.Star4 or PupilShape.Diamond;
+            p.PupilFacetIntensity = rng.Next(100) < (jewel ? 60 : 8) ? Range(0.45, 0.90) : 0.0;
+            p.PupilFacetCount = rng.Next(6, 16);
+        }
+
+        private static void RandomizeRays(IrisParameters p, Random rng)
+        {
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+
+            int[] counts = { 24, 36, 48, 56, 64, 72, 80, 96 };
+            p.RayCount = counts[rng.Next(counts.Length)];
+            p.RayThickness = Range(0.8, 2.0, 1);
+            p.RayLengthRatio = Range(0.55, 0.80);
+            p.RayIntensity = Range(0.40, 0.85);
+            p.RayRandomness = Range(0.25, 0.60);
+            p.RayInnerRadiusRatio = Range(0.26, 0.40);
+            p.RayTaper = Range(0.5, 0.9);
+            p.RayWidthVariation = Range(0.3, 0.7);
+            p.RayCurve = Range(-0.35, 0.35); // a gentle swirl, either way
+            p.RayFineLayer = Range(0.4, 0.8);
+
+            // 見える範囲: 2 designs in 10 have the rays on the lower side only
+            bool lower = rng.Next(10) < 2;
+            p.RayRangeAngle = IrisParameters.DefaultRangeAngle;
+            p.RayRangeWidth = lower ? Math.Round(Range(160.0, 220.0)) : IrisParameters.FullRangeWidth;
+            p.RayRangeFeather = lower ? Math.Round(Range(30.0, 60.0)) : IrisParameters.DefaultRangeFeather;
+        }
+
+        private static void RandomizeGlitter(IrisParameters p, Random rng)
+        {
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+
+            // 25% none, 60% a sprinkle, 15% a starry sky over the whole iris
+            int roll = rng.Next(100);
+            bool starry = roll >= 85;
+            p.ParticleCount = roll < 25 ? 0 : starry ? rng.Next(140, 221) : rng.Next(25, 96);
+            p.ParticleRadiusRatio = starry ? Range(0.85, 0.95) : Range(0.68, 0.86);
+            p.ParticleMinSize = Range(0.8, 1.4, 1);
+            p.ParticleMaxSize = Math.Round(p.ParticleMinSize + Range(0.8, 2.0, 1), 1);
+            p.ParticleOpacity = Range(0.65, 0.95);
+            p.ParticleGlow = Range(0.5, 0.9);
+            p.ParticleFlareRatio = Range(0.08, 0.25);
+            p.ParticleFlareLength = Range(3.0, 5.5, 1);
+            p.GlitterBlend = rng.Next(10) switch { < 5 => LayerBlend.Normal, < 9 => LayerBlend.Screen, _ => LayerBlend.ColorDodge };
+
+            // 見える範囲: 1 design in 10 has the glitter on the lower side only
+            bool lower = rng.Next(10) < 1;
+            p.ParticleRangeAngle = IrisParameters.DefaultRangeAngle;
+            p.ParticleRangeWidth = lower ? Math.Round(Range(200.0, 260.0)) : IrisParameters.FullRangeWidth;
+            p.ParticleRangeFeather = lower ? Math.Round(Range(40.0, 70.0)) : IrisParameters.DefaultRangeFeather;
+        }
+
+        /// <summary>
+        /// 4 designs in 10 get a symbol, a quarter of them a second, smaller one. Symbols sit away from the highlights
+        /// (upper right and lower left of the pupil), so they do not run into each other.
+        /// </summary>
+        private static void RandomizeSymbols(IrisParameters p, Random rng, double hue, bool colorsLocked)
+        {
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+
+            p.Symbols.Clear();
+            if (rng.Next(10) >= 4) return;
+
+            // The symbols' color: the glitter's (always, when the palette is locked), a pale tint of the theme or a
+            // pale complementary accent
+            int colorRoll = rng.Next(10);
+            string color = colorsLocked || colorRoll < 5 ? p.ParticleColor
+                : colorRoll < 8 ? HslToHex(hue + 30.0, 0.70, 0.88)
+                : HslToHex(hue + 180.0, 0.60, 0.85);
+
+            bool upperRight = rng.Next(2) == 0;
+            int count = rng.Next(10) < 7 ? 1 : rng.Next(2, 4);
+            var first = SymbolTypes[rng.Next(SymbolTypes.Length)];
+            p.Symbols.Add(NewSymbol(first, upperRight, count > 1 ? Range(0.10, 0.14) : Range(0.13, 0.20), count));
+
+            if (rng.Next(4) == 0)
+            {
+                var second = SymbolTypes[(Array.IndexOf(SymbolTypes, first) + 1 + rng.Next(SymbolTypes.Length - 1)) % SymbolTypes.Length];
+                p.Symbols.Add(NewSymbol(second, !upperRight, Range(0.08, 0.12), 1));
+            }
+
+            DecorativeSymbolItem NewSymbol(SymbolType type, bool upper, double size, int copies)
+            {
+                // Upper right: 290–340°, lower left: 110–160° (0° = right, 90° = down), 0.48–0.62 of the radius out
+                double angle = (upper ? Range(290.0, 340.0) : Range(110.0, 160.0)) * Math.PI / 180.0;
+                double radius = Range(0.48, 0.62);
+                return new DecorativeSymbolItem
+                {
+                    Type = type,
+                    Count = copies,
+                    Size = size,
+                    PositionX = Math.Round(Math.Cos(angle) * radius, 2),
+                    PositionY = Math.Round(Math.Sin(angle) * radius, 2),
+                    Color = color,
+                    Opacity = Range(0.75, 0.95),
+                    Rotation = Range(-25.0, 25.0, 1),
+                    Blend = rng.Next(10) < 6 ? LayerBlend.Normal : LayerBlend.Screen,
+                    Enabled = true
+                };
+            }
+        }
+
+        /// <summary>宝石カット面: 15% of designs, a third of them on the upper side only.</summary>
+        private static void RandomizeIrisFacets(IrisParameters p, Random rng)
+        {
+            double Range(double min, double max, int digits = 2) => Math.Round(min + rng.NextDouble() * (max - min), digits);
+
+            bool on = rng.Next(100) < 15;
+            int[] counts = { 6, 8, 8, 10, 12 };
+            bool upper = rng.Next(10) < 3;
+            p.IrisFacetIntensity = on ? Range(0.35, 0.70) : 0.0;
+            p.IrisFacetCount = counts[rng.Next(counts.Length)];
+            p.IrisFacetTableSize = Range(0.35, 0.55);
+            p.IrisFacetShadeAngle = Math.Round(Range(225.0, 315.0)); // the dark side somewhere above
+            p.IrisFacetShadeBias = Range(0.4, 0.8);
+            p.IrisFacetBlend = rng.Next(10) < 3 ? LayerBlend.SoftLight : LayerBlend.Overlay;
+            p.IrisFacetRangeAngle = upper ? 270.0 : IrisParameters.DefaultRangeAngle;
+            p.IrisFacetRangeWidth = upper ? 200.0 : IrisParameters.FullRangeWidth;
+            p.IrisFacetRangeFeather = upper ? 60.0 : IrisParameters.DefaultRangeFeather;
         }
 
         public static string HslToHex(double h, double s, double l)

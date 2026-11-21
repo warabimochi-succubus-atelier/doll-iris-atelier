@@ -110,7 +110,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(0.6, q.FiberNoise);
             Assert.Equal(1.4, q.FiberNoiseScale);
 
-            ColorPresets.ApplyPreset(q, ColorPresets.All[0]);
+            ColorPresets.ApplyPreset(q, ColorPresets.All.First(x => x.FiberNoise == null)); // a preset that leaves it out
             Assert.Equal(0.0, q.FiberNoise);
             Assert.Equal(1.0, q.FiberNoiseScale);
 
