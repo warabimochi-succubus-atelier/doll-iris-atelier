@@ -158,10 +158,18 @@ namespace DollIrisGenerator.Services
                 // 右目の反転 is how the pair is built, not part of the look: the new highlights keep the first one's
                 var flip = p.Highlights.FirstOrDefault()?.RightEyeFlip ?? RightEyeFlip.Mirror;
                 var style = HighlightStyles.All[rng.Next(HighlightStyles.All.Count)];
+                // Finish: crisp 45%, soft (輪郭のぼかし) 25%, glowing (光のにじみ) 20%, both 10%. On a pale iris a
+                // glow washes the color out, so it stays faint there
+                int finish = rng.Next(100);
+                bool soft = finish is >= 45 and < 70 || finish >= 90;
+                bool glowing = finish >= 70;
+                double softness = soft ? Range(0.15, 0.40) : 0.0;
+                double glow = !glowing ? 0.0 : lit > 0.62 ? Range(0.20, 0.45) : Range(0.35, 0.80);
                 p.Highlights.Clear();
-                foreach (var h in HighlightStyles.Build(style, rng, flip))
+                foreach (var h in HighlightStyles.Build(style, rng, flip, softness, glow))
                 {
-                    h.Blend = Chance(70) ? LayerBlend.Normal : LayerBlend.Screen;
+                    // A glowing highlight looks more lit with screen
+                    h.Blend = Chance(glowing ? 50 : 70) ? LayerBlend.Normal : LayerBlend.Screen;
                     p.Highlights.Add(h);
                 }
             }

@@ -83,6 +83,41 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void Highlights_AreCrispSoftOrGlowing_AndOnlySmoothShapesAreBlurred()
+        {
+            int crisp = 0, soft = 0, glowing = 0;
+            foreach (var p in Designs(400))
+            {
+                // One finish for the whole layout
+                Assert.Single(p.Highlights.Select(h => h.Glow).Distinct());
+                Assert.True(p.Highlights.Where(h => h.Softness > 0).Select(h => h.Softness).Distinct().Count() <= 1);
+                foreach (var h in p.Highlights)
+                {
+                    if (!HighlightStyles.IsSmooth(h.Shape)) Assert.Equal(0.0, h.Softness);
+                    if (h.Softness > 0) Assert.InRange(h.Softness, 0.15, 0.40);
+                    if (h.Glow > 0) Assert.InRange(h.Glow, 0.20, 0.80);
+                }
+                bool s = p.Highlights.Any(h => h.Softness > 0), g = p.Highlights[0].Glow > 0;
+                if (!s && !g) crisp++;
+                if (s) soft++;
+                if (g) glowing++;
+            }
+            // Crisp is the most common finish; soft and glowing both show up often
+            Assert.True(crisp > 120 && soft > 60 && glowing > 60, $"crisp {crisp}, soft {soft}, glowing {glowing}");
+        }
+
+        [Fact]
+        public void SomePresets_HaveSoftOrGlowingHighlights()
+        {
+            var presets = ColorPresets.All;
+            Assert.Contains(presets, x => x.Highlights!.Any(h => h.Glow > 0));
+            Assert.Contains(presets, x => x.Highlights!.Any(h => h.Softness > 0));
+            Assert.Contains(presets, x => x.Highlights!.All(h => h.Glow == 0 && h.Softness == 0));
+            foreach (var h in presets.SelectMany(x => x.Highlights!))
+                if (!HighlightStyles.IsSmooth(h.Shape)) Assert.Equal(0.0, h.Softness);
+        }
+
+        [Fact]
         public void HighlightStyles_WithoutJitter_AreFixed_AndJitterStaysClose()
         {
             foreach (var style in HighlightStyles.All)
