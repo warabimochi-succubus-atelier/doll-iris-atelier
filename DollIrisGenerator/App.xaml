@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:DollIrisGenerator"
              xmlns:conv="clr-namespace:DollIrisGenerator.Converters"
+             xmlns:controls="clr-namespace:DollIrisGenerator.Controls"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -98,7 +99,8 @@
                                     <Border Background="#20242C" BorderBrush="#4F5D75" BorderThickness="1" CornerRadius="4"
                                             MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                             MaxHeight="{TemplateBinding MaxDropDownHeight}" Margin="0,2,0,0">
-                                        <ScrollViewer SnapsToDevicePixels="True">
+                                        <!-- The popup is its own window, so the pages' wheel handling does not reach it: a touchpad swipe flew through the list -->
+                                        <ScrollViewer SnapsToDevicePixels="True" controls:ProportionalWheelScrolling.IsEnabled="True">
                                             <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
                                         </ScrollViewer>
                                     </Border>
