@@ -102,6 +102,16 @@ namespace DollIrisGenerator.Models
         public double? LensRangeAngle { get; set; }
         public double? LensRangeWidth { get; set; }
         public double? LensRangeFeather { get; set; }
+        // 宝石カット面
+        public double? IrisFacetIntensity { get; set; }
+        public double? IrisFacetTableSize { get; set; }
+        public double? IrisFacetShadeAngle { get; set; }
+        public double? IrisFacetShadeBias { get; set; }
+        public double? IrisFacetRangeAngle { get; set; }
+        public double? IrisFacetRangeWidth { get; set; }
+        public double? IrisFacetRangeFeather { get; set; }
+        public int? IrisFacetCount { get; set; }
+        public LayerBlend? IrisFacetBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
@@ -375,6 +385,15 @@ namespace DollIrisGenerator.Models
             target.LensRangeAngle = preset.LensRangeAngle ?? d.LensRangeAngle;
             target.LensRangeWidth = preset.LensRangeWidth ?? d.LensRangeWidth;
             target.LensRangeFeather = preset.LensRangeFeather ?? d.LensRangeFeather;
+            target.IrisFacetIntensity = preset.IrisFacetIntensity ?? d.IrisFacetIntensity;
+            target.IrisFacetTableSize = preset.IrisFacetTableSize ?? d.IrisFacetTableSize;
+            target.IrisFacetShadeAngle = preset.IrisFacetShadeAngle ?? d.IrisFacetShadeAngle;
+            target.IrisFacetShadeBias = preset.IrisFacetShadeBias ?? d.IrisFacetShadeBias;
+            target.IrisFacetRangeAngle = preset.IrisFacetRangeAngle ?? d.IrisFacetRangeAngle;
+            target.IrisFacetRangeWidth = preset.IrisFacetRangeWidth ?? d.IrisFacetRangeWidth;
+            target.IrisFacetRangeFeather = preset.IrisFacetRangeFeather ?? d.IrisFacetRangeFeather;
+            target.IrisFacetCount = preset.IrisFacetCount ?? d.IrisFacetCount;
+            target.IrisFacetBlend = preset.IrisFacetBlend ?? d.IrisFacetBlend;
 
             // Highlights (replaced in place, so the list on screen stays bound)
             ReplaceItems(target.Highlights, preset.Highlights ?? d.Highlights.ToList(), h => h.Clone());
@@ -521,6 +540,15 @@ namespace DollIrisGenerator.Models
                 LensRangeAngle = design.LensRangeAngle,
                 LensRangeWidth = design.LensRangeWidth,
                 LensRangeFeather = design.LensRangeFeather,
+                IrisFacetIntensity = design.IrisFacetIntensity,
+                IrisFacetTableSize = design.IrisFacetTableSize,
+                IrisFacetShadeAngle = design.IrisFacetShadeAngle,
+                IrisFacetShadeBias = design.IrisFacetShadeBias,
+                IrisFacetRangeAngle = design.IrisFacetRangeAngle,
+                IrisFacetRangeWidth = design.IrisFacetRangeWidth,
+                IrisFacetRangeFeather = design.IrisFacetRangeFeather,
+                IrisFacetCount = design.IrisFacetCount,
+                IrisFacetBlend = design.IrisFacetBlend,
 
                 Highlights = design.Highlights.Select(h => h.Clone()).ToList(),
                 PupilRightEyeFlip = design.PupilRightEyeFlip,

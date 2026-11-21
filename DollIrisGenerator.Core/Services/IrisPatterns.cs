@@ -240,6 +240,82 @@ namespace DollIrisGenerator.Services
             return facets;
         }
 
+        private const int IrisFacetSeedOffset = 5500;
+
+        /// <summary>Strongest alpha of a 宝石カット面 facet (at strength 100 % and a facet's full shade).</summary>
+        public const double MaxIrisFacetAlpha = 0.9;
+
+        /// <summary>Radius (iris radii) the outer facets reach: past the iris, so shaped outlines' corners are covered too.</summary>
+        public const double IrisFacetReach = 1.5;
+
+        /// <summary>
+        /// 宝石カット面: a brilliant cut seen from above, over the whole iris, in iris-radius units around (0, 0)
+        /// (x right, y down; the caller stretches it onto the iris like the other patterns). <paramref name="count"/>
+        /// table corners, the first at the top. From the center out: the table (N-gon, radius
+        /// <paramref name="tableSize"/>), a star facet on each table edge (tip halfway to the rim), a kite from each
+        /// table corner out to the girdle, and two upper-girdle triangles between neighbouring kites. The outer points
+        /// lie at <see cref="IrisFacetReach"/> (the iris clip cuts them at the rim).
+        ///
+        /// Shade (-1 = black … 1 = white): <paramref name="bias"/> × the facet's direction (darkest when it points at
+        /// <paramref name="shadeAngle"/>) + (1 − bias / 2) × a light / dark alternation by facet kind, plus a small seeded
+        /// jitter. The table stays faintly light. <paramref name="mirror"/> mirrors the result left-right (right eye:
+        /// the dark side is mirrored with it).
+        /// </summary>
+        public static List<(Point[] Polygon, double Shade)> IrisFacets(int count, double tableSize, double shadeAngle, double bias,
+            int seed, bool mirror)
+        {
+            var facets = new List<(Point[], double)>(count * 4 + 1);
+            if (count < 3) return facets;
+
+            var rng = new Random(seed + IrisFacetSeedOffset);
+            double t = tableSize, s = tableSize + 0.5 * (1.0 - tableSize), g = IrisFacetReach;
+            double step = 2.0 * Math.PI / count;
+            double dark = shadeAngle * Math.PI / 180.0;
+
+            Point At(double r, double a) => new(r * Math.Cos(a), r * Math.Sin(a));
+            double Vertex(int i) => -Math.PI / 2.0 + step * i;
+            double Mid(int i) => Vertex(i) + step / 2.0;
+            double Shade(Point[] poly, double alternate)
+            {
+                double cx = 0, cy = 0;
+                foreach (var q in poly) { cx += q.X; cy += q.Y; }
+                double direction = -Math.Cos(Math.Atan2(cy, cx) - dark); // -1 on the dark side
+                double jitter = (rng.NextDouble() - 0.5) * 0.3;
+                // The alternation keeps neighbouring facets apart even when the direction dominates
+                return Math.Clamp(bias * direction + (1.0 - 0.5 * bias) * alternate + jitter, -1.0, 1.0);
+            }
+
+            var table = new Point[count];
+            for (int i = 0; i < count; i++) table[i] = At(t, Vertex(i));
+            facets.Add((table, 0.2 + (rng.NextDouble() - 0.5) * 0.1));
+
+            for (int i = 0; i < count; i++)
+            {
+                int next = (i + 1) % count;
+                double sign = i % 2 == 0 ? 1.0 : -1.0;
+                var star = new[] { At(t, Vertex(i)), At(t, Vertex(next)), At(s, Mid(i)) };
+                facets.Add((star, Shade(star, 0.7 * sign)));
+                var kite = new[] { At(t, Vertex(i)), At(s, Mid(i - 1 + count)), At(g, Vertex(i)), At(s, Mid(i)) };
+                facets.Add((kite, Shade(kite, -0.5 * sign)));
+                var girdleA = new[] { At(s, Mid(i)), At(g, Vertex(i)), At(g, Mid(i)) };
+                facets.Add((girdleA, Shade(girdleA, 0.4)));
+                var girdleB = new[] { At(s, Mid(i)), At(g, Mid(i)), At(g, Vertex(next)) };
+                facets.Add((girdleB, Shade(girdleB, -0.4)));
+            }
+
+            if (mirror)
+            {
+                for (int k = 0; k < facets.Count; k++)
+                {
+                    var (poly, shade) = facets[k];
+                    var m = new Point[poly.Length];
+                    for (int j = 0; j < poly.Length; j++) m[j] = new Point(-poly[j].X, poly[j].Y);
+                    facets[k] = (m, shade);
+                }
+            }
+            return facets;
+        }
+
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>
         public static ShapeOutline Flare(double size, double length) => ShapeOutline.Star(4, size * length * 0.6, 0.07);
     }

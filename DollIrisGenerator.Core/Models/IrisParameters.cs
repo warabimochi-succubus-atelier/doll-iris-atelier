@@ -54,6 +54,12 @@ namespace DollIrisGenerator.Models
         public const double DefaultRangeFeather = 30.0;
         public const double MaxRangeFeather = 90.0;
 
+        /// <summary>宝石カット面 (IrisPatterns.IrisFacets): ranges and defaults.</summary>
+        public const int MinIrisFacetCount = 6, MaxIrisFacetCount = 16, DefaultIrisFacetCount = 8;
+        public const double MinIrisFacetTableSize = 0.2, MaxIrisFacetTableSize = 0.7, DefaultIrisFacetTableSize = 0.45;
+        public const double DefaultIrisFacetShadeAngle = 270.0;  // the darker side: up
+        public const double DefaultIrisFacetShadeBias = 0.6;
+
         /// <summary>An angle in degrees brought into 0–360 (NaN / infinity: <see cref="DefaultRangeAngle"/>).</summary>
         private static double NormalizeAngle(double value)
         {
@@ -170,6 +176,17 @@ namespace DollIrisGenerator.Models
         private double _lensRangeAngle = DefaultRangeAngle;
         private double _lensRangeWidth = FullRangeWidth;
         private double _lensRangeFeather = DefaultRangeFeather;
+
+        // 宝石カット面 (gem facets over the whole iris): 0 strength = off. Files saved before it existed load as off.
+        private double _irisFacetIntensity = 0.0;
+        private int _irisFacetCount = DefaultIrisFacetCount;
+        private double _irisFacetTableSize = DefaultIrisFacetTableSize;
+        private double _irisFacetShadeAngle = DefaultIrisFacetShadeAngle;
+        private double _irisFacetShadeBias = DefaultIrisFacetShadeBias;
+        private LayerBlend _irisFacetBlend = LayerBlend.Overlay;
+        private double _irisFacetRangeAngle = DefaultRangeAngle;
+        private double _irisFacetRangeWidth = FullRangeWidth;
+        private double _irisFacetRangeFeather = DefaultRangeFeather;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -784,6 +801,69 @@ namespace DollIrisGenerator.Models
         {
             get => _lensRangeFeather;
             set { _lensRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>宝石カット面の強さ: how strongly the facets lighten / darken the iris. 0 = off.</summary>
+        public double IrisFacetIntensity
+        {
+            get => _irisFacetIntensity;
+            set { _irisFacetIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>面の数: the cut's symmetry (table corners).</summary>
+        public int IrisFacetCount
+        {
+            get => _irisFacetCount;
+            set { _irisFacetCount = Math.Clamp(value, MinIrisFacetCount, MaxIrisFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>テーブルの大きさ: radius of the flat center facet, as a fraction of the iris radius.</summary>
+        public double IrisFacetTableSize
+        {
+            get => _irisFacetTableSize;
+            set { _irisFacetTableSize = ClampFinite(value, MinIrisFacetTableSize, MaxIrisFacetTableSize, DefaultIrisFacetTableSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>明暗の向き: the side (degrees; 0 = right, 90 = down, 270 = up) whose facets are darkest.</summary>
+        public double IrisFacetShadeAngle
+        {
+            get => _irisFacetShadeAngle;
+            set { _irisFacetShadeAngle = double.IsFinite(value) ? NormalizeAngle(value) : DefaultIrisFacetShadeAngle; OnPropertyChanged(); }
+        }
+
+        /// <summary>明暗の偏り: 0 = facets only alternate light / dark; 1 = shaded by their direction only.</summary>
+        public double IrisFacetShadeBias
+        {
+            get => _irisFacetShadeBias;
+            set { _irisFacetShadeBias = ClampFinite(value, 0.0, 1.0, DefaultIrisFacetShadeBias); OnPropertyChanged(); }
+        }
+
+        /// <summary>宝石カット面の重ね方 (overlay by default: the facets keep the iris color).</summary>
+        public LayerBlend IrisFacetBlend
+        {
+            get => _irisFacetBlend;
+            set { _irisFacetBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>宝石カット面の範囲の向き (see PatternRange).</summary>
+        public double IrisFacetRangeAngle
+        {
+            get => _irisFacetRangeAngle;
+            set { _irisFacetRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>宝石カット面の範囲の広さ. 360 = everywhere.</summary>
+        public double IrisFacetRangeWidth
+        {
+            get => _irisFacetRangeWidth;
+            set { _irisFacetRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>宝石カット面の範囲の端のぼかし.</summary>
+        public double IrisFacetRangeFeather
+        {
+            get => _irisFacetRangeFeather;
+            set { _irisFacetRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
         // Collections

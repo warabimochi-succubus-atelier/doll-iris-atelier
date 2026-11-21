@@ -36,8 +36,10 @@ namespace DollIrisGenerator.Models
         Lens = 1 << 8,
         /// <summary>オッドアイ: on/off, the odd-eye colors and its seed offset.</summary>
         OddEye = 1 << 9,
+        /// <summary>宝石カット面: strength, facet count, table size, shading, blend mode and visible range.</summary>
+        IrisFacets = 1 << 10,
 
-        All = Colors | Seed | Pupil | Rays | LimbalRing | Particles | Symbols | Highlights | Lens | OddEye
+        All = Colors | Seed | Pupil | Rays | LimbalRing | Particles | Symbols | Highlights | Lens | OddEye | IrisFacets
     }
 
     public static class RandomizeLocksInfo
@@ -54,6 +56,7 @@ namespace DollIrisGenerator.Models
             (RandomizeLocks.Symbols, "装飾記号"),
             (RandomizeLocks.Highlights, "ハイライト"),
             (RandomizeLocks.Lens, "レンズ風"),
+            (RandomizeLocks.IrisFacets, "宝石カット面"),
             (RandomizeLocks.OddEye, "オッドアイ")
         };
 

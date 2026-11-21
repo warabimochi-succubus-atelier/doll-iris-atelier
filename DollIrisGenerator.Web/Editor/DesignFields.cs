@@ -210,6 +210,20 @@ public static class DesignFields
         new SliderField<IrisParameters>("リング線幅", p => p.LensRingWidth, (p, v) => p.LensRingWidth = v, 0.3, 3.0, 0.1, Fmt.F1),
         new SliderField<IrisParameters>("中心屈折光 (コースティクス)", p => p.LensRefractionGlow, (p, v) => p.LensRefractionGlow = v, 0, 1, 0.01, Fmt.Percent),
         .. RangeFields(PatternLayer.LensRings),
+        new HeadingField<IrisParameters>("宝石カット面", "虹彩全体に、カットした宝石を上から見たような明暗の面を重ねます (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("強さ", p => p.IrisFacetIntensity, (p, v) => p.IrisFacetIntensity = v, 0, 1, 0.01, Fmt.Percent, "面の明暗の強さ。0% でオフ"),
+        new SliderField<IrisParameters>("面の数", p => p.IrisFacetCount, (p, v) => p.IrisFacetCount = Int(v),
+            IrisParameters.MinIrisFacetCount, IrisParameters.MaxIrisFacetCount, 1, v => Fmt.Count(v, "面"), "宝石の対称の数 (テーブル面の角の数)"),
+        new SliderField<IrisParameters>("テーブルの大きさ", p => p.IrisFacetTableSize, (p, v) => p.IrisFacetTableSize = v,
+            IrisParameters.MinIrisFacetTableSize, IrisParameters.MaxIrisFacetTableSize, 0.01, Fmt.Percent, "中心の平らな面 (テーブル面) の大きさ。虹彩の半径に対する割合"),
+        new SliderField<IrisParameters>("明暗の向き", p => p.IrisFacetShadeAngle, (p, v) => p.IrisFacetShadeAngle = v, 0, 360, 1, Fmt.Deg,
+            "暗くなる側の向き。0° = 右、90° = 下、180° = 左、270° = 上 (右目は自動で鏡像)"),
+        new SliderField<IrisParameters>("明暗の偏り", p => p.IrisFacetShadeBias, (p, v) => p.IrisFacetShadeBias = v, 0, 1, 0.01, Fmt.Percent,
+            "0% で面ごとに交互の明暗だけ。上げるほど、向きによる明暗が強くなります"),
+        new ChoiceField<IrisParameters>("重ね方", p => p.IrisFacetBlend, (p, v) => p.IrisFacetBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "オーバーレイ (最初の値) とソフトライトは虹彩の色を残したまま明暗を付けます"),
+        .. RangeFields(PatternLayer.IrisFacets),
     ];
 
     public static readonly IReadOnlyList<Field<IrisParameters>> OddEye = new Field<IrisParameters>[]

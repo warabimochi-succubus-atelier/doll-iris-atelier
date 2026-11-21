@@ -313,6 +313,7 @@ namespace DollIrisGenerator.ViewModels
         public IReadOnlyList<PatternRangeChoice> RayRangeChoices { get; } = RangeChoices(PatternLayer.Rays);
         public IReadOnlyList<PatternRangeChoice> GlitterRangeChoices { get; } = RangeChoices(PatternLayer.Glitter);
         public IReadOnlyList<PatternRangeChoice> LensRangeChoices { get; } = RangeChoices(PatternLayer.LensRings);
+        public IReadOnlyList<PatternRangeChoice> FacetRangeChoices { get; } = RangeChoices(PatternLayer.IrisFacets);
         public ICommand RandomizeAttributesCommand { get; }
         public ICommand ZoomInCommand { get; }
         public ICommand ZoomOutCommand { get; }

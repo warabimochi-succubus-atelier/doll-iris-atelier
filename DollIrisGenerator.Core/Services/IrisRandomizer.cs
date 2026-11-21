@@ -361,6 +361,28 @@ namespace DollIrisGenerator.Services
                 p.LensRangeFeather = IrisParameters.DefaultRangeFeather;
             }
 
+            // 14c. 宝石カット面 (drawn after everything else, so the earlier draws stay as they were): 15% of designs,
+            // sometimes on the upper side only
+            if (!Locked(RandomizeLocks.IrisFacets))
+            {
+                bool on = rng.Next(100) < 15;
+                double strength = rng.NextDouble(), table = rng.NextDouble(), bias = rng.NextDouble();
+                int[] counts = { 6, 8, 8, 10, 12 };
+                int count = counts[rng.Next(counts.Length)];
+                bool softLight = rng.Next(10) < 3;
+                bool upper = rng.Next(10) < 3;
+                double angle = rng.NextDouble();
+                p.IrisFacetIntensity = on ? Math.Round(0.35 + strength * 0.35, 2) : 0.0;
+                p.IrisFacetCount = count;
+                p.IrisFacetTableSize = Math.Round(0.35 + table * 0.2, 2);
+                p.IrisFacetShadeAngle = Math.Round(225.0 + angle * 90.0); // the dark side somewhere above
+                p.IrisFacetShadeBias = Math.Round(0.4 + bias * 0.4, 2);
+                p.IrisFacetBlend = softLight ? LayerBlend.SoftLight : LayerBlend.Overlay;
+                p.IrisFacetRangeAngle = upper ? 270.0 : IrisParameters.DefaultRangeAngle;
+                p.IrisFacetRangeWidth = upper ? 200.0 : IrisParameters.FullRangeWidth;
+                p.IrisFacetRangeFeather = upper ? 60.0 : IrisParameters.DefaultRangeFeather;
+            }
+
             // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;

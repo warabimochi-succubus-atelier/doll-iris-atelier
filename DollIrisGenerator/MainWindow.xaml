@@ -1720,6 +1720,86 @@
                                     </StackPanel>
                                 </GroupBox>
 
+                                <!-- Gem facets over the whole iris (宝石カット面) -->
+                                <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="宝石カット面" VerticalAlignment="Center"/>
+                                            <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockIrisFacets}" Style="{StaticResource RandomizeLockCheckBox}"
+                                                      ToolTip="宝石カット面の各設定をランダム生成で変えない"/>
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="虹彩全体に、カットした宝石を上から見たような明暗の面を重ねます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="面の明暗の強さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.IrisFacetIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="宝石の対称の数 (テーブル面の角の数)">
+                                            <TextBlock Text="面の数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetCount, StringFormat='{}{0} 面'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="6" Maximum="16" Value="{Binding CurrentIris.IrisFacetCount}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="中心の平らな面 (テーブル面) の大きさ。虹彩の半径に対する割合">
+                                            <TextBlock Text="テーブルの大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetTableSize, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.2" Maximum="0.7" Value="{Binding CurrentIris.IrisFacetTableSize}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="暗くなる側の向き。0° = 右、90° = 下、180° = 左、270° = 上 (右目は自動で鏡像)">
+                                            <TextBlock Text="明暗の向き:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetShadeAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.IrisFacetShadeAngle}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0% で面ごとに交互の明暗だけ。上げるほど、向きによる明暗が強くなります">
+                                            <TextBlock Text="明暗の偏り:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetShadeBias, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.IrisFacetShadeBias}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,2,0,4" ToolTip="面の重ね方。オーバーレイ (最初の値) とソフトライトは虹彩の色を残したまま明暗を付けます">
+                                            <TextBlock Text="重ね方:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.IrisFacetBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.IrisFacetBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.IrisFacetBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.IrisFacetBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.IrisFacetBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+
+                                        <!-- 見える範囲 (IrisFacet) -->
+                                        <TextBlock Text="見える範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,10,0,4"
+                                                   ToolTip="中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"/>
+                                        <ItemsControl ItemsSource="{Binding FacetRangeChoices}" Margin="0,0,0,6">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding Style.Name}" Padding="8,2" Margin="0,0,6,4" Background="#333842" Foreground="#80D8FF"
+                                                            Command="{Binding DataContext.ApplyPatternRangeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の中心の向き。0° = 右、90° = 下、180° = 左、270° = 上">
+                                            <TextBlock Text="範囲の向き:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetRangeAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.IrisFacetRangeAngle}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の広さ。360° で全体 (範囲の制限なし)、180° で半分">
+                                            <TextBlock Text="範囲の広さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetRangeWidth, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.IrisFacetRangeWidth}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の両端で、だんだん消えていく角度の幅">
+                                            <TextBlock Text="端のぼかし:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.IrisFacetRangeFeather, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.IrisFacetRangeFeather}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <!-- Odd-Eye Settings -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>

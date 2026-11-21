@@ -608,6 +608,29 @@ namespace DollIrisGenerator.Services
                 }
             }
 
+            // 宝石カット面 (gem facets over the whole iris): white / black polygons in one group, which carries the blend
+            // mode and the 見える範囲 mask (as the glitter does). Above the patterns, under the limbal ring and pupil.
+            if (p.IrisFacetIntensity > 0.01)
+            {
+                string? facetRange = AppendRangeMask(sb, $"{idPrefix}_iris_facets_range", p, PatternLayer.IrisFacets, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                string facetMask = facetRange != null ? $@" mask=""url(#{facetRange})""" : "";
+                sb.AppendLine($@"      <g id=""{idPrefix}_iris_facets""{BlendStyle(p.IrisFacetBlend)}{facetMask}>");
+                foreach (var (poly, shade) in IrisPatterns.IrisFacets(p.IrisFacetCount, p.IrisFacetTableSize, p.IrisFacetShadeAngle,
+                             p.IrisFacetShadeBias, effectiveSeed, isRightEye))
+                {
+                    double alpha = p.IrisFacetIntensity * IrisPatterns.MaxIrisFacetAlpha * Math.Abs(shade);
+                    if (alpha < 0.002) continue;
+                    sb.Append(@"        <path d=""M");
+                    for (int j = 0; j < poly.Length; j++)
+                    {
+                        if (j > 0) sb.Append(" L");
+                        sb.AppendFixed(cx + poly[j].X * rx, 3).Append(',').AppendFixed(cy + poly[j].Y * ry, 3);
+                    }
+                    sb.AppendLine($@" Z"" fill=""{(shade >= 0 ? "#FFFFFF" : "#000000")}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
+                }
+                sb.AppendLine("      </g>");
+            }
+
             // Limbal Ring
             if (p.LimbalRingThickness > 0.005 && p.LimbalRingOpacity > 0.01)
             {
