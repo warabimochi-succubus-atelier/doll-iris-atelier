@@ -79,5 +79,13 @@ namespace DollIrisGenerator.Services
             var (a, r, g, b) = GeometryHelper.ParseHexArgb(hex, alpha);
             return Color.FromArgb(a, r, g, b);
         }
+
+        /// <summary>WPF color of a color string; false (and black) when it is not a color (see <see cref="GeometryHelper.TryParseHexArgb"/>).</summary>
+        public static bool TryParseHexColor(string? hex, out Color color, double alpha = 1.0)
+        {
+            bool ok = GeometryHelper.TryParseHexArgb(hex, out var argb, alpha);
+            color = Color.FromArgb(argb.A, argb.R, argb.G, argb.B);
+            return ok;
+        }
     }
 }

@@ -535,6 +535,68 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestColorBoxMarksAnUnreadableValueInsteadOfShowingBlack()
+        {
+            RunOnSta(() =>
+            {
+                // A hand-edited file: the iris uses the field's default color, so a black swatch would be wrong
+                var box = new ColorPickerBox { SelectedColorHex = "#GGHHII" };
+                var swatch = (Border)box.FindName("ColorSwatch");
+                var hexBox = (TextBox)box.FindName("HexTextBox");
+                Assert.IsNotType<SolidColorBrush>(swatch.Background);
+                Assert.Contains("#GGHHII", hexBox.ToolTip as string);
+                Assert.Equal("#GGHHII", box.SelectedColorHex); // only shown, not changed
+
+                // Typing a real color clears the mark
+                hexBox.Text = "#FF8000";
+                Assert.Equal(Color.FromRgb(0xFF, 0x80, 0x00), ((SolidColorBrush)swatch.Background).Color);
+                Assert.Null(hexBox.ToolTip);
+                Assert.Equal("#FF8000", box.SelectedColorHex);
+
+                // A readable value set from outside has no mark
+                box.SelectedColorHex = "#123";
+                Assert.Equal(Color.FromRgb(0x11, 0x22, 0x33), ((SolidColorBrush)swatch.Background).Color);
+                Assert.Null(hexBox.ToolTip);
+            });
+        }
+
+        [Theory]
+        [InlineData("#2979FF", 255, 0x29, 0x79, 0xFF)]
+        [InlineData("2979ff", 255, 0x29, 0x79, 0xFF)]
+        [InlineData(" #ABC ", 255, 0xAA, 0xBB, 0xCC)]
+        [InlineData("#80FF0000", 0x80, 0xFF, 0x00, 0x00)]
+        [InlineData(RedToBlue, 255, 0xFF, 0x00, 0x00)]
+        public void TestReadableColorsParse(string text, int a, int r, int g, int b)
+        {
+            Assert.True(GeometryHelper.TryParseHexArgb(text, out var argb));
+            Assert.Equal(((byte)a, (byte)r, (byte)g, (byte)b), argb);
+            Assert.Equal(argb, GeometryHelper.ParseHexArgb(text));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("red")]
+        [InlineData("#GGHHII")]
+        [InlineData("#12345")]
+        [InlineData("#1 2345")]
+        [InlineData("#-1-2-3")]
+        [InlineData("#+F+F+F")]
+        public void TestUnreadableColorsAreReportedAndOpaqueBlack(string? text)
+        {
+            Assert.False(GeometryHelper.TryParseHexArgb(text, out _));
+            Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)0), GeometryHelper.ParseHexArgb(text, alpha: 0.5));
+            Assert.False(WpfGeometry.TryParseHexColor(text, out _));
+        }
+
+        [Fact]
+        public void TestAlphaMultipliesTheColorsOwnAlpha()
+        {
+            Assert.Equal(((byte)127, (byte)0x29, (byte)0x79, (byte)0xFF), GeometryHelper.ParseHexArgb("#2979FF", 0.5));
+            Assert.Equal(((byte)64, (byte)0xFF, (byte)0, (byte)0), GeometryHelper.ParseHexArgb("#80FF0000", 0.5));
+        }
+
+        [Fact]
         public void TestColorBoxMakesAConicGradient()
         {
             RunOnSta(() =>
