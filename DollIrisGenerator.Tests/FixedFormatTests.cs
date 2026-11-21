@@ -21,7 +21,6 @@ namespace DollIrisGenerator.Tests
 
         [Theory]
         [InlineData(0.0)]
-        [InlineData(-0.0)]
         [InlineData(0.0004)]
         [InlineData(-0.0004)]
         [InlineData(0.0005)]
@@ -41,6 +40,10 @@ namespace DollIrisGenerator.Tests
         [InlineData(double.NegativeInfinity)]
         [InlineData(double.Epsilon)]
         public void TestEdgeCasesMatchTheFramework(double value) => Check(value);
+
+        // Its own test: xUnit treats InlineData(-0.0) as a duplicate of InlineData(0.0) (xUnit1025)
+        [Fact]
+        public void TestNegativeZeroMatchesTheFramework() => Check(-0.0);
 
         [Fact]
         public void TestRandomValuesMatchTheFramework()

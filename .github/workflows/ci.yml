@@ -3,8 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
+    # No paths-ignore for *.md: DistributionDocsTests, DesignJsonFormatTests and VersionSyncTests read the documents
   workflow_dispatch:
 
 permissions:

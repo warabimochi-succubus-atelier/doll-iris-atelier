@@ -30,7 +30,8 @@ namespace DollIrisGenerator.Tests
             string desktop = ProjectVersion(RepoFile("DollIrisGenerator", "DollIrisGenerator.csproj"));
             string web = ProjectVersion(RepoFile("DollIrisGenerator.Web", "DollIrisGenerator.Web.csproj"));
             Assert.Equal(desktop, web);
-            Assert.Equal("v" + desktop, AppInfo.VersionLabel);
+            string label = AppInfo.VersionLabel; // a const: xUnit2000 would want it as the expected value
+            Assert.Equal("v" + desktop, label);
         }
 
         [Fact]

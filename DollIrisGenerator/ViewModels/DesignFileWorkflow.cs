@@ -62,43 +62,46 @@ namespace DollIrisGenerator.ViewModels
             PrintSheetConfig sheetConfig,
             Action<bool> setBusy)
         {
-            // A design larger than the page (e.g. from a hand-edited JSON) or a manual grid that doesn't fit
-            // the margins would print off the paper: say so before asking for a file name.
-            IEnumerable<SheetItem> itemsToCheck = sheetItems.Count > 0 ? sheetItems : new List<SheetItem> { new(currentIris, 1) };
-            var checkLayout = new SheetLayout(itemsToCheck, sheetConfig);
-            if (!checkLayout.FitsOnPage)
-            {
-                bool proceed = _dialogs.ConfirmWarning(
-                    $"現在の配置は用紙の印刷範囲に収まりません。はみ出した部分は印刷されません。\n\n" +
-                    $"配置の大きさ: {checkLayout.GridWidthMm:F1} × {checkLayout.GridHeightMm:F1} mm\n" +
-                    $"印刷範囲 (余白の内側): {checkLayout.UsableWidthMm:F1} × {checkLayout.UsableHeightMm:F1} mm\n\n" +
-                    "虹彩サイズ・縦横比、手動の列数・行数、余白・間隔を見直してください。\n\nこのまま PDF を出力しますか？",
-                    "用紙からはみ出します",
-                    defaultToNo: true);
-                if (!proceed)
-                {
-                    _reportStatus("PDF 出力を中止しました (配置が用紙に収まりません)。");
-                    return;
-                }
-            }
-
-            string? path = _dialogs.PickSaveFile(
-                "PDF 印刷用ドキュメント (*.pdf)|*.pdf",
-                $"DollIris_A4Sheet_{currentIris.SizeMm:F1}mm.pdf",
-                "A4 印刷用 PDF シートを出力");
-            if (path == null) return;
-
-            // Snapshot everything so edits made while exporting can't change the output mid-way
-            var itemsToPrint = sheetItems.Count > 0
-                ? sheetItems.Select(i => new SheetItem(i.Parameters.Clone(), i.PairCount)).ToList()
-                : new List<SheetItem> { new(currentIris.Clone(), 1) };
-            var configSnapshot = JsonSerializer.Deserialize<PrintSheetConfig>(JsonSerializer.Serialize(sheetConfig))!;
-            int pageCount = new SheetLayout(itemsToPrint, configSnapshot).PageCount;
-
-            setBusy(true);
-            _reportStatus($"PDF を出力中です… ({pageCount} ページ / 1200 DPI 描画のため少し時間がかかります)");
+            // Everything is inside the try: this runs from an async void command, where an exception would end the app
+            bool busy = false;
             try
             {
+                // A design larger than the page (e.g. from a hand-edited JSON) or a manual grid that doesn't fit
+                // the margins would print off the paper: say so before asking for a file name.
+                IEnumerable<SheetItem> itemsToCheck = sheetItems.Count > 0 ? sheetItems : new List<SheetItem> { new(currentIris, 1) };
+                var checkLayout = new SheetLayout(itemsToCheck, sheetConfig);
+                if (!checkLayout.FitsOnPage)
+                {
+                    bool proceed = _dialogs.ConfirmWarning(
+                        $"現在の配置は用紙の印刷範囲に収まりません。はみ出した部分は印刷されません。\n\n" +
+                        $"配置の大きさ: {checkLayout.GridWidthMm:F1} × {checkLayout.GridHeightMm:F1} mm\n" +
+                        $"印刷範囲 (余白の内側): {checkLayout.UsableWidthMm:F1} × {checkLayout.UsableHeightMm:F1} mm\n\n" +
+                        "虹彩サイズ・縦横比、手動の列数・行数、余白・間隔を見直してください。\n\nこのまま PDF を出力しますか？",
+                        "用紙からはみ出します",
+                        defaultToNo: true);
+                    if (!proceed)
+                    {
+                        _reportStatus("PDF 出力を中止しました (配置が用紙に収まりません)。");
+                        return;
+                    }
+                }
+
+                string? path = _dialogs.PickSaveFile(
+                    "PDF 印刷用ドキュメント (*.pdf)|*.pdf",
+                    $"DollIris_A4Sheet_{currentIris.SizeMm:F1}mm.pdf",
+                    "A4 印刷用 PDF シートを出力");
+                if (path == null) return;
+
+                // Snapshot everything so edits made while exporting can't change the output mid-way
+                var itemsToPrint = sheetItems.Count > 0
+                    ? sheetItems.Select(i => new SheetItem(i.Parameters.Clone(), i.PairCount)).ToList()
+                    : new List<SheetItem> { new(currentIris.Clone(), 1) };
+                var configSnapshot = JsonSerializer.Deserialize<PrintSheetConfig>(JsonSerializer.Serialize(sheetConfig))!;
+                int pageCount = new SheetLayout(itemsToPrint, configSnapshot).PageCount;
+
+                setBusy(true);
+                busy = true;
+                _reportStatus($"PDF を出力中です… ({pageCount} ページ / 1200 DPI 描画のため少し時間がかかります)");
                 // 1200 DPI rendering is slow: run it off the UI thread so the window stays responsive.
                 // WPF rendering needs an STA thread, so use a dedicated one instead of the thread pool.
                 await RunOnStaThreadAsync(() => PdfExporter.ExportA4SheetToPdf(path, itemsToPrint, configSnapshot));
@@ -112,7 +115,7 @@ namespace DollIrisGenerator.ViewModels
             }
             finally
             {
-                setBusy(false);
+                if (busy) setBusy(false);
             }
         }
 
