@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `SpotBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -143,6 +143,17 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `FiberNoise` | 0〜1 | 0 でオフ。0.15〜0.45 が自然 |
 | `FiberNoiseScale` | 0.5〜2.0 | 大きいほど細かい |
 
+### 色の段（瞳孔の縁から外周までの同心の色の帯。アニメ塗りの段階）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `ToneBandIntensity` | 0〜1 | 強さ（不透明度）。0 でオフ（既定） |
+| `ToneBandCount` | 2〜5 | 帯の数（既定 3） |
+| `ToneBandInnerColor` | 色（単色） | いちばん内側の帯の色（既定 `#FFFFFF`） |
+| `ToneBandOuterColor` | 色（単色） | いちばん外側の帯の色（既定 `#000000`）。間の帯は等分した色 |
+| `ToneBandSoftness` | 0〜1 | 境目のぼかし。0 でくっきり（既定 0.1） |
+| `ToneBandBlend` | 重ね方 | 既定 4（ソフトライト）。白 → 黒のまま使うと、虹彩の色を残して内側を明るく・外側を暗くする。0（通常）で帯の色で塗る |
+
 ### 瞳孔
 
 | 項目 | 範囲・値 | 説明 |
@@ -158,6 +169,21 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目の瞳孔を左右反転するか（三日月の向き・左右の長さ・宝石カット） |
 | `PupilFacetIntensity` | 0〜1 | 宝石のカット面（0 でオフ） |
 | `PupilFacetCount` | 4〜24 | カット面の数 |
+| `PupilOutlineIntensity` | 0〜1 | 瞳孔の縁取り線の強さ（不透明度）。0 でオフ（既定） |
+| `PupilOutlineWidth` | 0.005〜0.05 | 縁取り線の太さの比率（既定 0.015） |
+| `PupilOutlineColor` | 色（単色） | 縁取り線の色（既定 `#FFFFFF`） |
+
+### 瞳孔まわりの輪（瞳孔の縁から外へ広がるギザギザの色の輪）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `CollaretteIntensity` | 0〜1 | 強さ（不透明度）。0 でオフ（既定） |
+| `CollaretteColor` | 色（グラデ可） | 既定 `#FFD54F`（金色）。放射グラデーションは瞳孔の縁 → 輪の外縁 |
+| `CollaretteWidth` | 0.05〜0.50 | 瞳孔の縁から輪の外縁（山の先）までの幅の比率（既定 0.20）。瞳孔の大きさ + 幅は 0.95 までに抑えて描く |
+| `CollaretteJagged` | 0〜1 | 外縁の谷の深さ。0 で円（既定 0.5） |
+| `CollaretteSpikeCount` | 8〜48 | 外縁の山の数（既定 20） |
+| `CollaretteSoftness` | 0〜1 | 外縁のぼかし。0 でくっきり（既定 0.4） |
+| `CollaretteBlend` | 重ね方 | 既定 0（通常）。1（スクリーン）で光るような輪 |
 
 ### 放射ライン（瞳孔から外へ伸びる線）
 
@@ -186,6 +212,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `LimbalRingColor` | 色（グラデ可） | 外周色より暗い色が基本 |
 | `LimbalRingOpacity` | 0〜1 | |
 | `LimbalRingSoftness` | 0〜0.80 | 内側の境界のぼかし |
+| `LimbalInnerRingIntensity` | 0〜1 | 外輪の内側の明るい輪の強さ（不透明度）。0 でオフ（既定） |
+| `LimbalInnerRingWidth` | 0.005〜0.06 | 内側の輪の太さの比率（既定 0.015） |
+| `LimbalInnerRingGap` | 0〜0.10 | 外輪の内側の縁から輪までの距離の比率（既定 0.01） |
+| `LimbalInnerRingColor` | 色（単色） | 内側の輪の色（既定 `#FFFFFF`） |
 
 ### ラメ（粒子）
 
@@ -204,6 +234,19 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleRangeAngle` | 0〜360（度） | 見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
 | `ParticleRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `ParticleRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
+
+### 斑点（虹彩の暗いしみ・くぼみ）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `SpotIntensity` | 0〜1 | 強さ（濃さ）。0 でオフ（既定） |
+| `SpotCount` | 1〜120 | 斑点の数（既定 24） |
+| `SpotSize` | 0.01〜0.10 | いちばん大きい斑点の半径の比率（既定 0.035） |
+| `SpotElongation` | 0〜1 | 0 で丸いしみ。上げるほど放射方向に細長いくぼみ（既定 0.3） |
+| `SpotSoftness` | 0〜1 | 縁のぼかし。0 でくっきり（既定 0.5） |
+| `SpotRadiusRatio` | 0.30〜0.95 | 斑点を置くいちばん外の距離の比率（既定 0.80） |
+| `SpotColor` | 色（単色） | 既定 `#3E2723`（こげ茶） |
+| `SpotBlend` | 重ね方 | 既定 0（通常）。4（ソフトライト）で虹彩の色になじむ |
 
 ### レンズ風パターン（同心円の屈折リング）
 
@@ -328,6 +371,20 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "NebulaSwirl": 0.4,
   "FiberNoise": 0.0,
   "FiberNoiseScale": 1.0,
+  "ToneBandIntensity": 0.0,
+  "ToneBandCount": 3,
+  "ToneBandInnerColor": "#FFFFFF",
+  "ToneBandOuterColor": "#000000",
+  "ToneBandSoftness": 0.1,
+  "ToneBandBlend": 4,
+  "SpotIntensity": 0.0,
+  "SpotCount": 24,
+  "SpotSize": 0.035,
+  "SpotElongation": 0.3,
+  "SpotSoftness": 0.5,
+  "SpotRadiusRatio": 0.8,
+  "SpotColor": "#3E2723",
+  "SpotBlend": 0,
   "PupilShape": 0,
   "PupilSizeRatio": 0.32,
   "PupilColor": "#060A18",
@@ -342,6 +399,16 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilRightEyeFlip": 0,
   "PupilFacetIntensity": 0.0,
   "PupilFacetCount": 10,
+  "PupilOutlineIntensity": 0.0,
+  "PupilOutlineWidth": 0.015,
+  "PupilOutlineColor": "#FFFFFF",
+  "CollaretteIntensity": 0.0,
+  "CollaretteColor": "#FFD54F",
+  "CollaretteWidth": 0.2,
+  "CollaretteJagged": 0.5,
+  "CollaretteSpikeCount": 20,
+  "CollaretteSoftness": 0.4,
+  "CollaretteBlend": 0,
   "RayCount": 48,
   "RayColor": "#B3E5FC",
   "RayThickness": 1.2,
@@ -360,6 +427,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "LimbalRingColor": "#051636",
   "LimbalRingOpacity": 0.95,
   "LimbalRingSoftness": 0.2,
+  "LimbalInnerRingIntensity": 0.0,
+  "LimbalInnerRingWidth": 0.015,
+  "LimbalInnerRingGap": 0.01,
+  "LimbalInnerRingColor": "#FFFFFF",
   "ParticleCount": 50,
   "ParticleColor": "#FFFFFF",
   "ParticleMinSize": 1.0,

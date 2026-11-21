@@ -194,6 +194,65 @@ namespace DollIrisGenerator.Services
                     p.OddEyeBottomHighlightColor = HslToHex(odd.SecondHue ?? oddHue + 12.0, oddPale, 0.86);
                 }
             }
+
+            // 瞳孔まわりの輪 (drawn after everything else, so the earlier draws stay as they were): 25% of designs, in gold
+            // or a light color of the theme
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.CollaretteIntensity = Chance(25) ? Range(0.35, 0.75) : 0.0;
+                p.CollaretteWidth = Range(0.12, 0.28);
+                p.CollaretteJagged = Range(0.3, 0.8);
+                p.CollaretteSpikeCount = rng.Next(14, 29);
+                p.CollaretteSoftness = Range(0.25, 0.6);
+                p.CollaretteBlend = Chance(40) ? LayerBlend.Screen : LayerBlend.Normal;
+            }
+            if (ColorFree(RandomizeLocks.Pupil))
+            {
+                p.CollaretteColor = Chance(50)
+                    ? HslToHex(Range(38.0, 50.0, 1), 0.85, 0.62)
+                    : HslToHex(hue + 6.0, paleSat, Math.Max(0.70, Math.Min(0.85, lit + 0.30)));
+            }
+
+            // 色の段 (after everything else, like the ring above): 20% of designs. Light / dark steps that keep each
+            // eye's color, or (not with the odd eye, whose other eye has other colors) steps of the theme's color
+            if (!colorsLocked)
+            {
+                p.ToneBandIntensity = Chance(20) ? Range(0.35, 0.70) : 0.0;
+                p.ToneBandCount = rng.Next(2, 5);
+                p.ToneBandSoftness = Range(0.0, 0.3);
+                bool themed = rng.Next(10) < 4 && !p.IsOddEye;
+                p.ToneBandInnerColor = themed ? HslToHex(hue + 6.0, sat, Math.Min(0.92, lit + 0.15)) : IrisParameters.DefaultToneBandInnerColor;
+                p.ToneBandOuterColor = themed ? HslToHex(hue - 8.0, sat, Math.Max(0.08, lit - 0.20)) : IrisParameters.DefaultToneBandOuterColor;
+                p.ToneBandBlend = themed ? LayerBlend.Normal : LayerBlend.SoftLight;
+            }
+
+            // 斑点 (after everything else): 20% of designs, dark spots of the theme's hue
+            if (!Locked(RandomizeLocks.Spots))
+            {
+                p.SpotIntensity = Chance(20) ? Range(0.30, 0.60) : 0.0;
+                p.SpotCount = rng.Next(8, 41);
+                p.SpotSize = Range(0.025, 0.05, 3);
+                p.SpotElongation = Range(0.0, 0.7);
+                p.SpotSoftness = Range(0.3, 0.7);
+                p.SpotRadiusRatio = Range(0.60, 0.85);
+                p.SpotBlend = Chance(40) ? LayerBlend.SoftLight : LayerBlend.Normal;
+            }
+            if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
+
+            // 瞳孔の縁取り線 and 外輪の内側の輪 (after everything else)
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.PupilOutlineIntensity = Chance(15) ? Range(0.5, 0.9) : 0.0;
+                p.PupilOutlineWidth = Range(0.01, 0.025, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil)) p.PupilOutlineColor = Chance(70) ? HslToHex(hue, paleSat, 0.85) : HslToHex(42.0, 0.85, 0.62);
+            if (!Locked(RandomizeLocks.LimbalRing))
+            {
+                p.LimbalInnerRingIntensity = Chance(20) ? Range(0.3, 0.7) : 0.0;
+                p.LimbalInnerRingWidth = Range(0.008, 0.02, 3);
+                p.LimbalInnerRingGap = Range(0.0, 0.03, 3);
+            }
+            if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalInnerRingColor = Chance(50) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
         }
 
         /// <summary>

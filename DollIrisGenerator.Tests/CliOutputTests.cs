@@ -227,6 +227,19 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
+        public void TestSheetFileWithANameWrittenTwice()
+        {
+            string json = JsonNode.Parse(Sheet(new PrintSheetConfig(), (Design("A"), 2)))!.ToJsonString()
+                .Replace("\"Config\":{", "\"Config\":{\"PageMarginLeftMm\":99,");
+            var report = DesignFileValidator.Validate(json);
+            Assert.Equal(DesignFileKind.Sheet, report.Kind);
+            var issue = Assert.Single(report.Issues, i => i.Level == DesignIssueLevel.Warning);
+            Assert.Equal("Config.PageMarginLeftMm", issue.Path);
+            Assert.Contains("最後の値を使います", issue.Message);
+            Assert.Equal(new PrintSheetConfig().PageMarginLeftMm, report.Sheet!.Config.PageMarginLeftMm);
+        }
+
+        [Fact]
         public void TestValidateAndSvgReadSheetFiles()
         {
             string input = WriteFile("print-sheet.json", Sheet(new PrintSheetConfig(), (Design("A"), 2), (Design("B"), 1)));

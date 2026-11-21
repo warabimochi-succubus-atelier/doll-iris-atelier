@@ -8,6 +8,12 @@ namespace DollIrisGenerator.Services
     /// <summary>One radial ray: its direction (radians, already mirrored for the right eye) and where it starts / ends.</summary>
     public readonly record struct RaySpec(double Angle, double InnerR, double OuterR, double WidthFactor);
 
+    /// <summary>
+    /// One 斑点: its center (iris-radius units around the iris center, x right, y down), the direction its long axis
+    /// points (radians, in the same units), its size (0.4–1 of 大きさ) and its opacity (0.6–1 of 強さ).
+    /// </summary>
+    public readonly record struct SpotSpec(Point Position, double Angle, double SizeFactor, double AlphaFactor);
+
     /// <summary>One glitter grain: where it sits, its size (drawing units), and how it is drawn.</summary>
     public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare);
 
@@ -314,6 +320,95 @@ namespace DollIrisGenerator.Services
                 }
             }
             return facets;
+        }
+
+        private const int CollaretteSeedOffset = 6500;
+
+        /// <summary>Fewest points round a 瞳孔まわりの輪 edge (so a smooth edge, ギザギザ 0, still reads as a circle).</summary>
+        public const int MinCollarettePoints = 96;
+
+        /// <summary>
+        /// 瞳孔まわりの輪: the outer edge, in iris-radius units around (0, 0) (x right, y down; the caller stretches it
+        /// onto the iris), as (direction, radius) pairs going round once. <paramref name="spikes"/> peaks alternate with
+        /// valleys joined by straight lines, each line split into equal steps so the edge has at least
+        /// <see cref="MinCollarettePoints"/> points. Peak i points at −90° + 360° / N × (i ± 0.15), the valley sits halfway
+        /// to the next peak. Peaks lie at <paramref name="pupil"/> + <paramref name="width"/> × (1 − jagged × 0.2 × r),
+        /// valleys at pupil + width × (1 − jagged × (0.45 + 0.35 × r)), r from the seed.
+        /// <paramref name="mirror"/> mirrors the edge left-right (right eye).
+        /// </summary>
+        public static (double Angle, double Radius)[] CollaretteEdge(double pupil, double width, double jagged, int spikes,
+            int seed, bool mirror)
+        {
+            spikes = Math.Max(3, spikes);
+            var rng = new Random(seed + CollaretteSeedOffset);
+            double step = 2.0 * Math.PI / spikes;
+            var peakAngle = new double[spikes];
+            var peakR = new double[spikes];
+            var valleyR = new double[spikes];
+            for (int i = 0; i < spikes; i++)
+            {
+                peakAngle[i] = -Math.PI / 2.0 + step * (i + (rng.NextDouble() - 0.5) * 0.3);
+                peakR[i] = pupil + width * (1.0 - jagged * 0.2 * rng.NextDouble());
+                valleyR[i] = pupil + width * (1.0 - jagged * (0.45 + 0.35 * rng.NextDouble()));
+            }
+
+            int perLine = Math.Max(1, (int)Math.Ceiling(MinCollarettePoints / (2.0 * spikes)));
+            var edge = new (double, double)[spikes * 2 * perLine];
+            int n = 0;
+            for (int i = 0; i < spikes; i++)
+            {
+                double next = i + 1 < spikes ? peakAngle[i + 1] : peakAngle[0] + 2.0 * Math.PI;
+                double valleyAngle = (peakAngle[i] + next) / 2.0;
+                double nextR = peakR[(i + 1) % spikes];
+                // peak i → valley i, then valley i → peak i + 1 (its point is the next line's first)
+                for (int k = 0; k < perLine; k++)
+                {
+                    double t = (double)k / perLine;
+                    edge[n++] = (peakAngle[i] + (valleyAngle - peakAngle[i]) * t, peakR[i] + (valleyR[i] - peakR[i]) * t);
+                }
+                for (int k = 0; k < perLine; k++)
+                {
+                    double t = (double)k / perLine;
+                    edge[n++] = (valleyAngle + (next - valleyAngle) * t, valleyR[i] + (nextR - valleyR[i]) * t);
+                }
+            }
+            if (mirror)
+            {
+                for (int k = 0; k < edge.Length; k++) edge[k] = (Math.PI - edge[k].Item1, edge[k].Item2);
+            }
+            return edge;
+        }
+
+        private const int SpotSeedOffset = 7500;
+
+        /// <summary>
+        /// 斑点: <paramref name="count"/> spots between 1.1 × the pupil's radius and <paramref name="outer"/>, spread
+        /// evenly over the area (r = √(a² + (b² − a²) × random)), each pointing along its radius ± 15°. Every spot takes
+        /// the same five draws, so changing the count keeps the first spots where they were. <paramref name="mirror"/>
+        /// mirrors them left-right (right eye).
+        /// </summary>
+        public static List<SpotSpec> Spots(int count, double pupil, double outer, int seed, bool mirror)
+        {
+            var spots = new List<SpotSpec>(Math.Max(0, count));
+            var rng = new Random(seed + SpotSeedOffset);
+            double a = pupil * 1.1, b = Math.Max(a, outer);
+            for (int i = 0; i < count; i++)
+            {
+                double angle = rng.NextDouble() * 2.0 * Math.PI;
+                double r = Math.Sqrt(a * a + (b * b - a * a) * rng.NextDouble());
+                double size = 0.4 + 0.6 * rng.NextDouble();
+                double alpha = 0.6 + 0.4 * rng.NextDouble();
+                double tilt = (rng.NextDouble() - 0.5) * (Math.PI / 6.0);
+                double axis = angle + tilt;
+                var position = new Point(r * Math.Cos(angle), r * Math.Sin(angle));
+                if (mirror)
+                {
+                    position = new Point(-position.X, position.Y);
+                    axis = Math.PI - axis;
+                }
+                spots.Add(new SpotSpec(position, axis, size, alpha));
+            }
+            return spots;
         }
 
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>

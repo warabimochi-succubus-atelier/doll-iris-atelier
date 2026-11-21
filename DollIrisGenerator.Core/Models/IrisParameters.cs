@@ -26,8 +26,33 @@ namespace DollIrisGenerator.Models
         /// <summary>Nebula color a new design starts with: magenta in the middle, violet, then sky blue outside.</summary>
         public const string DefaultNebulaColor = "radial-gradient(#E040FB 0%, #7C4DFF 50%, #40C4FF 100%)";
 
+        /// <summary>色の段 (SvgExporter.ToneBandStops): ranges and defaults.</summary>
+        public const int MinToneBandCount = 2, MaxToneBandCount = 5, DefaultToneBandCount = 3;
+        public const string DefaultToneBandInnerColor = "#FFFFFF", DefaultToneBandOuterColor = "#000000";
+        public const double DefaultToneBandSoftness = 0.1;
+
+        /// <summary>斑点 (IrisPatterns.Spots): ranges and defaults.</summary>
+        public const int MinSpotCount = 1, MaxSpotCount = 120, DefaultSpotCount = 24;
+        public const double MinSpotSize = 0.01, MaxSpotSize = 0.10, DefaultSpotSize = 0.035;
+        public const double DefaultSpotElongation = 0.3, DefaultSpotSoftness = 0.5;
+        public const double MinSpotRadiusRatio = 0.30, MaxSpotRadiusRatio = 0.95, DefaultSpotRadiusRatio = 0.80;
+        public const string DefaultSpotColor = "#3E2723";
+
+        /// <summary>瞳孔の縁取り線 and 外輪の内側の輪: ranges and defaults.</summary>
+        public const double MinPupilOutlineWidth = 0.005, MaxPupilOutlineWidth = 0.05, DefaultPupilOutlineWidth = 0.015;
+        public const string DefaultPupilOutlineColor = "#FFFFFF";
+        public const double MinLimbalInnerRingWidth = 0.005, MaxLimbalInnerRingWidth = 0.06, DefaultLimbalInnerRingWidth = 0.015;
+        public const double MaxLimbalInnerRingGap = 0.10, DefaultLimbalInnerRingGap = 0.01;
+        public const string DefaultLimbalInnerRingColor = "#FFFFFF";
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
+
+        /// <summary>瞳孔まわりの輪 (IrisPatterns.CollaretteEdge): ranges and defaults.</summary>
+        public const string DefaultCollaretteColor = "#FFD54F";
+        public const double MinCollaretteWidth = 0.05, MaxCollaretteWidth = 0.50, DefaultCollaretteWidth = 0.20;
+        public const double DefaultCollaretteJagged = 0.5, DefaultCollaretteSoftness = 0.4;
+        public const int MinCollaretteSpikeCount = 8, MaxCollaretteSpikeCount = 48, DefaultCollaretteSpikeCount = 20;
         public const double MinNebulaScale = 0.5;
         public const double MaxNebulaScale = 3.0;
 
@@ -99,6 +124,17 @@ namespace DollIrisGenerator.Models
         private double _limbalRingOpacity = 0.95;
         private double _limbalRingSoftness = 0.20;
 
+        // 外輪の内側の輪 (a thin light ring inside the limbal ring): 0 strength = off. Older files load as off.
+        private double _limbalInnerRingIntensity = 0.0;
+        private double _limbalInnerRingWidth = DefaultLimbalInnerRingWidth;
+        private double _limbalInnerRingGap = DefaultLimbalInnerRingGap;
+        private string _limbalInnerRingColor = DefaultLimbalInnerRingColor;
+
+        // 瞳孔の縁取り線 (a line along the pupil's outline): 0 strength = off. Older files load as off.
+        private double _pupilOutlineIntensity = 0.0;
+        private double _pupilOutlineWidth = DefaultPupilOutlineWidth;
+        private string _pupilOutlineColor = DefaultPupilOutlineColor;
+
         // Pupil (瞳孔)
         private PupilShape _pupilShape = PupilShape.Round;
         private double _pupilSizeRatio = 0.32; // fraction of iris diameter
@@ -114,6 +150,15 @@ namespace DollIrisGenerator.Models
         private double _pupilFacetIntensity = 0.0; // 宝石カット: strength of the light / dark facets inside the pupil. 0 = off
         private int _pupilFacetCount = 10;          // facets round the pupil
 
+        // 瞳孔まわりの輪 (a jagged ring of color round the pupil): 0 strength = off. Files saved before it existed load as off.
+        private double _collaretteIntensity = 0.0;
+        private string _collaretteColor = DefaultCollaretteColor;
+        private double _collaretteWidth = DefaultCollaretteWidth;
+        private double _collaretteJagged = DefaultCollaretteJagged;
+        private int _collaretteSpikeCount = DefaultCollaretteSpikeCount;
+        private double _collaretteSoftness = DefaultCollaretteSoftness;
+        private LayerBlend _collaretteBlend = LayerBlend.Normal;
+
         // Nebula layer (星雲): soft clouds over the iris body. 0 = off.
         private string _nebulaColor = DefaultNebulaColor;
         private double _nebulaOpacity = 0.0;
@@ -124,6 +169,24 @@ namespace DollIrisGenerator.Models
         private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
+
+        // 色の段 (concentric bands of color from the pupil to the rim): 0 strength = off. Files saved before it existed load as off.
+        private double _toneBandIntensity = 0.0;
+        private int _toneBandCount = DefaultToneBandCount;
+        private string _toneBandInnerColor = DefaultToneBandInnerColor;
+        private string _toneBandOuterColor = DefaultToneBandOuterColor;
+        private double _toneBandSoftness = DefaultToneBandSoftness;
+        private LayerBlend _toneBandBlend = LayerBlend.SoftLight;
+
+        // 斑点 (dark freckles / crypts scattered over the iris): 0 strength = off. Files saved before it existed load as off.
+        private double _spotIntensity = 0.0;
+        private int _spotCount = DefaultSpotCount;
+        private double _spotSize = DefaultSpotSize;
+        private double _spotElongation = DefaultSpotElongation;
+        private double _spotSoftness = DefaultSpotSoftness;
+        private double _spotRadiusRatio = DefaultSpotRadiusRatio;
+        private string _spotColor = DefaultSpotColor;
+        private LayerBlend _spotBlend = LayerBlend.Normal;
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -380,6 +443,34 @@ namespace DollIrisGenerator.Models
             set { _limbalRingSoftness = Math.Max(0.0, Math.Min(1.0, value)); OnPropertyChanged(); }
         }
 
+        /// <summary>外輪の内側の輪の強さ: the ring's opacity. 0 = off.</summary>
+        public double LimbalInnerRingIntensity
+        {
+            get => _limbalInnerRingIntensity;
+            set { _limbalInnerRingIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の輪の太さ, as a fraction of the iris radius.</summary>
+        public double LimbalInnerRingWidth
+        {
+            get => _limbalInnerRingWidth;
+            set { _limbalInnerRingWidth = ClampFinite(value, MinLimbalInnerRingWidth, MaxLimbalInnerRingWidth, DefaultLimbalInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>間隔: from the limbal ring's inner edge to the inner ring, as a fraction of the iris radius.</summary>
+        public double LimbalInnerRingGap
+        {
+            get => _limbalInnerRingGap;
+            set { _limbalInnerRingGap = ClampFinite(value, 0.0, MaxLimbalInnerRingGap, DefaultLimbalInnerRingGap); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の輪の色 (one color).</summary>
+        public string LimbalInnerRingColor
+        {
+            get => _limbalInnerRingColor;
+            set { _limbalInnerRingColor = value ?? DefaultLimbalInnerRingColor; OnPropertyChanged(); }
+        }
+
         // Pupil
         /// <summary>Unknown numbers from a file (such as 1, the vertical oval that is now a stretched circle) become a circle.</summary>
         public PupilShape PupilShape
@@ -428,6 +519,76 @@ namespace DollIrisGenerator.Models
         {
             get => _pupilFacetCount;
             set { _pupilFacetCount = Math.Clamp(value, MinPupilFacetCount, MaxPupilFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の縁取り線の強さ: the line's opacity. 0 = off.</summary>
+        public double PupilOutlineIntensity
+        {
+            get => _pupilOutlineIntensity;
+            set { _pupilOutlineIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁取り線の太さ, as a fraction of the iris radius.</summary>
+        public double PupilOutlineWidth
+        {
+            get => _pupilOutlineWidth;
+            set { _pupilOutlineWidth = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilOutlineWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁取り線の色 (one color).</summary>
+        public string PupilOutlineColor
+        {
+            get => _pupilOutlineColor;
+            set { _pupilOutlineColor = value ?? DefaultPupilOutlineColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の強さ: the ring's opacity. 0 = off.</summary>
+        public double CollaretteIntensity
+        {
+            get => _collaretteIntensity;
+            set { _collaretteIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の色 (solid or gradient; a radial one runs from the pupil's edge to the ring's outer edge).</summary>
+        public string CollaretteColor
+        {
+            get => _collaretteColor;
+            set { _collaretteColor = value ?? DefaultCollaretteColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>幅: from the pupil's edge to the ring's outer edge (its peaks), as a fraction of the iris radius.</summary>
+        public double CollaretteWidth
+        {
+            get => _collaretteWidth;
+            set { _collaretteWidth = ClampFinite(value, MinCollaretteWidth, MaxCollaretteWidth, DefaultCollaretteWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>ギザギザ: depth of the valleys of the outer edge. 0 = a plain circle.</summary>
+        public double CollaretteJagged
+        {
+            get => _collaretteJagged;
+            set { _collaretteJagged = ClampFinite(value, 0.0, 1.0, DefaultCollaretteJagged); OnPropertyChanged(); }
+        }
+
+        /// <summary>山の数: peaks round the outer edge.</summary>
+        public int CollaretteSpikeCount
+        {
+            get => _collaretteSpikeCount;
+            set { _collaretteSpikeCount = Math.Clamp(value, MinCollaretteSpikeCount, MaxCollaretteSpikeCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>柔らかさ: how softly the outer edge fades out. 0 = crisp.</summary>
+        public double CollaretteSoftness
+        {
+            get => _collaretteSoftness;
+            set { _collaretteSoftness = ClampFinite(value, 0.0, 1.0, DefaultCollaretteSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の重ね方.</summary>
+        public LayerBlend CollaretteBlend
+        {
+            get => _collaretteBlend;
+            set { _collaretteBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>Color of the nebula clouds (solid or gradient, laid across the iris like the other iris-wide colors).</summary>
@@ -491,6 +652,104 @@ namespace DollIrisGenerator.Models
         {
             get => _fiberNoiseScale;
             set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>色の段の強さ: the bands' opacity. 0 = off.</summary>
+        public double ToneBandIntensity
+        {
+            get => _toneBandIntensity;
+            set { _toneBandIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>段の数: bands between the pupil's edge and the rim.</summary>
+        public int ToneBandCount
+        {
+            get => _toneBandCount;
+            set { _toneBandCount = Math.Clamp(value, MinToneBandCount, MaxToneBandCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の色: the innermost band's color (one color; the bands between are evenly mixed).</summary>
+        public string ToneBandInnerColor
+        {
+            get => _toneBandInnerColor;
+            set { _toneBandInnerColor = value ?? DefaultToneBandInnerColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>外側の色: the outermost band's color.</summary>
+        public string ToneBandOuterColor
+        {
+            get => _toneBandOuterColor;
+            set { _toneBandOuterColor = value ?? DefaultToneBandOuterColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>境目のぼかし: 0 = crisp steps; 1 = each boundary blends across a whole band's width.</summary>
+        public double ToneBandSoftness
+        {
+            get => _toneBandSoftness;
+            set { _toneBandSoftness = ClampFinite(value, 0.0, 1.0, DefaultToneBandSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>色の段の重ね方 (soft light by default: light / dark steps that keep the iris color).</summary>
+        public LayerBlend ToneBandBlend
+        {
+            get => _toneBandBlend;
+            set { _toneBandBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の強さ: the darkest spot's opacity. 0 = off.</summary>
+        public double SpotIntensity
+        {
+            get => _spotIntensity;
+            set { _spotIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の数.</summary>
+        public int SpotCount
+        {
+            get => _spotCount;
+            set { _spotCount = Math.Clamp(value, MinSpotCount, MaxSpotCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>大きさ: the largest spot's radius, as a fraction of the iris radius.</summary>
+        public double SpotSize
+        {
+            get => _spotSize;
+            set { _spotSize = ClampFinite(value, MinSpotSize, MaxSpotSize, DefaultSpotSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>細長さ: 0 = round freckles; 1 = crypts stretched along the radius (3.5 × as long as wide).</summary>
+        public double SpotElongation
+        {
+            get => _spotElongation;
+            set { _spotElongation = ClampFinite(value, 0.0, 1.0, DefaultSpotElongation); OnPropertyChanged(); }
+        }
+
+        /// <summary>柔らかさ: how softly a spot's edge fades out. 0 = crisp.</summary>
+        public double SpotSoftness
+        {
+            get => _spotSoftness;
+            set { _spotSoftness = ClampFinite(value, 0.0, 1.0, DefaultSpotSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>分布範囲: the farthest a spot sits from the center, as a fraction of the iris radius.</summary>
+        public double SpotRadiusRatio
+        {
+            get => _spotRadiusRatio;
+            set { _spotRadiusRatio = ClampFinite(value, MinSpotRadiusRatio, MaxSpotRadiusRatio, DefaultSpotRadiusRatio); OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の色 (one color).</summary>
+        public string SpotColor
+        {
+            get => _spotColor;
+            set { _spotColor = value ?? DefaultSpotColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>斑点の重ね方.</summary>
+        public LayerBlend SpotBlend
+        {
+            get => _spotBlend;
+            set { _spotBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>

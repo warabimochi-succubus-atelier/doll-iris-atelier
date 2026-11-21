@@ -318,15 +318,30 @@ namespace DollIrisGenerator.Services
         /// distance d inside the rim the mask is Φ((<paramref name="widthMm"/> − d) / σ), the same curve as the
         /// ellipse's radial gradient (<see cref="GaussianEdgeStops"/>) in steps of at most <see cref="OutlineRingStepMm"/>.
         /// </summary>
-        internal static (double HalfWidthMm, double Opacity)[] OutlineRingStrokes(double widthMm, double sigmaMm)
+        internal static (double HalfWidthMm, double Opacity)[] OutlineRingStrokes(double widthMm, double sigmaMm) =>
+            NestedFadeSteps(widthMm, sigmaMm, OutlineRingStepMm, MinOutlineRingSteps, MaxOutlineRingSteps);
+
+        /// <summary>Longest step (in the ring's width) between the nested shapes of a soft 瞳孔まわりの輪, and how many.</summary>
+        public const double CollaretteFadeStep = 0.04;
+        public const int MinCollaretteFadeSteps = 8, MaxCollaretteFadeSteps = 32;
+
+        /// <summary>Gaussian deviation of the 瞳孔まわりの輪's outer edge at 柔らかさ 1, in the ring's width.</summary>
+        public const double CollaretteSigmaPerSoftness = 0.4;
+
+        /// <summary>
+        /// Nested shapes (reach, opacity), widest first, each covering everything closer than its reach, drawn white one
+        /// over another so that at a distance d the result is Φ((<paramref name="width"/> − d) / σ) in steps of at most
+        /// <paramref name="maxStep"/> (between <paramref name="minSteps"/> and <paramref name="maxSteps"/> shapes).
+        /// </summary>
+        internal static (double Reach, double Opacity)[] NestedFadeSteps(double width, double sigma, double maxStep, int minSteps, int maxSteps)
         {
-            double lo = Math.Max(0.0, widthMm - 2.5 * sigmaMm), hi = widthMm + 2.5 * sigmaMm;
-            int count = Math.Clamp((int)Math.Ceiling((hi - lo) / OutlineRingStepMm), MinOutlineRingSteps, MaxOutlineRingSteps);
+            double lo = Math.Max(0.0, width - 2.5 * sigma), hi = width + 2.5 * sigma;
+            int count = Math.Clamp((int)Math.Ceiling((hi - lo) / maxStep), minSteps, maxSteps);
             double step = (hi - lo) / count;
             // Target mask value in each band (its middle), band k between lo + k·step and lo + (k + 1)·step
             var target = new double[count];
             for (int k = 0; k < count; k++)
-                target[k] = NormalCdf((widthMm - (lo + (k + 0.5) * step)) / sigmaMm);
+                target[k] = NormalCdf((width - (lo + (k + 0.5) * step)) / sigma);
             // Band k is covered by the strokes k … count − 1, so 1 − target[k] = Π (1 − opacity[j]) over them
             var strokes = new (double, double)[count];
             for (int k = count - 1; k >= 0; k--)
@@ -358,6 +373,140 @@ namespace DollIrisGenerator.Services
             }
             sb.AppendLine("        </filter>");
             sb.AppendLine("      </defs>");
+        }
+
+        /// <summary>
+        /// 瞳孔まわりの輪: a jagged ring of color from the pupil's edge out (<see cref="IrisPatterns.CollaretteEdge"/>),
+        /// stretched onto the iris. Crisp: the edge filled with the ring's paint. Soft: the ring's paint over the iris,
+        /// shown through a mask of the edge shrunk / grown toward the pupil's edge (<see cref="NestedFadeSteps"/>).
+        /// </summary>
+        private static void AppendCollarette(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, int seed, Rect irisBox)
+        {
+            double pupil = p.PupilSizeRatio;
+            double width = Math.Min(p.CollaretteWidth, 0.95 - pupil);
+            if (width < 0.01) return;
+
+            var edge = IrisPatterns.CollaretteEdge(pupil, width, p.CollaretteJagged, p.CollaretteSpikeCount, seed, isRightEye);
+            string paint = Paint(sb, "      ", $"{idPrefix}_collarette_fill", p.CollaretteColor, IrisParameters.DefaultCollaretteColor,
+                irisBox, isRightEye, pupil, pupil + width);
+            string common = $@" opacity=""{p.CollaretteIntensity.ToFixed(2)}""{BlendStyle(p.CollaretteBlend)}";
+
+            // The edge at u (0 = the pupil's edge, 1 = the ring's edge)
+            void AppendEdge(double u)
+            {
+                sb.Append(@" d=""M");
+                for (int k = 0; k < edge.Length; k++)
+                {
+                    var (angle, r) = edge[k];
+                    double radius = pupil + u * (r - pupil);
+                    if (k > 0) sb.Append(" L");
+                    sb.AppendFixed(cx + Math.Cos(angle) * radius * rx, 3).Append(',').AppendFixed(cy + Math.Sin(angle) * radius * ry, 3);
+                }
+                sb.Append(@" Z""");
+            }
+
+            if (p.CollaretteSoftness < 0.01)
+            {
+                sb.Append($@"      <path id=""{idPrefix}_collarette""");
+                AppendEdge(1.0);
+                sb.AppendLine($@" fill=""{paint}""{common} />");
+                return;
+            }
+
+            string maskId = $"{idPrefix}_collarette_mask";
+            double sigma = p.CollaretteSoftness * CollaretteSigmaPerSoftness;
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <mask id=""{maskId}"">");
+            foreach (var (reach, opacity) in NestedFadeSteps(1.0, sigma, CollaretteFadeStep, MinCollaretteFadeSteps, MaxCollaretteFadeSteps))
+            {
+                if (opacity < 1e-4) continue;
+                sb.Append("          <path");
+                AppendEdge(reach);
+                sb.AppendLine($@" fill=""#FFFFFF"" fill-opacity=""{F(opacity, 4)}"" />");
+            }
+            sb.AppendLine("        </mask>");
+            sb.AppendLine("      </defs>");
+            sb.AppendLine($@"      <ellipse id=""{idPrefix}_collarette"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{paint}""{common} mask=""url(#{maskId})"" />");
+        }
+
+        /// <summary>
+        /// 色の段: the stops (offset 0–1 of the iris radius, "#RRGGBB", alpha) of the bands' radial gradient. N bands
+        /// split the pupil's edge … rim evenly; band k's color is the inner color mixed toward the outer one by k / (N − 1).
+        /// Each boundary gets the colors on either side at ± 境目のぼかし × the band's width / 2 (the same offset twice
+        /// when crisp). Past the first and last stops the end colors carry on (inside the pupil, the shaped outline's corners).
+        /// </summary>
+        internal static List<(double Offset, string Rgb, double Alpha)> ToneBandStops(IrisParameters p)
+        {
+            int n = p.ToneBandCount;
+            double pupil = Math.Clamp(p.PupilSizeRatio, 0.0, 0.95);
+            double width = (1.0 - pupil) / n;
+            double half = p.ToneBandSoftness * width / 2.0;
+            var inner = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.ToneBandInnerColor, IrisParameters.DefaultToneBandInnerColor));
+            var outer = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.ToneBandOuterColor, IrisParameters.DefaultToneBandOuterColor));
+
+            (string, double) Band(int k)
+            {
+                double t = (double)k / (n - 1);
+                int Mix(byte a, byte b) => (int)Math.Round(a + (b - a) * t);
+                return ($"#{Mix(inner.R, outer.R):X2}{Mix(inner.G, outer.G):X2}{Mix(inner.B, outer.B):X2}", Mix(inner.A, outer.A) / 255.0);
+            }
+
+            var stops = new List<(double, string, double)>();
+            var (firstRgb, firstAlpha) = Band(0);
+            stops.Add((0.0, firstRgb, firstAlpha));
+            for (int k = 1; k < n; k++)
+            {
+                double edge = pupil + width * k;
+                var (beforeRgb, beforeAlpha) = Band(k - 1);
+                var (afterRgb, afterAlpha) = Band(k);
+                stops.Add((edge - half, beforeRgb, beforeAlpha));
+                stops.Add((edge + half, afterRgb, afterAlpha));
+            }
+            var (lastRgb, lastAlpha) = Band(n - 1);
+            stops.Add((1.0, lastRgb, lastAlpha));
+            return stops;
+        }
+
+        /// <summary>Length of a 斑点 at 細長さ 1, in widths (1 + this × 細長さ).</summary>
+        public const double SpotStretchPerElongation = 2.5;
+
+        /// <summary>
+        /// 斑点: dark ellipses (<see cref="IrisPatterns.Spots"/>) in one group carrying the blend mode. Soft spots share a
+        /// bounding-box radial gradient: the color up to 1 − 柔らかさ, clear at the edge.
+        /// </summary>
+        private static void AppendSpots(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry, double baseR,
+            IrisParameters p, bool isRightEye, int seed)
+        {
+            var (rgb, colorAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.SpotColor, IrisParameters.DefaultSpotColor));
+            string fill = rgb;
+            if (p.SpotSoftness > 0.005)
+            {
+                string gradId = $"{idPrefix}_spots_grad";
+                string opacityAttr = colorAlpha < 1.0 ? $@" stop-opacity=""{colorAlpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <radialGradient id=""{gradId}"">");
+                sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{rgb}""{opacityAttr} />");
+                sb.AppendLine($@"          <stop offset=""{((1.0 - p.SpotSoftness) * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
+                sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{rgb}"" stop-opacity=""0"" />");
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine("      </defs>");
+                fill = $"url(#{gradId})";
+                colorAlpha = 1.0; // carried by the stops
+            }
+
+            double width = p.SpotSize * baseR;
+            double length = width * (1.0 + SpotStretchPerElongation * p.SpotElongation);
+            sb.AppendLine($@"      <g id=""{idPrefix}_spots"" fill=""{fill}""{BlendStyle(p.SpotBlend)}>");
+            foreach (var spot in IrisPatterns.Spots(p.SpotCount, p.PupilSizeRatio, p.SpotRadiusRatio, seed, isRightEye))
+            {
+                double x = cx + spot.Position.X * rx, y = cy + spot.Position.Y * ry;
+                // The long (vertical) axis turned to the spot's direction, as seen on the stretched iris
+                double deg = Math.Atan2(Math.Sin(spot.Angle) * ry, Math.Cos(spot.Angle) * rx) * 180.0 / Math.PI - 90.0;
+                double alpha = p.SpotIntensity * spot.AlphaFactor * colorAlpha;
+                sb.AppendLine($@"        <ellipse cx=""{F(x)}"" cy=""{F(y)}"" rx=""{F(width * spot.SizeFactor, 4)}"" ry=""{F(length * spot.SizeFactor, 4)}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" transform=""rotate({deg.ToFixed(1)}, {F(x)}, {F(y)})"" />");
+            }
+            sb.AppendLine("      </g>");
         }
 
         /// <summary>Number of radial strips the fiber noise is made of.</summary>
@@ -533,6 +682,21 @@ namespace DollIrisGenerator.Services
                 string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_aurora")} fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}""{BlendStyle(p.AuroraBlend)} />");
             }
+            if (p.ToneBandIntensity > 0.01)
+            {
+                // 色の段: one radial gradient over the iris ellipse, with a step of color at each band boundary
+                string gradId = $"{idPrefix}_tone_bands_grad";
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <radialGradient id=""{gradId}"" gradientUnits=""userSpaceOnUse"" cx=""0"" cy=""0"" r=""1"" gradientTransform=""translate({F(cx)} {F(cy)}) scale({F(rx, 6)} {F(ry, 6)})"">");
+                foreach (var (offset, rgb, alpha) in ToneBandStops(p))
+                {
+                    string opacityAttr = alpha < 1.0 ? $@" stop-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                    sb.AppendLine($@"          <stop offset=""{(offset * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
+                }
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine("      </defs>");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_tone_bands")} fill=""url(#{gradId})"" opacity=""{p.ToneBandIntensity.ToFixed(2)}""{BlendStyle(p.ToneBandBlend)} />");
+            }
             if (p.NebulaOpacity > 0.01)
             {
                 // The same cloud pixels the screen / PDF renderer draws, embedded as a PNG over the iris box
@@ -542,6 +706,14 @@ namespace DollIrisGenerator.Services
             if (p.FiberNoise > 0.005)
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
+            }
+            if (p.SpotIntensity > 0.01)
+            {
+                AppendSpots(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
+            }
+            if (p.CollaretteIntensity > 0.01)
+            {
+                AppendCollarette(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, irisBox);
             }
             sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)
@@ -691,6 +863,25 @@ namespace DollIrisGenerator.Services
                 }
             }
 
+            // 外輪の内側の輪: a band at the same distance inside the rim all the way round (strokes of the rim in a mask)
+            if (p.LimbalInnerRingIntensity > 0.01)
+            {
+                double inset = baseR * (p.LimbalRingThickness + p.LimbalInnerRingGap);
+                double width = baseR * p.LimbalInnerRingWidth;
+                string maskId = $"{idPrefix}_limbal_inner_mask";
+                string Rim(string stroke, double strokeWidth) => outlineId != null
+                    ? $@"<use href=""#{outlineId}"" fill=""none"" stroke=""{stroke}"" stroke-width=""{F(strokeWidth, 4)}"" />"
+                    : $@"<ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx)}"" ry=""{F(ry)}"" fill=""none"" stroke=""{stroke}"" stroke-width=""{F(strokeWidth, 4)}"" />";
+                string color = GeometryHelper.SanitizeColorHex(p.LimbalInnerRingColor, IrisParameters.DefaultLimbalInnerRingColor);
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <mask id=""{maskId}"">");
+                sb.AppendLine("          " + Rim("#FFFFFF", 2.0 * (inset + width)));
+                if (inset > 1e-6) sb.AppendLine("          " + Rim("#000000", 2.0 * inset));
+                sb.AppendLine("        </mask>");
+                sb.AppendLine("      </defs>");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_limbal_inner_ring")} fill=""{color}"" opacity=""{p.LimbalInnerRingIntensity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+            }
+
             // Pupil
             if (p.PupilSizeRatio > 0.01 && p.PupilOpacity > 0.01)
             {
@@ -784,6 +975,13 @@ namespace DollIrisGenerator.Services
                             $@""" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
                     }
                     sb.AppendLine("      </g>");
+                }
+
+                // 瞳孔の縁取り線: a line centered on the same outline (not blurred)
+                if (p.PupilOutlineIntensity > 0.01)
+                {
+                    string color = GeometryHelper.SanitizeColorHex(p.PupilOutlineColor, IrisParameters.DefaultPupilOutlineColor);
+                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_outline"" fill=""none"" stroke=""{color}"" stroke-width=""{F(baseR * p.PupilOutlineWidth, 4)}"" stroke-linejoin=""round"" opacity=""{p.PupilOutlineIntensity.ToFixed(2)}""");
                 }
             }
 

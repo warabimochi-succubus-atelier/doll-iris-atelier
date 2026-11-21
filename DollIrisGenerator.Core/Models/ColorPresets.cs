@@ -53,6 +53,9 @@ namespace DollIrisGenerator.Models
         public double? NebulaDensity { get; set; }
         public double? NebulaSwirl { get; set; }
         public int? PupilFacetCount { get; set; }
+        public double? PupilOutlineIntensity { get; set; }
+        public double? PupilOutlineWidth { get; set; }
+        public string? PupilOutlineColor { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
         public int? RayCount { get; set; }
@@ -71,6 +74,10 @@ namespace DollIrisGenerator.Models
         public double? LimbalRingThickness { get; set; }
         public double? LimbalRingOpacity { get; set; }
         public double? LimbalRingSoftness { get; set; }
+        public double? LimbalInnerRingIntensity { get; set; }
+        public double? LimbalInnerRingWidth { get; set; }
+        public double? LimbalInnerRingGap { get; set; }
+        public string? LimbalInnerRingColor { get; set; }
         public double? PupilOpacity { get; set; }
         public double? PupilSoftness { get; set; }
         public double? PupilCornerRounding { get; set; }
@@ -102,6 +109,14 @@ namespace DollIrisGenerator.Models
         public double? LensRangeAngle { get; set; }
         public double? LensRangeWidth { get; set; }
         public double? LensRangeFeather { get; set; }
+        // 瞳孔まわりの輪
+        public double? CollaretteIntensity { get; set; }
+        public string? CollaretteColor { get; set; }
+        public double? CollaretteWidth { get; set; }
+        public double? CollaretteJagged { get; set; }
+        public int? CollaretteSpikeCount { get; set; }
+        public double? CollaretteSoftness { get; set; }
+        public LayerBlend? CollaretteBlend { get; set; }
         // 宝石カット面
         public double? IrisFacetIntensity { get; set; }
         public double? IrisFacetTableSize { get; set; }
@@ -115,6 +130,22 @@ namespace DollIrisGenerator.Models
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
+        // 色の段
+        public double? ToneBandIntensity { get; set; }
+        public int? ToneBandCount { get; set; }
+        public string? ToneBandInnerColor { get; set; }
+        public string? ToneBandOuterColor { get; set; }
+        public double? ToneBandSoftness { get; set; }
+        public LayerBlend? ToneBandBlend { get; set; }
+        // 斑点
+        public double? SpotIntensity { get; set; }
+        public int? SpotCount { get; set; }
+        public double? SpotSize { get; set; }
+        public double? SpotElongation { get; set; }
+        public double? SpotSoftness { get; set; }
+        public double? SpotRadiusRatio { get; set; }
+        public string? SpotColor { get; set; }
+        public LayerBlend? SpotBlend { get; set; }
         public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
@@ -442,6 +473,9 @@ namespace DollIrisGenerator.Models
             target.NebulaDensity = preset.NebulaDensity ?? d.NebulaDensity;
             target.NebulaSwirl = preset.NebulaSwirl ?? d.NebulaSwirl;
             target.PupilFacetCount = preset.PupilFacetCount ?? d.PupilFacetCount;
+            target.PupilOutlineIntensity = preset.PupilOutlineIntensity ?? d.PupilOutlineIntensity;
+            target.PupilOutlineWidth = preset.PupilOutlineWidth ?? d.PupilOutlineWidth;
+            target.PupilOutlineColor = preset.PupilOutlineColor ?? d.PupilOutlineColor;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
             target.RayCount = preset.RayCount ?? d.RayCount;
@@ -456,11 +490,29 @@ namespace DollIrisGenerator.Models
             target.GlitterBlend = preset.GlitterBlend ?? d.GlitterBlend;
             target.AuroraBlend = preset.AuroraBlend ?? d.AuroraBlend;
             target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
+            target.ToneBandIntensity = preset.ToneBandIntensity ?? d.ToneBandIntensity;
+            target.ToneBandCount = preset.ToneBandCount ?? d.ToneBandCount;
+            target.ToneBandInnerColor = preset.ToneBandInnerColor ?? d.ToneBandInnerColor;
+            target.ToneBandOuterColor = preset.ToneBandOuterColor ?? d.ToneBandOuterColor;
+            target.ToneBandSoftness = preset.ToneBandSoftness ?? d.ToneBandSoftness;
+            target.ToneBandBlend = preset.ToneBandBlend ?? d.ToneBandBlend;
+            target.SpotIntensity = preset.SpotIntensity ?? d.SpotIntensity;
+            target.SpotCount = preset.SpotCount ?? d.SpotCount;
+            target.SpotSize = preset.SpotSize ?? d.SpotSize;
+            target.SpotElongation = preset.SpotElongation ?? d.SpotElongation;
+            target.SpotSoftness = preset.SpotSoftness ?? d.SpotSoftness;
+            target.SpotRadiusRatio = preset.SpotRadiusRatio ?? d.SpotRadiusRatio;
+            target.SpotColor = preset.SpotColor ?? d.SpotColor;
+            target.SpotBlend = preset.SpotBlend ?? d.SpotBlend;
             target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
             target.LimbalRingOpacity = preset.LimbalRingOpacity ?? d.LimbalRingOpacity;
             target.LimbalRingSoftness = preset.LimbalRingSoftness ?? d.LimbalRingSoftness;
+            target.LimbalInnerRingIntensity = preset.LimbalInnerRingIntensity ?? d.LimbalInnerRingIntensity;
+            target.LimbalInnerRingWidth = preset.LimbalInnerRingWidth ?? d.LimbalInnerRingWidth;
+            target.LimbalInnerRingGap = preset.LimbalInnerRingGap ?? d.LimbalInnerRingGap;
+            target.LimbalInnerRingColor = preset.LimbalInnerRingColor ?? d.LimbalInnerRingColor;
             target.PupilOpacity = preset.PupilOpacity ?? d.PupilOpacity;
             target.PupilSoftness = preset.PupilSoftness ?? d.PupilSoftness;
             target.PupilCornerRounding = preset.PupilCornerRounding ?? d.PupilCornerRounding;
@@ -491,6 +543,13 @@ namespace DollIrisGenerator.Models
             target.LensRangeAngle = preset.LensRangeAngle ?? d.LensRangeAngle;
             target.LensRangeWidth = preset.LensRangeWidth ?? d.LensRangeWidth;
             target.LensRangeFeather = preset.LensRangeFeather ?? d.LensRangeFeather;
+            target.CollaretteIntensity = preset.CollaretteIntensity ?? d.CollaretteIntensity;
+            target.CollaretteColor = preset.CollaretteColor ?? d.CollaretteColor;
+            target.CollaretteWidth = preset.CollaretteWidth ?? d.CollaretteWidth;
+            target.CollaretteJagged = preset.CollaretteJagged ?? d.CollaretteJagged;
+            target.CollaretteSpikeCount = preset.CollaretteSpikeCount ?? d.CollaretteSpikeCount;
+            target.CollaretteSoftness = preset.CollaretteSoftness ?? d.CollaretteSoftness;
+            target.CollaretteBlend = preset.CollaretteBlend ?? d.CollaretteBlend;
             target.IrisFacetIntensity = preset.IrisFacetIntensity ?? d.IrisFacetIntensity;
             target.IrisFacetTableSize = preset.IrisFacetTableSize ?? d.IrisFacetTableSize;
             target.IrisFacetShadeAngle = preset.IrisFacetShadeAngle ?? d.IrisFacetShadeAngle;
@@ -598,6 +657,9 @@ namespace DollIrisGenerator.Models
                 NebulaDensity = design.NebulaDensity,
                 NebulaSwirl = design.NebulaSwirl,
                 PupilFacetCount = design.PupilFacetCount,
+                PupilOutlineIntensity = design.PupilOutlineIntensity,
+                PupilOutlineWidth = design.PupilOutlineWidth,
+                PupilOutlineColor = design.PupilOutlineColor,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
                 RayCount = design.RayCount,
@@ -611,11 +673,29 @@ namespace DollIrisGenerator.Models
                 GlitterBlend = design.GlitterBlend,
                 AuroraBlend = design.AuroraBlend,
                 FiberNoiseScale = design.FiberNoiseScale,
+                ToneBandIntensity = design.ToneBandIntensity,
+                ToneBandCount = design.ToneBandCount,
+                ToneBandInnerColor = design.ToneBandInnerColor,
+                ToneBandOuterColor = design.ToneBandOuterColor,
+                ToneBandSoftness = design.ToneBandSoftness,
+                ToneBandBlend = design.ToneBandBlend,
+                SpotIntensity = design.SpotIntensity,
+                SpotCount = design.SpotCount,
+                SpotSize = design.SpotSize,
+                SpotElongation = design.SpotElongation,
+                SpotSoftness = design.SpotSoftness,
+                SpotRadiusRatio = design.SpotRadiusRatio,
+                SpotColor = design.SpotColor,
+                SpotBlend = design.SpotBlend,
                 FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,
                 LimbalRingOpacity = design.LimbalRingOpacity,
                 LimbalRingSoftness = design.LimbalRingSoftness,
+                LimbalInnerRingIntensity = design.LimbalInnerRingIntensity,
+                LimbalInnerRingWidth = design.LimbalInnerRingWidth,
+                LimbalInnerRingGap = design.LimbalInnerRingGap,
+                LimbalInnerRingColor = design.LimbalInnerRingColor,
                 PupilOpacity = design.PupilOpacity,
                 PupilSoftness = design.PupilSoftness,
                 PupilCornerRounding = design.PupilCornerRounding,
@@ -646,6 +726,13 @@ namespace DollIrisGenerator.Models
                 LensRangeAngle = design.LensRangeAngle,
                 LensRangeWidth = design.LensRangeWidth,
                 LensRangeFeather = design.LensRangeFeather,
+                CollaretteIntensity = design.CollaretteIntensity,
+                CollaretteColor = design.CollaretteColor,
+                CollaretteWidth = design.CollaretteWidth,
+                CollaretteJagged = design.CollaretteJagged,
+                CollaretteSpikeCount = design.CollaretteSpikeCount,
+                CollaretteSoftness = design.CollaretteSoftness,
+                CollaretteBlend = design.CollaretteBlend,
                 IrisFacetIntensity = design.IrisFacetIntensity,
                 IrisFacetTableSize = design.IrisFacetTableSize,
                 IrisFacetShadeAngle = design.IrisFacetShadeAngle,
