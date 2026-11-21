@@ -1,4 +1,4 @@
-# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.20.0
+# Doll Iris Atelier (ドール用虹彩生成・実寸出力ツール) v0.21.0
 
 ![Doll Iris Atelier のデスクトップ版。左に左右の虹彩のプレビュー、右に設定タブが並ぶ画面](docs/images/screenshot-desktop.png)
 
@@ -168,10 +168,10 @@ dotnet build .\DollIrisGenerator --configuration Release
 ### リリース（GitHub Actions）
 `DollIrisGenerator.csproj`・`DollIrisGenerator.Web.csproj`・`DollIrisGenerator.Cli.csproj` の `<Version>` を上げて `main` に入れたら、そのコミットにバージョンのタグを付けて push します。
 ```powershell
-git tag v0.20.0
-git push origin v0.20.0
+git tag v0.21.0
+git push origin v0.21.0
 ```
-`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.20.0-win-x64.zip`（`DollIrisGenerator.exe`）と、コマンドライン版の `DollIrisAtelier-v0.20.0-cli-win-x64.zip`（`DollIrisCli.exe`）を、そのタグの GitHub Release に添付します。どちらの zip にも、exe と同じ文書（利用者向けの [docs/README_DIST.md](docs/README_DIST.md) を `README.md` として、USER_MANUAL.md、docs/DESIGN_JSON_FORMAT.md、LICENSE、NOTICE.md、`third_party/resvg/` の resvg のライセンス）が入ります。文書はリポジトリと同じ配置にするので、文書の間のリンクは zip の中でもつながります。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
+`.github/workflows/release.yml` がテストと発行を行い、`DollIrisAtelier-v0.21.0-win-x64.zip`（`DollIrisGenerator.exe`）と、コマンドライン版の `DollIrisAtelier-v0.21.0-cli-win-x64.zip`（`DollIrisCli.exe`）を、そのタグの GitHub Release に添付します。どちらの zip にも、exe と同じ文書（利用者向けの [docs/README_DIST.md](docs/README_DIST.md) を `README.md` として、USER_MANUAL.md、docs/DESIGN_JSON_FORMAT.md、LICENSE、NOTICE.md、`third_party/resvg/` の resvg のライセンス）が入ります。文書はリポジトリと同じ配置にするので、文書の間のリンクは zip の中でもつながります。0.x のバージョンはプレリリースになり、リリースノートは前のタグからのプルリクエストで作られます。タグと `<Version>` が一致しないときは失敗します。
 
 ### 配布用ファイルの作成（手元で作る場合）
 .NET のインストールが不要な、exe 1 つの形式です（リリースと同じ設定）。出力された `dist\DollIrisAtelier` フォルダーに、リリースの zip と同じ文書（`release.yml` の Zip の手順を参照）を加えて配布します。
