@@ -519,6 +519,46 @@
                                         </DockPanel>
                                         <Slider Minimum="-45.0" Maximum="45.0" Value="{Binding CurrentIris.TiltAngle}" Margin="0,0,0,8"/>
 
+                                        <!-- Outline (虹彩の輪郭): all 0 = the ellipse -->
+                                        <TextBlock Text="虹彩の輪郭:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,4,0,4"
+                                                   ToolTip="上を平らにする・卵形や盾形にするなど、楕円からの変え方です。すべて 0 で楕円。カットラインも輪郭に沿います"/>
+                                        <ItemsControl ItemsSource="{Binding OutlineStyles}" Margin="0,0,0,6">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding Name}" Padding="8,2" Margin="0,0,6,4" Background="#333842" Foreground="#80D8FF"
+                                                            Command="{Binding DataContext.ApplyOutlineStyleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="上下の幅の差:" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
+                                            <TextBlock Text="{Binding CurrentIris.OutlineTaper, StringFormat='{}{0:P0}'}" Foreground="#80D8FF" HorizontalAlignment="Right" FontSize="11"/>
+                                        </DockPanel>
+                                        <Slider Minimum="-1.0" Maximum="1.0" Value="{Binding CurrentIris.OutlineTaper}" Margin="0,0,0,8"
+                                                ToolTip="プラスで上が広く下がすぼむ (卵形・盾形)、マイナスで下が広くなります"/>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="上の平ら:" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
+                                            <TextBlock Text="{Binding CurrentIris.OutlineTopFlat, StringFormat='{}{0:P0}'}" Foreground="#80D8FF" HorizontalAlignment="Right" FontSize="11"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.OutlineTopFlat}" Margin="0,0,0,8"
+                                                ToolTip="上の端を平らにします (角は丸いまま)"/>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="下の平ら:" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
+                                            <TextBlock Text="{Binding CurrentIris.OutlineBottomFlat, StringFormat='{}{0:P0}'}" Foreground="#80D8FF" HorizontalAlignment="Right" FontSize="11"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.OutlineBottomFlat}" Margin="0,0,0,8"
+                                                ToolTip="下の端を平らにします (角は丸いまま)"/>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="四角さ:" Foreground="{StaticResource TextSecondary}" FontSize="11"/>
+                                            <TextBlock Text="{Binding CurrentIris.OutlineSquareness, StringFormat='{}{0:P0}'}" Foreground="#80D8FF" HorizontalAlignment="Right" FontSize="11"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.OutlineSquareness}" Margin="0,0,0,8"
+                                                ToolTip="楕円から角の丸い四角に近づけます"/>
+
                                         <!-- Seed -->
                                         <DockPanel Margin="0,4,0,0">
                                             <TextBlock Text="乱数シード:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>

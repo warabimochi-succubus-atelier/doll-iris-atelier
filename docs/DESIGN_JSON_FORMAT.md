@@ -97,6 +97,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Shape` | 0 正円, 1 縦長楕円, 2 横長楕円 | 虹彩の形 |
 | `AspectRatio` | 0.6〜2.0 | Shape 1 は高さ = SizeMm × この値、Shape 2 は幅 = SizeMm × この値。Shape 0 では使わない（1.0 にする）。自然なのは 1.05〜1.3 |
 | `TiltAngle` | -45〜45（度） | 楕円の傾き。プラスで時計回り（左目）。右目は自動で逆向き |
+| `OutlineTaper` | -1〜1 | 輪郭の上下の幅の差。プラスで上が広く下がすぼむ（卵形・盾形）、マイナスで下が広い。0 で楕円のまま |
+| `OutlineTopFlat` | 0〜1 | 輪郭の上の端を平らにする（角は丸いまま）。0 でオフ |
+| `OutlineBottomFlat` | 0〜1 | 輪郭の下の端を平らにする。0 でオフ |
+| `OutlineSquareness` | 0〜1 | 楕円から角の丸い四角に近づける。0 でオフ。輪郭の 4 項目がすべて 0 なら楕円 |
 | `Seed` | 0 以上の整数 | 放射ライン・ラメ・星雲などの乱れ方が変わる |
 
 ### 虹彩の地の色（単色のみ。グラデ不可）
@@ -274,6 +278,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "Shape": 0,
   "AspectRatio": 1.0,
   "TiltAngle": 0.0,
+  "OutlineTaper": 0.0,
+  "OutlineTopFlat": 0.0,
+  "OutlineBottomFlat": 0.0,
+  "OutlineSquareness": 0.0,
   "Seed": 12345,
   "BaseColor": "#2979FF",
   "InnerColor": "#80D8FF",

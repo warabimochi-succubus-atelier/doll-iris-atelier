@@ -298,6 +298,38 @@ namespace DollIrisGenerator.Services
             return 0.5 * (1.0 + (x >= 0 ? erf : -erf));
         }
 
+        /// <summary>Longest step (mm) between the nested strokes of a soft limbal ring on a shaped outline.</summary>
+        public const double OutlineRingStepMm = 0.02;
+        public const int MinOutlineRingSteps = 12, MaxOutlineRingSteps = 64;
+
+        /// <summary>
+        /// The nested strokes (half width in mm from the rim, opacity) that make a soft limbal ring's mask on a shaped
+        /// outline (<see cref="IrisOutline"/>): a stroke of width 2d centered on the rim covers everything within d of
+        /// it, at the same distance all the way round. Drawn white one over another, from the widest, so that at a
+        /// distance d inside the rim the mask is Φ((<paramref name="widthMm"/> − d) / σ), the same curve as the
+        /// ellipse's radial gradient (<see cref="GaussianEdgeStops"/>) in steps of at most <see cref="OutlineRingStepMm"/>.
+        /// </summary>
+        internal static (double HalfWidthMm, double Opacity)[] OutlineRingStrokes(double widthMm, double sigmaMm)
+        {
+            double lo = Math.Max(0.0, widthMm - 2.5 * sigmaMm), hi = widthMm + 2.5 * sigmaMm;
+            int count = Math.Clamp((int)Math.Ceiling((hi - lo) / OutlineRingStepMm), MinOutlineRingSteps, MaxOutlineRingSteps);
+            double step = (hi - lo) / count;
+            // Target mask value in each band (its middle), band k between lo + k·step and lo + (k + 1)·step
+            var target = new double[count];
+            for (int k = 0; k < count; k++)
+                target[k] = NormalCdf((widthMm - (lo + (k + 0.5) * step)) / sigmaMm);
+            // Band k is covered by the strokes k … count − 1, so 1 − target[k] = Π (1 − opacity[j]) over them
+            var strokes = new (double, double)[count];
+            for (int k = count - 1; k >= 0; k--)
+            {
+                double outer = k == count - 1 ? 1.0 : 1.0 - target[k + 1];
+                double opacity = outer > 1e-9 ? Math.Clamp(1.0 - (1.0 - target[k]) / outer, 0.0, 1.0) : 0.0;
+                strokes[k] = (lo + (k + 1) * step, opacity);
+            }
+            Array.Reverse(strokes); // widest first
+            return strokes;
+        }
+
         /// <summary>
         /// A Gaussian blur filter of <paramref name="stdDeviation"/> (mm) whose region is <paramref name="box"/> grown
         /// by <paramref name="extra"/> plus three deviations (user space: a stroke is outside an element's bounding box).
@@ -434,10 +466,28 @@ namespace DollIrisGenerator.Services
             string upperShadowId = $"{idPrefix}_shadow_grad";
             string bottomGlowId = $"{idPrefix}_glow_grad";
 
+            // A shaped outline (虹彩の輪郭) is written once and used by the clip, the limbal ring and the cut line; the
+            // plain ellipse keeps its <ellipse> elements (unchanged output)
+            string? outlineId = IrisOutline.IsEllipse(p) ? null : $"{idPrefix}_outline";
+            // The start of an element covering the whole iris: the ellipse, or the outline (which reaches into the
+            // box's corners). Both have the iris box as bounding box, so bounding-box gradients come out the same.
+            string IrisBody(string id) => outlineId != null
+                ? $@"<use id=""{id}"" href=""#{outlineId}"""
+                : $@"<ellipse id=""{id}"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}""";
+
             sb.AppendLine("  <defs>");
+            if (outlineId != null)
+            {
+                sb.Append($@"    <path id=""{outlineId}"" d=""");
+                IrisOutline.Build(p, rx, ry).AppendSvgPathData(sb, cx, cy);
+                sb.AppendLine(@""" />");
+            }
             // Boundary clip
             sb.AppendLine($@"    <clipPath id=""{clipId}"">");
-            sb.AppendLine($@"      <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" />");
+            if (outlineId != null)
+                sb.AppendLine($@"      <use href=""#{outlineId}"" />");
+            else
+                sb.AppendLine($@"      <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" />");
             sb.AppendLine("    </clipPath>");
 
             // Base Radial Gradient
@@ -468,11 +518,11 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($@"    <g id=""{idPrefix}_clipped"" clip-path=""url(#{clipId})"">");
 
             // Base Background
-            sb.AppendLine($@"      <ellipse id=""{idPrefix}_base"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{radGradId})"" />");
+            sb.AppendLine($@"      {IrisBody($"{idPrefix}_base")} fill=""url(#{radGradId})"" />");
             if (p.AuroraOpacity > 0.01)
             {
                 string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
-                sb.AppendLine($@"      <ellipse id=""{idPrefix}_aurora"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}""{BlendStyle(p.AuroraBlend)} />");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_aurora")} fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}""{BlendStyle(p.AuroraBlend)} />");
             }
             if (p.NebulaOpacity > 0.01)
             {
@@ -484,10 +534,10 @@ namespace DollIrisGenerator.Services
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
             }
-            sb.AppendLine($@"      <ellipse id=""{idPrefix}_upper_shadow"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{upperShadowId})"" />");
+            sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)
             {
-                sb.AppendLine($@"      <ellipse id=""{idPrefix}_bottom_glow"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""url(#{bottomGlowId})"" />");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_bottom_glow")} fill=""url(#{bottomGlowId})"" />");
             }
 
             // Radial Rays
@@ -558,7 +608,28 @@ namespace DollIrisGenerator.Services
                 // Soft inner edge (境界の柔らかさ): the ring's paint over the whole iris, shown through a mask that rises
                 // from clear to opaque across the inner edge along a Gaussian curve (the shape a blur gives, but exact:
                 // a large blur in resvg leaves faint steps). The rim stays fully covered; any ring color works.
-                if (p.LimbalRingSoftness > 0.05)
+                if (outlineId != null)
+                {
+                    // Shaped outline: the ring follows it at the same width all the way round (strokes of the outline,
+                    // inner half shown by the clip)
+                    if (p.LimbalRingSoftness > 0.05)
+                    {
+                        string maskId = $"{idPrefix}_limbal_mask";
+                        double sigmaMm = ringWidth * p.LimbalRingSoftness * LimbalBlurPerSoftness;
+                        sb.AppendLine("      <defs>");
+                        sb.AppendLine($@"        <mask id=""{maskId}"">");
+                        foreach (var (half, opacity) in OutlineRingStrokes(ringWidth, sigmaMm))
+                            sb.AppendLine($@"          <use href=""#{outlineId}"" fill=""none"" stroke=""#FFFFFF"" stroke-width=""{F(half * 2.0, 4)}"" stroke-opacity=""{F(opacity, 4)}"" />");
+                        sb.AppendLine("        </mask>");
+                        sb.AppendLine("      </defs>");
+                        sb.AppendLine($@"      <use id=""{idPrefix}_limbal_ring"" href=""#{outlineId}"" fill=""{limbalPaint}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+                    }
+                    else
+                    {
+                        sb.AppendLine($@"      <use id=""{idPrefix}_limbal_ring"" href=""#{outlineId}"" fill=""none"" stroke=""{limbalPaint}"" stroke-width=""{(ringWidth * 2.0).ToFixed(3)}"" opacity=""{p.LimbalRingOpacity.ToFixed(2)}"" />");
+                    }
+                }
+                else if (p.LimbalRingSoftness > 0.05)
                 {
                     string maskId = $"{idPrefix}_limbal_mask";
                     double edge = 1.0 - p.LimbalRingThickness;                                 // inner edge, radius 1 = rim
@@ -884,7 +955,9 @@ namespace DollIrisGenerator.Services
             if (cutLine || centerMark)
             {
                 sb.AppendLine($@"    <g id=""{idPrefix}_guides"">");
-                if (cutLine)
+                if (cutLine && outlineId != null)
+                    sb.AppendLine($@"      <use href=""#{outlineId}"" fill=""none"" stroke=""#999999"" stroke-width=""0.15"" stroke-dasharray=""2,2"" />");
+                else if (cutLine)
                     sb.AppendLine($@"      <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""none"" stroke=""#999999"" stroke-width=""0.15"" stroke-dasharray=""2,2"" />");
                 if (centerMark)
                 {

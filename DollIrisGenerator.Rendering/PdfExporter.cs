@@ -172,8 +172,18 @@ namespace DollIrisGenerator.Services
                             pageContentSb.AppendLine("[2 2] 0 d"); // Dashed line
 
                             // Cut lines follow the eye's tilt (the right eye is mirrored, so its tilt is reversed)
-                            AppendCutEllipse(pageContentSb, leftCx_Mm, leftCy_Mm, eyeW_Mm / 2.0, eyeH_Mm / 2.0, curP.TiltAngle);
-                            AppendCutEllipse(pageContentSb, rightCx_Mm, rightCy_Mm, eyeW_Mm / 2.0, eyeH_Mm / 2.0, -curP.TiltAngle);
+                            if (IrisOutline.IsEllipse(curP))
+                            {
+                                AppendCutEllipse(pageContentSb, leftCx_Mm, leftCy_Mm, eyeW_Mm / 2.0, eyeH_Mm / 2.0, curP.TiltAngle);
+                                AppendCutEllipse(pageContentSb, rightCx_Mm, rightCy_Mm, eyeW_Mm / 2.0, eyeH_Mm / 2.0, -curP.TiltAngle);
+                            }
+                            else
+                            {
+                                // Shaped outline (虹彩の輪郭): left-right symmetric, so both eyes use the same outline
+                                var outline = IrisOutline.Build(curP, eyeW_Mm / 2.0, eyeH_Mm / 2.0);
+                                AppendCutOutline(pageContentSb, leftCx_Mm, leftCy_Mm, outline, curP.TiltAngle);
+                                AppendCutOutline(pageContentSb, rightCx_Mm, rightCy_Mm, outline, -curP.TiltAngle);
+                            }
                             pageContentSb.AppendLine("Q");
                         }
 
@@ -301,6 +311,25 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($"{cos.ToString("F6", Inv)} {sin.ToString("F6", Inv)} {(-sin).ToString("F6", Inv)} {cos.ToString("F6", Inv)} {MmToPt(cx_Mm).ToString("F3", Inv)} {MmToPt(cy_Mm).ToString("F3", Inv)} cm");
             AppendPdfEllipse(sb, 0, 0, MmToPt(rx_Mm), MmToPt(ry_Mm));
             sb.AppendLine("S");
+            sb.AppendLine("Q");
+        }
+
+        /// <summary>
+        /// Strokes a shaped iris outline (<see cref="IrisOutline"/>, mm, y down as on screen) as the cut line, centered
+        /// at the eye and rotated by <paramref name="screenTiltDeg"/> like <see cref="AppendCutEllipse"/>.
+        /// </summary>
+        public static void AppendCutOutline(StringBuilder sb, double cx_Mm, double cy_Mm, ShapeOutline outline, double screenTiltDeg)
+        {
+            double phi = -screenTiltDeg * Math.PI / 180.0;
+            double cos = Math.Cos(phi), sin = Math.Sin(phi);
+            sb.AppendLine("q");
+            sb.AppendLine($"{cos.ToString("F6", Inv)} {sin.ToString("F6", Inv)} {(-sin).ToString("F6", Inv)} {cos.ToString("F6", Inv)} {MmToPt(cx_Mm).ToString("F3", Inv)} {MmToPt(cy_Mm).ToString("F3", Inv)} cm");
+            // PDF's y axis points up: the outline's y is flipped
+            string P(DollIrisGenerator.Core.Geometry.Point pt) => $"{MmToPt(pt.X).ToString("F3", Inv)} {MmToPt(-pt.Y).ToString("F3", Inv)}";
+            sb.AppendLine($"{P(outline.Start)} m");
+            foreach (var seg in outline.Segments)
+                sb.AppendLine(seg.IsLine ? $"{P(seg.End)} l" : $"{P(seg.C1)} {P(seg.C2)} {P(seg.End)} c");
+            sb.AppendLine("h S");
             sb.AppendLine("Q");
         }
 

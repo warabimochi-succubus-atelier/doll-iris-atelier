@@ -1,4 +1,5 @@
 using DollIrisGenerator.Models;
+using DollIrisGenerator.Services;
 
 namespace DollIrisGenerator.Web.Editor;
 
@@ -70,6 +71,18 @@ public static class DesignFields
         }),
         new SliderField<IrisParameters>("楕円の縦横比率", p => p.AspectRatio, (p, v) => p.AspectRatio = v, 0.6, 2.0, 0.01, Fmt.F2),
         new SliderField<IrisParameters>("楕円の傾き角度 (チルト)", p => p.TiltAngle, (p, v) => p.TiltAngle = v, -45, 45, 1, Fmt.Deg),
+        new HeadingField<IrisParameters>("虹彩の輪郭", "上を平らにする・卵形や盾形にするなど、楕円からの変え方です。すべて 0 で楕円。カットラインも輪郭に沿います"),
+        new ChoiceField<IrisParameters>("簡単選択", p => IrisOutline.Match(p)?.Name ?? "",
+            (p, v) => { var s = IrisOutline.Styles.FirstOrDefault(x => x.Name == (string)v); if (s != null) IrisOutline.Apply(p, s); },
+            IrisOutline.Styles.Select(s => (s.Name, (object)s.Name)).ToArray()),
+        new SliderField<IrisParameters>("上下の幅の差", p => p.OutlineTaper, (p, v) => p.OutlineTaper = v, -1, 1, 0.01, Fmt.Percent,
+            "プラスで上が広く下がすぼむ (卵形・盾形)、マイナスで下が広くなります"),
+        new SliderField<IrisParameters>("上の平ら", p => p.OutlineTopFlat, (p, v) => p.OutlineTopFlat = v, 0, 1, 0.01, Fmt.Percent,
+            "上の端を平らにします (角は丸いまま)"),
+        new SliderField<IrisParameters>("下の平ら", p => p.OutlineBottomFlat, (p, v) => p.OutlineBottomFlat = v, 0, 1, 0.01, Fmt.Percent,
+            "下の端を平らにします (角は丸いまま)"),
+        new SliderField<IrisParameters>("四角さ", p => p.OutlineSquareness, (p, v) => p.OutlineSquareness = v, 0, 1, 0.01, Fmt.Percent,
+            "楕円から角の丸い四角に近づけます"),
     };
 
     public static readonly IReadOnlyList<Field<IrisParameters>> Colors = new Field<IrisParameters>[]
