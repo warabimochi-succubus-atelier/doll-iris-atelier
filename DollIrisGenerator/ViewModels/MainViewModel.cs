@@ -301,6 +301,18 @@ namespace DollIrisGenerator.ViewModels
 
         /// <summary>The outline quick-select buttons (虹彩の輪郭).</summary>
         public IReadOnlyList<OutlineStyle> OutlineStyles => IrisOutline.Styles;
+
+        public ICommand ApplyPatternRangeCommand { get; }
+
+        /// <summary>One quick-select button of a pattern layer's 見える範囲.</summary>
+        public sealed record PatternRangeChoice(PatternLayer Layer, PatternRangeStyle Style);
+
+        private static IReadOnlyList<PatternRangeChoice> RangeChoices(PatternLayer layer) =>
+            PatternRange.Styles.Select(s => new PatternRangeChoice(layer, s)).ToList();
+
+        public IReadOnlyList<PatternRangeChoice> RayRangeChoices { get; } = RangeChoices(PatternLayer.Rays);
+        public IReadOnlyList<PatternRangeChoice> GlitterRangeChoices { get; } = RangeChoices(PatternLayer.Glitter);
+        public IReadOnlyList<PatternRangeChoice> LensRangeChoices { get; } = RangeChoices(PatternLayer.LensRings);
         public ICommand RandomizeAttributesCommand { get; }
         public ICommand ZoomInCommand { get; }
         public ICommand ZoomOutCommand { get; }
@@ -397,6 +409,7 @@ namespace DollIrisGenerator.ViewModels
             NewDesignCommand = new RelayCommand(OnNewDesign);
             RandomizeSeedCommand = new RelayCommand(OnRandomizeSeed);
             ApplyOutlineStyleCommand = new RelayCommand(OnApplyOutlineStyle);
+            ApplyPatternRangeCommand = new RelayCommand(OnApplyPatternRange);
             RandomizeAttributesCommand = new RelayCommand(OnRandomizeAttributes);
             ZoomInCommand = new RelayCommand(() => ZoomScale *= 1.25);
             ZoomOutCommand = new RelayCommand(() => ZoomScale /= 1.25);
@@ -669,6 +682,26 @@ namespace DollIrisGenerator.ViewModels
                 IrisOutline.Apply(CurrentIris, style);
                 RecordHistory($"虹彩の輪郭: {style.Name}");
                 StatusMessage = $"虹彩の輪郭を「{style.Name}」にしました";
+            }
+            finally
+            {
+                _isInternalStateChange = false;
+                OnPropertyChanged(nameof(CurrentIris));
+            }
+        }
+
+        /// <summary>Sets a layer's three 見える範囲 settings at once: one undo step and one history entry.</summary>
+        private void OnApplyPatternRange(object? parameter)
+        {
+            if (parameter is not PatternRangeChoice choice) return;
+            string label = $"{PatternRange.LayerName(choice.Layer)}の見える範囲: {choice.Style.Name}";
+            PushUndo();
+            _isInternalStateChange = true;
+            try
+            {
+                PatternRange.Apply(CurrentIris, choice.Layer, choice.Style);
+                RecordHistory(label);
+                StatusMessage = $"{PatternRange.LayerName(choice.Layer)}の見える範囲を「{choice.Style.Name}」にしました";
             }
             finally
             {

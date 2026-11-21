@@ -336,6 +336,31 @@ namespace DollIrisGenerator.Services
                 p.PupilStarCoreScale = Math.Round(0.85 + rng.NextDouble() * 0.3, 2);
             }
 
+            // 14b. 見える範囲 (drawn last, so the earlier draws stay as they were): now and then the rays or the
+            // glitter only on the lower side; the lens rings always everywhere
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                bool lower = rng.Next(10) < 2; // 20%
+                double w = rng.NextDouble(), f = rng.NextDouble();
+                p.RayRangeAngle = IrisParameters.DefaultRangeAngle;
+                p.RayRangeWidth = lower ? Math.Round(160.0 + w * 60.0) : IrisParameters.FullRangeWidth;
+                p.RayRangeFeather = lower ? Math.Round(30.0 + f * 30.0) : IrisParameters.DefaultRangeFeather;
+            }
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                bool lower = rng.Next(10) < 1; // 10%
+                double w = rng.NextDouble(), f = rng.NextDouble();
+                p.ParticleRangeAngle = IrisParameters.DefaultRangeAngle;
+                p.ParticleRangeWidth = lower ? Math.Round(200.0 + w * 60.0) : IrisParameters.FullRangeWidth;
+                p.ParticleRangeFeather = lower ? Math.Round(40.0 + f * 30.0) : IrisParameters.DefaultRangeFeather;
+            }
+            if (!Locked(RandomizeLocks.Lens))
+            {
+                p.LensRangeAngle = IrisParameters.DefaultRangeAngle;
+                p.LensRangeWidth = IrisParameters.FullRangeWidth;
+                p.LensRangeFeather = IrisParameters.DefaultRangeFeather;
+            }
+
             // 15. RESTORE SIZE AND DIMENSIONS (GUARANTEE NON-MODIFICATION)
             p.SizeMm = preservedSizeMm;
             p.Shape = preservedShape;
