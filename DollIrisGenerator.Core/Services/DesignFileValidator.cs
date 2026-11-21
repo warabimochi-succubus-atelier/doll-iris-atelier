@@ -111,9 +111,10 @@ namespace DollIrisGenerator.Services
             var designs = new List<ValidatedDesign>();
 
             JsonNode? root;
+            var duplicates = new List<string>();
             try
             {
-                root = JsonNode.Parse(json);
+                root = ParseKeepingLastDuplicate(json, duplicates);
             }
             catch (JsonException ex)
             {
@@ -129,9 +130,17 @@ namespace DollIrisGenerator.Services
                 return new DesignFileReport(designs, issues, DesignFileKind.Design);
             }
 
+            // The app reads a name written twice as its last value, without a word: say so
+            foreach (string path in duplicates)
+                issues.Add(new DesignIssue(DesignIssueLevel.Warning, path, "同じ項目が 2 回以上書かれています。最後の値を使います"));
+
             // A design has no "Items"; the A4 sheet always has it
             if (root is JsonObject sheetRoot && sheetRoot.ContainsKey(nameof(PrintSheetState.Items)))
-                return ValidateSheet(sheetRoot, json);
+            {
+                var sheet = ValidateSheet(sheetRoot, json);
+                return issues.Count == 0 ? sheet
+                    : new DesignFileReport(sheet.Designs, issues.Concat(sheet.Issues).ToList(), sheet.Kind, sheet.Sheet);
+            }
 
             var kind = root is JsonArray ? DesignFileKind.Favorites : DesignFileKind.Design;
 
@@ -442,6 +451,85 @@ namespace DollIrisGenerator.Services
         };
 
         private static string Join(string prefix, string name) => prefix.Length == 0 ? name : $"{prefix}.{name}";
+
+        /// <summary>
+        /// The file as a node tree. A <see cref="JsonNode"/> cannot hold a name twice in one object (it throws when the
+        /// object is first used), while the app's loader (<see cref="JsonSerializer"/>) takes the last value; so an
+        /// object with a repeated name keeps only its last value, as the app reads it, and the repeated names' paths
+        /// go to <paramref name="duplicates"/>.
+        /// </summary>
+        /// <exception cref="JsonException">The text is not JSON.</exception>
+        private static JsonNode? ParseKeepingLastDuplicate(string json, List<string> duplicates)
+        {
+            using var doc = JsonDocument.Parse(json);
+            FindDuplicates(doc.RootElement, "", duplicates);
+            if (duplicates.Count == 0) return JsonNode.Parse(json);
+
+            using var stream = new System.IO.MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+                WriteLastValues(doc.RootElement, writer);
+            return JsonNode.Parse(stream.ToArray());
+        }
+
+        private static void FindDuplicates(JsonElement element, string path, List<string> duplicates)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                var reported = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var property in element.EnumerateObject())
+                {
+                    if (!seen.Add(property.Name) && reported.Add(property.Name))
+                        duplicates.Add(Join(path, property.Name));
+                }
+                // Only the values the app keeps (the last of each name) are looked into
+                foreach (var (name, value) in LastValues(element))
+                    FindDuplicates(value, Join(path, name), duplicates);
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                int i = 0;
+                foreach (var item in element.EnumerateArray())
+                    FindDuplicates(item, $"{path}[{i++}]", duplicates);
+            }
+        }
+
+        /// <summary>Each name of an object once, in the order first written, with its last value.</summary>
+        private static List<(string Name, JsonElement Value)> LastValues(JsonElement obj)
+        {
+            var order = new List<string>();
+            var last = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            foreach (var property in obj.EnumerateObject())
+            {
+                if (!last.ContainsKey(property.Name)) order.Add(property.Name);
+                last[property.Name] = property.Value;
+            }
+            return order.Select(name => (name, last[name])).ToList();
+        }
+
+        private static void WriteLastValues(JsonElement element, Utf8JsonWriter writer)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    writer.WriteStartObject();
+                    foreach (var (name, value) in LastValues(element))
+                    {
+                        writer.WritePropertyName(name);
+                        WriteLastValues(value, writer);
+                    }
+                    writer.WriteEndObject();
+                    break;
+                case JsonValueKind.Array:
+                    writer.WriteStartArray();
+                    foreach (var item in element.EnumerateArray()) WriteLastValues(item, writer);
+                    writer.WriteEndArray();
+                    break;
+                default:
+                    element.WriteTo(writer);
+                    break;
+            }
+        }
 
         /// <summary>"$.Symbols[0].Size" → "Symbols[0].Size", "$[1].Parameters" → "[1].Parameters".</summary>
         private static string PathOf(string? jsonPath)

@@ -174,6 +174,47 @@ namespace DollIrisGenerator.Tests
 
         // ---- validate command ----
 
+        /// <summary>
+        /// A name written twice: the app reads the last value without a word, so the check says so (as a warning) and
+        /// goes on with that value. Not an exception (a JsonNode cannot hold a name twice).
+        /// </summary>
+        [Fact]
+        public void TestNameWrittenTwiceIsAWarning_AndTheLastValueIsUsed()
+        {
+            string json = Design(d => d["RayCount"] = 12).Replace("\"RayCount\":12", "\"RayCount\":12,\"RayCount\":40");
+            var report = DesignFileValidator.Validate(json);
+            var issue = Single(report);
+            Assert.Equal("RayCount", issue.Path);
+            Assert.Contains("最後の値を使います", issue.Message);
+            Assert.Equal(40, Assert.Single(report.Designs).Parameters.RayCount);
+            Assert.Equal(40, FavoritesStore.ParseImportText(json, out _)![0].Parameters.RayCount); // as the app reads it
+
+            // Three times is one warning; inside a symbol and in a favorites list, with the path
+            json = "[{\"Name\": \"案\", \"Parameters\": {\"Name\": \"a\", \"Seed\": 1, \"Seed\": 2, \"Seed\": 3,"
+                 + " \"Symbols\": [{\"Size\": 0.1, \"Size\": 0.2}]}}]";
+            report = DesignFileValidator.Validate(json);
+            Assert.Equal(new[] { "[0].Parameters.Seed", "[0].Parameters.Symbols[0].Size" },
+                report.Issues.Where(i => i.Message.Contains("2 回以上")).Select(i => i.Path));
+            var p = Assert.Single(report.Designs).Parameters;
+            Assert.Equal(3, p.Seed);
+            Assert.Equal(0.2, p.Symbols[0].Size);
+        }
+
+        [Fact]
+        public void TestCommandsReadANameWrittenTwice()
+        {
+            string json = Design().Replace("\"Seed\":", "\"Seed\":5,\"Seed\":");
+            var validate = Run("validate", WriteFile("twice.json", json));
+            Assert.Equal(CliApp.ExitWarnings, validate.Code);
+            Assert.Contains("警告 Seed:", validate.Out);
+
+            string output = Path.Combine(_dir, "twice.svg");
+            var svg = Run("svg", WriteFile("twice2.json", json), "-o", output);
+            Assert.Equal(CliApp.ExitOk, svg.Code);
+            Assert.True(File.Exists(output));
+            Assert.Contains("最後の値を使います", svg.Err);
+        }
+
         [Fact]
         public void TestValidateExitCodes()
         {
