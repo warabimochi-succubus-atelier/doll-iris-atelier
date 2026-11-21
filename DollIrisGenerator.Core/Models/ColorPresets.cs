@@ -102,6 +102,14 @@ namespace DollIrisGenerator.Models
         public double? LensRangeAngle { get; set; }
         public double? LensRangeWidth { get; set; }
         public double? LensRangeFeather { get; set; }
+        // 瞳孔まわりの輪
+        public double? CollaretteIntensity { get; set; }
+        public string? CollaretteColor { get; set; }
+        public double? CollaretteWidth { get; set; }
+        public double? CollaretteJagged { get; set; }
+        public int? CollaretteSpikeCount { get; set; }
+        public double? CollaretteSoftness { get; set; }
+        public LayerBlend? CollaretteBlend { get; set; }
         // 宝石カット面
         public double? IrisFacetIntensity { get; set; }
         public double? IrisFacetTableSize { get; set; }
@@ -491,6 +499,13 @@ namespace DollIrisGenerator.Models
             target.LensRangeAngle = preset.LensRangeAngle ?? d.LensRangeAngle;
             target.LensRangeWidth = preset.LensRangeWidth ?? d.LensRangeWidth;
             target.LensRangeFeather = preset.LensRangeFeather ?? d.LensRangeFeather;
+            target.CollaretteIntensity = preset.CollaretteIntensity ?? d.CollaretteIntensity;
+            target.CollaretteColor = preset.CollaretteColor ?? d.CollaretteColor;
+            target.CollaretteWidth = preset.CollaretteWidth ?? d.CollaretteWidth;
+            target.CollaretteJagged = preset.CollaretteJagged ?? d.CollaretteJagged;
+            target.CollaretteSpikeCount = preset.CollaretteSpikeCount ?? d.CollaretteSpikeCount;
+            target.CollaretteSoftness = preset.CollaretteSoftness ?? d.CollaretteSoftness;
+            target.CollaretteBlend = preset.CollaretteBlend ?? d.CollaretteBlend;
             target.IrisFacetIntensity = preset.IrisFacetIntensity ?? d.IrisFacetIntensity;
             target.IrisFacetTableSize = preset.IrisFacetTableSize ?? d.IrisFacetTableSize;
             target.IrisFacetShadeAngle = preset.IrisFacetShadeAngle ?? d.IrisFacetShadeAngle;
@@ -646,6 +661,13 @@ namespace DollIrisGenerator.Models
                 LensRangeAngle = design.LensRangeAngle,
                 LensRangeWidth = design.LensRangeWidth,
                 LensRangeFeather = design.LensRangeFeather,
+                CollaretteIntensity = design.CollaretteIntensity,
+                CollaretteColor = design.CollaretteColor,
+                CollaretteWidth = design.CollaretteWidth,
+                CollaretteJagged = design.CollaretteJagged,
+                CollaretteSpikeCount = design.CollaretteSpikeCount,
+                CollaretteSoftness = design.CollaretteSoftness,
+                CollaretteBlend = design.CollaretteBlend,
                 IrisFacetIntensity = design.IrisFacetIntensity,
                 IrisFacetTableSize = design.IrisFacetTableSize,
                 IrisFacetShadeAngle = design.IrisFacetShadeAngle,

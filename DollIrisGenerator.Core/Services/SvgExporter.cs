@@ -318,15 +318,30 @@ namespace DollIrisGenerator.Services
         /// distance d inside the rim the mask is Φ((<paramref name="widthMm"/> − d) / σ), the same curve as the
         /// ellipse's radial gradient (<see cref="GaussianEdgeStops"/>) in steps of at most <see cref="OutlineRingStepMm"/>.
         /// </summary>
-        internal static (double HalfWidthMm, double Opacity)[] OutlineRingStrokes(double widthMm, double sigmaMm)
+        internal static (double HalfWidthMm, double Opacity)[] OutlineRingStrokes(double widthMm, double sigmaMm) =>
+            NestedFadeSteps(widthMm, sigmaMm, OutlineRingStepMm, MinOutlineRingSteps, MaxOutlineRingSteps);
+
+        /// <summary>Longest step (in the ring's width) between the nested shapes of a soft 瞳孔まわりの輪, and how many.</summary>
+        public const double CollaretteFadeStep = 0.04;
+        public const int MinCollaretteFadeSteps = 8, MaxCollaretteFadeSteps = 32;
+
+        /// <summary>Gaussian deviation of the 瞳孔まわりの輪's outer edge at 柔らかさ 1, in the ring's width.</summary>
+        public const double CollaretteSigmaPerSoftness = 0.4;
+
+        /// <summary>
+        /// Nested shapes (reach, opacity), widest first, each covering everything closer than its reach, drawn white one
+        /// over another so that at a distance d the result is Φ((<paramref name="width"/> − d) / σ) in steps of at most
+        /// <paramref name="maxStep"/> (between <paramref name="minSteps"/> and <paramref name="maxSteps"/> shapes).
+        /// </summary>
+        internal static (double Reach, double Opacity)[] NestedFadeSteps(double width, double sigma, double maxStep, int minSteps, int maxSteps)
         {
-            double lo = Math.Max(0.0, widthMm - 2.5 * sigmaMm), hi = widthMm + 2.5 * sigmaMm;
-            int count = Math.Clamp((int)Math.Ceiling((hi - lo) / OutlineRingStepMm), MinOutlineRingSteps, MaxOutlineRingSteps);
+            double lo = Math.Max(0.0, width - 2.5 * sigma), hi = width + 2.5 * sigma;
+            int count = Math.Clamp((int)Math.Ceiling((hi - lo) / maxStep), minSteps, maxSteps);
             double step = (hi - lo) / count;
             // Target mask value in each band (its middle), band k between lo + k·step and lo + (k + 1)·step
             var target = new double[count];
             for (int k = 0; k < count; k++)
-                target[k] = NormalCdf((widthMm - (lo + (k + 0.5) * step)) / sigmaMm);
+                target[k] = NormalCdf((width - (lo + (k + 0.5) * step)) / sigma);
             // Band k is covered by the strokes k … count − 1, so 1 − target[k] = Π (1 − opacity[j]) over them
             var strokes = new (double, double)[count];
             for (int k = count - 1; k >= 0; k--)
@@ -358,6 +373,61 @@ namespace DollIrisGenerator.Services
             }
             sb.AppendLine("        </filter>");
             sb.AppendLine("      </defs>");
+        }
+
+        /// <summary>
+        /// 瞳孔まわりの輪: a jagged ring of color from the pupil's edge out (<see cref="IrisPatterns.CollaretteEdge"/>),
+        /// stretched onto the iris. Crisp: the edge filled with the ring's paint. Soft: the ring's paint over the iris,
+        /// shown through a mask of the edge shrunk / grown toward the pupil's edge (<see cref="NestedFadeSteps"/>).
+        /// </summary>
+        private static void AppendCollarette(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, int seed, Rect irisBox)
+        {
+            double pupil = p.PupilSizeRatio;
+            double width = Math.Min(p.CollaretteWidth, 0.95 - pupil);
+            if (width < 0.01) return;
+
+            var edge = IrisPatterns.CollaretteEdge(pupil, width, p.CollaretteJagged, p.CollaretteSpikeCount, seed, isRightEye);
+            string paint = Paint(sb, "      ", $"{idPrefix}_collarette_fill", p.CollaretteColor, IrisParameters.DefaultCollaretteColor,
+                irisBox, isRightEye, pupil, pupil + width);
+            string common = $@" opacity=""{p.CollaretteIntensity.ToFixed(2)}""{BlendStyle(p.CollaretteBlend)}";
+
+            // The edge at u (0 = the pupil's edge, 1 = the ring's edge)
+            void AppendEdge(double u)
+            {
+                sb.Append(@" d=""M");
+                for (int k = 0; k < edge.Length; k++)
+                {
+                    var (angle, r) = edge[k];
+                    double radius = pupil + u * (r - pupil);
+                    if (k > 0) sb.Append(" L");
+                    sb.AppendFixed(cx + Math.Cos(angle) * radius * rx, 3).Append(',').AppendFixed(cy + Math.Sin(angle) * radius * ry, 3);
+                }
+                sb.Append(@" Z""");
+            }
+
+            if (p.CollaretteSoftness < 0.01)
+            {
+                sb.Append($@"      <path id=""{idPrefix}_collarette""");
+                AppendEdge(1.0);
+                sb.AppendLine($@" fill=""{paint}""{common} />");
+                return;
+            }
+
+            string maskId = $"{idPrefix}_collarette_mask";
+            double sigma = p.CollaretteSoftness * CollaretteSigmaPerSoftness;
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <mask id=""{maskId}"">");
+            foreach (var (reach, opacity) in NestedFadeSteps(1.0, sigma, CollaretteFadeStep, MinCollaretteFadeSteps, MaxCollaretteFadeSteps))
+            {
+                if (opacity < 1e-4) continue;
+                sb.Append("          <path");
+                AppendEdge(reach);
+                sb.AppendLine($@" fill=""#FFFFFF"" fill-opacity=""{F(opacity, 4)}"" />");
+            }
+            sb.AppendLine("        </mask>");
+            sb.AppendLine("      </defs>");
+            sb.AppendLine($@"      <ellipse id=""{idPrefix}_collarette"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{paint}""{common} mask=""url(#{maskId})"" />");
         }
 
         /// <summary>Number of radial strips the fiber noise is made of.</summary>
@@ -542,6 +612,10 @@ namespace DollIrisGenerator.Services
             if (p.FiberNoise > 0.005)
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
+            }
+            if (p.CollaretteIntensity > 0.01)
+            {
+                AppendCollarette(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, irisBox);
             }
             sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
             if (p.BottomHighlightIntensity > 0.01)

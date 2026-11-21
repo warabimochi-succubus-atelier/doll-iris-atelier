@@ -28,6 +28,12 @@ namespace DollIrisGenerator.Models
 
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
+
+        /// <summary>瞳孔まわりの輪 (IrisPatterns.CollaretteEdge): ranges and defaults.</summary>
+        public const string DefaultCollaretteColor = "#FFD54F";
+        public const double MinCollaretteWidth = 0.05, MaxCollaretteWidth = 0.50, DefaultCollaretteWidth = 0.20;
+        public const double DefaultCollaretteJagged = 0.5, DefaultCollaretteSoftness = 0.4;
+        public const int MinCollaretteSpikeCount = 8, MaxCollaretteSpikeCount = 48, DefaultCollaretteSpikeCount = 20;
         public const double MinNebulaScale = 0.5;
         public const double MaxNebulaScale = 3.0;
 
@@ -113,6 +119,15 @@ namespace DollIrisGenerator.Models
         private double _pupilCornerRounding = 0.0; // 0 = sharp corners (files saved before this existed load as 0)
         private double _pupilFacetIntensity = 0.0; // 宝石カット: strength of the light / dark facets inside the pupil. 0 = off
         private int _pupilFacetCount = 10;          // facets round the pupil
+
+        // 瞳孔まわりの輪 (a jagged ring of color round the pupil): 0 strength = off. Files saved before it existed load as off.
+        private double _collaretteIntensity = 0.0;
+        private string _collaretteColor = DefaultCollaretteColor;
+        private double _collaretteWidth = DefaultCollaretteWidth;
+        private double _collaretteJagged = DefaultCollaretteJagged;
+        private int _collaretteSpikeCount = DefaultCollaretteSpikeCount;
+        private double _collaretteSoftness = DefaultCollaretteSoftness;
+        private LayerBlend _collaretteBlend = LayerBlend.Normal;
 
         // Nebula layer (星雲): soft clouds over the iris body. 0 = off.
         private string _nebulaColor = DefaultNebulaColor;
@@ -428,6 +443,55 @@ namespace DollIrisGenerator.Models
         {
             get => _pupilFacetCount;
             set { _pupilFacetCount = Math.Clamp(value, MinPupilFacetCount, MaxPupilFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の強さ: the ring's opacity. 0 = off.</summary>
+        public double CollaretteIntensity
+        {
+            get => _collaretteIntensity;
+            set { _collaretteIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の色 (solid or gradient; a radial one runs from the pupil's edge to the ring's outer edge).</summary>
+        public string CollaretteColor
+        {
+            get => _collaretteColor;
+            set { _collaretteColor = value ?? DefaultCollaretteColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>幅: from the pupil's edge to the ring's outer edge (its peaks), as a fraction of the iris radius.</summary>
+        public double CollaretteWidth
+        {
+            get => _collaretteWidth;
+            set { _collaretteWidth = ClampFinite(value, MinCollaretteWidth, MaxCollaretteWidth, DefaultCollaretteWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>ギザギザ: depth of the valleys of the outer edge. 0 = a plain circle.</summary>
+        public double CollaretteJagged
+        {
+            get => _collaretteJagged;
+            set { _collaretteJagged = ClampFinite(value, 0.0, 1.0, DefaultCollaretteJagged); OnPropertyChanged(); }
+        }
+
+        /// <summary>山の数: peaks round the outer edge.</summary>
+        public int CollaretteSpikeCount
+        {
+            get => _collaretteSpikeCount;
+            set { _collaretteSpikeCount = Math.Clamp(value, MinCollaretteSpikeCount, MaxCollaretteSpikeCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>柔らかさ: how softly the outer edge fades out. 0 = crisp.</summary>
+        public double CollaretteSoftness
+        {
+            get => _collaretteSoftness;
+            set { _collaretteSoftness = ClampFinite(value, 0.0, 1.0, DefaultCollaretteSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔まわりの輪の重ね方.</summary>
+        public LayerBlend CollaretteBlend
+        {
+            get => _collaretteBlend;
+            set { _collaretteBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>Color of the nebula clouds (solid or gradient, laid across the iris like the other iris-wide colors).</summary>

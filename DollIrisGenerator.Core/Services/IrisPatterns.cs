@@ -316,6 +316,63 @@ namespace DollIrisGenerator.Services
             return facets;
         }
 
+        private const int CollaretteSeedOffset = 6500;
+
+        /// <summary>Fewest points round a 瞳孔まわりの輪 edge (so a smooth edge, ギザギザ 0, still reads as a circle).</summary>
+        public const int MinCollarettePoints = 96;
+
+        /// <summary>
+        /// 瞳孔まわりの輪: the outer edge, in iris-radius units around (0, 0) (x right, y down; the caller stretches it
+        /// onto the iris), as (direction, radius) pairs going round once. <paramref name="spikes"/> peaks alternate with
+        /// valleys joined by straight lines, each line split into equal steps so the edge has at least
+        /// <see cref="MinCollarettePoints"/> points. Peak i points at −90° + 360° / N × (i ± 0.15), the valley sits halfway
+        /// to the next peak. Peaks lie at <paramref name="pupil"/> + <paramref name="width"/> × (1 − jagged × 0.2 × r),
+        /// valleys at pupil + width × (1 − jagged × (0.45 + 0.35 × r)), r from the seed.
+        /// <paramref name="mirror"/> mirrors the edge left-right (right eye).
+        /// </summary>
+        public static (double Angle, double Radius)[] CollaretteEdge(double pupil, double width, double jagged, int spikes,
+            int seed, bool mirror)
+        {
+            spikes = Math.Max(3, spikes);
+            var rng = new Random(seed + CollaretteSeedOffset);
+            double step = 2.0 * Math.PI / spikes;
+            var peakAngle = new double[spikes];
+            var peakR = new double[spikes];
+            var valleyR = new double[spikes];
+            for (int i = 0; i < spikes; i++)
+            {
+                peakAngle[i] = -Math.PI / 2.0 + step * (i + (rng.NextDouble() - 0.5) * 0.3);
+                peakR[i] = pupil + width * (1.0 - jagged * 0.2 * rng.NextDouble());
+                valleyR[i] = pupil + width * (1.0 - jagged * (0.45 + 0.35 * rng.NextDouble()));
+            }
+
+            int perLine = Math.Max(1, (int)Math.Ceiling(MinCollarettePoints / (2.0 * spikes)));
+            var edge = new (double, double)[spikes * 2 * perLine];
+            int n = 0;
+            for (int i = 0; i < spikes; i++)
+            {
+                double next = i + 1 < spikes ? peakAngle[i + 1] : peakAngle[0] + 2.0 * Math.PI;
+                double valleyAngle = (peakAngle[i] + next) / 2.0;
+                double nextR = peakR[(i + 1) % spikes];
+                // peak i → valley i, then valley i → peak i + 1 (its point is the next line's first)
+                for (int k = 0; k < perLine; k++)
+                {
+                    double t = (double)k / perLine;
+                    edge[n++] = (peakAngle[i] + (valleyAngle - peakAngle[i]) * t, peakR[i] + (valleyR[i] - peakR[i]) * t);
+                }
+                for (int k = 0; k < perLine; k++)
+                {
+                    double t = (double)k / perLine;
+                    edge[n++] = (valleyAngle + (next - valleyAngle) * t, valleyR[i] + (nextR - valleyR[i]) * t);
+                }
+            }
+            if (mirror)
+            {
+                for (int k = 0; k < edge.Length; k++) edge[k] = (Math.PI - edge[k].Item1, edge[k].Item2);
+            }
+            return edge;
+        }
+
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>
         public static ShapeOutline Flare(double size, double length) => ShapeOutline.Star(4, size * length * 0.6, 0.07);
     }

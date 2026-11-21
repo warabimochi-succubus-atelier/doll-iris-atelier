@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `CollaretteBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -158,6 +158,18 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目の瞳孔を左右反転するか（三日月の向き・左右の長さ・宝石カット） |
 | `PupilFacetIntensity` | 0〜1 | 宝石のカット面（0 でオフ） |
 | `PupilFacetCount` | 4〜24 | カット面の数 |
+
+### 瞳孔まわりの輪（瞳孔の縁から外へ広がるギザギザの色の輪）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `CollaretteIntensity` | 0〜1 | 強さ（不透明度）。0 でオフ（既定） |
+| `CollaretteColor` | 色（グラデ可） | 既定 `#FFD54F`（金色）。放射グラデーションは瞳孔の縁 → 輪の外縁 |
+| `CollaretteWidth` | 0.05〜0.50 | 瞳孔の縁から輪の外縁（山の先）までの幅の比率（既定 0.20）。瞳孔の大きさ + 幅は 0.95 までに抑えて描く |
+| `CollaretteJagged` | 0〜1 | 外縁の谷の深さ。0 で円（既定 0.5） |
+| `CollaretteSpikeCount` | 8〜48 | 外縁の山の数（既定 20） |
+| `CollaretteSoftness` | 0〜1 | 外縁のぼかし。0 でくっきり（既定 0.4） |
+| `CollaretteBlend` | 重ね方 | 既定 0（通常）。1（スクリーン）で光るような輪 |
 
 ### 放射ライン（瞳孔から外へ伸びる線）
 
@@ -342,6 +354,13 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilRightEyeFlip": 0,
   "PupilFacetIntensity": 0.0,
   "PupilFacetCount": 10,
+  "CollaretteIntensity": 0.0,
+  "CollaretteColor": "#FFD54F",
+  "CollaretteWidth": 0.2,
+  "CollaretteJagged": 0.5,
+  "CollaretteSpikeCount": 20,
+  "CollaretteSoftness": 0.4,
+  "CollaretteBlend": 0,
   "RayCount": 48,
   "RayColor": "#B3E5FC",
   "RayThickness": 1.2,

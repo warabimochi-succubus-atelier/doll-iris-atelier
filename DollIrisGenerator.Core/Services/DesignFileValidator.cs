@@ -89,6 +89,7 @@ namespace DollIrisGenerator.Services
             nameof(IrisParameters.LimbalRingColor),
             nameof(IrisParameters.ParticleColor),
             nameof(IrisParameters.LensRingColor),
+            nameof(IrisParameters.CollaretteColor),
             nameof(IrisParameters.OddEyeRayColor),
             nameof(DecorativeSymbolItem.Color), // symbols and highlights: their only color, "Color"
         };

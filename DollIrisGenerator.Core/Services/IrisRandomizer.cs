@@ -194,6 +194,24 @@ namespace DollIrisGenerator.Services
                     p.OddEyeBottomHighlightColor = HslToHex(odd.SecondHue ?? oddHue + 12.0, oddPale, 0.86);
                 }
             }
+
+            // 瞳孔まわりの輪 (drawn after everything else, so the earlier draws stay as they were): 25% of designs, in gold
+            // or a light color of the theme
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.CollaretteIntensity = Chance(25) ? Range(0.35, 0.75) : 0.0;
+                p.CollaretteWidth = Range(0.12, 0.28);
+                p.CollaretteJagged = Range(0.3, 0.8);
+                p.CollaretteSpikeCount = rng.Next(14, 29);
+                p.CollaretteSoftness = Range(0.25, 0.6);
+                p.CollaretteBlend = Chance(40) ? LayerBlend.Screen : LayerBlend.Normal;
+            }
+            if (ColorFree(RandomizeLocks.Pupil))
+            {
+                p.CollaretteColor = Chance(50)
+                    ? HslToHex(Range(38.0, 50.0, 1), 0.85, 0.62)
+                    : HslToHex(hue + 6.0, paleSat, Math.Max(0.70, Math.Min(0.85, lit + 0.30)));
+            }
         }
 
         /// <summary>
