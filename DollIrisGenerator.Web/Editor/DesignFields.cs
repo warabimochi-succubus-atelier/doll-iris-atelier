@@ -27,7 +27,7 @@ public static class DesignFields
     {
         ("正円", ShapeKind.Circle), ("4芒星", ShapeKind.Star4), ("5芒星", ShapeKind.Star5), ("ハート", ShapeKind.Heart),
         ("三日月", ShapeKind.Moon), ("クロス", ShapeKind.Cross), ("ダイヤ", ShapeKind.Diamond), ("桜の花びら", ShapeKind.SakuraPetal),
-        ("猫目スリット", ShapeKind.CatSlit)
+        ("猫目スリット", ShapeKind.CatSlit), ("蝶々", ShapeKind.Butterfly)
     }.Select(x => (x.Item1, (object)of(x.Item2))).ToArray();
 
     private static SymbolType SymbolOf(ShapeKind kind) =>

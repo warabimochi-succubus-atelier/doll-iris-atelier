@@ -756,6 +756,7 @@
                                             <RadioButton Content="ダイヤ (◆)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                             <RadioButton Content="桜の花びら (🌸)" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                             <RadioButton Content="猫目スリット" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
+                                            <RadioButton Content="蝶々" Margin="0,0,10,4" IsChecked="{Binding CurrentIris.PupilShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
                                         </WrapPanel>
 
                                         <!-- Pupil Color -->
@@ -1396,6 +1397,7 @@
                                                         <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                         <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                         <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
+                                                        <RadioButton Content="蝶々" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
@@ -1513,6 +1515,7 @@
                                                             <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                             <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                             <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
+                                                            <RadioButton Content="蝶々" Margin="0,0,8,4" IsChecked="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
                                                             <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
@@ -1886,6 +1889,7 @@
                                                         <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                         <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                         <RadioButton Content="猫目スリット" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
+                                                        <RadioButton Content="蝶々" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
@@ -1989,6 +1993,7 @@
                                                             <RadioButton Content="ダイヤ (◆)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
                                                             <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                             <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
+                                                            <RadioButton Content="蝶々" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
                                                             <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
