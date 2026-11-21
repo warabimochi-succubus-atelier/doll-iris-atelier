@@ -118,6 +118,17 @@ public static class DesignFields
         new SliderField<IrisParameters>("繊維ノイズ", p => p.FiberNoise, (p, v) => p.FiberNoise = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
         new SliderField<IrisParameters>("繊維の細かさ", p => p.FiberNoiseScale, (p, v) => p.FiberNoiseScale = v, 0.5, 2, 0.01, Fmt.F2,
             "上げるほど繊維が細かく、密になります"),
+        new HeadingField<IrisParameters>("色の段", "瞳孔の縁から外周までを同じ幅の同心の帯に分け、帯ごとに一段ずつ違う色を重ねます (アニメ塗りの段階的な色分け)"),
+        new SliderField<IrisParameters>("色の段の強さ", p => p.ToneBandIntensity, (p, v) => p.ToneBandIntensity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new SliderField<IrisParameters>("段の数", p => p.ToneBandCount, (p, v) => p.ToneBandCount = Int(v),
+            IrisParameters.MinToneBandCount, IrisParameters.MaxToneBandCount, 1, v => Fmt.Count(v, "段")),
+        new ColorField<IrisParameters>("内側の色", p => p.ToneBandInnerColor, (p, v) => p.ToneBandInnerColor = v),
+        new ColorField<IrisParameters>("外側の色", p => p.ToneBandOuterColor, (p, v) => p.ToneBandOuterColor = v),
+        new SliderField<IrisParameters>("境目のぼかし", p => p.ToneBandSoftness, (p, v) => p.ToneBandSoftness = v, 0, 1, 0.01, Fmt.Percent,
+            "0% でくっきりした段。上げるほど境目がなめらかになります"),
+        new ChoiceField<IrisParameters>("色の段の重ね方", p => p.ToneBandBlend, (p, v) => p.ToneBandBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "ソフトライト (最初の値): 白 → 黒なら虹彩の色を残したまま内側を明るく、外側を暗くします。通常: 帯の色で塗ります"),
     };
 
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays =

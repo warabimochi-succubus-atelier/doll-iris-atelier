@@ -212,6 +212,19 @@ namespace DollIrisGenerator.Services
                     ? HslToHex(Range(38.0, 50.0, 1), 0.85, 0.62)
                     : HslToHex(hue + 6.0, paleSat, Math.Max(0.70, Math.Min(0.85, lit + 0.30)));
             }
+
+            // 色の段 (after everything else, like the ring above): 20% of designs. Light / dark steps that keep each
+            // eye's color, or (not with the odd eye, whose other eye has other colors) steps of the theme's color
+            if (!colorsLocked)
+            {
+                p.ToneBandIntensity = Chance(20) ? Range(0.35, 0.70) : 0.0;
+                p.ToneBandCount = rng.Next(2, 5);
+                p.ToneBandSoftness = Range(0.0, 0.3);
+                bool themed = rng.Next(10) < 4 && !p.IsOddEye;
+                p.ToneBandInnerColor = themed ? HslToHex(hue + 6.0, sat, Math.Min(0.92, lit + 0.15)) : IrisParameters.DefaultToneBandInnerColor;
+                p.ToneBandOuterColor = themed ? HslToHex(hue - 8.0, sat, Math.Max(0.08, lit - 0.20)) : IrisParameters.DefaultToneBandOuterColor;
+                p.ToneBandBlend = themed ? LayerBlend.Normal : LayerBlend.SoftLight;
+            }
         }
 
         /// <summary>

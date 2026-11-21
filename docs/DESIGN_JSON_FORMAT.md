@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `CollaretteBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -142,6 +142,17 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 |---|---|---|
 | `FiberNoise` | 0〜1 | 0 でオフ。0.15〜0.45 が自然 |
 | `FiberNoiseScale` | 0.5〜2.0 | 大きいほど細かい |
+
+### 色の段（瞳孔の縁から外周までの同心の色の帯。アニメ塗りの段階）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `ToneBandIntensity` | 0〜1 | 強さ（不透明度）。0 でオフ（既定） |
+| `ToneBandCount` | 2〜5 | 帯の数（既定 3） |
+| `ToneBandInnerColor` | 色（単色） | いちばん内側の帯の色（既定 `#FFFFFF`） |
+| `ToneBandOuterColor` | 色（単色） | いちばん外側の帯の色（既定 `#000000`）。間の帯は等分した色 |
+| `ToneBandSoftness` | 0〜1 | 境目のぼかし。0 でくっきり（既定 0.1） |
+| `ToneBandBlend` | 重ね方 | 既定 4（ソフトライト）。白 → 黒のまま使うと、虹彩の色を残して内側を明るく・外側を暗くする。0（通常）で帯の色で塗る |
 
 ### 瞳孔
 
@@ -340,6 +351,12 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "NebulaSwirl": 0.4,
   "FiberNoise": 0.0,
   "FiberNoiseScale": 1.0,
+  "ToneBandIntensity": 0.0,
+  "ToneBandCount": 3,
+  "ToneBandInnerColor": "#FFFFFF",
+  "ToneBandOuterColor": "#000000",
+  "ToneBandSoftness": 0.1,
+  "ToneBandBlend": 4,
   "PupilShape": 0,
   "PupilSizeRatio": 0.32,
   "PupilColor": "#060A18",

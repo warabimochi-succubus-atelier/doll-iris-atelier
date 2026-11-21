@@ -123,6 +123,13 @@ namespace DollIrisGenerator.Models
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
+        // 色の段
+        public double? ToneBandIntensity { get; set; }
+        public int? ToneBandCount { get; set; }
+        public string? ToneBandInnerColor { get; set; }
+        public string? ToneBandOuterColor { get; set; }
+        public double? ToneBandSoftness { get; set; }
+        public LayerBlend? ToneBandBlend { get; set; }
         public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
@@ -464,6 +471,12 @@ namespace DollIrisGenerator.Models
             target.GlitterBlend = preset.GlitterBlend ?? d.GlitterBlend;
             target.AuroraBlend = preset.AuroraBlend ?? d.AuroraBlend;
             target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
+            target.ToneBandIntensity = preset.ToneBandIntensity ?? d.ToneBandIntensity;
+            target.ToneBandCount = preset.ToneBandCount ?? d.ToneBandCount;
+            target.ToneBandInnerColor = preset.ToneBandInnerColor ?? d.ToneBandInnerColor;
+            target.ToneBandOuterColor = preset.ToneBandOuterColor ?? d.ToneBandOuterColor;
+            target.ToneBandSoftness = preset.ToneBandSoftness ?? d.ToneBandSoftness;
+            target.ToneBandBlend = preset.ToneBandBlend ?? d.ToneBandBlend;
             target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
@@ -626,6 +639,12 @@ namespace DollIrisGenerator.Models
                 GlitterBlend = design.GlitterBlend,
                 AuroraBlend = design.AuroraBlend,
                 FiberNoiseScale = design.FiberNoiseScale,
+                ToneBandIntensity = design.ToneBandIntensity,
+                ToneBandCount = design.ToneBandCount,
+                ToneBandInnerColor = design.ToneBandInnerColor,
+                ToneBandOuterColor = design.ToneBandOuterColor,
+                ToneBandSoftness = design.ToneBandSoftness,
+                ToneBandBlend = design.ToneBandBlend,
                 FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,

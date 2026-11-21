@@ -430,6 +430,44 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($@"      <ellipse id=""{idPrefix}_collarette"" cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{rx.ToFixed(3)}"" ry=""{ry.ToFixed(3)}"" fill=""{paint}""{common} mask=""url(#{maskId})"" />");
         }
 
+        /// <summary>
+        /// 色の段: the stops (offset 0–1 of the iris radius, "#RRGGBB", alpha) of the bands' radial gradient. N bands
+        /// split the pupil's edge … rim evenly; band k's color is the inner color mixed toward the outer one by k / (N − 1).
+        /// Each boundary gets the colors on either side at ± 境目のぼかし × the band's width / 2 (the same offset twice
+        /// when crisp). Past the first and last stops the end colors carry on (inside the pupil, the shaped outline's corners).
+        /// </summary>
+        internal static List<(double Offset, string Rgb, double Alpha)> ToneBandStops(IrisParameters p)
+        {
+            int n = p.ToneBandCount;
+            double pupil = Math.Clamp(p.PupilSizeRatio, 0.0, 0.95);
+            double width = (1.0 - pupil) / n;
+            double half = p.ToneBandSoftness * width / 2.0;
+            var inner = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.ToneBandInnerColor, IrisParameters.DefaultToneBandInnerColor));
+            var outer = GeometryHelper.ParseHexArgb(GeometryHelper.SanitizeColorHex(p.ToneBandOuterColor, IrisParameters.DefaultToneBandOuterColor));
+
+            (string, double) Band(int k)
+            {
+                double t = (double)k / (n - 1);
+                int Mix(byte a, byte b) => (int)Math.Round(a + (b - a) * t);
+                return ($"#{Mix(inner.R, outer.R):X2}{Mix(inner.G, outer.G):X2}{Mix(inner.B, outer.B):X2}", Mix(inner.A, outer.A) / 255.0);
+            }
+
+            var stops = new List<(double, string, double)>();
+            var (firstRgb, firstAlpha) = Band(0);
+            stops.Add((0.0, firstRgb, firstAlpha));
+            for (int k = 1; k < n; k++)
+            {
+                double edge = pupil + width * k;
+                var (beforeRgb, beforeAlpha) = Band(k - 1);
+                var (afterRgb, afterAlpha) = Band(k);
+                stops.Add((edge - half, beforeRgb, beforeAlpha));
+                stops.Add((edge + half, afterRgb, afterAlpha));
+            }
+            var (lastRgb, lastAlpha) = Band(n - 1);
+            stops.Add((1.0, lastRgb, lastAlpha));
+            return stops;
+        }
+
         /// <summary>Number of radial strips the fiber noise is made of.</summary>
         public const int FiberStripCount = 40;
 
@@ -602,6 +640,21 @@ namespace DollIrisGenerator.Services
             {
                 string auroraPaint = Paint(sb, "      ", $"{idPrefix}_aurora_fill", p.AuroraColor, "#FF80AB", irisBox, isRightEye);
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_aurora")} fill=""{auroraPaint}"" opacity=""{p.AuroraOpacity.ToFixed(2)}""{BlendStyle(p.AuroraBlend)} />");
+            }
+            if (p.ToneBandIntensity > 0.01)
+            {
+                // 色の段: one radial gradient over the iris ellipse, with a step of color at each band boundary
+                string gradId = $"{idPrefix}_tone_bands_grad";
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <radialGradient id=""{gradId}"" gradientUnits=""userSpaceOnUse"" cx=""0"" cy=""0"" r=""1"" gradientTransform=""translate({F(cx)} {F(cy)}) scale({F(rx, 6)} {F(ry, 6)})"">");
+                foreach (var (offset, rgb, alpha) in ToneBandStops(p))
+                {
+                    string opacityAttr = alpha < 1.0 ? $@" stop-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                    sb.AppendLine($@"          <stop offset=""{(offset * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
+                }
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine("      </defs>");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_tone_bands")} fill=""url(#{gradId})"" opacity=""{p.ToneBandIntensity.ToFixed(2)}""{BlendStyle(p.ToneBandBlend)} />");
             }
             if (p.NebulaOpacity > 0.01)
             {

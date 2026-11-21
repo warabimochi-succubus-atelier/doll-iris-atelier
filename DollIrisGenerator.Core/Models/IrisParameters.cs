@@ -26,6 +26,11 @@ namespace DollIrisGenerator.Models
         /// <summary>Nebula color a new design starts with: magenta in the middle, violet, then sky blue outside.</summary>
         public const string DefaultNebulaColor = "radial-gradient(#E040FB 0%, #7C4DFF 50%, #40C4FF 100%)";
 
+        /// <summary>色の段 (SvgExporter.ToneBandStops): ranges and defaults.</summary>
+        public const int MinToneBandCount = 2, MaxToneBandCount = 5, DefaultToneBandCount = 3;
+        public const string DefaultToneBandInnerColor = "#FFFFFF", DefaultToneBandOuterColor = "#000000";
+        public const double DefaultToneBandSoftness = 0.1;
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -139,6 +144,14 @@ namespace DollIrisGenerator.Models
         private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
+
+        // 色の段 (concentric bands of color from the pupil to the rim): 0 strength = off. Files saved before it existed load as off.
+        private double _toneBandIntensity = 0.0;
+        private int _toneBandCount = DefaultToneBandCount;
+        private string _toneBandInnerColor = DefaultToneBandInnerColor;
+        private string _toneBandOuterColor = DefaultToneBandOuterColor;
+        private double _toneBandSoftness = DefaultToneBandSoftness;
+        private LayerBlend _toneBandBlend = LayerBlend.SoftLight;
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -555,6 +568,48 @@ namespace DollIrisGenerator.Models
         {
             get => _fiberNoiseScale;
             set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>色の段の強さ: the bands' opacity. 0 = off.</summary>
+        public double ToneBandIntensity
+        {
+            get => _toneBandIntensity;
+            set { _toneBandIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>段の数: bands between the pupil's edge and the rim.</summary>
+        public int ToneBandCount
+        {
+            get => _toneBandCount;
+            set { _toneBandCount = Math.Clamp(value, MinToneBandCount, MaxToneBandCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の色: the innermost band's color (one color; the bands between are evenly mixed).</summary>
+        public string ToneBandInnerColor
+        {
+            get => _toneBandInnerColor;
+            set { _toneBandInnerColor = value ?? DefaultToneBandInnerColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>外側の色: the outermost band's color.</summary>
+        public string ToneBandOuterColor
+        {
+            get => _toneBandOuterColor;
+            set { _toneBandOuterColor = value ?? DefaultToneBandOuterColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>境目のぼかし: 0 = crisp steps; 1 = each boundary blends across a whole band's width.</summary>
+        public double ToneBandSoftness
+        {
+            get => _toneBandSoftness;
+            set { _toneBandSoftness = ClampFinite(value, 0.0, 1.0, DefaultToneBandSoftness); OnPropertyChanged(); }
+        }
+
+        /// <summary>色の段の重ね方 (soft light by default: light / dark steps that keep the iris color).</summary>
+        public LayerBlend ToneBandBlend
+        {
+            get => _toneBandBlend;
+            set { _toneBandBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>
