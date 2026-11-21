@@ -169,6 +169,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目の瞳孔を左右反転するか（三日月の向き・左右の長さ・宝石カット） |
 | `PupilFacetIntensity` | 0〜1 | 宝石のカット面（0 でオフ） |
 | `PupilFacetCount` | 4〜24 | カット面の数 |
+| `PupilOutlineIntensity` | 0〜1 | 瞳孔の縁取り線の強さ（不透明度）。0 でオフ（既定） |
+| `PupilOutlineWidth` | 0.005〜0.05 | 縁取り線の太さの比率（既定 0.015） |
+| `PupilOutlineColor` | 色（単色） | 縁取り線の色（既定 `#FFFFFF`） |
 
 ### 瞳孔まわりの輪（瞳孔の縁から外へ広がるギザギザの色の輪）
 
@@ -209,6 +212,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `LimbalRingColor` | 色（グラデ可） | 外周色より暗い色が基本 |
 | `LimbalRingOpacity` | 0〜1 | |
 | `LimbalRingSoftness` | 0〜0.80 | 内側の境界のぼかし |
+| `LimbalInnerRingIntensity` | 0〜1 | 外輪の内側の明るい輪の強さ（不透明度）。0 でオフ（既定） |
+| `LimbalInnerRingWidth` | 0.005〜0.06 | 内側の輪の太さの比率（既定 0.015） |
+| `LimbalInnerRingGap` | 0〜0.10 | 外輪の内側の縁から輪までの距離の比率（既定 0.01） |
+| `LimbalInnerRingColor` | 色（単色） | 内側の輪の色（既定 `#FFFFFF`） |
 
 ### ラメ（粒子）
 
@@ -392,6 +399,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilRightEyeFlip": 0,
   "PupilFacetIntensity": 0.0,
   "PupilFacetCount": 10,
+  "PupilOutlineIntensity": 0.0,
+  "PupilOutlineWidth": 0.015,
+  "PupilOutlineColor": "#FFFFFF",
   "CollaretteIntensity": 0.0,
   "CollaretteColor": "#FFD54F",
   "CollaretteWidth": 0.2,
@@ -417,6 +427,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "LimbalRingColor": "#051636",
   "LimbalRingOpacity": 0.95,
   "LimbalRingSoftness": 0.2,
+  "LimbalInnerRingIntensity": 0.0,
+  "LimbalInnerRingWidth": 0.015,
+  "LimbalInnerRingGap": 0.01,
+  "LimbalInnerRingColor": "#FFFFFF",
   "ParticleCount": 50,
   "ParticleColor": "#FFFFFF",
   "ParticleMinSize": 1.0,

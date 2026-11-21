@@ -238,6 +238,21 @@ namespace DollIrisGenerator.Services
                 p.SpotBlend = Chance(40) ? LayerBlend.SoftLight : LayerBlend.Normal;
             }
             if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
+
+            // 瞳孔の縁取り線 and 外輪の内側の輪 (after everything else)
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.PupilOutlineIntensity = Chance(15) ? Range(0.5, 0.9) : 0.0;
+                p.PupilOutlineWidth = Range(0.01, 0.025, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil)) p.PupilOutlineColor = Chance(70) ? HslToHex(hue, paleSat, 0.85) : HslToHex(42.0, 0.85, 0.62);
+            if (!Locked(RandomizeLocks.LimbalRing))
+            {
+                p.LimbalInnerRingIntensity = Chance(20) ? Range(0.3, 0.7) : 0.0;
+                p.LimbalInnerRingWidth = Range(0.008, 0.02, 3);
+                p.LimbalInnerRingGap = Range(0.0, 0.03, 3);
+            }
+            if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalInnerRingColor = Chance(50) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
         }
 
         /// <summary>

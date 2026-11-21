@@ -38,6 +38,13 @@ namespace DollIrisGenerator.Models
         public const double MinSpotRadiusRatio = 0.30, MaxSpotRadiusRatio = 0.95, DefaultSpotRadiusRatio = 0.80;
         public const string DefaultSpotColor = "#3E2723";
 
+        /// <summary>瞳孔の縁取り線 and 外輪の内側の輪: ranges and defaults.</summary>
+        public const double MinPupilOutlineWidth = 0.005, MaxPupilOutlineWidth = 0.05, DefaultPupilOutlineWidth = 0.015;
+        public const string DefaultPupilOutlineColor = "#FFFFFF";
+        public const double MinLimbalInnerRingWidth = 0.005, MaxLimbalInnerRingWidth = 0.06, DefaultLimbalInnerRingWidth = 0.015;
+        public const double MaxLimbalInnerRingGap = 0.10, DefaultLimbalInnerRingGap = 0.01;
+        public const string DefaultLimbalInnerRingColor = "#FFFFFF";
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -116,6 +123,17 @@ namespace DollIrisGenerator.Models
         private string _limbalRingColor = "#051636";
         private double _limbalRingOpacity = 0.95;
         private double _limbalRingSoftness = 0.20;
+
+        // 外輪の内側の輪 (a thin light ring inside the limbal ring): 0 strength = off. Older files load as off.
+        private double _limbalInnerRingIntensity = 0.0;
+        private double _limbalInnerRingWidth = DefaultLimbalInnerRingWidth;
+        private double _limbalInnerRingGap = DefaultLimbalInnerRingGap;
+        private string _limbalInnerRingColor = DefaultLimbalInnerRingColor;
+
+        // 瞳孔の縁取り線 (a line along the pupil's outline): 0 strength = off. Older files load as off.
+        private double _pupilOutlineIntensity = 0.0;
+        private double _pupilOutlineWidth = DefaultPupilOutlineWidth;
+        private string _pupilOutlineColor = DefaultPupilOutlineColor;
 
         // Pupil (瞳孔)
         private PupilShape _pupilShape = PupilShape.Round;
@@ -425,6 +443,34 @@ namespace DollIrisGenerator.Models
             set { _limbalRingSoftness = Math.Max(0.0, Math.Min(1.0, value)); OnPropertyChanged(); }
         }
 
+        /// <summary>外輪の内側の輪の強さ: the ring's opacity. 0 = off.</summary>
+        public double LimbalInnerRingIntensity
+        {
+            get => _limbalInnerRingIntensity;
+            set { _limbalInnerRingIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の輪の太さ, as a fraction of the iris radius.</summary>
+        public double LimbalInnerRingWidth
+        {
+            get => _limbalInnerRingWidth;
+            set { _limbalInnerRingWidth = ClampFinite(value, MinLimbalInnerRingWidth, MaxLimbalInnerRingWidth, DefaultLimbalInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>間隔: from the limbal ring's inner edge to the inner ring, as a fraction of the iris radius.</summary>
+        public double LimbalInnerRingGap
+        {
+            get => _limbalInnerRingGap;
+            set { _limbalInnerRingGap = ClampFinite(value, 0.0, MaxLimbalInnerRingGap, DefaultLimbalInnerRingGap); OnPropertyChanged(); }
+        }
+
+        /// <summary>内側の輪の色 (one color).</summary>
+        public string LimbalInnerRingColor
+        {
+            get => _limbalInnerRingColor;
+            set { _limbalInnerRingColor = value ?? DefaultLimbalInnerRingColor; OnPropertyChanged(); }
+        }
+
         // Pupil
         /// <summary>Unknown numbers from a file (such as 1, the vertical oval that is now a stretched circle) become a circle.</summary>
         public PupilShape PupilShape
@@ -473,6 +519,27 @@ namespace DollIrisGenerator.Models
         {
             get => _pupilFacetCount;
             set { _pupilFacetCount = Math.Clamp(value, MinPupilFacetCount, MaxPupilFacetCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の縁取り線の強さ: the line's opacity. 0 = off.</summary>
+        public double PupilOutlineIntensity
+        {
+            get => _pupilOutlineIntensity;
+            set { _pupilOutlineIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁取り線の太さ, as a fraction of the iris radius.</summary>
+        public double PupilOutlineWidth
+        {
+            get => _pupilOutlineWidth;
+            set { _pupilOutlineWidth = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilOutlineWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁取り線の色 (one color).</summary>
+        public string PupilOutlineColor
+        {
+            get => _pupilOutlineColor;
+            set { _pupilOutlineColor = value ?? DefaultPupilOutlineColor; OnPropertyChanged(); }
         }
 
         /// <summary>瞳孔まわりの輪の強さ: the ring's opacity. 0 = off.</summary>

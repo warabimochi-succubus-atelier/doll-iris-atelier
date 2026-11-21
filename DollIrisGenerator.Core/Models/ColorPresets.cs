@@ -53,6 +53,9 @@ namespace DollIrisGenerator.Models
         public double? NebulaDensity { get; set; }
         public double? NebulaSwirl { get; set; }
         public int? PupilFacetCount { get; set; }
+        public double? PupilOutlineIntensity { get; set; }
+        public double? PupilOutlineWidth { get; set; }
+        public string? PupilOutlineColor { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
         public int? RayCount { get; set; }
@@ -71,6 +74,10 @@ namespace DollIrisGenerator.Models
         public double? LimbalRingThickness { get; set; }
         public double? LimbalRingOpacity { get; set; }
         public double? LimbalRingSoftness { get; set; }
+        public double? LimbalInnerRingIntensity { get; set; }
+        public double? LimbalInnerRingWidth { get; set; }
+        public double? LimbalInnerRingGap { get; set; }
+        public string? LimbalInnerRingColor { get; set; }
         public double? PupilOpacity { get; set; }
         public double? PupilSoftness { get; set; }
         public double? PupilCornerRounding { get; set; }
@@ -466,6 +473,9 @@ namespace DollIrisGenerator.Models
             target.NebulaDensity = preset.NebulaDensity ?? d.NebulaDensity;
             target.NebulaSwirl = preset.NebulaSwirl ?? d.NebulaSwirl;
             target.PupilFacetCount = preset.PupilFacetCount ?? d.PupilFacetCount;
+            target.PupilOutlineIntensity = preset.PupilOutlineIntensity ?? d.PupilOutlineIntensity;
+            target.PupilOutlineWidth = preset.PupilOutlineWidth ?? d.PupilOutlineWidth;
+            target.PupilOutlineColor = preset.PupilOutlineColor ?? d.PupilOutlineColor;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
             target.RayCount = preset.RayCount ?? d.RayCount;
@@ -499,6 +509,10 @@ namespace DollIrisGenerator.Models
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
             target.LimbalRingOpacity = preset.LimbalRingOpacity ?? d.LimbalRingOpacity;
             target.LimbalRingSoftness = preset.LimbalRingSoftness ?? d.LimbalRingSoftness;
+            target.LimbalInnerRingIntensity = preset.LimbalInnerRingIntensity ?? d.LimbalInnerRingIntensity;
+            target.LimbalInnerRingWidth = preset.LimbalInnerRingWidth ?? d.LimbalInnerRingWidth;
+            target.LimbalInnerRingGap = preset.LimbalInnerRingGap ?? d.LimbalInnerRingGap;
+            target.LimbalInnerRingColor = preset.LimbalInnerRingColor ?? d.LimbalInnerRingColor;
             target.PupilOpacity = preset.PupilOpacity ?? d.PupilOpacity;
             target.PupilSoftness = preset.PupilSoftness ?? d.PupilSoftness;
             target.PupilCornerRounding = preset.PupilCornerRounding ?? d.PupilCornerRounding;
@@ -643,6 +657,9 @@ namespace DollIrisGenerator.Models
                 NebulaDensity = design.NebulaDensity,
                 NebulaSwirl = design.NebulaSwirl,
                 PupilFacetCount = design.PupilFacetCount,
+                PupilOutlineIntensity = design.PupilOutlineIntensity,
+                PupilOutlineWidth = design.PupilOutlineWidth,
+                PupilOutlineColor = design.PupilOutlineColor,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
                 RayCount = design.RayCount,
@@ -675,6 +692,10 @@ namespace DollIrisGenerator.Models
                 LightAngle = design.LightAngle,
                 LimbalRingOpacity = design.LimbalRingOpacity,
                 LimbalRingSoftness = design.LimbalRingSoftness,
+                LimbalInnerRingIntensity = design.LimbalInnerRingIntensity,
+                LimbalInnerRingWidth = design.LimbalInnerRingWidth,
+                LimbalInnerRingGap = design.LimbalInnerRingGap,
+                LimbalInnerRingColor = design.LimbalInnerRingColor,
                 PupilOpacity = design.PupilOpacity,
                 PupilSoftness = design.PupilSoftness,
                 PupilCornerRounding = design.PupilCornerRounding,

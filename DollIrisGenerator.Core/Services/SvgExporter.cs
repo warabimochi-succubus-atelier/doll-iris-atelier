@@ -863,6 +863,25 @@ namespace DollIrisGenerator.Services
                 }
             }
 
+            // 外輪の内側の輪: a band at the same distance inside the rim all the way round (strokes of the rim in a mask)
+            if (p.LimbalInnerRingIntensity > 0.01)
+            {
+                double inset = baseR * (p.LimbalRingThickness + p.LimbalInnerRingGap);
+                double width = baseR * p.LimbalInnerRingWidth;
+                string maskId = $"{idPrefix}_limbal_inner_mask";
+                string Rim(string stroke, double strokeWidth) => outlineId != null
+                    ? $@"<use href=""#{outlineId}"" fill=""none"" stroke=""{stroke}"" stroke-width=""{F(strokeWidth, 4)}"" />"
+                    : $@"<ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx)}"" ry=""{F(ry)}"" fill=""none"" stroke=""{stroke}"" stroke-width=""{F(strokeWidth, 4)}"" />";
+                string color = GeometryHelper.SanitizeColorHex(p.LimbalInnerRingColor, IrisParameters.DefaultLimbalInnerRingColor);
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <mask id=""{maskId}"">");
+                sb.AppendLine("          " + Rim("#FFFFFF", 2.0 * (inset + width)));
+                if (inset > 1e-6) sb.AppendLine("          " + Rim("#000000", 2.0 * inset));
+                sb.AppendLine("        </mask>");
+                sb.AppendLine("      </defs>");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_limbal_inner_ring")} fill=""{color}"" opacity=""{p.LimbalInnerRingIntensity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+            }
+
             // Pupil
             if (p.PupilSizeRatio > 0.01 && p.PupilOpacity > 0.01)
             {
@@ -956,6 +975,13 @@ namespace DollIrisGenerator.Services
                             $@""" fill=""{color}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
                     }
                     sb.AppendLine("      </g>");
+                }
+
+                // 瞳孔の縁取り線: a line centered on the same outline (not blurred)
+                if (p.PupilOutlineIntensity > 0.01)
+                {
+                    string color = GeometryHelper.SanitizeColorHex(p.PupilOutlineColor, IrisParameters.DefaultPupilOutlineColor);
+                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_outline"" fill=""none"" stroke=""{color}"" stroke-width=""{F(baseR * p.PupilOutlineWidth, 4)}"" stroke-linejoin=""round"" opacity=""{p.PupilOutlineIntensity.ToFixed(2)}""");
                 }
             }
 

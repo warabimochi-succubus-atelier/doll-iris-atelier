@@ -775,7 +775,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="瞳孔模様" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockPupil}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色と、瞳孔まわりの輪をランダム生成で変えない"/>
+                                                      ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色と、縁取り線・瞳孔まわりの輪をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -875,6 +875,24 @@
                                             <TextBlock Text="{Binding CurrentIris.PupilFacetCount, StringFormat='{}{0} 面'}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="4" Maximum="24" Value="{Binding CurrentIris.PupilFacetCount}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+
+                                        <!-- 瞳孔の縁取り線 (Pupil outline) -->
+                                        <TextBlock Text="瞳孔の縁取り線" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
+                                        <TextBlock Text="瞳孔の輪郭に沿って細い線を引きます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="線の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilOutlineIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilOutlineIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="線の太さ。虹彩の半径に対する割合">
+                                            <TextBlock Text="太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilOutlineWidth, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.005" Maximum="0.05" Value="{Binding CurrentIris.PupilOutlineWidth}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="線の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilOutlineColor, Mode=TwoWay}"/>
+                                        </DockPanel>
 
                                         <!-- 瞳孔まわりの輪 (Collarette) -->
                                         <TextBlock Text="瞳孔まわりの輪" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
@@ -1309,7 +1327,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="外輪" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLimbalRing}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="外輪の太さ・透明度・ぼかし・色をランダム生成で変えない"/>
+                                                      ToolTip="外輪の太さ・透明度・ぼかし・色と、外輪の内側の輪をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -1335,6 +1353,29 @@
                                             <TextBlock Text="{Binding CurrentIris.LimbalRingSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.0" Maximum="0.80" Value="{Binding CurrentIris.LimbalRingSoftness}"/>
+
+                                        <!-- 外輪の内側の輪 (Inner limbal ring) -->
+                                        <TextBlock Text="外輪の内側の輪" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
+                                        <TextBlock Text="外輪の内側に、細く明るい輪をもう 1 本引きます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="輪の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalInnerRingIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LimbalInnerRingIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="輪の太さ。虹彩の半径に対する割合">
+                                            <TextBlock Text="太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalInnerRingWidth, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.005" Maximum="0.06" Value="{Binding CurrentIris.LimbalInnerRingWidth}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="外輪の内側の縁から輪までの距離。虹彩の半径に対する割合">
+                                            <TextBlock Text="外輪との間隔:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.LimbalInnerRingGap, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="0.10" Value="{Binding CurrentIris.LimbalInnerRingGap}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,0">
+                                            <TextBlock Text="輪の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.LimbalInnerRingColor, Mode=TwoWay}"/>
+                                        </DockPanel>
                                     </StackPanel>
                                 </GroupBox>
 
