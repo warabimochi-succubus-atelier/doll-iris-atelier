@@ -57,6 +57,11 @@ namespace DollIrisGenerator.Models
         private IrisShape _shape = IrisShape.Circle;
         private double _aspectRatio = 1.15; // used when shape is oval
         private double _tiltAngle = 0.0;    // degrees (-45 to 45) for stylized doll eyes
+        // Outline (虹彩の輪郭): all 0 = the ellipse (see IrisOutline). Files saved before these existed load as 0.
+        private double _outlineTaper = 0.0;      // -1..1: + = wider at the top (egg / shield), − = wider at the bottom
+        private double _outlineTopFlat = 0.0;    // 0..1: flattens the top edge
+        private double _outlineBottomFlat = 0.0; // 0..1: flattens the bottom edge
+        private double _outlineSquareness = 0.0; // 0..1: from the ellipse toward a rounded square
         private int _seed = 12345;
 
         // Base & Gradients
@@ -228,6 +233,34 @@ namespace DollIrisGenerator.Models
         {
             get => _tiltAngle;
             set { _tiltAngle = Math.Max(-45.0, Math.Min(45.0, value)); OnPropertyChanged(); }
+        }
+
+        /// <summary>上下の幅の差: + widens the top and narrows the bottom (egg / shield), − the other way. -1..1.</summary>
+        public double OutlineTaper
+        {
+            get => _outlineTaper;
+            set { _outlineTaper = ClampFinite(value, -1.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>上の平ら: flattens the top of the outline (rounded corners stay). 0..1.</summary>
+        public double OutlineTopFlat
+        {
+            get => _outlineTopFlat;
+            set { _outlineTopFlat = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>下の平ら: flattens the bottom of the outline. 0..1.</summary>
+        public double OutlineBottomFlat
+        {
+            get => _outlineBottomFlat;
+            set { _outlineBottomFlat = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>四角さ: from the ellipse (0) toward a rounded square (1).</summary>
+        public double OutlineSquareness
+        {
+            get => _outlineSquareness;
+            set { _outlineSquareness = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
         public int Seed

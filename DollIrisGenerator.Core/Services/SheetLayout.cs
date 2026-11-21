@@ -100,6 +100,21 @@ namespace DollIrisGenerator.Services
         public static (double W, double H) GetEyeFootprintMm(IrisParameters p)
         {
             var (w, h) = GetEyeSizeMm(p);
+            if (!IrisOutline.IsEllipse(p))
+            {
+                // A shaped outline fills the box's corners more than the ellipse does, so its tilted box is found
+                // from the outline itself. Measured from the center both ways (the canvas centers the eye there).
+                if (Math.Abs(p.TiltAngle) < 0.05) return (w, h);
+                double rad = p.TiltAngle * Math.PI / 180.0;
+                double c = Math.Cos(rad), s = Math.Sin(rad);
+                double maxX = 0.0, maxY = 0.0;
+                foreach (var pt in IrisOutline.Build(p, w / 2.0, h / 2.0).Flatten(8))
+                {
+                    maxX = Math.Max(maxX, Math.Abs(pt.X * c - pt.Y * s));
+                    maxY = Math.Max(maxY, Math.Abs(pt.X * s + pt.Y * c));
+                }
+                return (maxX * 2.0, maxY * 2.0);
+            }
             if (Math.Abs(p.TiltAngle) < 0.05 || Math.Abs(w - h) < 1e-9) return (w, h);
 
             double a = w / 2.0, b = h / 2.0;

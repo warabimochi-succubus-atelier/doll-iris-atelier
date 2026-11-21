@@ -297,6 +297,10 @@ namespace DollIrisGenerator.ViewModels
         // Commands
         public ICommand NewDesignCommand { get; }
         public ICommand RandomizeSeedCommand { get; }
+        public ICommand ApplyOutlineStyleCommand { get; }
+
+        /// <summary>The outline quick-select buttons (虹彩の輪郭).</summary>
+        public IReadOnlyList<OutlineStyle> OutlineStyles => IrisOutline.Styles;
         public ICommand RandomizeAttributesCommand { get; }
         public ICommand ZoomInCommand { get; }
         public ICommand ZoomOutCommand { get; }
@@ -392,6 +396,7 @@ namespace DollIrisGenerator.ViewModels
             // Setup base commands
             NewDesignCommand = new RelayCommand(OnNewDesign);
             RandomizeSeedCommand = new RelayCommand(OnRandomizeSeed);
+            ApplyOutlineStyleCommand = new RelayCommand(OnApplyOutlineStyle);
             RandomizeAttributesCommand = new RelayCommand(OnRandomizeAttributes);
             ZoomInCommand = new RelayCommand(() => ZoomScale *= 1.25);
             ZoomOutCommand = new RelayCommand(() => ZoomScale /= 1.25);
@@ -651,6 +656,25 @@ namespace DollIrisGenerator.ViewModels
             CurrentIris.Seed = Random.Shared.Next(1, 999999);
             RecordHistory($"シード変更: {CurrentIris.Seed}");
             StatusMessage = $"乱数シードを変更しました: {CurrentIris.Seed}";
+        }
+
+        /// <summary>Sets the four outline settings at once: one undo step and one history entry.</summary>
+        private void OnApplyOutlineStyle(object? parameter)
+        {
+            if (parameter is not OutlineStyle style) return;
+            PushUndo();
+            _isInternalStateChange = true;
+            try
+            {
+                IrisOutline.Apply(CurrentIris, style);
+                RecordHistory($"虹彩の輪郭: {style.Name}");
+                StatusMessage = $"虹彩の輪郭を「{style.Name}」にしました";
+            }
+            finally
+            {
+                _isInternalStateChange = false;
+                OnPropertyChanged(nameof(CurrentIris));
+            }
         }
 
         private void OnRandomizeAttributes()
