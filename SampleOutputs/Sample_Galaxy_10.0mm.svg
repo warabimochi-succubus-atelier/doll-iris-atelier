@@ -365,7 +365,7 @@
       </g>
     </g>
     <g id="left_eye_highlights">
-        <polygon points="6.500,5.200 6.702,6.298 7.800,6.500 6.702,6.702 6.500,7.800 6.298,6.702 5.200,6.500 6.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <polygon points="6.500,5.200 6.702,6.298 7.800,6.500 6.702,6.702 6.500,7.800 6.298,6.702 5.200,6.500 6.298,6.298 " fill="#FFFFFF" opacity="0.95" />
       <ellipse cx="9.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="left_eye_guides">
@@ -738,7 +738,7 @@
       </g>
     </g>
     <g id="right_eye_highlights">
-        <polygon points="23.500,5.200 23.702,6.298 24.800,6.500 23.702,6.702 23.500,7.800 23.298,6.702 22.200,6.500 23.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <polygon points="23.500,5.200 23.702,6.298 24.800,6.500 23.702,6.702 23.500,7.800 23.298,6.702 22.200,6.500 23.298,6.298 " fill="#FFFFFF" opacity="0.95" />
       <ellipse cx="20.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="right_eye_guides">

@@ -1931,7 +1931,18 @@
                                                         <TextBlock Text="透明度:" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                                         <TextBlock Text="{Binding Opacity, Converter={StaticResource TransparencyPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                                     </DockPanel>
-                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}"/>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Opacity, Converter={StaticResource OpacityToTransparencyConverter}}" Margin="0,0,0,6"/>
+
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="ハイライトの輪郭をぼかして、まわりになじませます。0% でくっきりした輪郭です">
+                                                        <TextBlock Text="輪郭のぼかし:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Softness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Softness}" Margin="0,0,0,6"/>
+                                                    <DockPanel Margin="0,0,0,4" ToolTip="ハイライトのまわりに光をにじませて、自分で光っているように見せます。重ね方をスクリーンにすると、より発光らしくなります">
+                                                        <TextBlock Text="光のにじみ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                                        <TextBlock Text="{Binding Glow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                                    </DockPanel>
+                                                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Glow}"/>
                                                     <DockPanel Margin="0,6,0,0" ToolTip="このハイライトの重ね方。通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
                                                         <TextBlock Text="重ね方:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="70"/>
                                                         <WrapPanel>

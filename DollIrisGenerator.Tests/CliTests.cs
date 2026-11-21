@@ -130,8 +130,8 @@ namespace DollIrisGenerator.Tests
             var issue = Single(DesignFileValidator.Validate(Design(d => d["Symbols"]![0]!["Size"] = 3)));
             Assert.Equal("Symbols[0].Size", issue.Path);
 
-            var unknown = Single(DesignFileValidator.Validate(Design(d => d["Highlights"]![1]!["Glow"] = 1)));
-            Assert.Equal("Highlights[1].Glow", unknown.Path);
+            var unknown = Single(DesignFileValidator.Validate(Design(d => d["Highlights"]![1]!["Twinkle"] = 1)));
+            Assert.Equal("Highlights[1].Twinkle", unknown.Path);
         }
 
         [Fact]
