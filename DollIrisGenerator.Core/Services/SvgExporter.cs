@@ -547,6 +547,10 @@ namespace DollIrisGenerator.Services
                 double bandInner = innerR / baseR, bandOuter = Math.Min(0.96, p.RayLengthRatio);
                 var center = new Point(cx, cy);
 
+                // 見える範囲: the main and fine rays together, inside one masked group
+                string? rayRange = AppendRangeMask(sb, $"{idPrefix}_rays_range", p, PatternLayer.Rays, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                if (rayRange != null) sb.AppendLine($@"      <g id=""{idPrefix}_rays_ranged"" mask=""url(#{rayRange})"">");
+
                 string rayPaint = Paint(sb, "      ", $"{idPrefix}_rays_fill", effectiveRayColor, "#B3E5FC", irisBox, isRightEye, bandInner, bandOuter);
                 AppendRays(sb, $"{idPrefix}_rays", IrisPatterns.MainRays(p, baseR, effectiveSeed, isRightEye), rayPaint, effectiveRayColor, irisBox, p.RayIntensity,
                     p, center, rx, ry, baseR, isRightEye);
@@ -556,6 +560,7 @@ namespace DollIrisGenerator.Services
                     AppendRays(sb, $"{idPrefix}_fine_rays", IrisPatterns.FineRays(p, baseR, effectiveSeed, isRightEye), rayPaint, effectiveRayColor, irisBox,
                         p.RayIntensity * p.RayFineLayer, p, center, rx, ry, baseR, isRightEye);
                 }
+                if (rayRange != null) sb.AppendLine("      </g>");
             }
 
             // Lens-Style Pattern (Fresnel Rings)
@@ -567,6 +572,8 @@ namespace DollIrisGenerator.Services
                 // (WPF's dash units and default dash cap)
                 double dotStroke = ringStroke * 0.8;
                 string dotAttr = $@" stroke-width=""{F(dotStroke)}"" stroke-dasharray=""{F(dotStroke * 4.0)},{F(dotStroke * 3.0)}"" stroke-linecap=""square""";
+                string? lensRange = AppendRangeMask(sb, $"{idPrefix}_lens_range", p, PatternLayer.LensRings, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                if (lensRange != null) sb.AppendLine($@"      <g id=""{idPrefix}_lens_ranged"" mask=""url(#{lensRange})"">");
                 OpenSharedPaintGroup(sb, $"{idPrefix}_lens_rings", "stroke", lensPaint, p.LensRingColor,
                     $@" stroke-width=""{F(ringStroke)}""{OpacityUnlessMasked(p.LensRingColor, p.LensRingIntensity)} fill=""none""", irisBox);
                 double pupilR = baseR * p.PupilSizeRatio;
@@ -583,6 +590,7 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{ringRx.ToFixed(3)}"" ry=""{ringRy.ToFixed(3)}""{dashAttr} />");
                 }
                 CloseSharedPaintGroup(sb, $"{idPrefix}_lens_rings", lensPaint, p.LensRingColor, p.LensRingIntensity, irisBox);
+                if (lensRange != null) sb.AppendLine("      </g>");
 
                 // Center refraction glow (中心屈折光): one color (a gradient's first), fading out to the edge
                 if (p.LensRefractionGlow > 0.01)
@@ -755,7 +763,12 @@ namespace DollIrisGenerator.Services
 
                 // 重ね方: the glow and the grains are blended onto the iris together (among themselves they stack normally)
                 bool glitterBlended = p.GlitterBlend != LayerBlend.Normal;
-                if (glitterBlended) sb.AppendLine($@"      <g id=""{idPrefix}_glitter_layer""{BlendStyle(p.GlitterBlend)}>");
+                // 見える範囲: masks the glow and the grains together. With a 重ね方 the mask goes on the blended group
+                // itself (a masked group inside it would be isolated and blend with nothing)
+                string? glitterRange = AppendRangeMask(sb, $"{idPrefix}_glitter_range", p, PatternLayer.Glitter, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                string glitterMask = glitterRange != null ? $@" mask=""url(#{glitterRange})""" : "";
+                if (glitterBlended) sb.AppendLine($@"      <g id=""{idPrefix}_glitter_layer""{BlendStyle(p.GlitterBlend)}{glitterMask}>");
+                else if (glitterRange != null) sb.AppendLine($@"      <g id=""{idPrefix}_glitter_ranged""{glitterMask}>");
 
                 // Glow (光のにじみ): a blurred, brightened copy of the grains (stars stay star-shaped, gradient colors
                 // stay where they are) under the sharp grains. The copy points at the glitter drawn just below.
@@ -794,7 +807,7 @@ namespace DollIrisGenerator.Services
                     }
                 }
                 CloseSharedPaintGroup(sb, $"{idPrefix}_glitter", glitterPaint, p.ParticleColor, p.ParticleOpacity, irisBox);
-                if (glitterBlended) sb.AppendLine("      </g>");
+                if (glitterBlended || glitterRange != null) sb.AppendLine("      </g>");
             }
 
             // Decorative Symbols
@@ -976,6 +989,46 @@ namespace DollIrisGenerator.Services
         /// Writes a group of rays: plain round-capped lines when no fiber setting is on (as earlier versions),
         /// otherwise each ray's fiber outline (the same outline the screen renderer fills).
         /// </summary>
+        /// <summary>
+        /// Writes the mask of a pattern layer's 見える範囲 (<see cref="PatternRange"/>) and returns its id, or null when
+        /// the range covers the whole iris (nothing is written: unchanged output). The mask holds nested white sectors
+        /// from the eye's center, each one piece reaching well past the iris, stretched with the iris like the
+        /// patterns' own angles; on the right eye the fan is mirrored.
+        /// </summary>
+        private static string? AppendRangeMask(StringBuilder sb, string id, IrisParameters p, PatternLayer layer, bool isRightEye,
+            double cx, double cy, double rx, double ry, double baseR, Rect irisBox)
+        {
+            var (angle, width, feather) = PatternRange.Of(p, layer);
+            if (PatternRange.IsFull(width)) return null;
+
+            double centerDeg = PatternRange.CenterFor(angle, isRightEye);
+            var center = new Point(cx, cy);
+            double reach = baseR * 3.0;
+            var (x, y, w, h) = MaskArea(irisBox);
+            sb.AppendLine($@"      <mask id=""{id}"" maskUnits=""userSpaceOnUse"" x=""{F(x)}"" y=""{F(y)}"" width=""{F(w)}"" height=""{F(h)}"">");
+            foreach (var (half, opacity) in PatternRange.Sectors(width, feather))
+            {
+                string opacityAttr = opacity < 0.9995 ? $@" fill-opacity=""{F(opacity, 4)}""" : "";
+                if (half >= 179.999)
+                {
+                    sb.AppendLine($@"        <rect x=""{F(x)}"" y=""{F(y)}"" width=""{F(w)}"" height=""{F(h)}"" fill=""#FFFFFF""{opacityAttr} />");
+                    continue;
+                }
+                // The fan: center, then the far arc from one edge to the other in steps of at most 10°
+                int steps = Math.Max(1, (int)Math.Ceiling(half * 2.0 / 10.0));
+                sb.Append($@"        <path d=""M{F(cx)},{F(cy)}");
+                for (int k = 0; k <= steps; k++)
+                {
+                    double a = (centerDeg - half + 2.0 * half * k / steps) * Math.PI / 180.0;
+                    var pt = IrisPatterns.OnIris(center, rx, ry, baseR, reach, a);
+                    sb.Append($" L{F(pt.X)},{F(pt.Y)}");
+                }
+                sb.AppendLine($@" Z"" fill=""#FFFFFF""{opacityAttr} />");
+            }
+            sb.AppendLine("      </mask>");
+            return id;
+        }
+
         private static void AppendRays(StringBuilder sb, string id, System.Collections.Generic.IEnumerable<RaySpec> rays, string paint,
             string? colorValue, Rect area, double opacity, IrisParameters p, Point center, double rx, double ry, double baseR, bool isRightEye)
         {

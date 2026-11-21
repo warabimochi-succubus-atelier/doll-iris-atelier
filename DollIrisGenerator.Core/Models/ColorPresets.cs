@@ -92,6 +92,16 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
+        // 見える範囲 (放射ライン・ラメ・レンズ風リング)
+        public double? RayRangeAngle { get; set; }
+        public double? RayRangeWidth { get; set; }
+        public double? RayRangeFeather { get; set; }
+        public double? ParticleRangeAngle { get; set; }
+        public double? ParticleRangeWidth { get; set; }
+        public double? ParticleRangeFeather { get; set; }
+        public double? LensRangeAngle { get; set; }
+        public double? LensRangeWidth { get; set; }
+        public double? LensRangeFeather { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
@@ -356,6 +366,15 @@ namespace DollIrisGenerator.Models
             target.ParticleMaxSize = preset.ParticleMaxSize ?? d.ParticleMaxSize;
             target.ParticleOpacity = preset.ParticleOpacity ?? d.ParticleOpacity;
             target.ParticleFlareLength = preset.ParticleFlareLength ?? d.ParticleFlareLength;
+            target.RayRangeAngle = preset.RayRangeAngle ?? d.RayRangeAngle;
+            target.RayRangeWidth = preset.RayRangeWidth ?? d.RayRangeWidth;
+            target.RayRangeFeather = preset.RayRangeFeather ?? d.RayRangeFeather;
+            target.ParticleRangeAngle = preset.ParticleRangeAngle ?? d.ParticleRangeAngle;
+            target.ParticleRangeWidth = preset.ParticleRangeWidth ?? d.ParticleRangeWidth;
+            target.ParticleRangeFeather = preset.ParticleRangeFeather ?? d.ParticleRangeFeather;
+            target.LensRangeAngle = preset.LensRangeAngle ?? d.LensRangeAngle;
+            target.LensRangeWidth = preset.LensRangeWidth ?? d.LensRangeWidth;
+            target.LensRangeFeather = preset.LensRangeFeather ?? d.LensRangeFeather;
 
             // Highlights (replaced in place, so the list on screen stays bound)
             ReplaceItems(target.Highlights, preset.Highlights ?? d.Highlights.ToList(), h => h.Clone());
@@ -493,6 +512,15 @@ namespace DollIrisGenerator.Models
                 ParticleMaxSize = design.ParticleMaxSize,
                 ParticleOpacity = design.ParticleOpacity,
                 ParticleFlareLength = design.ParticleFlareLength,
+                RayRangeAngle = design.RayRangeAngle,
+                RayRangeWidth = design.RayRangeWidth,
+                RayRangeFeather = design.RayRangeFeather,
+                ParticleRangeAngle = design.ParticleRangeAngle,
+                ParticleRangeWidth = design.ParticleRangeWidth,
+                ParticleRangeFeather = design.ParticleRangeFeather,
+                LensRangeAngle = design.LensRangeAngle,
+                LensRangeWidth = design.LensRangeWidth,
+                LensRangeFeather = design.LensRangeFeather,
 
                 Highlights = design.Highlights.Select(h => h.Clone()).ToList(),
                 PupilRightEyeFlip = design.PupilRightEyeFlip,

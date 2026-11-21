@@ -120,8 +120,8 @@ public static class DesignFields
             "上げるほど繊維が細かく、密になります"),
     };
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays = new Field<IrisParameters>[]
-    {
+    public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays =
+    [
         new HeadingField<IrisParameters>("瞳孔模様"),
         new ChoiceField<IrisParameters>("形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, Shapes(PupilOf)),
         new ColorField<IrisParameters>("色", p => p.PupilColor, (p, v) => p.PupilColor = v, AllowGradient: true),
@@ -154,10 +154,32 @@ public static class DesignFields
         new SliderField<IrisParameters>("太さのばらつき", p => p.RayWidthVariation, (p, v) => p.RayWidthVariation = v, 0, 1, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("うねり (渦巻き)", p => p.RayCurve, (p, v) => p.RayCurve = v, -1, 1, 0.01, Fmt.Percent, "マイナスで逆回り (右目は自動で鏡像)"),
         new SliderField<IrisParameters>("細線レイヤー", p => p.RayFineLayer, (p, v) => p.RayFineLayer = v, 0, 1, 0.01, Fmt.Percent),
-    };
+        .. RangeFields(PatternLayer.Rays),
+    ];
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> RingAndGlitter = new Field<IrisParameters>[]
+    /// <summary>
+    /// A pattern layer's 見える範囲: quick-select buttons and the three sliders (the same as the desktop app).
+    /// </summary>
+    private static Field<IrisParameters>[] RangeFields(PatternLayer layer)
     {
+        Func<IrisParameters, (double A, double W, double F)> of = p => PatternRange.Of(p, layer);
+        return new Field<IrisParameters>[]
+        {
+            new HeadingField<IrisParameters>("見える範囲", "中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"),
+            new ChoiceField<IrisParameters>("簡単選択", p => PatternRange.Match(p, layer)?.Name ?? "",
+                (p, v) => { var s = PatternRange.Styles.FirstOrDefault(x => x.Name == (string)v); if (s != null) PatternRange.Apply(p, layer, s); },
+                PatternRange.Styles.Select(s => (s.Name, (object)s.Name)).ToArray()),
+            new SliderField<IrisParameters>("範囲の向き", p => of(p).A, (p, v) => { var r = of(p); PatternRange.Set(p, layer, v, r.W, r.F); }, 0, 360, 1, Fmt.Deg,
+                "扇形の中心の向き。0° = 右、90° = 下、180° = 左、270° = 上"),
+            new SliderField<IrisParameters>("範囲の広さ", p => of(p).W, (p, v) => { var r = of(p); PatternRange.Set(p, layer, r.A, v, r.F); }, 0, 360, 1, Fmt.Deg,
+                "360° で全体 (範囲の制限なし)、180° で半分"),
+            new SliderField<IrisParameters>("端のぼかし", p => of(p).F, (p, v) => { var r = of(p); PatternRange.Set(p, layer, r.A, r.W, v); }, 0, 90, 1, Fmt.Deg,
+                "扇形の両端で、だんだん消えていく角度の幅"),
+        };
+    }
+
+    public static readonly IReadOnlyList<Field<IrisParameters>> RingAndGlitter =
+    [
         new HeadingField<IrisParameters>("外輪"),
         new SliderField<IrisParameters>("リング幅 (太さ)", p => p.LimbalRingThickness, (p, v) => p.LimbalRingThickness = v, 0, 0.22, 0.005, Fmt.Percent),
         new ColorField<IrisParameters>("リング色", p => p.LimbalRingColor, (p, v) => p.LimbalRingColor = v, AllowGradient: true),
@@ -175,10 +197,11 @@ public static class DesignFields
         new SliderField<IrisParameters>("フレアの長さ", p => p.ParticleFlareLength, (p, v) => p.ParticleFlareLength = v, 1, 8, 0.1, Fmt.F1),
         new ChoiceField<IrisParameters>("ラメの重ね方", p => p.GlitterBlend, (p, v) => p.GlitterBlend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }, "スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
-    };
+        .. RangeFields(PatternLayer.Glitter),
+    ];
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> Lens = new Field<IrisParameters>[]
-    {
+    public static readonly IReadOnlyList<Field<IrisParameters>> Lens =
+    [
         new HeadingField<IrisParameters>("レンズ風パターン"),
         new ToggleField<IrisParameters>("光学レンズ・フレネル屈折リングを有効化", p => p.LensPatternEnabled, (p, v) => p.LensPatternEnabled = v),
         new SliderField<IrisParameters>("屈折リング数", p => p.LensRingCount, (p, v) => p.LensRingCount = Int(v), 2, 20, 1, v => Fmt.Count(v, "本")),
@@ -186,7 +209,8 @@ public static class DesignFields
         new SliderField<IrisParameters>("リング強度 (濃度)", p => p.LensRingIntensity, (p, v) => p.LensRingIntensity = v, 0, 1, 0.01, Fmt.Percent),
         new SliderField<IrisParameters>("リング線幅", p => p.LensRingWidth, (p, v) => p.LensRingWidth = v, 0.3, 3.0, 0.1, Fmt.F1),
         new SliderField<IrisParameters>("中心屈折光 (コースティクス)", p => p.LensRefractionGlow, (p, v) => p.LensRefractionGlow = v, 0, 1, 0.01, Fmt.Percent),
-    };
+        .. RangeFields(PatternLayer.LensRings),
+    ];
 
     public static readonly IReadOnlyList<Field<IrisParameters>> OddEye = new Field<IrisParameters>[]
     {

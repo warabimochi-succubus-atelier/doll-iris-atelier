@@ -174,6 +174,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `RayWidthVariation` | 0〜1 | 太さのばらつき |
 | `RayCurve` | -1〜1 | うねり・渦巻き（マイナスで逆回り） |
 | `RayFineLayer` | 0〜1 | 細い線の層の濃さ |
+| `RayRangeAngle` | 0〜360（度） | 見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `RayRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `RayRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### 外輪（虹彩のふちの濃い輪）
 
@@ -198,6 +201,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleFlareRatio` | 0〜1 | 十字に光る粒の割合 |
 | `ParticleFlareLength` | 1〜8 | 十字の光の長さ |
 | `GlitterBlend` | 重ね方 | |
+| `ParticleRangeAngle` | 0〜360（度） | 見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `ParticleRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `ParticleRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### レンズ風パターン（同心円の屈折リング）
 
@@ -209,6 +215,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `LensRingIntensity` | 0〜1 | |
 | `LensRingWidth` | 0.3〜3.0 | |
 | `LensRefractionGlow` | 0〜1 | 中心の屈折光 |
+| `LensRangeAngle` | 0〜360（度） | リングの見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `LensRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `LensRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### 装飾記号 `Symbols`（配列。0 個でもよい。最大 64 個）
 
@@ -328,6 +337,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "RayWidthVariation": 0.5,
   "RayCurve": 0.2,
   "RayFineLayer": 0.6,
+  "RayRangeAngle": 90.0,
+  "RayRangeWidth": 360.0,
+  "RayRangeFeather": 30.0,
   "LimbalRingThickness": 0.08,
   "LimbalRingColor": "#051636",
   "LimbalRingOpacity": 0.95,
@@ -342,12 +354,18 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ParticleFlareRatio": 0.15,
   "ParticleFlareLength": 4.0,
   "GlitterBlend": 0,
+  "ParticleRangeAngle": 90.0,
+  "ParticleRangeWidth": 360.0,
+  "ParticleRangeFeather": 30.0,
   "LensPatternEnabled": false,
   "LensRingCount": 6,
   "LensRingColor": "#FFFFFF",
   "LensRingIntensity": 0.5,
   "LensRingWidth": 0.8,
   "LensRefractionGlow": 0.35,
+  "LensRangeAngle": 90.0,
+  "LensRangeWidth": 360.0,
+  "LensRangeFeather": 30.0,
   "Symbols": [
     {
       "Type": 1,

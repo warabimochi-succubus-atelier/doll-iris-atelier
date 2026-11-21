@@ -48,6 +48,20 @@ namespace DollIrisGenerator.Models
         public const double DefaultParticleFlareRatio = 0.15;
         public const double DefaultParticleFlareLength = 4.0;
 
+        /// <summary>見える範囲 (pattern ranges, see PatternRange): a fan this wide covers the whole iris (off).</summary>
+        public const double FullRangeWidth = 360.0;
+        public const double DefaultRangeAngle = 90.0;   // down
+        public const double DefaultRangeFeather = 30.0;
+        public const double MaxRangeFeather = 90.0;
+
+        /// <summary>An angle in degrees brought into 0–360 (NaN / infinity: <see cref="DefaultRangeAngle"/>).</summary>
+        private static double NormalizeAngle(double value)
+        {
+            if (!double.IsFinite(value)) return DefaultRangeAngle;
+            double a = value % 360.0;
+            return a < 0 ? a + 360.0 : a;
+        }
+
         /// <summary>Clamps a loaded / bound value; NaN or infinity (hand-edited file) falls back to <paramref name="fallback"/>.</summary>
         private static double ClampFinite(double value, double min, double max, double fallback) =>
             double.IsFinite(value) ? Math.Clamp(value, min, max) : fallback;
@@ -144,6 +158,18 @@ namespace DollIrisGenerator.Models
         private double _particleGlow = DefaultParticleGlow;       // soft halo around every grain
         private double _particleFlareRatio = DefaultParticleFlareRatio;   // share of grains that also get a cross-shaped flare
         private double _particleFlareLength = DefaultParticleFlareLength;  // flare length, in grain sizes
+
+        // 見える範囲 (pattern ranges): a fan seen from the iris center; 360° wide = everywhere (off). Files saved
+        // before these existed load with the defaults (off).
+        private double _rayRangeAngle = DefaultRangeAngle;
+        private double _rayRangeWidth = FullRangeWidth;
+        private double _rayRangeFeather = DefaultRangeFeather;
+        private double _particleRangeAngle = DefaultRangeAngle;
+        private double _particleRangeWidth = FullRangeWidth;
+        private double _particleRangeFeather = DefaultRangeFeather;
+        private double _lensRangeAngle = DefaultRangeAngle;
+        private double _lensRangeWidth = FullRangeWidth;
+        private double _lensRangeFeather = DefaultRangeFeather;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -695,6 +721,69 @@ namespace DollIrisGenerator.Models
         {
             get => _particleFlareLength;
             set { _particleFlareLength = ClampFinite(value, MinParticleFlareLength, MaxParticleFlareLength, DefaultParticleFlareLength); OnPropertyChanged(); }
+        }
+
+        /// <summary>放射ラインの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>
+        public double RayRangeAngle
+        {
+            get => _rayRangeAngle;
+            set { _rayRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>放射ラインの範囲の広さ: how wide the visible fan is (degrees). 360 = everywhere.</summary>
+        public double RayRangeWidth
+        {
+            get => _rayRangeWidth;
+            set { _rayRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>放射ラインの範囲の端のぼかし: degrees over which the fan's edges fade out.</summary>
+        public double RayRangeFeather
+        {
+            get => _rayRangeFeather;
+            set { _rayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>ラメの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>
+        public double ParticleRangeAngle
+        {
+            get => _particleRangeAngle;
+            set { _particleRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>ラメの範囲の広さ: how wide the visible fan is (degrees). 360 = everywhere.</summary>
+        public double ParticleRangeWidth
+        {
+            get => _particleRangeWidth;
+            set { _particleRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>ラメの範囲の端のぼかし: degrees over which the fan's edges fade out.</summary>
+        public double ParticleRangeFeather
+        {
+            get => _particleRangeFeather;
+            set { _particleRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>レンズ風リングの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>
+        public double LensRangeAngle
+        {
+            get => _lensRangeAngle;
+            set { _lensRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>レンズ風リングの範囲の広さ: how wide the visible fan is (degrees). 360 = everywhere.</summary>
+        public double LensRangeWidth
+        {
+            get => _lensRangeWidth;
+            set { _lensRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>レンズ風リングの範囲の端のぼかし: degrees over which the fan's edges fade out.</summary>
+        public double LensRangeFeather
+        {
+            get => _lensRangeFeather;
+            set { _lensRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
         // Collections
