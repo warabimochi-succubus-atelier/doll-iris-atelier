@@ -239,6 +239,19 @@ namespace DollIrisGenerator.Services
             }
             if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
 
+            // まぶたの影 (after everything else): mostly the usual shadow, sometimes light or deep, sometimes tinted
+            if (!colorsLocked)
+            {
+                int roll = rng.Next(100);
+                double strength = rng.NextDouble(), depth = rng.NextDouble();
+                bool tinted = Chance(30);
+                p.UpperShadowIntensity = roll < 70 ? IrisParameters.DefaultUpperShadowIntensity
+                    : roll < 85 ? Math.Round(0.25 + strength * 0.25, 2) : Math.Round(0.70 + strength * 0.15, 2);
+                p.UpperShadowDepth = roll < 70 ? IrisParameters.DefaultUpperShadowDepth
+                    : roll < 85 ? Math.Round(0.45 + depth * 0.15, 2) : Math.Round(0.70 + depth * 0.15, 2);
+                p.UpperShadowColor = tinted ? HslToHex(hue, sat, 0.10) : IrisParameters.DefaultUpperShadowColor;
+            }
+
             // 瞳孔の縁取り線 and 外輪の内側の輪 (after everything else)
             if (!Locked(RandomizeLocks.Pupil))
             {

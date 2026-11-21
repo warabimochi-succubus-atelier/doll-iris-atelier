@@ -143,6 +143,16 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `FiberNoise` | 0〜1 | 0 でオフ。0.15〜0.45 が自然 |
 | `FiberNoiseScale` | 0.5〜2.0 | 大きいほど細かい |
 
+### まぶたの影（虹彩の上側に落ちる影）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `UpperShadowIntensity` | 0〜1 | 上端での影の濃さ。0 で影なし（既定 0.65） |
+| `UpperShadowDepth` | 0.20〜1.00 | 影が消えるところ。虹彩の高さに対する上端からの割合（既定 0.65） |
+| `UpperShadowColor` | 色（単色） | 影の色（既定 `#000000`） |
+
+省略すると以前のアプリと同じ影になります。
+
 ### 色の段（瞳孔の縁から外周までの同心の色の帯。アニメ塗りの段階）
 
 | 項目 | 範囲・値 | 説明 |
@@ -371,6 +381,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "NebulaSwirl": 0.4,
   "FiberNoise": 0.0,
   "FiberNoiseScale": 1.0,
+  "UpperShadowIntensity": 0.65,
+  "UpperShadowDepth": 0.65,
+  "UpperShadowColor": "#000000",
   "ToneBandIntensity": 0.0,
   "ToneBandCount": 3,
   "ToneBandInnerColor": "#FFFFFF",

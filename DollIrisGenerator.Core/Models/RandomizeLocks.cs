@@ -16,7 +16,7 @@ namespace DollIrisGenerator.Models
     public enum RandomizeLocks
     {
         None = 0,
-        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity, the design name, and the rest of the 「虹彩カラー設定」 box (aurora / nebula strength and blend, light direction and strength, fiber noise, tone bands).</summary>
+        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity, the design name, and the rest of the 「虹彩カラー設定」 box (aurora / nebula strength and blend, light direction and strength, fiber noise, tone bands, eyelid shadow).</summary>
         Colors = 1 << 0,
         /// <summary>乱数シード (the pattern jitter of rays and glitter).</summary>
         Seed = 1 << 1,

@@ -45,6 +45,11 @@ namespace DollIrisGenerator.Models
         public const double MaxLimbalInnerRingGap = 0.10, DefaultLimbalInnerRingGap = 0.01;
         public const string DefaultLimbalInnerRingColor = "#FFFFFF";
 
+        /// <summary>まぶたの影: ranges and defaults (the defaults are the fixed shadow of earlier versions).</summary>
+        public const double DefaultUpperShadowIntensity = 0.65;
+        public const double MinUpperShadowDepth = 0.20, MaxUpperShadowDepth = 1.0, DefaultUpperShadowDepth = 0.65;
+        public const string DefaultUpperShadowColor = "#000000";
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -169,6 +174,11 @@ namespace DollIrisGenerator.Models
         private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
+
+        // まぶたの影 (the shadow over the top of the iris). Files saved before it was adjustable load as the old fixed shadow.
+        private double _upperShadowIntensity = DefaultUpperShadowIntensity;
+        private double _upperShadowDepth = DefaultUpperShadowDepth;
+        private string _upperShadowColor = DefaultUpperShadowColor;
 
         // 色の段 (concentric bands of color from the pupil to the rim): 0 strength = off. Files saved before it existed load as off.
         private double _toneBandIntensity = 0.0;
@@ -652,6 +662,27 @@ namespace DollIrisGenerator.Models
         {
             get => _fiberNoiseScale;
             set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>まぶたの影の強さ: the shadow's opacity at the top edge. 0 = no shadow.</summary>
+        public double UpperShadowIntensity
+        {
+            get => _upperShadowIntensity;
+            set { _upperShadowIntensity = ClampFinite(value, 0.0, 1.0, DefaultUpperShadowIntensity); OnPropertyChanged(); }
+        }
+
+        /// <summary>深さ: where the shadow has faded out, as a fraction of the iris box's height from the top.</summary>
+        public double UpperShadowDepth
+        {
+            get => _upperShadowDepth;
+            set { _upperShadowDepth = ClampFinite(value, MinUpperShadowDepth, MaxUpperShadowDepth, DefaultUpperShadowDepth); OnPropertyChanged(); }
+        }
+
+        /// <summary>まぶたの影の色 (one color).</summary>
+        public string UpperShadowColor
+        {
+            get => _upperShadowColor;
+            set { _upperShadowColor = value ?? DefaultUpperShadowColor; OnPropertyChanged(); }
         }
 
         /// <summary>色の段の強さ: the bands' opacity. 0 = off.</summary>

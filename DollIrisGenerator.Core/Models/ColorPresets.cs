@@ -130,6 +130,10 @@ namespace DollIrisGenerator.Models
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
+        // まぶたの影
+        public double? UpperShadowIntensity { get; set; }
+        public double? UpperShadowDepth { get; set; }
+        public string? UpperShadowColor { get; set; }
         // 色の段
         public double? ToneBandIntensity { get; set; }
         public int? ToneBandCount { get; set; }
@@ -490,6 +494,9 @@ namespace DollIrisGenerator.Models
             target.GlitterBlend = preset.GlitterBlend ?? d.GlitterBlend;
             target.AuroraBlend = preset.AuroraBlend ?? d.AuroraBlend;
             target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
+            target.UpperShadowIntensity = preset.UpperShadowIntensity ?? d.UpperShadowIntensity;
+            target.UpperShadowDepth = preset.UpperShadowDepth ?? d.UpperShadowDepth;
+            target.UpperShadowColor = preset.UpperShadowColor ?? d.UpperShadowColor;
             target.ToneBandIntensity = preset.ToneBandIntensity ?? d.ToneBandIntensity;
             target.ToneBandCount = preset.ToneBandCount ?? d.ToneBandCount;
             target.ToneBandInnerColor = preset.ToneBandInnerColor ?? d.ToneBandInnerColor;
@@ -673,6 +680,9 @@ namespace DollIrisGenerator.Models
                 GlitterBlend = design.GlitterBlend,
                 AuroraBlend = design.AuroraBlend,
                 FiberNoiseScale = design.FiberNoiseScale,
+                UpperShadowIntensity = design.UpperShadowIntensity,
+                UpperShadowDepth = design.UpperShadowDepth,
+                UpperShadowColor = design.UpperShadowColor,
                 ToneBandIntensity = design.ToneBandIntensity,
                 ToneBandCount = design.ToneBandCount,
                 ToneBandInnerColor = design.ToneBandInnerColor,

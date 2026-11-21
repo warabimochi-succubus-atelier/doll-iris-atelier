@@ -610,7 +610,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="虹彩カラー設定" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない (すべての色)" IsChecked="{Binding LockColors}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・オーロラ層・星雲・色の段・デザイン名をランダム生成で変えない"/>
+                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・まぶたの影・オーロラ層・星雲・色の段・デザイン名をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -648,6 +648,22 @@
                                         <DockPanel Margin="0,0,0,4">
                                             <TextBlock Text="反射光の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.BottomHighlightIntensity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+
+                                        <!-- まぶたの影 (Upper eyelid shadow) -->
+                                        <DockPanel Margin="0,8,0,4" ToolTip="虹彩の上側に落ちるまぶたの影の濃さ。0% で影なし (最初は 65%)">
+                                            <TextBlock Text="まぶたの影:" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.UpperShadowIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.UpperShadowIntensity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="影が消えるところ。虹彩の高さに対する、上端からの割合 (最初は 65%)">
+                                            <TextBlock Text="影の深さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.UpperShadowDepth, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.UpperShadowDepth}" Minimum="0.20" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="影の色。黒のほか、紺やこげ茶の影にもできます">
+                                            <TextBlock Text="影の色:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.UpperShadowColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <!-- Light direction (光の入る向き) -->

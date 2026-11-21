@@ -657,11 +657,17 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($@"      <stop offset=""100%"" stop-color=""{effectiveOuterColor}"" />");
             sb.AppendLine("    </radialGradient>");
 
-            // Upper Shadow
-            sb.AppendLine($@"    <linearGradient id=""{upperShadowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
-            sb.AppendLine($@"      <stop offset=""0%"" stop-color=""#000000"" stop-opacity=""0.65"" />");
-            sb.AppendLine($@"      <stop offset=""65%"" stop-color=""#000000"" stop-opacity=""0"" />");
-            sb.AppendLine("    </linearGradient>");
+            // Upper Shadow (まぶたの影): the shadow color at 強さ on the top edge, clear at 深さ. The defaults write what
+            // the fixed shadow always did
+            bool upperShadow = p.UpperShadowIntensity > 0.005;
+            if (upperShadow)
+            {
+                var (shadowRgb, shadowAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.UpperShadowColor, IrisParameters.DefaultUpperShadowColor));
+                sb.AppendLine($@"    <linearGradient id=""{upperShadowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
+                sb.AppendLine($@"      <stop offset=""0%"" stop-color=""{shadowRgb}"" stop-opacity=""{(p.UpperShadowIntensity * shadowAlpha).ToString("0.###", Inv)}"" />");
+                sb.AppendLine($@"      <stop offset=""{(p.UpperShadowDepth * 100.0).ToString("0.###", Inv)}%"" stop-color=""{shadowRgb}"" stop-opacity=""0"" />");
+                sb.AppendLine("    </linearGradient>");
+            }
 
             // Lower Glow
             sb.AppendLine($@"    <linearGradient id=""{bottomGlowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
@@ -715,7 +721,10 @@ namespace DollIrisGenerator.Services
             {
                 AppendCollarette(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, irisBox);
             }
-            sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
+            if (upperShadow)
+            {
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
+            }
             if (p.BottomHighlightIntensity > 0.01)
             {
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_bottom_glow")} fill=""url(#{bottomGlowId})"" />");
