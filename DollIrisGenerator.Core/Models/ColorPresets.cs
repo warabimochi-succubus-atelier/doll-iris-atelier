@@ -152,26 +152,17 @@ namespace DollIrisGenerator.Models
             // The first one is the preset selected at start-up
             Basic("クリアブルー", "澄んだ水色のガラスのようなクリアブルー",
                 "#2E86FF", "#9BE1FF", "#0A2A8A", "#CFF3FF", "#06173F", "#071030", "#C9F0FF", HighlightStyle.Classic),
-            Basic("アクア", "南国の海のような明るいアクアブルー",
-                "#12B5C9", "#9FF3F0", "#04506B", "#D6FFFB", "#02303C", "#03202A", "#C8FFF7", HighlightStyle.Droplet),
-            Basic("ラベンダー", "やさしく透けるラベンダーパープル",
-                "#8E63E0", "#D9C6FF", "#3B1C8C", "#EEE4FF", "#1E0E4A", "#140A33", "#E6DAFF", HighlightStyle.Sparkle),
+            // Five hues; the purple, red, aqua and silver looks are in 雰囲気 (C, D, F, G)
             Basic("ピンク", "甘く華やかなローズピンク",
                 "#F06292", "#FFC1D9", "#8E1F4F", "#FFE6F0", "#4A0A27", "#3A0A20", "#FFD6E6", HighlightStyle.Heart),
-            Basic("レッド", "宝石のように深く輝くレッド",
-                "#E0283C", "#FF8A8A", "#6E0612", "#FFD0D0", "#3A0309", "#2A0207", "#FFC2C2", HighlightStyle.Classic),
-            Basic("アンバー", "蜂蜜のようにとろける琥珀色",
-                "#E08A1E", "#FFD27A", "#7A3A06", "#FFE9B8", "#3A1A03", "#2A1202", "#FFE3A8", HighlightStyle.ThreeDots),
             Basic("グリーン", "透明感のあるエメラルドグリーン",
                 "#19A36B", "#8FF0C0", "#064D33", "#D5FFEA", "#022B1C", "#021F14", "#C6FFE3", HighlightStyle.Droplet),
-            Basic("グレー", "銀色にきらめくクールグレー",
-                "#7D8792", "#D3DAE2", "#2E343B", "#EEF2F6", "#15181C", "#0D0F12", "#E6EBF0", HighlightStyle.Window),
-            Tweak(Basic("ブラウン", "あたたかく落ち着いたチョコレートブラウン",
-                "#8A5A33", "#D9A86C", "#3A2010", "#F2D2A6", "#1E0F06", "#140A04", "#F5DDB8", HighlightStyle.Classic),
-                p => { p.ParticleCount = 40; p.FiberNoise = 0.35; }),
-            Tweak(Basic("ヘーゼル", "緑から金茶へ移ろうヘーゼル",
-                "#7C7A3A", "#D6A64E", "#33350F", "#E8D9A0", "#1A1A08", "#0F0F06", "#EFE3B0", HighlightStyle.ThreeDots),
-                p => { p.ParticleCount = 45; p.FiberNoise = 0.35; p.InnerGradientRadius = 0.45; }),
+            Basic("アンバー", "蜂蜜のようにとろける琥珀色",
+                "#E08A1E", "#FFD27A", "#7A3A06", "#FFE9B8", "#3A1A03", "#2A1202", "#FFE3A8", HighlightStyle.ThreeDots),
+            // A natural brown: muted glitter, more fibers and soft-edged highlights that melt into the iris
+            Tweak(Basic("ブラウン", "あたたかく落ち着いたチョコレートブラウン。光はやわらか",
+                "#8A5A33", "#D9A86C", "#3A2010", "#F2D2A6", "#1E0F06", "#140A04", "#F5DDB8", HighlightStyle.Window),
+                p => { p.ParticleCount = 40; p.FiberNoise = 0.35; p.Highlights = HighlightStyles.Build(HighlightStyle.Window, softness: 0.3); }),
 
             // ---------------- 特殊: layers, shaped pupils and symbols ----------------
             new PresetDefinition
@@ -182,7 +173,7 @@ namespace DollIrisGenerator.Models
                 LimbalRingColor = "#03061A", PupilColor = "#02040F", RayColor = "#9FB8FF", ParticleColor = "#FFFFFF",
                 RayCount = 48, RayIntensity = 0.35, ParticleCount = 230, ParticleRadiusRatio = 0.92,
                 ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45,
-                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle, glow: 0.6)
             },
             new PresetDefinition
             {
@@ -193,7 +184,7 @@ namespace DollIrisGenerator.Models
                 RayColor = "conic-gradient(from 270deg, #FFFFFF 0%, #FF80AB 33%, #80D8FF 66%, #FFFFFF 100%)",
                 AuroraColor = IrisParameters.DefaultAuroraColor, AuroraOpacity = 0.55, AuroraBlend = LayerBlend.Screen,
                 RayCount = 64, RayIntensity = 0.65, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
-                Highlights = HighlightStyles.Build(HighlightStyle.Window)
+                Highlights = HighlightStyles.Build(HighlightStyle.Window, softness: 0.3)
             },
             new PresetDefinition
             {
@@ -204,7 +195,7 @@ namespace DollIrisGenerator.Models
                 NebulaColor = IrisParameters.DefaultNebulaColor, NebulaOpacity = 0.85, NebulaDensity = 0.55, NebulaSwirl = 0.5,
                 RayCount = 48, RayIntensity = 0.3, ParticleCount = 170, ParticleRadiusRatio = 0.92,
                 ParticleGlow = 0.8, ParticleFlareRatio = 0.12,
-                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle, glow: 0.5)
             },
             new PresetDefinition
             {
@@ -216,7 +207,7 @@ namespace DollIrisGenerator.Models
                 BottomHighlightIntensity = 0.6, LightStrength = 0.35, LightAngle = 250,
                 // The light of the setting sun from below: rays on the lower side only
                 RayRangeWidth = 200, RayRangeFeather = 50,
-                Highlights = HighlightStyles.Build(HighlightStyle.Droplet)
+                Highlights = HighlightStyles.Build(HighlightStyle.Droplet, softness: 0.25, glow: 0.35)
             },
             new PresetDefinition
             {
@@ -228,7 +219,7 @@ namespace DollIrisGenerator.Models
                 RayCount = 40, RayIntensity = 0.3, ParticleCount = 160, ParticleRadiusRatio = 0.9,
                 ParticleGlow = 0.85, ParticleFlareRatio = 0.12,
                 DefaultSymbol = SymbolType.Star4, SymbolColor = "#FFFFFF", SymbolSize = 0.12, SymbolPositionX = 0.4, SymbolPositionY = -0.35, SymbolCount = 1,
-                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
+                Highlights = HighlightStyles.Build(HighlightStyle.Classic, glow: 0.5)
             },
             new PresetDefinition
             {
@@ -245,17 +236,6 @@ namespace DollIrisGenerator.Models
             new PresetDefinition
             {
                 Name = "特殊: ハート",
-                Description = "赤い虹彩の中心に、ルビーのようなカットのハート",
-                BaseColor = "#E53950", InnerColor = "#FF8A9B", OuterColor = "#6A0418", BottomHighlightColor = "#FFD5DB",
-                LimbalRingColor = "#3B0010", PupilColor = "radial-gradient(#FF1744 0%, #8B0016 100%)",
-                RayColor = "#FFCDD2", ParticleColor = "#FFFFFF",
-                PupilShape = PupilShape.Heart, PupilSizeRatio = 0.5, PupilFacetIntensity = 0.8, PupilFacetCount = 10,
-                RayCount = 56, RayIntensity = 0.55, ParticleCount = 90, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
-                Highlights = HighlightStyles.Build(HighlightStyle.Heart)
-            },
-            new PresetDefinition
-            {
-                Name = "特殊: 花びら",
                 Description = "淡いピンクに、ふちどりのハートが浮かぶ",
                 BaseColor = "#F48FB1", InnerColor = "#FFE0EC", OuterColor = "#C2185B", BottomHighlightColor = "#FFF0F6",
                 LimbalRingColor = "#6A0A33", PupilColor = "#C2185B", RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
@@ -264,7 +244,7 @@ namespace DollIrisGenerator.Models
                 // A pale heart over the pupil heart leaves only its rim: an outlined heart
                 DefaultSymbol = SymbolType.Heart, SymbolColor = "#FFC1D9", SymbolSize = 0.32,
                 SymbolPositionX = 0.0, SymbolPositionY = 0.0, SymbolCount = 1, SymbolOpacity = 1.0,
-                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
+                Highlights = HighlightStyles.Build(HighlightStyle.Heart)
             },
             new PresetDefinition
             {
@@ -324,7 +304,7 @@ namespace DollIrisGenerator.Models
                     Symbol(SymbolType.Moon, "#FFE08A", 0.2, 0.40, -0.40, rotation: -20, opacity: 0.95),
                     Symbol(SymbolType.Star4, "#FFF1C2", 0.08, 0.58, -0.12, opacity: 0.9)
                 },
-                Highlights = HighlightStyles.Build(HighlightStyle.Crescent)
+                Highlights = HighlightStyles.Build(HighlightStyle.Crescent, glow: 0.6)
             },
             new PresetDefinition
             {
@@ -343,15 +323,15 @@ namespace DollIrisGenerator.Models
             // ---------------- 雰囲気: a basic look with its own glitter, pupil and highlights ----------------
             Tweak(Mood("A. ナチュラル (ピンク系)", "やわらかく自然なピンク。ラメは控えめ",
                 "#E58BA7", "#FBD3DF", "#9A4762", "#FFEFF4", "#4A1A2A", "#2E1019", "#FBE0E8", HighlightStyle.Classic,
-                particles: 40, glow: 0.5),
+                particles: 40, glow: 0.5, highlightSoftness: 0.25),
                 p => { p.FiberNoise = 0.35; }),
             Mood("B. 精霊 (ブルー系)", "光をまとったような幻想的なブルー",
                 "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", HighlightStyle.Window,
-                particles: 150, glow: 0.7,
+                particles: 150, glow: 0.7, highlightGlow: 0.5,
                 aurora: "conic-gradient(from 270deg, #80D8FF 0%, #FFFFFF 33%, #82B1FF 66%, #80D8FF 100%)", auroraOpacity: 0.3),
             Tweak(Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル。光の筋は下側だけ",
                 "#7A5BA8", "#C9B5E6", "#2E1F4D", "#E6DCF2", "#170F29", "#0F0A1C", "#DCCFEE", HighlightStyle.Droplet,
-                particles: 40, glow: 0.45, rays: 0.5),
+                particles: 40, glow: 0.45, rays: 0.5, highlightSoftness: 0.35),
                 p => { p.RayRangeWidth = 180; p.RayRangeFeather = 60; p.FiberNoise = 0.3; }),
             Mood("D. つんでれ (レッド系)", "強気なのに甘さもある鮮やかなレッド",
                 "#E8364F", "#FF9AA8", "#7A0A1E", "#FFE0E4", "#3B0510", "#24030A", "#FFD1D8", HighlightStyle.Sparkle,
@@ -368,7 +348,7 @@ namespace DollIrisGenerator.Models
                 pupilSize: 0.38),
             Tweak(Mood("G. 儚げ (シルバー系)", "淡く透ける銀青色。外輪もやわらか",
                 "#A8B8CC", "#EEF4FA", "#5A6B82", "#F7FBFF", "#3A4658", "#1C2430", "#FFFFFF", HighlightStyle.Window,
-                particles: 120, glow: 0.6, rays: 0.45, pupilSize: 0.28),
+                particles: 120, glow: 0.6, rays: 0.45, pupilSize: 0.28, highlightSoftness: 0.3, highlightGlow: 0.3),
                 p => { p.LimbalRingSoftness = 0.45; p.LimbalRingOpacity = 0.7; p.ParticleMinSize = 0.6; p.ParticleMaxSize = 1.6; p.LightStrength = 0.35; }),
             Tweak(Mood("H. クール (アイス系)", "小さな瞳孔に細かな光の筋。上側にカット面",
                 "#1FA7D8", "#C8F4FF", "#073C66", "#E6FAFF", "#021C33", "#020F1C", "#E6FAFF", HighlightStyle.Sparkle,
@@ -402,7 +382,8 @@ namespace DollIrisGenerator.Models
         private static PresetDefinition Mood(string name, string description, string baseColor, string inner, string outer,
             string bottom, string limbal, string pupilColor, string ray, HighlightStyle highlights, int particles, double glow,
             double rays = 0.6, PupilShape pupil = PupilShape.Round, double pupilSize = 0.32, double facets = 0.0,
-            string? aurora = null, double auroraOpacity = 0.0, double pupilStretchX = 1.0, double pupilStretchY = 1.0) => new()
+            string? aurora = null, double auroraOpacity = 0.0, double pupilStretchX = 1.0, double pupilStretchY = 1.0,
+            double highlightSoftness = 0.0, double highlightGlow = 0.0) => new()
         {
             Name = "雰囲気: " + name,
             Description = description,
@@ -414,7 +395,7 @@ namespace DollIrisGenerator.Models
             AuroraColor = aurora, AuroraOpacity = auroraOpacity,
             RayCount = 60, RayIntensity = rays, ParticleCount = particles, ParticleRadiusRatio = 0.8,
             ParticleGlow = glow, ParticleFlareRatio = 0.12, LightStrength = 0.25, LightAngle = 235,
-            Highlights = HighlightStyles.Build(highlights)
+            Highlights = HighlightStyles.Build(highlights, softness: highlightSoftness, glow: highlightGlow)
         };
 
         /// <summary>Changes a few settings of a preset made by <see cref="Basic"/> or <see cref="Mood"/>.</summary>
@@ -541,7 +522,7 @@ namespace DollIrisGenerator.Models
             }
 
             // The preset's symbol (or none) replaces the design's symbols: every other symbol is switched off, so a
-            // symbol from another preset, e.g. the outline heart of 花びら, does not stay behind
+            // symbol from another preset, e.g. the outline heart of ハート, does not stay behind
             bool hasSymbol = preset.DefaultSymbol != SymbolType.None;
             for (int i = hasSymbol ? 1 : 0; i < target.Symbols.Count; i++) target.Symbols[i].Enabled = false;
             if (!hasSymbol) return;

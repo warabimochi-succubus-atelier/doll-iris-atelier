@@ -365,7 +365,29 @@
       </g>
     </g>
     <g id="left_eye_highlights">
+      <defs>
+        <filter id="left_eye_highlight0_glow_filter" filterUnits="userSpaceOnUse" x="1.834" y="1.834" width="9.332" height="9.332">
+          <feGaussianBlur stdDeviation="0.9425" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.00" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+      <g id="left_eye_highlight0_glow" filter="url(#left_eye_highlight0_glow_filter)" opacity="0.67">
+        <polygon points="6.500,5.200 6.702,6.298 7.800,6.500 6.702,6.702 6.500,7.800 6.298,6.702 5.200,6.500 6.298,6.298 " fill="#FFFFFF" opacity="1.00" />
+      </g>
       <polygon points="6.500,5.200 6.702,6.298 7.800,6.500 6.702,6.702 6.500,7.800 6.298,6.702 5.200,6.500 6.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <defs>
+        <filter id="left_eye_highlight1_glow_filter" filterUnits="userSpaceOnUse" x="7.167" y="7.267" width="4.666" height="4.666">
+          <feGaussianBlur stdDeviation="0.4713" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.00" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+      <g id="left_eye_highlight1_glow" filter="url(#left_eye_highlight1_glow_filter)" opacity="0.49">
+        <ellipse cx="9.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="1.00" />
+      </g>
       <ellipse cx="9.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="left_eye_guides">
@@ -738,7 +760,29 @@
       </g>
     </g>
     <g id="right_eye_highlights">
+      <defs>
+        <filter id="right_eye_highlight0_glow_filter" filterUnits="userSpaceOnUse" x="18.834" y="1.834" width="9.332" height="9.332">
+          <feGaussianBlur stdDeviation="0.9425" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.00" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+      <g id="right_eye_highlight0_glow" filter="url(#right_eye_highlight0_glow_filter)" opacity="0.67">
+        <polygon points="23.500,5.200 23.702,6.298 24.800,6.500 23.702,6.702 23.500,7.800 23.298,6.702 22.200,6.500 23.298,6.298 " fill="#FFFFFF" opacity="1.00" />
+      </g>
       <polygon points="23.500,5.200 23.702,6.298 24.800,6.500 23.702,6.702 23.500,7.800 23.298,6.702 22.200,6.500 23.298,6.298 " fill="#FFFFFF" opacity="0.95" />
+      <defs>
+        <filter id="right_eye_highlight1_glow_filter" filterUnits="userSpaceOnUse" x="18.167" y="7.267" width="4.666" height="4.666">
+          <feGaussianBlur stdDeviation="0.4713" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2.00" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+      <g id="right_eye_highlight1_glow" filter="url(#right_eye_highlight1_glow_filter)" opacity="0.49">
+        <ellipse cx="20.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="1.00" />
+      </g>
       <ellipse cx="20.500" cy="9.600" rx="0.650" ry="0.650" fill="#FFFFFF" opacity="0.70" />
     </g>
     <g id="right_eye_guides">

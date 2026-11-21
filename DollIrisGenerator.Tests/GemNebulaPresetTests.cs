@@ -206,10 +206,8 @@ namespace DollIrisGenerator.Tests
 
         private static readonly string[] SampleNames =
         {
-            "ベーシック: クリアブルー", "ベーシック: アクア", "ベーシック: ラベンダー", "ベーシック: ピンク",
-            "ベーシック: レッド", "ベーシック: アンバー", "ベーシック: グリーン", "ベーシック: グレー",
-            "ベーシック: ブラウン", "ベーシック: ヘーゼル",
-            "特殊: 星屑", "特殊: オーロラ", "特殊: 銀河", "特殊: 夕焼け", "特殊: 夜空", "特殊: 宝石", "特殊: ハート", "特殊: 花びら",
+            "ベーシック: クリアブルー", "ベーシック: ピンク", "ベーシック: グリーン", "ベーシック: アンバー", "ベーシック: ブラウン",
+            "特殊: 星屑", "特殊: オーロラ", "特殊: 銀河", "特殊: 夕焼け", "特殊: 夜空", "特殊: 宝石", "特殊: ハート",
             "特殊: 桜", "特殊: キャットアイ", "特殊: 蝶々", "特殊: 三日月", "特殊: クリスタル",
             "雰囲気: A. ナチュラル (ピンク系)", "雰囲気: B. 精霊 (ブルー系)", "雰囲気: C. アンニュイ (パープル系)",
             "雰囲気: D. つんでれ (レッド系)", "雰囲気: E. 小悪魔 (赤紫系)", "雰囲気: F. 無邪気 (アクア系)",
@@ -309,17 +307,17 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestPetalPresetOutlinesTheHeartAndTheNextPresetRemovesIt()
+        public void TestHeartPresetOutlinesTheHeartAndTheNextPresetRemovesIt()
         {
             var p = new IrisParameters();
-            ColorPresets.ApplyPreset(p, Preset("特殊: 花びら"));
+            ColorPresets.ApplyPreset(p, Preset("特殊: ハート"));
             var heart = p.Symbols.Single(s => s.Enabled);
             Assert.Equal(SymbolType.Heart, heart.Type);
             Assert.Equal(0.0, heart.PositionX);
             Assert.Equal(0.0, heart.PositionY);
             Assert.True(heart.Size < p.PupilSizeRatio); // smaller than the pupil heart: only its rim shows
 
-            ColorPresets.ApplyPreset(p, Preset("ベーシック: アクア"));
+            ColorPresets.ApplyPreset(p, Preset("ベーシック: グリーン"));
             Assert.DoesNotContain(p.Symbols, s => s.Enabled);
         }
 
@@ -347,7 +345,7 @@ namespace DollIrisGenerator.Tests
         {
             // Start from a built-in look with a symbol, then change the look settings by hand
             var source = new IrisParameters();
-            ColorPresets.ApplyPreset(source, Preset("特殊: 花びら"));
+            ColorPresets.ApplyPreset(source, Preset("特殊: ハート"));
             source.RayCount = 37;
             source.RayIntensity = 0.42;
             source.ParticleCount = 123;
@@ -397,7 +395,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(SymbolType.None, preset.DefaultSymbol);
 
             var target = new IrisParameters();
-            ColorPresets.ApplyPreset(target, Preset("特殊: 花びら"));
+            ColorPresets.ApplyPreset(target, Preset("特殊: ハート"));
             ColorPresets.ApplyPreset(target, preset);
             Assert.DoesNotContain(target.Symbols, s => s.Enabled);
         }
@@ -431,7 +429,7 @@ namespace DollIrisGenerator.Tests
                 var target = new IrisParameters();
                 IrisRandomizer.RandomizeAttributes(target, new Random(seed + 1000));
                 target.IsOddEye = false;
-                ColorPresets.ApplyPreset(target, Preset("特殊: 花びら"));
+                ColorPresets.ApplyPreset(target, Preset("特殊: ハート"));
                 ColorPresets.ApplyPreset(target, preset);
                 target.Seed = source.Seed; // the seed is not part of a preset
                 Assert.True(SvgExporter.GeneratePairSvg(source) == SvgExporter.GeneratePairSvg(target), $"seed {seed}");
@@ -475,10 +473,10 @@ namespace DollIrisGenerator.Tests
             string path = Path.Combine(Path.GetTempPath(), $"dolliris_palette_{Guid.NewGuid():N}.json");
             try
             {
-                ColorPresets.ExportPalettesToFile(path, new[] { Preset("特殊: 銀河"), Preset("特殊: 花びら") });
+                ColorPresets.ExportPalettesToFile(path, new[] { Preset("特殊: 銀河"), Preset("特殊: ハート") });
                 var loaded = ColorPresets.ImportPalettesFromFile(path)!;
                 Assert.Equal(Preset("特殊: 銀河").NebulaOpacity, loaded[0].NebulaOpacity);
-                Assert.Equal(Preset("特殊: 花びら").SymbolSize, loaded[1].SymbolSize);
+                Assert.Equal(Preset("特殊: ハート").SymbolSize, loaded[1].SymbolSize);
             }
             finally
             {

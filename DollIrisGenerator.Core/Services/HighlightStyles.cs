@@ -36,8 +36,11 @@ namespace DollIrisGenerator.Services
         /// <summary>
         /// The highlights of <paramref name="style"/>. With <paramref name="jitter"/>, positions move by up to ±0.03,
         /// sizes by up to ±10% and sparkles turn a little, so two random designs with the same layout still differ.
+        /// <paramref name="softness"/> (輪郭のぼかし) goes on the smooth shapes only (circles and the crescent): a blurred
+        /// sparkle, heart or diamond loses the points that make it one. <paramref name="glow"/> (光のにじみ) goes on all.
         /// </summary>
-        public static List<HighlightItem> Build(HighlightStyle style, Random? jitter = null, RightEyeFlip flip = RightEyeFlip.Mirror)
+        public static List<HighlightItem> Build(HighlightStyle style, Random? jitter = null, RightEyeFlip flip = RightEyeFlip.Mirror,
+            double softness = 0.0, double glow = 0.0)
         {
             double Pos(double v) => jitter == null ? v : Math.Round(v + (jitter.NextDouble() - 0.5) * 0.06, 2);
             double Size(double v) => jitter == null ? v : Math.Round(v * (0.9 + jitter.NextDouble() * 0.2), 2);
@@ -55,6 +58,8 @@ namespace DollIrisGenerator.Services
                 StretchRight = stretchX,
                 Color = "#FFFFFF",
                 Opacity = opacity,
+                Softness = IsSmooth(shape) ? softness : 0.0,
+                Glow = glow,
                 Enabled = true,
                 RightEyeFlip = flip
             };
@@ -106,5 +111,8 @@ namespace DollIrisGenerator.Services
                 }
             };
         }
+
+        /// <summary>Shapes without points, which 輪郭のぼかし softens without losing what they are.</summary>
+        public static bool IsSmooth(HighlightShape shape) => shape is HighlightShape.Circle or HighlightShape.Moon;
     }
 }
