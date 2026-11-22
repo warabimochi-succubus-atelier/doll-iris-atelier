@@ -880,49 +880,19 @@ namespace DollIrisGenerator.Services
                 if (rayRange != null) sb.AppendLine("      </g>");
             }
 
-            // Lens-Style Pattern (Fresnel Rings)
-            if (p.LensPatternEnabled && p.LensRingIntensity > 0.01)
+            // 中心の光 (レンズの効果): one color at 強さ × 0.45 in the middle, fading out over 55% of the iris
+            if (p.CenterGlowIntensity > 0.01)
             {
-                string lensPaint = Paint(sb, "      ", $"{idPrefix}_lens_fill", p.LensRingColor, "#FFFFFF", irisBox, isRightEye, p.PupilSizeRatio, 0.92);
-                double ringStroke = p.LensRingWidth * IrisStyle.MmPerStyleUnit;
-                // Odd rings: thinner and finely dotted, dashes 4 : 3 of the line width with square ends
-                // (WPF's dash units and default dash cap)
-                double dotStroke = ringStroke * 0.8;
-                string dotAttr = $@" stroke-width=""{F(dotStroke)}"" stroke-dasharray=""{F(dotStroke * 4.0)},{F(dotStroke * 3.0)}"" stroke-linecap=""square""";
-                string? lensRange = AppendRangeMask(sb, $"{idPrefix}_lens_range", p, PatternLayer.LensRings, isRightEye, cx, cy, rx, ry, baseR, irisBox);
-                if (lensRange != null) sb.AppendLine($@"      <g id=""{idPrefix}_lens_ranged"" mask=""url(#{lensRange})"">");
-                OpenSharedPaintGroup(sb, $"{idPrefix}_lens_rings", "stroke", lensPaint, p.LensRingColor,
-                    $@" stroke-width=""{F(ringStroke)}""{OpacityUnlessMasked(p.LensRingColor, p.LensRingIntensity)} fill=""none""", irisBox);
-                double pupilR = baseR * p.PupilSizeRatio;
-                double ringSpan = (baseR * 0.92) - pupilR;
-
-                for (int k = 1; k <= p.LensRingCount; k++)
-                {
-                    double progress = Math.Pow((double)k / p.LensRingCount, 0.82);
-                    double ringR = pupilR + ringSpan * progress;
-                    double ringRx = ringR * (rx / baseR);
-                    double ringRy = ringR * (ry / baseR);
-
-                    string dashAttr = (k % 2 == 1) ? dotAttr : "";
-                    sb.AppendLine($@"        <ellipse cx=""{cx.ToFixed(3)}"" cy=""{cy.ToFixed(3)}"" rx=""{ringRx.ToFixed(3)}"" ry=""{ringRy.ToFixed(3)}""{dashAttr} />");
-                }
-                CloseSharedPaintGroup(sb, $"{idPrefix}_lens_rings", lensPaint, p.LensRingColor, p.LensRingIntensity, irisBox);
-                if (lensRange != null) sb.AppendLine("      </g>");
-
-                // Center refraction glow (中心屈折光): one color (a gradient's first), fading out to the edge
-                if (p.LensRefractionGlow > 0.01)
-                {
-                    var (ga, gr, gg, gb) = GeometryHelper.ParseHexArgb(p.LensRingColor, p.LensRefractionGlow * 0.45);
-                    string glowRgb = $"#{gr:X2}{gg:X2}{gb:X2}";
-                    string glowId = $"{idPrefix}_lens_glow_grad";
-                    sb.AppendLine("      <defs>");
-                    sb.AppendLine($@"        <radialGradient id=""{glowId}"">");
-                    sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{glowRgb}"" stop-opacity=""{(ga / 255.0).ToString("0.###", Inv)}"" />");
-                    sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{glowRgb}"" stop-opacity=""0"" />");
-                    sb.AppendLine("        </radialGradient>");
-                    sb.AppendLine("      </defs>");
-                    sb.AppendLine($@"      <ellipse id=""{idPrefix}_lens_glow"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx * 0.55)}"" ry=""{F(ry * 0.55)}"" fill=""url(#{glowId})"" />");
-                }
+                var (ga, gr, gg, gb) = GeometryHelper.ParseHexArgb(p.CenterGlowColor, p.CenterGlowIntensity * 0.45);
+                string glowRgb = $"#{gr:X2}{gg:X2}{gb:X2}";
+                string glowId = $"{idPrefix}_center_glow_grad";
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <radialGradient id=""{glowId}"">");
+                sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{glowRgb}"" stop-opacity=""{(ga / 255.0).ToString("0.###", Inv)}"" />");
+                sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{glowRgb}"" stop-opacity=""0"" />");
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine("      </defs>");
+                sb.AppendLine($@"      <ellipse id=""{idPrefix}_center_glow"" cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx * 0.55)}"" ry=""{F(ry * 0.55)}"" fill=""url(#{glowId})"" />");
             }
 
             // 宝石カット面 (gem facets over the whole iris): white / black polygons in one group, which carries the blend

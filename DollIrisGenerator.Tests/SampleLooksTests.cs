@@ -168,23 +168,23 @@ namespace DollIrisGenerator.Tests
         }
 
         /// <summary>
-        /// Rays, glitter and lens rings with a conic color: the shapes go white into a mask over one rectangle in the
+        /// Rays and glitter with a conic color: the shapes go white into a mask over one rectangle in the
         /// pattern, so renderers draw the pattern once instead of once per shape. Other colors keep the plain group.
         /// </summary>
         [Fact]
         public void TestConicOnManyShapesIsDrawnOnceThroughAMask()
         {
-            var p = new IrisParameters { RayColor = Aurora, ParticleColor = Aurora, LensRingColor = Aurora, LensPatternEnabled = true };
+            var p = new IrisParameters { RayColor = Aurora, ParticleColor = Aurora };
             string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye: false);
             Assert.True(SvgValidator.IsWellFormed(svg, out var error), error);
 
-            foreach (var (id, fill) in new[] { ("rays", "rays_fill"), ("fine_rays", "rays_fill"), ("glitter", "glitter_fill"), ("lens_rings", "lens_fill") })
+            foreach (var (id, fill) in new[] { ("rays", "rays_fill"), ("fine_rays", "rays_fill"), ("glitter", "glitter_fill") })
             {
                 Assert.Contains($"<mask id=\"eye_left_{id}_mask\" maskUnits=\"userSpaceOnUse\"", svg);
                 Assert.Matches($"<rect id=\"eye_left_{id}\" [^>]*fill=\"url\\(#eye_left_{fill}\\)\" mask=\"url\\(#eye_left_{id}_mask\\)\" opacity=", svg);
             }
             // Only the masked rectangles (and nothing inside the masks) use the patterns
-            Assert.Equal(4, Regex.Matches(svg, "=\"url\\(#eye_left_(rays|glitter|lens)_fill\\)\"").Count);
+            Assert.Equal(3, Regex.Matches(svg, "=\"url\\(#eye_left_(rays|glitter)_fill\\)\"").Count);
 
             var plain = SvgExporter.GenerateSingleEyeSvg(new IrisParameters { RayColor = "#B3E5FC" }, false);
             Assert.DoesNotContain("_rays_mask", plain);

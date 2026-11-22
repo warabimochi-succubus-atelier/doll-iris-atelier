@@ -280,25 +280,14 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `ParticleRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
-### レンズ風パターン（同心円の屈折リング）
-
-| 項目 | 範囲・値 | 説明 |
-|---|---|---|
-| `LensPatternEnabled` | true / false | |
-| `LensRingCount` | 2〜20 | |
-| `LensRingColor` | 色（グラデ可） | |
-| `LensRingIntensity` | 0〜1 | |
-| `LensRingWidth` | 0.3〜3.0 | |
-| `LensRefractionGlow` | 0〜1 | 中心の屈折光 |
-| `LensRangeAngle` | 0〜360（度） | リングの見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
-| `LensRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
-| `LensRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
-
-### 集光・縁の屈折（ドームのレンズが集める光）
-どちらも「光の入る向き」（`LightAngle`）と反対側に出ます。右目は光の向きと同じく反転します。
+### 中心の光・集光・縁の屈折（ドームのレンズが集める光）
+中心の光は虹彩の中心に出ます。集光と縁の屈折は「光の入る向き」（`LightAngle`）と反対側に出ます。右目は光の向きと同じく反転します。
+以前の同心円の屈折リング（`LensPatternEnabled`・`LensRing…`・`LensRefractionGlow`・`LensRange…`）は取り除きました。書いてあっても読みません。
 
 | 項目 | 値 | 説明 |
 |---|---|---|
+| `CenterGlowIntensity` | 0〜1 | 中心の光の強さ。0 でオフ（既定） |
+| `CenterGlowColor` | 色（単色） | 中心の光の色（既定 `#FFFFFF`） |
 | `CausticIntensity` | 0〜1 | 集光の強さ。0 でオフ（既定） |
 | `CausticColor` | 色（単色） | 集光の色（既定 `#FFFFFF`） |
 | `CausticOffset` | 0〜0.80 | 中心から光と反対側への位置。虹彩の半径に対する割合（既定 0.45） |
@@ -520,15 +509,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ParticleRangeAngle": 90.0,
   "ParticleRangeWidth": 360.0,
   "ParticleRangeFeather": 30.0,
-  "LensPatternEnabled": false,
-  "LensRingCount": 6,
-  "LensRingColor": "#FFFFFF",
-  "LensRingIntensity": 0.5,
-  "LensRingWidth": 0.8,
-  "LensRefractionGlow": 0.35,
-  "LensRangeAngle": 90.0,
-  "LensRangeWidth": 360.0,
-  "LensRangeFeather": 30.0,
+  "CenterGlowIntensity": 0.0,
+  "CenterGlowColor": "#FFFFFF",
   "CausticIntensity": 0.0,
   "CausticColor": "#FFFFFF",
   "CausticOffset": 0.45,

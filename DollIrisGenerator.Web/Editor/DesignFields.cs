@@ -298,6 +298,9 @@ public static class DesignFields
 
     public static readonly IReadOnlyList<Field<IrisParameters>> Lens =
     [
+        new HeadingField<IrisParameters>("中心の光", "虹彩の中心のぼんやりした光です (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("中心の光の強さ", p => p.CenterGlowIntensity, (p, v) => p.CenterGlowIntensity = v, 0, 1, 0.01, Fmt.Percent, "光の明るさ。0% でオフ"),
+        new ColorField<IrisParameters>("中心の光の色", p => p.CenterGlowColor, (p, v) => p.CenterGlowColor = v),
         new HeadingField<IrisParameters>("集光", "透明なドームのレンズが集めた光です。「光の入る向き」と反対側に出ます (強さ 0% でオフ)"),
         new SliderField<IrisParameters>("集光の強さ", p => p.CausticIntensity, (p, v) => p.CausticIntensity = v, 0, 1, 0.01, Fmt.Percent, "集めた光の明るさ。0% でオフ"),
         new ColorField<IrisParameters>("集光の色", p => p.CausticColor, (p, v) => p.CausticColor = v),
@@ -317,14 +320,6 @@ public static class DesignFields
             IrisParameters.MinDomeEdgeWidth, IrisParameters.MaxDomeEdgeWidth, 0.01, Fmt.Percent, "外輪の内側から中へ、だんだん消えていく幅。虹彩の半径に対する割合"),
         new SliderField<IrisParameters>("縁の屈折の偏り", p => p.DomeEdgeBias, (p, v) => p.DomeEdgeBias = v, 0, 1, 0.01, Fmt.Percent,
             "0% で一周同じ、100% で光と反対側だけ"),
-        new HeadingField<IrisParameters>("レンズ風パターン"),
-        new ToggleField<IrisParameters>("光学レンズ・フレネル屈折リングを有効化", p => p.LensPatternEnabled, (p, v) => p.LensPatternEnabled = v),
-        new SliderField<IrisParameters>("屈折リング数", p => p.LensRingCount, (p, v) => p.LensRingCount = Int(v), 2, 20, 1, v => Fmt.Count(v, "本")),
-        new ColorField<IrisParameters>("リング線色", p => p.LensRingColor, (p, v) => p.LensRingColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("リング強度 (濃度)", p => p.LensRingIntensity, (p, v) => p.LensRingIntensity = v, 0, 1, 0.01, Fmt.Percent),
-        new SliderField<IrisParameters>("リング線幅", p => p.LensRingWidth, (p, v) => p.LensRingWidth = v, 0.3, 3.0, 0.1, Fmt.F1),
-        new SliderField<IrisParameters>("中心屈折光 (コースティクス)", p => p.LensRefractionGlow, (p, v) => p.LensRefractionGlow = v, 0, 1, 0.01, Fmt.Percent),
-        .. RangeFields(PatternLayer.LensRings),
         new HeadingField<IrisParameters>("宝石カット面", "虹彩全体に、カットした宝石を上から見たような明暗の面を重ねます (強さ 0% でオフ)"),
         new SliderField<IrisParameters>("強さ", p => p.IrisFacetIntensity, (p, v) => p.IrisFacetIntensity = v, 0, 1, 0.01, Fmt.Percent, "面の明暗の強さ。0% でオフ"),
         new SliderField<IrisParameters>("面の数", p => p.IrisFacetCount, (p, v) => p.IrisFacetCount = Int(v),

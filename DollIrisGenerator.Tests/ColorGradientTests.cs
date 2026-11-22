@@ -172,8 +172,6 @@ namespace DollIrisGenerator.Tests
                 PupilColor = RedToBlue,
                 RayColor = "linear-gradient(45deg, #FFFFFF 0%, #80D8FF 50%, #0D47A1 100%)",
                 ParticleColor = RadialRedToBlue,
-                LensRingColor = RedToBlue,
-                LensPatternEnabled = true,
                 IsOddEye = true,
                 OddEyeRayColor = "linear-gradient(135deg, #FFE082 0%, #E65100 100%)"
             };
@@ -218,7 +216,6 @@ namespace DollIrisGenerator.Tests
                 Assert.Equal(p.PupilColor, copy.PupilColor);
                 Assert.Equal(p.RayColor, copy.RayColor);
                 Assert.Equal(p.ParticleColor, copy.ParticleColor);
-                Assert.Equal(p.LensRingColor, copy.LensRingColor);
                 Assert.Equal(p.OddEyeRayColor, copy.OddEyeRayColor);
                 Assert.Equal(p.Highlights[0].Color, copy.Highlights[0].Color);
                 Assert.Equal(p.Symbols[0].Color, copy.Symbols[0].Color);
@@ -324,8 +321,7 @@ namespace DollIrisGenerator.Tests
                 ParticleCount = 0,
                 LimbalRingThickness = 0,
                 PupilSizeRatio = 0.05,
-                PupilOpacity = 0,
-                LensPatternEnabled = false
+                PupilOpacity = 0
             };
             p.Highlights.Clear();
             p.Symbols.Clear();
@@ -486,8 +482,8 @@ namespace DollIrisGenerator.Tests
 
             var ids = Regex.Matches(svg, @"\bid=""([^""]+_fill)""").Select(m => m.Groups[1].Value).ToList();
             Assert.Equal(ids.Count, ids.Distinct().Count());
-            // 3 + 2 symbol copies, 2 highlights, pupil, ring, rays, lens, glitter — per eye
-            Assert.Equal(2 * (5 + 2 + 5), ids.Count);
+            // 3 + 2 symbol copies, 2 highlights, pupil, ring, rays, glitter — per eye
+            Assert.Equal(2 * (5 + 2 + 4), ids.Count);
             foreach (var id in ids) Assert.Contains($"url(#{id})", svg);
 
             // The app's #AARRGGBB becomes #RRGGBB + stop-opacity (SVG would read 8 digits as RRGGBBAA)

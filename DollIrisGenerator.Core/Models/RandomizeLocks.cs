@@ -32,7 +32,7 @@ namespace DollIrisGenerator.Models
         Symbols = 1 << 6,
         /// <summary>ハイライト: the whole highlight list (each highlight's blend mode included).</summary>
         Highlights = 1 << 7,
-        /// <summary>レンズ風: on/off and every lens parameter including its color.</summary>
+        /// <summary>レンズの効果: 中心の光・集光・縁の屈折, their colors included.</summary>
         Lens = 1 << 8,
         /// <summary>オッドアイ: on/off, the odd-eye colors and its seed offset.</summary>
         OddEye = 1 << 9,
@@ -55,7 +55,7 @@ namespace DollIrisGenerator.Models
             (RandomizeLocks.Particles, "ラメ"),
             (RandomizeLocks.Symbols, "装飾記号"),
             (RandomizeLocks.Highlights, "ハイライト"),
-            (RandomizeLocks.Lens, "レンズ風"),
+            (RandomizeLocks.Lens, "レンズの効果"),
             (RandomizeLocks.IrisFacets, "宝石カット面"),
             (RandomizeLocks.OddEye, "オッドアイ")
         };

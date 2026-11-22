@@ -142,15 +142,11 @@ namespace DollIrisGenerator.Services
 
             if (!Locked(RandomizeLocks.Lens))
             {
-                p.LensPatternEnabled = Chance(30);
-                p.LensRingCount = rng.Next(4, 11);
-                p.LensRingIntensity = Range(0.30, 0.60);
-                p.LensRingWidth = Range(0.6, 1.4, 1);
-                p.LensRefractionGlow = Range(0.20, 0.55);
-                if (!colorsLocked) p.LensRingColor = p.RayColor;
-                p.LensRangeAngle = IrisParameters.DefaultRangeAngle;
-                p.LensRangeWidth = IrisParameters.FullRangeWidth;
-                p.LensRangeFeather = IrisParameters.DefaultRangeFeather;
+                // 中心の光: 3 designs in 10, the rays' color
+                bool glow = Chance(30);
+                double glowIntensity = Range(0.20, 0.55);
+                p.CenterGlowIntensity = glow ? glowIntensity : 0.0;
+                if (!colorsLocked) p.CenterGlowColor = GeometryHelper.SanitizeColorHex(p.RayColor, IrisParameters.DefaultCenterGlowColor);
             }
 
             if (!Locked(RandomizeLocks.Highlights))
