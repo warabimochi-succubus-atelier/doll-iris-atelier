@@ -31,13 +31,6 @@ namespace DollIrisGenerator.Models
         public const string DefaultToneBandInnerColor = "#FFFFFF", DefaultToneBandOuterColor = "#000000";
         public const double DefaultToneBandSoftness = 0.1;
 
-        /// <summary>斑点 (IrisPatterns.Spots): ranges and defaults.</summary>
-        public const int MinSpotCount = 1, MaxSpotCount = 120, DefaultSpotCount = 24;
-        public const double MinSpotSize = 0.01, MaxSpotSize = 0.10, DefaultSpotSize = 0.035;
-        public const double DefaultSpotElongation = 0.3, DefaultSpotSoftness = 0.5;
-        public const double MinSpotRadiusRatio = 0.30, MaxSpotRadiusRatio = 0.95, DefaultSpotRadiusRatio = 0.80;
-        public const string DefaultSpotColor = "#3E2723";
-
         /// <summary>瞳孔の縁取り線 and 外輪の内側の輪: ranges and defaults.</summary>
         public const double MinPupilOutlineWidth = 0.005, MaxPupilOutlineWidth = 0.05, DefaultPupilOutlineWidth = 0.015;
         public const string DefaultPupilOutlineColor = "#FFFFFF";
@@ -93,6 +86,8 @@ namespace DollIrisGenerator.Models
         public const double DefaultParticleGlow = 0.7;
         public const double DefaultParticleFlareRatio = 0.15;
         public const double DefaultParticleFlareLength = 4.0;
+        /// <summary>にじみの色 used when ParticleGlowCustomColor is on: a warm white.</summary>
+        public const string DefaultParticleGlowColor = "#FFF8E1";
 
         /// <summary>見える範囲 (pattern ranges, see PatternRange): a fan this wide covers the whole iris (off).</summary>
         public const double FullRangeWidth = 360.0;
@@ -227,15 +222,6 @@ namespace DollIrisGenerator.Models
         private double _twoToneAngle = DefaultTwoToneAngle;
         private LayerBlend _twoToneBlend = LayerBlend.Normal;
 
-        // 斑点 (dark freckles / crypts scattered over the iris): 0 strength = off. Files saved before it existed load as off.
-        private double _spotIntensity = 0.0;
-        private int _spotCount = DefaultSpotCount;
-        private double _spotSize = DefaultSpotSize;
-        private double _spotElongation = DefaultSpotElongation;
-        private double _spotSoftness = DefaultSpotSoftness;
-        private double _spotRadiusRatio = DefaultSpotRadiusRatio;
-        private string _spotColor = DefaultSpotColor;
-        private LayerBlend _spotBlend = LayerBlend.Normal;
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -273,6 +259,8 @@ namespace DollIrisGenerator.Models
         private string _particleColor = "#FFFFFF";
         private double _particleRadiusRatio = 0.75;
         // Glowing glitter (光るラメ). On by default (also for older files); 0 = plain grains.
+        private bool _particleGlowCustomColor = false;            // false: the glow takes the grains' own color
+        private string _particleGlowColor = DefaultParticleGlowColor;
         private double _particleGlow = DefaultParticleGlow;       // soft halo around every grain
         private double _particleFlareRatio = DefaultParticleFlareRatio;   // share of grains that also get a cross-shaped flare
         private double _particleFlareLength = DefaultParticleFlareLength;  // flare length, in grain sizes
@@ -843,61 +831,6 @@ namespace DollIrisGenerator.Models
             set { _twoToneBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
-        /// <summary>斑点の強さ: the darkest spot's opacity. 0 = off.</summary>
-        public double SpotIntensity
-        {
-            get => _spotIntensity;
-            set { _spotIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
-        }
-
-        /// <summary>斑点の数.</summary>
-        public int SpotCount
-        {
-            get => _spotCount;
-            set { _spotCount = Math.Clamp(value, MinSpotCount, MaxSpotCount); OnPropertyChanged(); }
-        }
-
-        /// <summary>大きさ: the largest spot's radius, as a fraction of the iris radius.</summary>
-        public double SpotSize
-        {
-            get => _spotSize;
-            set { _spotSize = ClampFinite(value, MinSpotSize, MaxSpotSize, DefaultSpotSize); OnPropertyChanged(); }
-        }
-
-        /// <summary>細長さ: 0 = round freckles; 1 = crypts stretched along the radius (3.5 × as long as wide).</summary>
-        public double SpotElongation
-        {
-            get => _spotElongation;
-            set { _spotElongation = ClampFinite(value, 0.0, 1.0, DefaultSpotElongation); OnPropertyChanged(); }
-        }
-
-        /// <summary>柔らかさ: how softly a spot's edge fades out. 0 = crisp.</summary>
-        public double SpotSoftness
-        {
-            get => _spotSoftness;
-            set { _spotSoftness = ClampFinite(value, 0.0, 1.0, DefaultSpotSoftness); OnPropertyChanged(); }
-        }
-
-        /// <summary>分布範囲: the farthest a spot sits from the center, as a fraction of the iris radius.</summary>
-        public double SpotRadiusRatio
-        {
-            get => _spotRadiusRatio;
-            set { _spotRadiusRatio = ClampFinite(value, MinSpotRadiusRatio, MaxSpotRadiusRatio, DefaultSpotRadiusRatio); OnPropertyChanged(); }
-        }
-
-        /// <summary>斑点の色 (one color).</summary>
-        public string SpotColor
-        {
-            get => _spotColor;
-            set { _spotColor = value ?? DefaultSpotColor; OnPropertyChanged(); }
-        }
-
-        /// <summary>斑点の重ね方.</summary>
-        public LayerBlend SpotBlend
-        {
-            get => _spotBlend;
-            set { _spotBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
-        }
 
         /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>
         public LayerBlend AuroraBlend
@@ -1140,6 +1073,21 @@ namespace DollIrisGenerator.Models
         }
 
         /// <summary>フレアの長さ: flare reach, in multiples of the grain's size.</summary>
+        /// <summary>にじみの色を変える: on, the glow is <see cref="ParticleGlowColor"/> (a light halo round black glitter);
+        /// off, it takes the grains' own color as before.</summary>
+        public bool ParticleGlowCustomColor
+        {
+            get => _particleGlowCustomColor;
+            set { _particleGlowCustomColor = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>にじみの色 (one color), used when <see cref="ParticleGlowCustomColor"/> is on.</summary>
+        public string ParticleGlowColor
+        {
+            get => _particleGlowColor;
+            set { _particleGlowColor = value ?? DefaultParticleGlowColor; OnPropertyChanged(); }
+        }
+
         public double ParticleFlareLength
         {
             get => _particleFlareLength;

@@ -269,6 +269,9 @@ namespace DollIrisGenerator.Services
         /// <summary>The glow's alpha is multiplied by this (clamped) so the faint blurred edges still read as light.</summary>
         public const double GlowAlphaSlope = 2.5;
 
+        /// <summary>The same for a glow in its own color (にじみの色): stronger, so a halo reads round dark grains.</summary>
+        public const double HaloAlphaSlope = 6.0;
+
         /// <summary>Blur (one deviation) of a highlight's 輪郭のぼかし at 100%, in highlight radii.</summary>
         public const double HighlightSoftnessBlur = 0.35;
 
@@ -359,17 +362,27 @@ namespace DollIrisGenerator.Services
         /// by <paramref name="extra"/> plus three deviations (user space: a stroke is outside an element's bounding box).
         /// <paramref name="alphaSlope"/> &gt; 1 strengthens the blurred alpha.
         /// </summary>
-        private static void AppendBlurFilter(StringBuilder sb, string id, double stdDeviation, Rect box, double extra, double alphaSlope = 1.0)
+        private static void AppendBlurFilter(StringBuilder sb, string id, double stdDeviation, Rect box, double extra, double alphaSlope = 1.0,
+            string? floodColor = null)
         {
             double m = extra + stdDeviation * 3.0;
             sb.AppendLine("      <defs>");
             sb.AppendLine($@"        <filter id=""{id}"" filterUnits=""userSpaceOnUse"" x=""{F(box.X - m)}"" y=""{F(box.Y - m)}"" width=""{F(box.Width + 2 * m)}"" height=""{F(box.Height + 2 * m)}"">");
-            sb.AppendLine($@"          <feGaussianBlur stdDeviation=""{F(stdDeviation, 4)}"" />");
+            // With a flood color, the blurred alpha is named and filled with that color (the shape's own colors dropped)
+            string named = floodColor != null ? @" result=""shape""" : "";
+            sb.AppendLine($@"          <feGaussianBlur stdDeviation=""{F(stdDeviation, 4)}""{(alphaSlope > 1.0 ? "" : named)} />");
             if (alphaSlope > 1.0)
             {
-                sb.AppendLine("          <feComponentTransfer>");
+                sb.AppendLine($"          <feComponentTransfer{named}>");
                 sb.AppendLine($@"            <feFuncA type=""linear"" slope=""{F(alphaSlope, 2)}"" />");
                 sb.AppendLine("          </feComponentTransfer>");
+            }
+            if (floodColor != null)
+            {
+                var (rgb, alpha) = SvgStopColor(floodColor);
+                string opacity = alpha < 1.0 ? $@" flood-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine($@"          <feFlood flood-color=""{rgb}""{opacity} />");
+                sb.AppendLine(@"          <feComposite in2=""shape"" operator=""in"" />");
             }
             sb.AppendLine("        </filter>");
             sb.AppendLine("      </defs>");
@@ -551,47 +564,6 @@ namespace DollIrisGenerator.Services
                     sb.AppendFixed(cx + ux * r + nx * side, 3).Append(',').AppendFixed(cy + uy * r + ny * side, 3);
                 }
                 sb.AppendLine($@" Z"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
-            }
-            sb.AppendLine("      </g>");
-        }
-
-        /// <summary>Length of a 斑点 at 細長さ 1, in widths (1 + this × 細長さ).</summary>
-        public const double SpotStretchPerElongation = 2.5;
-
-        /// <summary>
-        /// 斑点: dark ellipses (<see cref="IrisPatterns.Spots"/>) in one group carrying the blend mode. Soft spots share a
-        /// bounding-box radial gradient: the color up to 1 − 柔らかさ, clear at the edge.
-        /// </summary>
-        private static void AppendSpots(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry, double baseR,
-            IrisParameters p, bool isRightEye, int seed)
-        {
-            var (rgb, colorAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.SpotColor, IrisParameters.DefaultSpotColor));
-            string fill = rgb;
-            if (p.SpotSoftness > 0.005)
-            {
-                string gradId = $"{idPrefix}_spots_grad";
-                string opacityAttr = colorAlpha < 1.0 ? $@" stop-opacity=""{colorAlpha.ToString("0.###", Inv)}""" : "";
-                sb.AppendLine("      <defs>");
-                sb.AppendLine($@"        <radialGradient id=""{gradId}"">");
-                sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{rgb}""{opacityAttr} />");
-                sb.AppendLine($@"          <stop offset=""{((1.0 - p.SpotSoftness) * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
-                sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{rgb}"" stop-opacity=""0"" />");
-                sb.AppendLine("        </radialGradient>");
-                sb.AppendLine("      </defs>");
-                fill = $"url(#{gradId})";
-                colorAlpha = 1.0; // carried by the stops
-            }
-
-            double width = p.SpotSize * baseR;
-            double length = width * (1.0 + SpotStretchPerElongation * p.SpotElongation);
-            sb.AppendLine($@"      <g id=""{idPrefix}_spots"" fill=""{fill}""{BlendStyle(p.SpotBlend)}>");
-            foreach (var spot in IrisPatterns.Spots(p.SpotCount, p.PupilSizeRatio, p.SpotRadiusRatio, seed, isRightEye))
-            {
-                double x = cx + spot.Position.X * rx, y = cy + spot.Position.Y * ry;
-                // The long (vertical) axis turned to the spot's direction, as seen on the stretched iris
-                double deg = Math.Atan2(Math.Sin(spot.Angle) * ry, Math.Cos(spot.Angle) * rx) * 180.0 / Math.PI - 90.0;
-                double alpha = p.SpotIntensity * spot.AlphaFactor * colorAlpha;
-                sb.AppendLine($@"        <ellipse cx=""{F(x)}"" cy=""{F(y)}"" rx=""{F(width * spot.SizeFactor, 4)}"" ry=""{F(length * spot.SizeFactor, 4)}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" transform=""rotate({deg.ToFixed(1)}, {F(x)}, {F(y)})"" />");
             }
             sb.AppendLine("      </g>");
         }
@@ -803,10 +775,6 @@ namespace DollIrisGenerator.Services
             if (p.FiberNoise > 0.005)
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
-            }
-            if (p.SpotIntensity > 0.01)
-            {
-                AppendSpots(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
             }
             if (p.CollaretteIntensity > 0.01)
             {
@@ -1123,8 +1091,12 @@ namespace DollIrisGenerator.Services
                     foreach (var g in grains) meanSize += g.Size;
                     meanSize /= grains.Count;
                     string glowId = $"{idPrefix}_glitter_glow";
+                    // にじみの色: the blurred shape filled with its own color (a light halo round dark grains)
+                    string? glowColor = p.ParticleGlowCustomColor
+                        ? GeometryHelper.SanitizeColorHex(p.ParticleGlowColor, IrisParameters.DefaultParticleGlowColor)
+                        : null;
                     AppendBlurFilter(sb, glowId + "_filter", meanSize * (GlowBlurBase + GlowBlurPerGlow * p.ParticleGlow), irisBox, meanSize * 4.0,
-                        alphaSlope: GlowAlphaSlope);
+                        alphaSlope: glowColor != null ? HaloAlphaSlope : GlowAlphaSlope, floodColor: glowColor);
                     sb.AppendLine($@"      <use id=""{glowId}"" href=""#{idPrefix}_glitter"" filter=""url(#{glowId}_filter)"" opacity=""{F(Math.Min(1.0, p.ParticleGlow))}"" />");
                 }
 

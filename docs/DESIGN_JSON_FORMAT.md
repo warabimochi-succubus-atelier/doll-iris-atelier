@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `SpotBlend` / `TwoToneBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `TwoToneBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -265,25 +265,14 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleOpacity` | 0〜1 | |
 | `ParticleRadiusRatio` | 0.30〜0.95 | ラメが散らばる範囲（外周までの比率） |
 | `ParticleGlow` | 0〜1 | 粒の光のにじみ |
+| `ParticleGlowCustomColor` | true / false | true でにじみを `ParticleGlowColor` の色にする（既定 false = 粒と同じ色） |
+| `ParticleGlowColor` | 色（単色） | にじみの色（既定 `#FFF8E1`）。`ParticleColor` を黒にすると後光のある黒いラメになる（`GlitterBlend` は 0） |
 | `ParticleFlareRatio` | 0〜1 | 十字に光る粒の割合 |
 | `ParticleFlareLength` | 1〜8 | 十字の光の長さ |
 | `GlitterBlend` | 重ね方 | |
 | `ParticleRangeAngle` | 0〜360（度） | 見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
 | `ParticleRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `ParticleRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
-
-### 斑点（虹彩の暗いしみ・くぼみ）
-
-| 項目 | 範囲・値 | 説明 |
-|---|---|---|
-| `SpotIntensity` | 0〜1 | 強さ（濃さ）。0 でオフ（既定） |
-| `SpotCount` | 1〜120 | 斑点の数（既定 24） |
-| `SpotSize` | 0.01〜0.10 | いちばん大きい斑点の半径の比率（既定 0.035） |
-| `SpotElongation` | 0〜1 | 0 で丸いしみ。上げるほど放射方向に細長いくぼみ（既定 0.3） |
-| `SpotSoftness` | 0〜1 | 縁のぼかし。0 でくっきり（既定 0.5） |
-| `SpotRadiusRatio` | 0.30〜0.95 | 斑点を置くいちばん外の距離の比率（既定 0.80） |
-| `SpotColor` | 色（単色） | 既定 `#3E2723`（こげ茶） |
-| `SpotBlend` | 重ね方 | 既定 0（通常）。4（ソフトライト）で虹彩の色になじむ |
 
 ### レンズ風パターン（同心円の屈折リング）
 
@@ -430,14 +419,6 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ToneBandOuterColor": "#000000",
   "ToneBandSoftness": 0.1,
   "ToneBandBlend": 4,
-  "SpotIntensity": 0.0,
-  "SpotCount": 24,
-  "SpotSize": 0.035,
-  "SpotElongation": 0.3,
-  "SpotSoftness": 0.5,
-  "SpotRadiusRatio": 0.8,
-  "SpotColor": "#3E2723",
-  "SpotBlend": 0,
   "PupilShape": 0,
   "PupilSizeRatio": 0.32,
   "PupilColor": "#060A18",
@@ -497,6 +478,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ParticleGlow": 0.7,
   "ParticleFlareRatio": 0.15,
   "ParticleFlareLength": 4.0,
+  "ParticleGlowCustomColor": false,
+  "ParticleGlowColor": "#FFF8E1",
   "GlitterBlend": 0,
   "ParticleRangeAngle": 90.0,
   "ParticleRangeWidth": 360.0,

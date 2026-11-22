@@ -226,19 +226,6 @@ namespace DollIrisGenerator.Services
                 p.ToneBandBlend = themed ? LayerBlend.Normal : LayerBlend.SoftLight;
             }
 
-            // 斑点 (after everything else): 20% of designs, dark spots of the theme's hue
-            if (!Locked(RandomizeLocks.Spots))
-            {
-                p.SpotIntensity = Chance(20) ? Range(0.30, 0.60) : 0.0;
-                p.SpotCount = rng.Next(8, 41);
-                p.SpotSize = Range(0.025, 0.05, 3);
-                p.SpotElongation = Range(0.0, 0.7);
-                p.SpotSoftness = Range(0.3, 0.7);
-                p.SpotRadiusRatio = Range(0.60, 0.85);
-                p.SpotBlend = Chance(40) ? LayerBlend.SoftLight : LayerBlend.Normal;
-            }
-            if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
-
             // まぶたの影 (after everything else): mostly the usual shadow, sometimes light or deep, sometimes tinted
             if (!colorsLocked)
             {
@@ -298,6 +285,24 @@ namespace DollIrisGenerator.Services
                 p.TwoToneSoftness = Range(0.0, 0.40);
                 p.TwoToneAngle = IrisParameters.DefaultTwoToneAngle;
                 p.TwoToneBlend = LayerBlend.Normal;
+            }
+
+            // 黒いラメ (drawn last): 10% of the designs with glitter get black grains with a light halo (にじみの色).
+            // Blended normally: under スクリーン black grains would vanish
+            bool blackGlitter = Chance(10) && p.ParticleCount > 0 && !colorsLocked;
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                p.ParticleGlowCustomColor = blackGlitter;
+                if (blackGlitter)
+                {
+                    p.ParticleGlow = Range(0.6, 0.9);
+                    p.GlitterBlend = LayerBlend.Normal;
+                }
+            }
+            if (ColorFree(RandomizeLocks.Particles))
+            {
+                p.ParticleGlowColor = Chance(50) ? IrisParameters.DefaultParticleGlowColor : HslToHex(hue, paleSat, 0.88);
+                if (blackGlitter) p.ParticleColor = HslToHex(hue, sat * 0.5, 0.06);
             }
         }
 

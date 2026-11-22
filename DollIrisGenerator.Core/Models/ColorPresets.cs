@@ -103,6 +103,8 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
+        public bool? ParticleGlowCustomColor { get; set; }
+        public string? ParticleGlowColor { get; set; }
         // 見える範囲 (放射ライン・ラメ・レンズ風リング)
         public double? RayRangeAngle { get; set; }
         public double? RayRangeWidth { get; set; }
@@ -160,15 +162,6 @@ namespace DollIrisGenerator.Models
         public double? TwoToneSoftness { get; set; }
         public double? TwoToneAngle { get; set; }
         public LayerBlend? TwoToneBlend { get; set; }
-        // 斑点
-        public double? SpotIntensity { get; set; }
-        public int? SpotCount { get; set; }
-        public double? SpotSize { get; set; }
-        public double? SpotElongation { get; set; }
-        public double? SpotSoftness { get; set; }
-        public double? SpotRadiusRatio { get; set; }
-        public string? SpotColor { get; set; }
-        public LayerBlend? SpotBlend { get; set; }
         public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
@@ -533,14 +526,6 @@ namespace DollIrisGenerator.Models
             target.TwoToneSoftness = preset.TwoToneSoftness ?? d.TwoToneSoftness;
             target.TwoToneAngle = preset.TwoToneAngle ?? d.TwoToneAngle;
             target.TwoToneBlend = preset.TwoToneBlend ?? d.TwoToneBlend;
-            target.SpotIntensity = preset.SpotIntensity ?? d.SpotIntensity;
-            target.SpotCount = preset.SpotCount ?? d.SpotCount;
-            target.SpotSize = preset.SpotSize ?? d.SpotSize;
-            target.SpotElongation = preset.SpotElongation ?? d.SpotElongation;
-            target.SpotSoftness = preset.SpotSoftness ?? d.SpotSoftness;
-            target.SpotRadiusRatio = preset.SpotRadiusRatio ?? d.SpotRadiusRatio;
-            target.SpotColor = preset.SpotColor ?? d.SpotColor;
-            target.SpotBlend = preset.SpotBlend ?? d.SpotBlend;
             target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
@@ -571,6 +556,8 @@ namespace DollIrisGenerator.Models
             target.ParticleMaxSize = preset.ParticleMaxSize ?? d.ParticleMaxSize;
             target.ParticleOpacity = preset.ParticleOpacity ?? d.ParticleOpacity;
             target.ParticleFlareLength = preset.ParticleFlareLength ?? d.ParticleFlareLength;
+            target.ParticleGlowCustomColor = preset.ParticleGlowCustomColor ?? d.ParticleGlowCustomColor;
+            target.ParticleGlowColor = preset.ParticleGlowColor ?? d.ParticleGlowColor;
             target.RayRangeAngle = preset.RayRangeAngle ?? d.RayRangeAngle;
             target.RayRangeWidth = preset.RayRangeWidth ?? d.RayRangeWidth;
             target.RayRangeFeather = preset.RayRangeFeather ?? d.RayRangeFeather;
@@ -736,14 +723,6 @@ namespace DollIrisGenerator.Models
                 TwoToneSoftness = design.TwoToneSoftness,
                 TwoToneAngle = design.TwoToneAngle,
                 TwoToneBlend = design.TwoToneBlend,
-                SpotIntensity = design.SpotIntensity,
-                SpotCount = design.SpotCount,
-                SpotSize = design.SpotSize,
-                SpotElongation = design.SpotElongation,
-                SpotSoftness = design.SpotSoftness,
-                SpotRadiusRatio = design.SpotRadiusRatio,
-                SpotColor = design.SpotColor,
-                SpotBlend = design.SpotBlend,
                 FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,
@@ -774,6 +753,8 @@ namespace DollIrisGenerator.Models
                 ParticleMaxSize = design.ParticleMaxSize,
                 ParticleOpacity = design.ParticleOpacity,
                 ParticleFlareLength = design.ParticleFlareLength,
+                ParticleGlowCustomColor = design.ParticleGlowCustomColor,
+                ParticleGlowColor = design.ParticleGlowColor,
                 RayRangeAngle = design.RayRangeAngle,
                 RayRangeWidth = design.RayRangeWidth,
                 RayRangeFeather = design.RayRangeFeather,
