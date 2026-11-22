@@ -116,7 +116,7 @@ namespace DollIrisGenerator.Models
         public double? ParticleFlareLength { get; set; }
         public bool? ParticleGlowCustomColor { get; set; }
         public string? ParticleGlowColor { get; set; }
-        // 見える範囲 (放射ライン・ラメ・レンズ風リング)
+        // 見える範囲 (放射ライン・ラメ)
         public double? RayRangeAngle { get; set; }
         public double? RayRangeWidth { get; set; }
         public double? RayRangeFeather { get; set; }
@@ -130,9 +130,6 @@ namespace DollIrisGenerator.Models
         public double? ParticleRangeAngle { get; set; }
         public double? ParticleRangeWidth { get; set; }
         public double? ParticleRangeFeather { get; set; }
-        public double? LensRangeAngle { get; set; }
-        public double? LensRangeWidth { get; set; }
-        public double? LensRangeFeather { get; set; }
         // 瞳孔まわりの輪
         public double? CollaretteIntensity { get; set; }
         public string? CollaretteColor { get; set; }
@@ -152,6 +149,19 @@ namespace DollIrisGenerator.Models
         public double? RimRayRangeAngle { get; set; }
         public double? RimRayRangeWidth { get; set; }
         public double? RimRayRangeFeather { get; set; }
+        // 中心の光・集光・縁の屈折
+        public double? CenterGlowIntensity { get; set; }
+        public string? CenterGlowColor { get; set; }
+        public double? CausticIntensity { get; set; }
+        public string? CausticColor { get; set; }
+        public double? CausticOffset { get; set; }
+        public double? CausticSize { get; set; }
+        public CausticShape? CausticShape { get; set; }
+        public LayerBlend? CausticBlend { get; set; }
+        public double? DomeEdgeIntensity { get; set; }
+        public string? DomeEdgeColor { get; set; }
+        public double? DomeEdgeWidth { get; set; }
+        public double? DomeEdgeBias { get; set; }
         public int? IrisFacetCount { get; set; }
         public LayerBlend? IrisFacetBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
@@ -186,13 +196,6 @@ namespace DollIrisGenerator.Models
         public RightEyeFlip? PupilRightEyeFlip { get; set; }
         public RightEyeFlip? LightRightEyeFlip { get; set; }
 
-        // Lens pattern
-        public bool? LensPatternEnabled { get; set; }
-        public int? LensRingCount { get; set; }
-        public double? LensRingIntensity { get; set; }
-        public double? LensRingWidth { get; set; }
-        public string? LensRingColor { get; set; }
-        public double? LensRefractionGlow { get; set; }
 
         /// <summary>
         /// The whole symbol list (presets made from a design). When set, it replaces the design's symbols and
@@ -370,14 +373,14 @@ namespace DollIrisGenerator.Models
             new PresetDefinition
             {
                 Name = "特殊: クリスタル",
-                Description = "氷のような水色に、ダイヤの瞳孔・カット面・光の輪",
+                Description = "氷のような水色に、ダイヤの瞳孔・カット面・中心の光",
                 BaseColor = "#7FC8F0", InnerColor = "#E6FAFF", OuterColor = "#24628E", BottomHighlightColor = "#F2FDFF",
                 LimbalRingColor = "#0E3250", PupilColor = "radial-gradient(#F2FDFF 0%, #6EC6F0 45%, #1A5A8A 100%)",
                 RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.Diamond, PupilSizeRatio = 0.4, PupilFacetIntensity = 0.8, PupilFacetCount = 8,
                 RayCount = 96, RayIntensity = 0.5, RayThickness = 0.9, ParticleCount = 100, ParticleGlow = 0.8,
                 IrisFacetIntensity = 0.55, IrisFacetCount = 12, IrisFacetTableSize = 0.4, IrisFacetBlend = LayerBlend.SoftLight,
-                LensPatternEnabled = true, LensRingCount = 5, LensRingIntensity = 0.35, LensRingColor = "#FFFFFF",
+                CenterGlowIntensity = 0.35, CenterGlowColor = "#FFFFFF",
                 Highlights = HighlightStyles.Build(HighlightStyle.Diamond)
             },
 
@@ -595,9 +598,6 @@ namespace DollIrisGenerator.Models
             target.ParticleRangeAngle = preset.ParticleRangeAngle ?? d.ParticleRangeAngle;
             target.ParticleRangeWidth = preset.ParticleRangeWidth ?? d.ParticleRangeWidth;
             target.ParticleRangeFeather = preset.ParticleRangeFeather ?? d.ParticleRangeFeather;
-            target.LensRangeAngle = preset.LensRangeAngle ?? d.LensRangeAngle;
-            target.LensRangeWidth = preset.LensRangeWidth ?? d.LensRangeWidth;
-            target.LensRangeFeather = preset.LensRangeFeather ?? d.LensRangeFeather;
             target.CollaretteIntensity = preset.CollaretteIntensity ?? d.CollaretteIntensity;
             target.CollaretteColor = preset.CollaretteColor ?? d.CollaretteColor;
             target.CollaretteWidth = preset.CollaretteWidth ?? d.CollaretteWidth;
@@ -615,6 +615,18 @@ namespace DollIrisGenerator.Models
             target.RimRayRangeAngle = preset.RimRayRangeAngle ?? d.RimRayRangeAngle;
             target.RimRayRangeWidth = preset.RimRayRangeWidth ?? d.RimRayRangeWidth;
             target.RimRayRangeFeather = preset.RimRayRangeFeather ?? d.RimRayRangeFeather;
+            target.CenterGlowIntensity = preset.CenterGlowIntensity ?? d.CenterGlowIntensity;
+            target.CenterGlowColor = preset.CenterGlowColor ?? d.CenterGlowColor;
+            target.CausticIntensity = preset.CausticIntensity ?? d.CausticIntensity;
+            target.CausticColor = preset.CausticColor ?? d.CausticColor;
+            target.CausticOffset = preset.CausticOffset ?? d.CausticOffset;
+            target.CausticSize = preset.CausticSize ?? d.CausticSize;
+            target.CausticShape = preset.CausticShape ?? d.CausticShape;
+            target.CausticBlend = preset.CausticBlend ?? d.CausticBlend;
+            target.DomeEdgeIntensity = preset.DomeEdgeIntensity ?? d.DomeEdgeIntensity;
+            target.DomeEdgeColor = preset.DomeEdgeColor ?? d.DomeEdgeColor;
+            target.DomeEdgeWidth = preset.DomeEdgeWidth ?? d.DomeEdgeWidth;
+            target.DomeEdgeBias = preset.DomeEdgeBias ?? d.DomeEdgeBias;
             target.IrisFacetCount = preset.IrisFacetCount ?? d.IrisFacetCount;
             target.IrisFacetBlend = preset.IrisFacetBlend ?? d.IrisFacetBlend;
 
@@ -623,13 +635,6 @@ namespace DollIrisGenerator.Models
             target.PupilRightEyeFlip = preset.PupilRightEyeFlip ?? d.PupilRightEyeFlip;
             target.LightRightEyeFlip = preset.LightRightEyeFlip ?? d.LightRightEyeFlip;
 
-            // Lens pattern
-            target.LensPatternEnabled = preset.LensPatternEnabled ?? d.LensPatternEnabled;
-            target.LensRingCount = preset.LensRingCount ?? d.LensRingCount;
-            target.LensRingIntensity = preset.LensRingIntensity ?? d.LensRingIntensity;
-            target.LensRingWidth = preset.LensRingWidth ?? d.LensRingWidth;
-            target.LensRingColor = preset.LensRingColor ?? d.LensRingColor;
-            target.LensRefractionGlow = preset.LensRefractionGlow ?? d.LensRefractionGlow;
 
             // A preset made from a design brings back its whole symbol list
             if (preset.Symbols != null)
@@ -806,9 +811,6 @@ namespace DollIrisGenerator.Models
                 ParticleRangeAngle = design.ParticleRangeAngle,
                 ParticleRangeWidth = design.ParticleRangeWidth,
                 ParticleRangeFeather = design.ParticleRangeFeather,
-                LensRangeAngle = design.LensRangeAngle,
-                LensRangeWidth = design.LensRangeWidth,
-                LensRangeFeather = design.LensRangeFeather,
                 CollaretteIntensity = design.CollaretteIntensity,
                 CollaretteColor = design.CollaretteColor,
                 CollaretteWidth = design.CollaretteWidth,
@@ -826,6 +828,18 @@ namespace DollIrisGenerator.Models
                 RimRayRangeAngle = design.RimRayRangeAngle,
                 RimRayRangeWidth = design.RimRayRangeWidth,
                 RimRayRangeFeather = design.RimRayRangeFeather,
+                CenterGlowIntensity = design.CenterGlowIntensity,
+                CenterGlowColor = design.CenterGlowColor,
+                CausticIntensity = design.CausticIntensity,
+                CausticColor = design.CausticColor,
+                CausticOffset = design.CausticOffset,
+                CausticSize = design.CausticSize,
+                CausticShape = design.CausticShape,
+                CausticBlend = design.CausticBlend,
+                DomeEdgeIntensity = design.DomeEdgeIntensity,
+                DomeEdgeColor = design.DomeEdgeColor,
+                DomeEdgeWidth = design.DomeEdgeWidth,
+                DomeEdgeBias = design.DomeEdgeBias,
                 IrisFacetCount = design.IrisFacetCount,
                 IrisFacetBlend = design.IrisFacetBlend,
 
@@ -833,12 +847,6 @@ namespace DollIrisGenerator.Models
                 PupilRightEyeFlip = design.PupilRightEyeFlip,
                 LightRightEyeFlip = design.LightRightEyeFlip,
 
-                LensPatternEnabled = design.LensPatternEnabled,
-                LensRingCount = design.LensRingCount,
-                LensRingIntensity = design.LensRingIntensity,
-                LensRingWidth = design.LensRingWidth,
-                LensRingColor = design.LensRingColor,
-                LensRefractionGlow = design.LensRefractionGlow,
 
                 Symbols = design.Symbols.Select(s => s.Clone()).ToList()
             };

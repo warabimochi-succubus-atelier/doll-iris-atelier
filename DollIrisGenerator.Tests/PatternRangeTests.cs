@@ -7,12 +7,12 @@ using Xunit;
 
 namespace DollIrisGenerator.Tests
 {
-    /// <summary>見える範囲 (SPECIFICATION.md 8.1): rays, glitter and lens rings shown only inside a fan.</summary>
+    /// <summary>見える範囲 (SPECIFICATION.md 8.1): rays, rim rays, glitter and gem facets shown only inside a fan.</summary>
     public class PatternRangeTests
     {
         private static IrisParameters Busy() => new()
         {
-            ParticleCount = 80, LensPatternEnabled = true, LensRingIntensity = 0.6, RayCount = 48, RayIntensity = 0.7
+            ParticleCount = 80, RayCount = 48, RayIntensity = 0.7
         };
 
         [Fact]
@@ -29,7 +29,6 @@ namespace DollIrisGenerator.Tests
         [Theory]
         [InlineData(PatternLayer.Rays, "rays")]
         [InlineData(PatternLayer.Glitter, "glitter")]
-        [InlineData(PatternLayer.LensRings, "lens")]
         public void ARange_MasksOnlyThatLayer(PatternLayer layer, string name)
         {
             var p = Busy();
@@ -112,12 +111,12 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void Settings_AreClamped_Normalized_AndSaved()
         {
-            var p = new IrisParameters { RayRangeAngle = -90, RayRangeWidth = 999, RayRangeFeather = -5, ParticleRangeAngle = double.NaN, LensRangeFeather = 200 };
+            var p = new IrisParameters { RayRangeAngle = -90, RayRangeWidth = 999, RayRangeFeather = -5, ParticleRangeAngle = double.NaN, RimRayRangeFeather = 200 };
             Assert.Equal(270.0, p.RayRangeAngle);
             Assert.Equal(360.0, p.RayRangeWidth);
             Assert.Equal(0.0, p.RayRangeFeather);
             Assert.Equal(IrisParameters.DefaultRangeAngle, p.ParticleRangeAngle);
-            Assert.Equal(IrisParameters.MaxRangeFeather, p.LensRangeFeather);
+            Assert.Equal(IrisParameters.MaxRangeFeather, p.RimRayRangeFeather);
 
             var q = Busy();
             PatternRange.Set(q, PatternLayer.Glitter, 45, 150, 20);

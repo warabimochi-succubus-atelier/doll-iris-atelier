@@ -142,15 +142,11 @@ namespace DollIrisGenerator.Services
 
             if (!Locked(RandomizeLocks.Lens))
             {
-                p.LensPatternEnabled = Chance(30);
-                p.LensRingCount = rng.Next(4, 11);
-                p.LensRingIntensity = Range(0.30, 0.60);
-                p.LensRingWidth = Range(0.6, 1.4, 1);
-                p.LensRefractionGlow = Range(0.20, 0.55);
-                if (!colorsLocked) p.LensRingColor = p.RayColor;
-                p.LensRangeAngle = IrisParameters.DefaultRangeAngle;
-                p.LensRangeWidth = IrisParameters.FullRangeWidth;
-                p.LensRangeFeather = IrisParameters.DefaultRangeFeather;
+                // 中心の光: 3 designs in 10, the rays' color
+                bool glow = Chance(30);
+                double glowIntensity = Range(0.20, 0.55);
+                p.CenterGlowIntensity = glow ? glowIntensity : 0.0;
+                if (!colorsLocked) p.CenterGlowColor = GeometryHelper.SanitizeColorHex(p.RayColor, IrisParameters.DefaultCenterGlowColor);
             }
 
             if (!Locked(RandomizeLocks.Highlights))
@@ -354,6 +350,33 @@ namespace DollIrisGenerator.Services
                 int roll = rng.Next(10);
                 var style = roll < 7 ? PatternRange.Styles[0] : roll < 9 ? PatternRange.Styles[3] : PatternRange.Styles[1];
                 PatternRange.Apply(p, PatternLayer.RimRays, style);
+            }
+
+            // 集光・縁の屈折 (drawn last): some designs get the dome's light opposite the light
+            if (!Locked(RandomizeLocks.Lens))
+            {
+                bool caustic = Chance(25);
+                double causticIntensity = Range(0.35, 0.70);
+                double offset = Range(0.35, 0.60), size = Range(0.30, 0.50);
+                bool crescent = Chance(60);
+                p.CausticIntensity = caustic ? causticIntensity : 0.0;
+                p.CausticOffset = offset;
+                p.CausticSize = size;
+                p.CausticShape = crescent ? CausticShape.Crescent : CausticShape.Round;
+                p.CausticBlend = LayerBlend.Screen;
+
+                bool edge = Chance(20);
+                double edgeIntensity = Range(0.30, 0.60);
+                p.DomeEdgeIntensity = edge ? edgeIntensity : 0.0;
+                p.DomeEdgeWidth = Range(0.08, 0.18);
+                p.DomeEdgeBias = Range(0.5, 0.9);
+            }
+            if (ColorFree(RandomizeLocks.Lens))
+            {
+                bool white = Chance(50);
+                string pale = HslToHex(hue, paleSat, 0.88);
+                p.CausticColor = white ? "#FFFFFF" : pale;
+                p.DomeEdgeColor = Chance(60) ? "#FFFFFF" : pale;
             }
         }
 

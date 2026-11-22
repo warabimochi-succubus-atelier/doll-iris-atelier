@@ -54,6 +54,19 @@ namespace DollIrisGenerator.Models
         public const double DefaultRimRayRandomness = 0.4;
         public const string DefaultRimRayColor = "#0D1B3E";
 
+        /// <summary>中心の光: the default color.</summary>
+        public const string DefaultCenterGlowColor = "#FFFFFF";
+
+        /// <summary>集光 (SvgExporter: the caustic opposite the light): ranges and defaults.</summary>
+        public const string DefaultCausticColor = "#FFFFFF";
+        public const double MaxCausticOffset = 0.80, DefaultCausticOffset = 0.45;
+        public const double MinCausticSize = 0.15, MaxCausticSize = 0.80, DefaultCausticSize = 0.40;
+
+        /// <summary>縁の屈折 (SvgExporter: the bright band inside the rim): ranges and defaults.</summary>
+        public const string DefaultDomeEdgeColor = "#FFFFFF";
+        public const double MinDomeEdgeWidth = 0.03, MaxDomeEdgeWidth = 0.30, DefaultDomeEdgeWidth = 0.12;
+        public const double DefaultDomeEdgeBias = 0.7;
+
         /// <summary>二色分け (IrisPatterns.TwoToneRegion): ranges and defaults.</summary>
         public const string DefaultTwoToneColor = "#82A8FF";
         public const double MinTwoToneHeight = 0.05, MaxTwoToneHeight = 0.95, DefaultTwoToneHeight = 0.40;
@@ -260,13 +273,9 @@ namespace DollIrisGenerator.Models
         private string _auroraColor = DefaultAuroraColor;
         private double _auroraOpacity = 0.0;
 
-        // Lens-Style Optical Pattern (レンズ風パターン)
-        private bool _lensPatternEnabled = false;
-        private int _lensRingCount = 6;
-        private double _lensRingIntensity = 0.50;
-        private double _lensRingWidth = 0.8;
-        private string _lensRingColor = "#FFFFFF";
-        private double _lensRefractionGlow = 0.35;
+        // 中心の光 (レンズの効果): a soft glow at the center. 0 = off.
+        private double _centerGlowIntensity;
+        private string _centerGlowColor = DefaultCenterGlowColor;
 
         // Glitter / Particles (粒子模様・ラメ)
         private int _particleCount = 50;
@@ -292,9 +301,6 @@ namespace DollIrisGenerator.Models
         private double _particleRangeAngle = DefaultRangeAngle;
         private double _particleRangeWidth = FullRangeWidth;
         private double _particleRangeFeather = DefaultRangeFeather;
-        private double _lensRangeAngle = DefaultRangeAngle;
-        private double _lensRangeWidth = FullRangeWidth;
-        private double _lensRangeFeather = DefaultRangeFeather;
 
         // 宝石カット面 (gem facets over the whole iris): 0 strength = off. Files saved before it existed load as off.
         private double _irisFacetIntensity = 0.0;
@@ -309,6 +315,16 @@ namespace DollIrisGenerator.Models
         private double _rimRayRangeAngle = DefaultRangeAngle;
         private double _rimRayRangeWidth = FullRangeWidth;
         private double _rimRayRangeFeather = DefaultRangeFeather;
+        private double _causticIntensity;                    // 集光 (off)
+        private string _causticColor = DefaultCausticColor;
+        private double _causticOffset = DefaultCausticOffset;
+        private double _causticSize = DefaultCausticSize;
+        private CausticShape _causticShape = CausticShape.Crescent;
+        private LayerBlend _causticBlend = LayerBlend.Screen;
+        private double _domeEdgeIntensity;                   // 縁の屈折 (off)
+        private string _domeEdgeColor = DefaultDomeEdgeColor;
+        private double _domeEdgeWidth = DefaultDomeEdgeWidth;
+        private double _domeEdgeBias = DefaultDomeEdgeBias;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -1069,41 +1085,18 @@ namespace DollIrisGenerator.Models
             set { _auroraOpacity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
-        // Lens-Style Optical Pattern
-        public bool LensPatternEnabled
+        /// <summary>中心の光の強さ: a soft glow at the iris center (the dome's light). 0 = off.</summary>
+        public double CenterGlowIntensity
         {
-            get => _lensPatternEnabled;
-            set { _lensPatternEnabled = value; OnPropertyChanged(); }
+            get => _centerGlowIntensity;
+            set { _centerGlowIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
-        public int LensRingCount
+        /// <summary>中心の光の色 (one color).</summary>
+        public string CenterGlowColor
         {
-            get => _lensRingCount;
-            set { _lensRingCount = Math.Max(1, Math.Min(24, value)); OnPropertyChanged(); }
-        }
-
-        public double LensRingIntensity
-        {
-            get => _lensRingIntensity;
-            set { _lensRingIntensity = Math.Max(0.0, Math.Min(1.0, value)); OnPropertyChanged(); }
-        }
-
-        public double LensRingWidth
-        {
-            get => _lensRingWidth;
-            set { _lensRingWidth = Math.Max(0.2, Math.Min(5.0, value)); OnPropertyChanged(); }
-        }
-
-        public string LensRingColor
-        {
-            get => _lensRingColor;
-            set { _lensRingColor = value; OnPropertyChanged(); }
-        }
-
-        public double LensRefractionGlow
-        {
-            get => _lensRefractionGlow;
-            set { _lensRefractionGlow = Math.Max(0.0, Math.Min(1.0, value)); OnPropertyChanged(); }
+            get => _centerGlowColor;
+            set { _centerGlowColor = value ?? DefaultCenterGlowColor; OnPropertyChanged(); }
         }
 
         // Particles
@@ -1277,27 +1270,6 @@ namespace DollIrisGenerator.Models
             set { _particleRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
-        /// <summary>レンズ風リングの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>
-        public double LensRangeAngle
-        {
-            get => _lensRangeAngle;
-            set { _lensRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
-        }
-
-        /// <summary>レンズ風リングの範囲の広さ: how wide the visible fan is (degrees). 360 = everywhere.</summary>
-        public double LensRangeWidth
-        {
-            get => _lensRangeWidth;
-            set { _lensRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
-        }
-
-        /// <summary>レンズ風リングの範囲の端のぼかし: degrees over which the fan's edges fade out.</summary>
-        public double LensRangeFeather
-        {
-            get => _lensRangeFeather;
-            set { _lensRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
-        }
-
         /// <summary>宝石カット面の強さ: how strongly the facets lighten / darken the iris. 0 = off.</summary>
         public double IrisFacetIntensity
         {
@@ -1380,6 +1352,76 @@ namespace DollIrisGenerator.Models
         {
             get => _rimRayRangeFeather;
             set { _rimRayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の強さ: the light gathered by the dome on the side opposite the light. 0 = off.</summary>
+        public double CausticIntensity
+        {
+            get => _causticIntensity;
+            set { _causticIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の色 (one color).</summary>
+        public string CausticColor
+        {
+            get => _causticColor;
+            set { _causticColor = value ?? DefaultCausticColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の位置: how far from the center (iris radii) toward the side opposite the light.</summary>
+        public double CausticOffset
+        {
+            get => _causticOffset;
+            set { _causticOffset = ClampFinite(value, 0.0, MaxCausticOffset, DefaultCausticOffset); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の大きさ: its radius (iris radii).</summary>
+        public double CausticSize
+        {
+            get => _causticSize;
+            set { _causticSize = ClampFinite(value, MinCausticSize, MaxCausticSize, DefaultCausticSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の形.</summary>
+        public CausticShape CausticShape
+        {
+            get => _causticShape;
+            set { _causticShape = Enum.IsDefined(value) ? value : CausticShape.Crescent; OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の重ね方 (screen by default: it only brightens).</summary>
+        public LayerBlend CausticBlend
+        {
+            get => _causticBlend;
+            set { _causticBlend = Enum.IsDefined(value) ? value : LayerBlend.Screen; OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の強さ: the band of light just inside the rim. 0 = off.</summary>
+        public double DomeEdgeIntensity
+        {
+            get => _domeEdgeIntensity;
+            set { _domeEdgeIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の色 (one color; a dark one makes a dark band).</summary>
+        public string DomeEdgeColor
+        {
+            get => _domeEdgeColor;
+            set { _domeEdgeColor = value ?? DefaultDomeEdgeColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の幅 (iris radii), from the limbal ring's inner edge inward.</summary>
+        public double DomeEdgeWidth
+        {
+            get => _domeEdgeWidth;
+            set { _domeEdgeWidth = ClampFinite(value, MinDomeEdgeWidth, MaxDomeEdgeWidth, DefaultDomeEdgeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の偏り: 0 = the same all round, 1 = only on the side opposite the light.</summary>
+        public double DomeEdgeBias
+        {
+            get => _domeEdgeBias;
+            set { _domeEdgeBias = ClampFinite(value, 0.0, 1.0, DefaultDomeEdgeBias); OnPropertyChanged(); }
         }
 
         // Collections

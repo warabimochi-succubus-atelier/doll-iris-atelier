@@ -462,7 +462,7 @@
                                         <WrapPanel>
                                             <Button Content="➕ 現在のデザインをプリセット登録" Command="{Binding AddCurrentAsPresetCommand}"
                                                     Background="#1E3A5F" Foreground="#80D8FF" Padding="8,4" Margin="0,0,6,4" FontSize="11"
-                                                    ToolTip="色・瞳孔・放射ライン・ラメ・外輪・オーロラ層・星雲・ハイライト・装飾記号・レンズ風をプリセットにします。サイズ・形状・傾き・シード・オッドアイは含みません"/>
+                                                    ToolTip="色・瞳孔・放射ライン・ラメ・外輪・オーロラ層・星雲・ハイライト・装飾記号・レンズの効果をプリセットにします。サイズ・形状・傾き・シード・オッドアイは含みません"/>
                                             <Button Content="📤 プリセット書き出し" Command="{Binding ExportPresetsCommand}"
                                                     Background="#333842" Foreground="{StaticResource TextSecondary}" Padding="8,4" Margin="0,0,6,4" FontSize="11"/>
                                             <Button Content="📥 プリセット読み込み" Command="{Binding ImportPresetsCommand}"
@@ -610,7 +610,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="虹彩カラー設定" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない (すべての色)" IsChecked="{Binding LockColors}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・まぶたの影・オーロラ層・星雲・色の段・二色分け・デザイン名をランダム生成で変えない"/>
+                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズの効果・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・まぶたの影・オーロラ層・星雲・色の段・二色分け・デザイン名をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -1968,91 +1968,90 @@
                     </TabItem>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 8 (下段): レンズ風パターン & オッドアイ (NEW!) -->
+                    <!-- TAB 8 (下段): レンズの効果 & オッドアイ -->
                     <!-- ======================================================== -->
-                    <TabItem Header="レンズ風・オッドアイ" controls:TabRowsPanel.Row="1">
+                    <TabItem Header="レンズ・オッドアイ" controls:TabRowsPanel.Row="1">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8" controls:ProportionalWheelScrolling.IsEnabled="True">
                             <StackPanel>
-                                <!-- Lens-Style Optical Pattern -->
+                                <!-- レンズの効果 (集光・縁の屈折) -->
                                 <GroupBox Foreground="{StaticResource TextSecondary}" BorderBrush="{StaticResource BorderDark}" Margin="0,0,0,10" Padding="8">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="レンズ風パターン" VerticalAlignment="Center"/>
+                                            <TextBlock Text="レンズの効果" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockLens}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="レンズ風パターンのオン／オフと各設定・色をランダム生成で変えない"/>
+                                                      ToolTip="中心の光・集光・縁の屈折の各設定と色をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
-                                        <CheckBox Content="光学レンズ・フレネル屈折リングを有効化" IsChecked="{Binding CurrentIris.LensPatternEnabled}" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="カメラレンズや同心円フレネル溝のような屈折模様を虹彩内部に合成します:" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="屈折リング数:" Foreground="{StaticResource TextPrimary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingCount, StringFormat='{}{0} 本'}" Foreground="#80D8FF" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="透明なドームのレンズが光を集める効果です。集光と縁の屈折は「光の入る向き」(虹彩カラー設定) と反対側に出ます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <TextBlock Text="中心の光" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,4"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="虹彩の中心のぼんやりした光の明るさ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.CenterGlowIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="2" Maximum="20" Value="{Binding CurrentIris.LensRingCount}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.CenterGlowIntensity}" Margin="0,0,0,8"/>
                                         <DockPanel Margin="0,0,0,6">
-                                            <TextBlock Text="リング線色:" VerticalAlignment="Center" Width="110"/>
-                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.LensRingColor, Mode=TwoWay}"
-                                                                    IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+                                            <TextBlock Text="光の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.CenterGlowColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="集光" Foreground="{StaticResource TextPrimary}" Margin="0,8,0,4"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="集めた光の明るさ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.CausticIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.CausticIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="光の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.CausticColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2,0,6" ToolTip="丸: ぼんやりした光のたまり。三日月: 虹彩のふちに沿った弧の照り返し">
+                                            <TextBlock Text="形:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="三日月" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Crescent}"/>
+                                                <RadioButton Content="丸" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Round}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="中心から、光と反対側へどれだけ寄せるか。虹彩の半径に対する割合">
+                                            <TextBlock Text="位置:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.CausticOffset, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="0.8" Value="{Binding CurrentIris.CausticOffset}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="光の半径。虹彩の半径に対する割合">
+                                            <TextBlock Text="大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.CausticSize, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.15" Maximum="0.8" Value="{Binding CurrentIris.CausticSize}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,2,0,4" ToolTip="スクリーン (最初の値) は明るくなるだけです。覆い焼きは強く光ります">
+                                            <TextBlock Text="重ね方:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.CausticBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                            </WrapPanel>
                                         </DockPanel>
 
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="リング強度 (濃度):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="縁の屈折" Foreground="{StaticResource TextPrimary}" Margin="0,8,0,4"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="外輪のすぐ内側に出る光の帯の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.DomeEdgeIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRingIntensity}" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="リング線幅:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRingWidth, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.DomeEdgeIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="帯の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.DomeEdgeColor, Mode=TwoWay}"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.3" Maximum="3.0" Value="{Binding CurrentIris.LensRingWidth}" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock Text="中心屈折光 (コースティクス):" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRefractionGlow, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="外輪の内側から中へ、だんだん消えていく幅。虹彩の半径に対する割合">
+                                            <TextBlock Text="幅:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.DomeEdgeWidth, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.LensRefractionGlow}"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-
-                                        <!-- 見える範囲 (Lens) -->
-                                        <TextBlock Text="見える範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,10,0,4"
-                                                   ToolTip="中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"/>
-                                        <ItemsControl ItemsSource="{Binding LensRangeChoices}" Margin="0,0,0,6" IsEnabled="{Binding CurrentIris.LensPatternEnabled}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="{Binding Style.Name}" Padding="8,2" Margin="0,0,6,4" Background="#333842" Foreground="#80D8FF"
-                                                            Command="{Binding DataContext.ApplyPatternRangeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                            CommandParameter="{Binding}"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の中心の向き。0° = 右、90° = 下、180° = 左、270° = 上">
-                                            <TextBlock Text="範囲の向き:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRangeAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        <Slider Minimum="0.03" Maximum="0.3" Value="{Binding CurrentIris.DomeEdgeWidth}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0% で一周同じ、100% で光と反対側だけ">
+                                            <TextBlock Text="偏り:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.DomeEdgeBias, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.LensRangeAngle}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の広さ。360° で全体 (範囲の制限なし)、180° で半分">
-                                            <TextBlock Text="範囲の広さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRangeWidth, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.LensRangeWidth}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
-                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の両端で、だんだん消えていく角度の幅">
-                                            <TextBlock Text="端のぼかし:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding CurrentIris.LensRangeFeather, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
-                                        </DockPanel>
-                                        <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.LensRangeFeather}" TickFrequency="1" IsSnapToTickEnabled="True"
-                                                IsEnabled="{Binding CurrentIris.LensPatternEnabled}"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.DomeEdgeBias}"/>
                                     </StackPanel>
                                 </GroupBox>
 

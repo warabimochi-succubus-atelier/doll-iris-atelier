@@ -67,12 +67,8 @@ namespace DollIrisGenerator.Tests
                 RayRandomness = 0.50,
                 RayColor = "#88DDFF",
                 RayInnerRadiusRatio = 0.30,
-                LensPatternEnabled = true,
-                LensRingCount = 8,
-                LensRingIntensity = 0.60,
-                LensRingWidth = 1.1,
-                LensRingColor = "#FFFFFF",
-                LensRefractionGlow = 0.40,
+                CenterGlowIntensity = 0.40,
+                CenterGlowColor = "#FFFFFF",
                 IsOddEye = true,
                 OddEyeBaseColor = "#FFB300",
                 OddEyeInnerColor = "#FFE082",
@@ -121,8 +117,8 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(original.TiltAngle, restored.TiltAngle);
             Assert.Equal(original.Seed, restored.Seed);
             Assert.Equal(original.BaseColor, restored.BaseColor);
-            Assert.Equal(original.LensPatternEnabled, restored.LensPatternEnabled);
-            Assert.Equal(original.LensRingCount, restored.LensRingCount);
+            Assert.Equal(original.CenterGlowIntensity, restored.CenterGlowIntensity);
+            Assert.Equal(original.CenterGlowColor, restored.CenterGlowColor);
             Assert.Equal(original.IsOddEye, restored.IsOddEye);
             Assert.Equal(original.OddEyeBaseColor, restored.OddEyeBaseColor);
             Assert.Equal(original.Highlights.Count, restored.Highlights.Count);
@@ -146,18 +142,14 @@ namespace DollIrisGenerator.Tests
         }
 
         [Fact]
-        public void TestLensPatternGeneratesOpticalRings()
+        public void TestCenterGlowIsASoftEllipseAtTheCenter()
         {
-            var p = new IrisParameters
-            {
-                LensPatternEnabled = true,
-                LensRingCount = 10,
-                LensRingIntensity = 0.70
-            };
+            Assert.DoesNotContain("center_glow", SvgExporter.GenerateSingleEyeSvg(new IrisParameters(), isRightEye: false));
 
+            var p = new IrisParameters { CenterGlowIntensity = 0.8, CenterGlowColor = "#FFEE88" };
             string svg = SvgExporter.GenerateSingleEyeSvg(p, isRightEye: false);
-            Assert.Contains("lens_rings", svg);
-            Assert.Contains("opacity=\"0.70\"", svg);
+            Assert.Contains("<stop offset=\"0%\" stop-color=\"#FFEE88\" stop-opacity=\"0.357\" />", svg); // 0.8 × 0.45, as an 8-bit alpha (91 / 255)
+            Assert.Matches("<ellipse id=\"eye_left_center_glow\" [^>]*fill=\"url\\(#eye_left_center_glow_grad\\)\"", svg);
         }
 
         [Fact]
@@ -438,7 +430,7 @@ namespace DollIrisGenerator.Tests
                 string tempPng = Path.Combine(Path.GetTempPath(), $"test_iris_1200dpi_{Guid.NewGuid():N}.png");
                 try
                 {
-                    var p = new IrisParameters { SizeMm = 18.0, Seed = 777, LensPatternEnabled = true };
+                    var p = new IrisParameters { SizeMm = 18.0, Seed = 777, CenterGlowIntensity = 0.4 };
                     var bmp = RasterExporter.RenderPairToBitmap(p, dpi: 1200.0, pairSpacingMm: 4.0);
 
                     Assert.NotNull(bmp);

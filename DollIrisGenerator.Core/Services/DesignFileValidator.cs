@@ -88,7 +88,6 @@ namespace DollIrisGenerator.Services
             nameof(IrisParameters.RayColor),
             nameof(IrisParameters.LimbalRingColor),
             nameof(IrisParameters.ParticleColor),
-            nameof(IrisParameters.LensRingColor),
             nameof(IrisParameters.CollaretteColor),
             nameof(IrisParameters.TwoToneColor),
             nameof(IrisParameters.OddEyeRayColor),

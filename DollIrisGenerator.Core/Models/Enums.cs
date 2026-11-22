@@ -78,6 +78,13 @@ namespace DollIrisGenerator.Models
     /// <summary>
     /// How a layer is laid over what is under it (CSS / SVG mix-blend-mode). The numbers are saved in design files.
     /// </summary>
+    /// <summary>集光の形 (SPECIFICATION.md 12.2).</summary>
+    public enum CausticShape
+    {
+        Round = 0,      // 丸
+        Crescent = 1    // 三日月 (虹彩の外側に沿った弧)
+    }
+
     public enum LayerBlend
     {
         Normal = 0,     // 通常

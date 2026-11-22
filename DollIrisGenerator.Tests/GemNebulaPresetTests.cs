@@ -251,7 +251,7 @@ namespace DollIrisGenerator.Tests
                 Assert.Contains(special, x => x.PupilShape == shape);
             }
             Assert.Contains(special, x => x.IrisFacetIntensity > 0);
-            Assert.Contains(special, x => x.LensPatternEnabled == true);
+            Assert.Contains(special, x => x.CenterGlowIntensity > 0);
             Assert.Contains(special, x => x.RayRangeWidth < IrisParameters.FullRangeWidth);
             Assert.Contains(special, x => x.Symbols?.Count >= 2);
         }
@@ -407,7 +407,7 @@ namespace DollIrisGenerator.Tests
             {
                 var source = new IrisParameters();
                 IrisRandomizer.RandomizeAttributes(source, new Random(seed));
-                source.LensPatternEnabled = seed % 2 == 0;
+                source.CenterGlowIntensity = seed % 2 == 0 ? 0.4 : 0.0;
                 source.Highlights.Add(new HighlightItem { PositionX = 0.4, PositionY = 0.3, Size = 0.1 });
                 source.Symbols.Add(new DecorativeSymbolItem { Type = SymbolType.Moon, Enabled = true, Rotation = 30 });
                 source.IsOddEye = false;
