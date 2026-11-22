@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `TwoToneBlend` / `CausticBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `TwoToneBlend` / `HoloBlend` / `CausticBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -155,6 +155,19 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `TwoToneSoftness` | 0〜1 | 境目のぼかし。0 でくっきり（既定） |
 | `TwoToneAngle` | 0〜360（度） | 色を変える側の向き。90 = 下（既定）、270 = 上。右目は自動で鏡像 |
 | `TwoToneBlend` | 重ね方 | 既定 0（通常） |
+
+### 偏光の虹色（ホログラムのような細かい虹色の縞）
+縞は「光の入る向き」（`LightAngle`）に合わせて並びます。右目は光の向きと同じく反転します。
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `HoloIntensity` | 0〜1 | 強さ。0 でオフ（既定） |
+| `HoloScale` | 1〜12 | 細かさ。虹がいくつ並ぶか（既定 4） |
+| `HoloShape` | 0 / 1 | 縞の形。0 = 直線（既定。光の向きに直角な縞）、1 = 同心円（光の側に寄った中心のまわりの輪） |
+| `HoloBlend` | 重ね方 | 既定 1（スクリーン） |
+| `HoloRangeAngle` | 0〜360（度） | 見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `HoloRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `HoloRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### まぶたの影（虹彩の上側に落ちる影）
 
@@ -325,7 +338,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 | 項目 | 範囲・値 | 説明 |
 |---|---|---|
-| `Shape` | 0 正円, 2 4芒星（キラキラ）, 3 ダイヤ（菱形）, 4 5芒星, 5 ハート, 6 三日月, 7 クロス, 8 桜の花びら, 9 猫目スリット, 10 蝶々 | 装飾記号と同じ形の一覧（番号は記号の `Type` と違う）。1 は使わない（以前の楕円。正円として読み込まれる）。楕円は正円の上下左右の長さで作る |
+| `Shape` | 0 正円, 2 4芒星（キラキラ）, 3 ダイヤ（菱形）, 4 5芒星, 5 ハート, 6 三日月, 7 クロス, 8 桜の花びら, 9 猫目スリット, 10 蝶々, 11 弧 | 装飾記号と同じ形の一覧に、ハイライトだけの弧（ふちに沿った細い曲線の光）を足したもの（番号は記号の `Type` と違う）。1 は使わない（以前の楕円。正円として読み込まれる）。楕円は正円の上下左右の長さで作る |
 | `PositionX`, `PositionY` | -0.85〜0.85 | 左上が自然 |
 | `Size` | 0.05〜0.45 | |
 | `Count` | 1〜12（省略時 1） | 2 以上は位置を中心に円形に並ぶ（半径はサイズ × 1.4）。装飾記号と同じ |
@@ -333,6 +346,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `Rotation` | -180〜180 | |
 | `CornerRounding` | 0〜1（省略時 0） | 星の先・ダイヤの角などの丸み。正円には影響しない |
 | `StarCoreScale` | 0.5〜2.0（省略時 1.0） | 星の芯の太さ（装飾記号と同じ） |
+| `ArcCurve` | 0〜1（省略時 0.3） | 弧の反り。真ん中が両端よりどれだけ盛り上がるか（回転 0 で上向きの ⌒）。0 でまっすぐ。弧のときだけ使う |
+| `ArcThickness` | 0.05〜0.6（省略時 0.18） | 弧の真ん中の太さ。両端はとがる。弧のときだけ使う |
 | `Color` | 色（グラデ可） | 通常は白 |
 | `Opacity` | 0〜1 | |
 | `Softness` | 0〜1（省略時 0） | 輪郭のぼかし。上げるほど輪郭がぼけて、まわりになじむ |
@@ -428,6 +443,13 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "TwoToneSoftness": 0.0,
   "TwoToneAngle": 90.0,
   "TwoToneBlend": 0,
+  "HoloIntensity": 0.0,
+  "HoloScale": 4.0,
+  "HoloShape": 0,
+  "HoloBlend": 1,
+  "HoloRangeAngle": 90.0,
+  "HoloRangeWidth": 360.0,
+  "HoloRangeFeather": 30.0,
   "ToneBandIntensity": 0.0,
   "ToneBandCount": 3,
   "ToneBandInnerColor": "#FFFFFF",
@@ -565,6 +587,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
       "Rotation": 0.0,
       "CornerRounding": 0.0,
       "StarCoreScale": 1.0,
+      "ArcCurve": 0.3,
+      "ArcThickness": 0.18,
       "Color": "#FFFFFF",
       "Opacity": 0.95,
       "Softness": 0.0,

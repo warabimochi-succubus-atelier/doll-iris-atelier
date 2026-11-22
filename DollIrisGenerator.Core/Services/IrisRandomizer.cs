@@ -352,6 +352,22 @@ namespace DollIrisGenerator.Services
                 PatternRange.Apply(p, PatternLayer.RimRays, style);
             }
 
+            // 偏光の虹色 (drawn last, kept by the 色 lock): 1 design in 10, sometimes on the lower half only
+            if (!colorsLocked)
+            {
+                bool holo = Chance(10);
+                double holoIntensity = Range(0.20, 0.45);
+                double scale = Range(3.0, 8.0, 1);
+                bool concentric = Chance(40);
+                int blendRoll = rng.Next(10);
+                bool lower = Chance(30);
+                p.HoloIntensity = holo ? holoIntensity : 0.0;
+                p.HoloScale = scale;
+                p.HoloShape = concentric ? HoloShape.Concentric : HoloShape.Linear;
+                p.HoloBlend = blendRoll < 5 ? LayerBlend.Screen : blendRoll < 8 ? LayerBlend.SoftLight : LayerBlend.Overlay;
+                PatternRange.Apply(p, PatternLayer.Holo, lower ? PatternRange.Styles[1] : PatternRange.Styles[0]);
+            }
+
             // 集光・縁の屈折 (drawn last): some designs get the dome's light opposite the light
             if (!Locked(RandomizeLocks.Lens))
             {

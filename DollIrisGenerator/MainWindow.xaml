@@ -132,6 +132,21 @@
                 <Slider Minimum="0.5" Maximum="2.0" Value="{Binding StarCoreScale}" Margin="0,0,0,6"/>
             </StackPanel>
         </DataTemplate>
+        <!-- 弧の反り・弧の太さ (HighlightItem.ArcCurve / ArcThickness): the 弧 highlight only -->
+        <DataTemplate x:Key="ArcFields">
+            <StackPanel ToolTip="弧の形だけに使います。ほかの形には影響しません">
+                <DockPanel Margin="0,0,0,4" ToolTip="弧の真ん中が先よりどれだけ盛り上がるか。0% でまっすぐな光の筋になります">
+                    <TextBlock Text="弧の反り:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding ArcCurve, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.0" Maximum="1.0" Value="{Binding ArcCurve}" Margin="0,0,0,6"/>
+                <DockPanel Margin="0,0,0,4" ToolTip="弧の真ん中の太さ。先はとがります">
+                    <TextBlock Text="弧の太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text="{Binding ArcThickness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <Slider Minimum="0.05" Maximum="0.6" Value="{Binding ArcThickness}" Margin="0,0,0,6"/>
+            </StackPanel>
+        </DataTemplate>
         <!-- 右目の反転 of a decorative symbol or highlight (RightEyeFlip) -->
         <DataTemplate x:Key="RightEyeFlipFields">
             <DockPanel Margin="0,6,0,0" ToolTip="右目での描き方。鏡像: 位置も形の向きも左右反転 (左右対称)。位置だけ反転: 置く場所は左右対称で、形の向きはそのまま (三日月などが両目で同じ向き)。反転しない: 両目でまったく同じ (光源が固定された自然な光)">
@@ -819,6 +834,67 @@
                                                 <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                             </WrapPanel>
                                         </DockPanel>
+
+                                        <!-- 偏光の虹色 (Holo) -->
+                                        <TextBlock Text="偏光の虹色" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
+                                        <TextBlock Text="ホログラムシートや偏光フィルムのような、細かい虹色の縞の照りです。縞は「光の向き」に合わせて並びます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="虹色の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.HoloIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.HoloIntensity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="虹彩の端から端までに、虹がいくつ並ぶか">
+                                            <TextBlock Text="細かさ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.HoloScale, StringFormat='{}{0:F1}'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.HoloScale}" Minimum="1.0" Maximum="12.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2,0,4" ToolTip="直線: 光の向きに直角な縞。同心円: 光の側に寄った中心のまわりの輪">
+                                            <TextBlock Text="縞の形:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="直線" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Linear}"/>
+                                                <RadioButton Content="同心円" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Concentric}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2,0,4" ToolTip="スクリーン (最初の値) は明るくなるだけです。ソフトライト・オーバーレイは虹彩の色を残して色づけます">
+                                            <TextBlock Text="重ね方:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.HoloBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                        <!-- 見える範囲 (Holo) -->
+                                        <TextBlock Text="偏光の虹色の見える範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,10,0,4"
+                                                   ToolTip="中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"/>
+                                        <ItemsControl ItemsSource="{Binding HoloRangeChoices}" Margin="0,0,0,6">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding Style.Name}" Padding="8,2" Margin="0,0,6,4" Background="#333842" Foreground="#80D8FF"
+                                                            Command="{Binding DataContext.ApplyPatternRangeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の中心の向き。0° = 右、90° = 下、180° = 左、270° = 上">
+                                            <TextBlock Text="範囲の向き:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.HoloRangeAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.HoloRangeAngle}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の広さ。360° で全体 (範囲の制限なし)、180° で半分">
+                                            <TextBlock Text="範囲の広さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.HoloRangeWidth, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.HoloRangeWidth}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の両端で、だんだん消えていく角度の幅">
+                                            <TextBlock Text="端のぼかし:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.HoloRangeFeather, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.HoloRangeFeather}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
                                     </StackPanel>
                                 </GroupBox>
                             </StackPanel>
@@ -2222,6 +2298,7 @@
                                                         <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                         <RadioButton Content="猫目スリット" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                         <RadioButton Content="蝶々" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
+                                                        <RadioButton Content="弧 (⌒)" Margin="0,0,8,2" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Arc}"/>
                                                     </WrapPanel>
 
                                                     <DockPanel Margin="0,0,0,6">
@@ -2257,6 +2334,7 @@
                                                     </DockPanel>
                                                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
                                                     <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ArcFields}"/>
                                                     <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
 
                                                     <DockPanel Margin="0,0,0,4">
@@ -2337,6 +2415,7 @@
                                                             <RadioButton Content="桜の花びら (🌸)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
                                                             <RadioButton Content="猫目スリット" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CatSlit}"/>
                                                             <RadioButton Content="蝶々" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Butterfly}"/>
+                                                            <RadioButton Content="弧 (⌒)" Margin="0,0,8,4" IsChecked="{Binding Shape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Arc}"/>
                                                         </WrapPanel>
                                                         <DockPanel Margin="0,0,0,6">
                                                             <TextBlock Text="色:" VerticalAlignment="Center" Width="90"/>
@@ -2353,6 +2432,7 @@
                                                         </DockPanel>
                                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CornerRounding}" Margin="0,0,0,6"/>
                                                         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StarCoreFields}"/>
+                                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ArcFields}"/>
                                                         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource StretchFields}"/>
                                                         <DockPanel Margin="0,0,0,2" ToolTip="上げるほど透けます (0% で不透明、100% で見えない)">
                                                             <TextBlock Text="透明度:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>

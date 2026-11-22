@@ -85,8 +85,8 @@ public static class DesignFields
             "楕円から角の丸い四角に近づけます"),
     };
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> Colors = new Field<IrisParameters>[]
-    {
+    public static readonly IReadOnlyList<Field<IrisParameters>> Colors =
+    [
         new HeadingField<IrisParameters>("虹彩カラー"),
         new ColorField<IrisParameters>("ベース色 (中間色)", p => p.BaseColor, (p, v) => p.BaseColor = v),
         new ColorField<IrisParameters>("内周色 (中心グラデ)", p => p.InnerColor, (p, v) => p.InnerColor = v),
@@ -149,7 +149,18 @@ public static class DesignFields
             "色を変える側。0° = 右、90° = 下 (最初の値)、180° = 左、270° = 上 (右目は自動で鏡像)"),
         new ChoiceField<IrisParameters>("二色分けの重ね方", p => p.TwoToneBlend, (p, v) => p.TwoToneBlend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }),
-    };
+        new HeadingField<IrisParameters>("偏光の虹色", "ホログラムシートや偏光フィルムのような、細かい虹色の縞の照りです。縞は「光の向き」に合わせて並びます (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("偏光の虹色の強さ", p => p.HoloIntensity, (p, v) => p.HoloIntensity = v, 0, 1, 0.01, Fmt.Percent, "虹色の濃さ。0% でオフ"),
+        new SliderField<IrisParameters>("偏光の虹色の細かさ", p => p.HoloScale, (p, v) => p.HoloScale = v,
+            IrisParameters.MinHoloScale, IrisParameters.MaxHoloScale, 0.1, Fmt.F1, "虹彩の端から端までに、虹がいくつ並ぶか"),
+        new ChoiceField<IrisParameters>("偏光の虹色の縞の形", p => p.HoloShape, (p, v) => p.HoloShape = (HoloShape)v,
+            new (string, object)[] { ("直線", HoloShape.Linear), ("同心円", HoloShape.Concentric) },
+            "直線: 光の向きに直角な縞。同心円: 光の側に寄った中心のまわりの輪"),
+        new ChoiceField<IrisParameters>("偏光の虹色の重ね方", p => p.HoloBlend, (p, v) => p.HoloBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
+            "スクリーン (最初の値) は明るくなるだけです。ソフトライト・オーバーレイは虹彩の色を残して色づけます"),
+        .. RangeFields(PatternLayer.Holo, "偏光の虹色の見える範囲"),
+    ];
 
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays =
     [
@@ -375,7 +386,8 @@ public static class DesignFields
     public static readonly IReadOnlyList<Field<HighlightItem>> Highlight = new Field<HighlightItem>[]
     {
         new ToggleField<HighlightItem>("表示する", h => h.Enabled, (h, v) => h.Enabled = v),
-        new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v, Shapes(HighlightOf)),
+        new ChoiceField<HighlightItem>("形状", h => h.Shape, (h, v) => h.Shape = (HighlightShape)v,
+            [.. Shapes(HighlightOf), ("弧", HighlightShape.Arc)]),
         new ColorField<HighlightItem>("色", h => h.Color, (h, v) => h.Color = v, AllowGradient: true),
         new SliderField<HighlightItem>("サイズ", h => h.Size, (h, v) => h.Size = v, 0.05, 0.45, 0.01, Fmt.Percent),
         new SliderField<HighlightItem>("繰り返し数", h => h.Count, (h, v) => h.Count = Int(v), 1, 12, 1, v => Fmt.Count(v, "個"),
@@ -386,6 +398,10 @@ public static class DesignFields
         new SliderField<HighlightItem>("角の丸み", h => h.CornerRounding, (h, v) => h.CornerRounding = v, 0, 1, 0.01, Fmt.Percent,
             "星の先・ダイヤの角などを丸めます。0% で従来どおりのとがった形です。正円には影響しません"),
         StarCoreField<HighlightItem>(h => h.StarCoreScale, (h, v) => h.StarCoreScale = v),
+        new SliderField<HighlightItem>("弧の反り", h => h.ArcCurve, (h, v) => h.ArcCurve = v, 0, HighlightItem.MaxArcCurve, 0.01, Fmt.Percent,
+            "弧の形だけに使います。真ん中が先よりどれだけ盛り上がるか。0% でまっすぐな光の筋になります"),
+        new SliderField<HighlightItem>("弧の太さ", h => h.ArcThickness, (h, v) => h.ArcThickness = v,
+            HighlightItem.MinArcThickness, HighlightItem.MaxArcThickness, 0.01, Fmt.Percent, "弧の形だけに使います。真ん中の太さで、先はとがります"),
         Stretch<HighlightItem>("上の長さ", h => h.StretchTop, (h, v) => h.StretchTop = v),
         Stretch<HighlightItem>("下の長さ", h => h.StretchBottom, (h, v) => h.StretchBottom = v),
         Stretch<HighlightItem>("左の長さ", h => h.StretchLeft, (h, v) => h.StretchLeft = v),
