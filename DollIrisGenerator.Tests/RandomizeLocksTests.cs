@@ -170,7 +170,7 @@ namespace DollIrisGenerator.Tests
                 PupilFacetIntensity = 0.03,
                 PupilFacetCount = 23,
                 PupilCornerRounding = 0.9,
-                HoloIntensity = 0.99, HoloScale = 11.9, HoloShape = HoloShape.Concentric, HoloBlend = LayerBlend.ColorDodge,
+                HoloIntensity = 0.99, HoloScale = 4.9, HoloShape = HoloShape.Concentric, HoloBlend = LayerBlend.ColorDodge,
                 HoloRangeAngle = 42, HoloRangeWidth = 132, HoloRangeFeather = 85,
                 CenterGlowIntensity = 0.99,
                 CenterGlowColor = "#444444",

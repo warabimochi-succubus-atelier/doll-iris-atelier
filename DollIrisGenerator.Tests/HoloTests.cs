@@ -87,12 +87,14 @@ namespace DollIrisGenerator.Tests
             var p = new IrisParameters { HoloIntensity = 3, HoloScale = 0, HoloShape = (HoloShape)7, HoloBlend = (LayerBlend)9 };
             Assert.Equal(1.0, p.HoloIntensity);
             Assert.Equal(IrisParameters.MinHoloScale, p.HoloScale);
+            p.HoloScale = 12;
+            Assert.Equal(5.0, p.HoloScale); // at most 5 rainbows
             Assert.Equal(HoloShape.Linear, p.HoloShape);
             Assert.Equal(LayerBlend.Screen, p.HoloBlend);
 
-            var q = new IrisParameters { HoloIntensity = 0.3, HoloScale = 6.5, HoloShape = HoloShape.Concentric };
+            var q = new IrisParameters { HoloIntensity = 0.3, HoloScale = 3.5, HoloShape = HoloShape.Concentric };
             var back = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(q))!;
-            Assert.Equal((0.3, 6.5, HoloShape.Concentric), (back.HoloIntensity, back.HoloScale, back.HoloShape));
+            Assert.Equal((0.3, 3.5, HoloShape.Concentric), (back.HoloIntensity, back.HoloScale, back.HoloShape));
             Assert.Equal(0.0, JsonSerializer.Deserialize<IrisParameters>("{\"TwoToneIntensity\": 0.5}")!.HoloIntensity);
 
             var target = new IrisParameters();
@@ -114,9 +116,9 @@ namespace DollIrisGenerator.Tests
             }
             Assert.InRange(on, 25, 80); // about 10%
 
-            var kept = new IrisParameters { HoloIntensity = 0.9, HoloScale = 11 };
+            var kept = new IrisParameters { HoloIntensity = 0.9, HoloScale = 1.2 };
             IrisRandomizer.RandomizeAttributes(kept, RandomizeLocks.Colors, new Random(3));
-            Assert.Equal((0.9, 11.0), (kept.HoloIntensity, kept.HoloScale));
+            Assert.Equal((0.9, 1.2), (kept.HoloIntensity, kept.HoloScale));
         }
     }
 }

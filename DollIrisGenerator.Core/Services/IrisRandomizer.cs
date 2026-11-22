@@ -357,7 +357,7 @@ namespace DollIrisGenerator.Services
             {
                 bool holo = Chance(10);
                 double holoIntensity = Range(0.20, 0.45);
-                double scale = Range(3.0, 8.0, 1);
+                double scale = Range(2.0, 5.0, 1);
                 bool concentric = Chance(40);
                 int blendRoll = rng.Next(10);
                 bool lower = Chance(30);
