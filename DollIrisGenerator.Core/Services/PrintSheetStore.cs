@@ -5,7 +5,7 @@ using DollIrisGenerator.Models;
 
 namespace DollIrisGenerator.Services
 {
-    /// <summary>What the 「A4印刷・テンプレート」 tab holds, as written to print-sheet.json.</summary>
+    /// <summary>What the 「印刷」 tab holds, as written to print-sheet.json.</summary>
     public sealed class PrintSheetState
     {
         public int Version { get; set; } = 1;

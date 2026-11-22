@@ -109,23 +109,6 @@ public static class DesignFields
             "0° = 右、90° = 下、270° = 上"),
         new ChoiceField<IrisParameters>("光の向きの右目の反転", p => p.LightRightEyeFlip, (p, v) => p.LightRightEyeFlip = (RightEyeFlip)v, CenteredFlips,
             "右目での光の向き。鏡像: 左右反転した向きから光が入る。反転しない: 両目で同じ向きから光が入る (ハイライトも「反転しない」にすると、光源が固定された自然な光になります)"),
-        new HeadingField<IrisParameters>("オーロラ層", "虹彩全体に重ねる色。「円周」のグラデーションにすると、中心の周りで色が移り変わるオーロラ風になります"),
-        new ColorField<IrisParameters>("オーロラ層の色", p => p.AuroraColor, (p, v) => p.AuroraColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("オーロラ層の強さ", p => p.AuroraOpacity, (p, v) => p.AuroraOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
-        new ChoiceField<IrisParameters>("オーロラ層の重ね方", p => p.AuroraBlend, (p, v) => p.AuroraBlend = (LayerBlend)v,
-            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }, "スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
-        new HeadingField<IrisParameters>("星雲", "虹彩に重ねる雲のような模様。グラデーションにすると、場所ごとに雲の色が変わります (銀河・星雲風)"),
-        new ColorField<IrisParameters>("星雲の色", p => p.NebulaColor, (p, v) => p.NebulaColor = v, AllowGradient: true),
-        new SliderField<IrisParameters>("星雲の強さ", p => p.NebulaOpacity, (p, v) => p.NebulaOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
-        new SliderField<IrisParameters>("星雲の量", p => p.NebulaDensity, (p, v) => p.NebulaDensity = v, 0, 1, 0.01, Fmt.Percent),
-        new SliderField<IrisParameters>("星雲の細かさ", p => p.NebulaScale, (p, v) => p.NebulaScale = v,
-            IrisParameters.MinNebulaScale, IrisParameters.MaxNebulaScale, 0.01, Fmt.F2),
-        new SliderField<IrisParameters>("星雲の渦巻き", p => p.NebulaSwirl, (p, v) => p.NebulaSwirl = v, -1, 1, 0.01, Fmt.Percent,
-            "マイナスで逆回り (右目は自動で鏡像)"),
-        new HeadingField<IrisParameters>("繊維ノイズ", "瞳孔から外へ伸びる細かい繊維のゆらぎ (明るい繊維と暗い繊維) を重ねます"),
-        new SliderField<IrisParameters>("繊維ノイズ", p => p.FiberNoise, (p, v) => p.FiberNoise = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
-        new SliderField<IrisParameters>("繊維の細かさ", p => p.FiberNoiseScale, (p, v) => p.FiberNoiseScale = v, 0.5, 2, 0.01, Fmt.F2,
-            "上げるほど繊維が細かく、密になります"),
         new HeadingField<IrisParameters>("色の段", "瞳孔の縁から外周までを同じ幅の同心の帯に分け、帯ごとに一段ずつ違う色を重ねます (アニメ塗りの段階的な色分け)"),
         new SliderField<IrisParameters>("色の段の強さ", p => p.ToneBandIntensity, (p, v) => p.ToneBandIntensity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
         new SliderField<IrisParameters>("段の数", p => p.ToneBandCount, (p, v) => p.ToneBandCount = Int(v),
@@ -149,6 +132,28 @@ public static class DesignFields
             "色を変える側。0° = 右、90° = 下 (最初の値)、180° = 左、270° = 上 (右目は自動で鏡像)"),
         new ChoiceField<IrisParameters>("二色分けの重ね方", p => p.TwoToneBlend, (p, v) => p.TwoToneBlend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }),
+    ];
+
+    /// <summary>The 質感 tab: layers over the iris colors (the same 「すべての色」 lock as 色).</summary>
+    public static readonly IReadOnlyList<Field<IrisParameters>> Texture =
+    [
+        new HeadingField<IrisParameters>("オーロラ層", "虹彩全体に重ねる色。「円周」のグラデーションにすると、中心の周りで色が移り変わるオーロラ風になります"),
+        new ColorField<IrisParameters>("オーロラ層の色", p => p.AuroraColor, (p, v) => p.AuroraColor = v, AllowGradient: true),
+        new SliderField<IrisParameters>("オーロラ層の強さ", p => p.AuroraOpacity, (p, v) => p.AuroraOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new ChoiceField<IrisParameters>("オーロラ層の重ね方", p => p.AuroraBlend, (p, v) => p.AuroraBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }, "スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの"),
+        new HeadingField<IrisParameters>("星雲", "虹彩に重ねる雲のような模様。グラデーションにすると、場所ごとに雲の色が変わります (銀河・星雲風)"),
+        new ColorField<IrisParameters>("星雲の色", p => p.NebulaColor, (p, v) => p.NebulaColor = v, AllowGradient: true),
+        new SliderField<IrisParameters>("星雲の強さ", p => p.NebulaOpacity, (p, v) => p.NebulaOpacity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new SliderField<IrisParameters>("星雲の量", p => p.NebulaDensity, (p, v) => p.NebulaDensity = v, 0, 1, 0.01, Fmt.Percent),
+        new SliderField<IrisParameters>("星雲の細かさ", p => p.NebulaScale, (p, v) => p.NebulaScale = v,
+            IrisParameters.MinNebulaScale, IrisParameters.MaxNebulaScale, 0.01, Fmt.F2),
+        new SliderField<IrisParameters>("星雲の渦巻き", p => p.NebulaSwirl, (p, v) => p.NebulaSwirl = v, -1, 1, 0.01, Fmt.Percent,
+            "マイナスで逆回り (右目は自動で鏡像)"),
+        new HeadingField<IrisParameters>("繊維ノイズ", "瞳孔から外へ伸びる細かい繊維のゆらぎ (明るい繊維と暗い繊維) を重ねます"),
+        new SliderField<IrisParameters>("繊維ノイズ", p => p.FiberNoise, (p, v) => p.FiberNoise = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new SliderField<IrisParameters>("繊維の細かさ", p => p.FiberNoiseScale, (p, v) => p.FiberNoiseScale = v, 0.5, 2, 0.01, Fmt.F2,
+            "上げるほど繊維が細かく、密になります"),
         new HeadingField<IrisParameters>("偏光の虹色", "ホログラムシートや偏光フィルムのような、細かい虹色の縞の照りです。縞は「光の向き」に合わせて並びます (強さ 0% でオフ)"),
         new SliderField<IrisParameters>("偏光の虹色の強さ", p => p.HoloIntensity, (p, v) => p.HoloIntensity = v, 0, 1, 0.01, Fmt.Percent, "虹色の濃さ。0% でオフ"),
         new SliderField<IrisParameters>("偏光の虹色の細かさ", p => p.HoloScale, (p, v) => p.HoloScale = v,
@@ -162,7 +167,7 @@ public static class DesignFields
         .. RangeFields(PatternLayer.Holo, "偏光の虹色の見える範囲"),
     ];
 
-    public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays =
+    public static readonly IReadOnlyList<Field<IrisParameters>> Pupil =
     [
         new HeadingField<IrisParameters>("瞳孔模様"),
         new ChoiceField<IrisParameters>("形状", p => p.PupilShape, (p, v) => p.PupilShape = (PupilShape)v, Shapes(PupilOf)),
@@ -180,7 +185,7 @@ public static class DesignFields
         new ChoiceField<IrisParameters>("右目の反転", p => p.PupilRightEyeFlip, (p, v) => p.PupilRightEyeFlip = (RightEyeFlip)v, CenteredFlips,
             "右目での瞳孔の描き方。鏡像: 左右反転 (三日月や左右の長さ・宝石カットも反転)。反転しない: 両目でまったく同じ"),
         new SliderField<IrisParameters>("輪郭の柔らかさ (ぼかし)", p => p.PupilSoftness, (p, v) => p.PupilSoftness = v, 0, 0.30, 0.01, Fmt.Percent),
-        new SliderField<IrisParameters>("宝石カット", p => p.PupilFacetIntensity, (p, v) => p.PupilFacetIntensity = v, 0, 1, 0.01, Fmt.Percent,
+        new SliderField<IrisParameters>("瞳孔の宝石カット", p => p.PupilFacetIntensity, (p, v) => p.PupilFacetIntensity = v, 0, 1, 0.01, Fmt.Percent,
             "瞳孔の中に宝石のカット面のような明暗の面を入れます。0% でオフ"),
         new SliderField<IrisParameters>("カット面の数", p => p.PupilFacetCount, (p, v) => p.PupilFacetCount = Int(v),
             IrisParameters.MinPupilFacetCount, IrisParameters.MaxPupilFacetCount, 1, v => Fmt.Count(v, "面")),
@@ -220,6 +225,10 @@ public static class DesignFields
         new ChoiceField<IrisParameters>("重ね方", p => p.CollaretteBlend, (p, v) => p.CollaretteBlend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
             "スクリーンにすると光るような輪になります"),
+    ];
+
+    public static readonly IReadOnlyList<Field<IrisParameters>> Rays =
+    [
         new HeadingField<IrisParameters>("放射模様"),
         new SliderField<IrisParameters>("ライン本数", p => p.RayCount, (p, v) => p.RayCount = Int(v), 0, 120, 2, v => Fmt.Count(v, "本")),
         new ColorField<IrisParameters>("ライン色", p => p.RayColor, (p, v) => p.RayColor = v, AllowGradient: true),

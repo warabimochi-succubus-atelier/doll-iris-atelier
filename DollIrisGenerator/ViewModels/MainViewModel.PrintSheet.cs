@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace DollIrisGenerator.ViewModels
 {
-    // A4 print sheet persistence: the 「A4印刷・テンプレート」 tab is saved on exit and restored on the next start
+    // A4 print sheet persistence: the 「印刷」 tab is saved on exit and restored on the next start
     public partial class MainViewModel
     {
         /// <summary>The current sheet: designs and quantities, sheet settings, and the selected template.</summary>
