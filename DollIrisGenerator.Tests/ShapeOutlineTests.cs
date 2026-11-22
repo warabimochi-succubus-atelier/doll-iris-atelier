@@ -497,7 +497,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal((0.7, 1.3, 3.0, 1.0), (clone.StretchTop, clone.StretchBottom, clone.StretchLeft, clone.StretchRight));
 
             // The file numbers of the other shapes stay; 1 (the oval) and unknown numbers become a circle
-            Assert.Equal(new[] { 0, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, Enum.GetValues<HighlightShape>().Select(s => (int)s).OrderBy(n => n));
+            Assert.Equal(new[] { 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, Enum.GetValues<HighlightShape>().Select(s => (int)s).OrderBy(n => n));
             foreach (string shape in new[] { "1", "99" })
             {
                 var old = JsonSerializer.Deserialize<HighlightItem>($"{{\"Shape\":{shape},\"AspectRatio\":1.6}}")!;
@@ -608,7 +608,7 @@ namespace DollIrisGenerator.Tests
             var all = Enum.GetValues<ShapeKind>().OrderBy(k => k).ToArray();
             var fromSymbols = Enum.GetValues<SymbolType>().Select(ShapeKinds.Of).Where(k => k != null).Select(k => k!.Value).OrderBy(k => k).ToArray();
             var fromHighlights = Enum.GetValues<HighlightShape>().Select(ShapeKinds.Of).OrderBy(k => k).ToArray();
-            Assert.Equal(all, fromSymbols);     // every shape once
+            Assert.Equal(all.Where(k => k != ShapeKind.Arc), fromSymbols); // every shape once (the 弧 is a highlight's only)
             Assert.Equal(all, fromHighlights);
 
             // The numbers the files have always stored keep their meaning; new shapes come after them
@@ -658,7 +658,7 @@ namespace DollIrisGenerator.Tests
         [Fact]
         public void TestEveryShapeDrawsAsASymbolAndAsAHighlight()
         {
-            foreach (var kind in Enum.GetValues<ShapeKind>())
+            foreach (var kind in Enum.GetValues<ShapeKind>().Where(k => k != ShapeKind.Arc)) // the 弧: ArcHighlightTests
             {
                 var p = new IrisParameters { SizeMm = 10.0 };
                 p.Symbols.Clear();
@@ -720,7 +720,7 @@ namespace DollIrisGenerator.Tests
         public void TestPupilsOfferTheSameShapesAndKeepTheirFileNumbers()
         {
             var all = Enum.GetValues<ShapeKind>().OrderBy(k => k).ToArray();
-            Assert.Equal(all, Enum.GetValues<PupilShape>().Select(ShapeKinds.Of).OrderBy(k => k).ToArray());
+            Assert.Equal(all.Where(k => k != ShapeKind.Arc), Enum.GetValues<PupilShape>().Select(ShapeKinds.Of).OrderBy(k => k).ToArray());
             Assert.Equal((0, 2, 3, 4), ((int)PupilShape.Round, (int)PupilShape.CatSlit, (int)PupilShape.Heart, (int)PupilShape.Star5));
             foreach (string number in new[] { "1", "42" }) // 1 was the vertical oval
                 Assert.Equal(PupilShape.Round, JsonSerializer.Deserialize<IrisParameters>($"{{\"PupilShape\":{number}}}")!.PupilShape);

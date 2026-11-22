@@ -149,6 +149,14 @@ namespace DollIrisGenerator.Models
         public double? RimRayRangeAngle { get; set; }
         public double? RimRayRangeWidth { get; set; }
         public double? RimRayRangeFeather { get; set; }
+        // 偏光の虹色
+        public double? HoloIntensity { get; set; }
+        public double? HoloScale { get; set; }
+        public HoloShape? HoloShape { get; set; }
+        public LayerBlend? HoloBlend { get; set; }
+        public double? HoloRangeAngle { get; set; }
+        public double? HoloRangeWidth { get; set; }
+        public double? HoloRangeFeather { get; set; }
         // 中心の光・集光・縁の屈折
         public double? CenterGlowIntensity { get; set; }
         public string? CenterGlowColor { get; set; }
@@ -390,7 +398,7 @@ namespace DollIrisGenerator.Models
                 particles: 40, glow: 0.5, highlightSoftness: 0.25),
                 p => { p.FiberNoise = 0.35; }),
             Mood("B. 精霊 (ブルー系)", "光をまとったような幻想的なブルー",
-                "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", HighlightStyle.Window,
+                "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", HighlightStyle.Arc,
                 particles: 150, glow: 0.7, highlightGlow: 0.5,
                 aurora: "conic-gradient(from 270deg, #80D8FF 0%, #FFFFFF 33%, #82B1FF 66%, #80D8FF 100%)", auroraOpacity: 0.3),
             Tweak(Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル。光の筋は下側だけ",
@@ -615,6 +623,13 @@ namespace DollIrisGenerator.Models
             target.RimRayRangeAngle = preset.RimRayRangeAngle ?? d.RimRayRangeAngle;
             target.RimRayRangeWidth = preset.RimRayRangeWidth ?? d.RimRayRangeWidth;
             target.RimRayRangeFeather = preset.RimRayRangeFeather ?? d.RimRayRangeFeather;
+            target.HoloIntensity = preset.HoloIntensity ?? d.HoloIntensity;
+            target.HoloScale = preset.HoloScale ?? d.HoloScale;
+            target.HoloShape = preset.HoloShape ?? d.HoloShape;
+            target.HoloBlend = preset.HoloBlend ?? d.HoloBlend;
+            target.HoloRangeAngle = preset.HoloRangeAngle ?? d.HoloRangeAngle;
+            target.HoloRangeWidth = preset.HoloRangeWidth ?? d.HoloRangeWidth;
+            target.HoloRangeFeather = preset.HoloRangeFeather ?? d.HoloRangeFeather;
             target.CenterGlowIntensity = preset.CenterGlowIntensity ?? d.CenterGlowIntensity;
             target.CenterGlowColor = preset.CenterGlowColor ?? d.CenterGlowColor;
             target.CausticIntensity = preset.CausticIntensity ?? d.CausticIntensity;
@@ -828,6 +843,13 @@ namespace DollIrisGenerator.Models
                 RimRayRangeAngle = design.RimRayRangeAngle,
                 RimRayRangeWidth = design.RimRayRangeWidth,
                 RimRayRangeFeather = design.RimRayRangeFeather,
+                HoloIntensity = design.HoloIntensity,
+                HoloScale = design.HoloScale,
+                HoloShape = design.HoloShape,
+                HoloBlend = design.HoloBlend,
+                HoloRangeAngle = design.HoloRangeAngle,
+                HoloRangeWidth = design.HoloRangeWidth,
+                HoloRangeFeather = design.HoloRangeFeather,
                 CenterGlowIntensity = design.CenterGlowIntensity,
                 CenterGlowColor = design.CenterGlowColor,
                 CausticIntensity = design.CausticIntensity,

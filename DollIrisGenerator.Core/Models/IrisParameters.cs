@@ -54,6 +54,9 @@ namespace DollIrisGenerator.Models
         public const double DefaultRimRayRandomness = 0.4;
         public const string DefaultRimRayColor = "#0D1B3E";
 
+        /// <summary>偏光の虹色 (SvgExporter.AppendHolo): ranges and defaults.</summary>
+        public const double MinHoloScale = 1.0, MaxHoloScale = 12.0, DefaultHoloScale = 4.0;
+
         /// <summary>中心の光: the default color.</summary>
         public const string DefaultCenterGlowColor = "#FFFFFF";
 
@@ -312,6 +315,13 @@ namespace DollIrisGenerator.Models
         private double _irisFacetRangeAngle = DefaultRangeAngle;
         private double _irisFacetRangeWidth = FullRangeWidth;
         private double _irisFacetRangeFeather = DefaultRangeFeather;
+        private double _holoIntensity;                       // 偏光の虹色 (off)
+        private double _holoScale = DefaultHoloScale;
+        private HoloShape _holoShape = HoloShape.Linear;
+        private LayerBlend _holoBlend = LayerBlend.Screen;
+        private double _holoRangeAngle = DefaultRangeAngle;
+        private double _holoRangeWidth = FullRangeWidth;
+        private double _holoRangeFeather = DefaultRangeFeather;
         private double _rimRayRangeAngle = DefaultRangeAngle;
         private double _rimRayRangeWidth = FullRangeWidth;
         private double _rimRayRangeFeather = DefaultRangeFeather;
@@ -1331,6 +1341,55 @@ namespace DollIrisGenerator.Models
         {
             get => _irisFacetRangeFeather;
             set { _irisFacetRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の強さ: rainbow stripes like a holographic sheet over the iris. 0 = off.</summary>
+        public double HoloIntensity
+        {
+            get => _holoIntensity;
+            set { _holoIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の細かさ: how many rainbows across the iris.</summary>
+        public double HoloScale
+        {
+            get => _holoScale;
+            set { _holoScale = ClampFinite(value, MinHoloScale, MaxHoloScale, DefaultHoloScale); OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の縞の形.</summary>
+        public HoloShape HoloShape
+        {
+            get => _holoShape;
+            set { _holoShape = Enum.IsDefined(value) ? value : HoloShape.Linear; OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の重ね方 (screen by default).</summary>
+        public LayerBlend HoloBlend
+        {
+            get => _holoBlend;
+            set { _holoBlend = Enum.IsDefined(value) ? value : LayerBlend.Screen; OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の範囲の向き (see PatternRange).</summary>
+        public double HoloRangeAngle
+        {
+            get => _holoRangeAngle;
+            set { _holoRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の範囲の広さ. 360 = everywhere.</summary>
+        public double HoloRangeWidth
+        {
+            get => _holoRangeWidth;
+            set { _holoRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>偏光の虹色の範囲の端のぼかし.</summary>
+        public double HoloRangeFeather
+        {
+            get => _holoRangeFeather;
+            set { _holoRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
         /// <summary>外周からの線の範囲の向き (see PatternRange).</summary>

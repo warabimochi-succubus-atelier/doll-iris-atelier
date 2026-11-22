@@ -659,6 +659,26 @@ namespace DollIrisGenerator.Services
             return (angle + 180.0 - tilt) * Math.PI / 180.0;
         }
 
+        /// <summary>偏光の虹色: the stops of one rainbow, its saturation and lightness, and where the 同心円's center sits.</summary>
+        public const int HoloStopsPerRainbow = 12;
+        public const double HoloSaturation = 0.85, HoloLightness = 0.62, HoloCenterShift = 0.35;
+
+        /// <summary>
+        /// The 偏光の虹色's gradient stops: 細かさ rainbows (hue 0° → 360°, <see cref="HoloStopsPerRainbow"/> stops each)
+        /// one after another from 0% to 100%.
+        /// </summary>
+        internal static (double Offset, string Color)[] HoloStops(double scale)
+        {
+            int count = (int)Math.Ceiling(scale * HoloStopsPerRainbow);
+            var stops = new (double, string)[count + 1];
+            for (int k = 0; k <= count; k++)
+            {
+                double t = (double)k / HoloStopsPerRainbow;              // in rainbows
+                stops[k] = (Math.Min(1.0, t / scale), IrisRandomizer.HslToHex(t * 360.0, HoloSaturation, HoloLightness));
+            }
+            return stops;
+        }
+
         /// <summary>How far the 三日月 集光's dark middle sits from its center, toward the iris center (in its radii), and its size.</summary>
         public const double CausticCutShift = 0.5, CausticCutSize = 0.85;
 
@@ -916,6 +936,33 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine($@" Z"" fill=""{(shade >= 0 ? "#FFFFFF" : "#000000")}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
                 }
                 sb.AppendLine("      </g>");
+            }
+
+            // 偏光の虹色: rainbow stripes over the iris body, laid out by the light (直線: across it, 同心円: round a
+            // center moved toward it), with its blend mode and 見える範囲. Over the patterns, under the 集光 and limbal ring
+            if (p.HoloIntensity > 0.01)
+            {
+                double light = AwayFromLight(p, isRightEye, tilt) + Math.PI; // toward the light, on the untilted iris
+                double ux = Math.Cos(light), uy = Math.Sin(light);
+                string gradId = $"{idPrefix}_holo_grad";
+                sb.AppendLine("      <defs>");
+                if (p.HoloShape == HoloShape.Concentric)
+                {
+                    double gcx = 0.5 + ux * HoloCenterShift / 2.0, gcy = 0.5 + uy * HoloCenterShift / 2.0;
+                    sb.AppendLine($@"        <radialGradient id=""{gradId}"" cx=""{F(gcx * 100.0, 3)}%"" cy=""{F(gcy * 100.0, 3)}%"" r=""{F((0.5 + HoloCenterShift / 2.0) * 100.0, 3)}%"">");
+                }
+                else
+                {
+                    double vx = ux * rx, vy = uy * ry;
+                    sb.AppendLine($@"        <linearGradient id=""{gradId}"" gradientUnits=""userSpaceOnUse"" x1=""{F(cx - vx)}"" y1=""{F(cy - vy)}"" x2=""{F(cx + vx)}"" y2=""{F(cy + vy)}"">");
+                }
+                foreach (var (offset, color) in HoloStops(p.HoloScale))
+                    sb.AppendLine($@"          <stop offset=""{F(offset * 100.0, 3)}%"" stop-color=""{color}"" />");
+                sb.AppendLine(p.HoloShape == HoloShape.Concentric ? "        </radialGradient>" : "        </linearGradient>");
+                sb.AppendLine("      </defs>");
+                string? holoRange = AppendRangeMask(sb, $"{idPrefix}_holo_range", p, PatternLayer.Holo, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                string holoMask = holoRange != null ? $@" mask=""url(#{holoRange})""" : "";
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_holo")} fill=""url(#{gradId})"" opacity=""{p.HoloIntensity.ToFixed(2)}""{BlendStyle(p.HoloBlend)}{holoMask} />");
             }
 
             // 集光: on the side opposite the light, over the patterns, under the limbal ring and the pupil
@@ -1336,7 +1383,7 @@ namespace DollIrisGenerator.Services
                         && ShapeStretch.IsNone(h) && h.CornerRounding <= 0.0 && h.StarCoreScale == 1.0;
                     ShapeOutline? hOutline = ellipse || polygon
                         ? null
-                        : ShapeOutline.ForHighlight(h.Shape, hRadius, h.StarCoreScale).Rounded(h.CornerRounding).Stretched(h, swapSides);
+                        : ShapeOutline.ForHighlight(h.Shape, hRadius, h.StarCoreScale, h.ArcCurve, h.ArcThickness).Rounded(h.CornerRounding).Stretched(h, swapSides);
                     // Gradient across the highlight's own box (each copy its own), turned with it (as on screen)
                     Rect localBox = hOutline?.GetBounds(mirrorShape) ?? IrisStyle.HighlightBox(h, hRadius, mirrorHighlight);
 

@@ -44,7 +44,8 @@ namespace DollIrisGenerator.Models
         Diamond,        // ダイヤ (菱形)
         SakuraPetal,    // 桜の花びら
         CatSlit,        // 猫目スリット
-        Butterfly       // 蝶々 (翅だけ)
+        Butterfly,      // 蝶々 (翅だけ)
+        Arc             // 弧 (ハイライトだけ)
     }
 
     /// <summary>ラメの粒の形. The numbers are what design files store.</summary>
@@ -78,6 +79,13 @@ namespace DollIrisGenerator.Models
     /// <summary>
     /// How a layer is laid over what is under it (CSS / SVG mix-blend-mode). The numbers are saved in design files.
     /// </summary>
+    /// <summary>偏光の虹色の縞の形 (SPECIFICATION.md 7.1.6).</summary>
+    public enum HoloShape
+    {
+        Linear = 0,     // 直線 (光の向きに直角な縞)
+        Concentric = 1  // 同心円 (光の側に寄った中心のまわりの輪)
+    }
+
     /// <summary>集光の形 (SPECIFICATION.md 12.2).</summary>
     public enum CausticShape
     {
@@ -110,7 +118,8 @@ namespace DollIrisGenerator.Models
         Cross = 7,          // クロス
         SakuraPetal = 8,    // 桜の花びら
         CatSlit = 9,        // 猫目スリット
-        Butterfly = 10      // 蝶々
+        Butterfly = 10,     // 蝶々
+        Arc = 11            // 弧 (細い曲線の光。ハイライトだけ)
     }
 
     /// <summary>
@@ -172,6 +181,7 @@ namespace DollIrisGenerator.Models
             HighlightShape.SakuraPetal => ShapeKind.SakuraPetal,
             HighlightShape.CatSlit => ShapeKind.CatSlit,
             HighlightShape.Butterfly => ShapeKind.Butterfly,
+            HighlightShape.Arc => ShapeKind.Arc,
             _ => ShapeKind.Circle
         };
 

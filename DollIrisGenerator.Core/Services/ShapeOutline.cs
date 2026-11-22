@@ -322,8 +322,61 @@ namespace DollIrisGenerator.Services
         /// Outline of a highlight of the given size: the shared shapes (<see cref="ForShape"/>). When not stretched or
         /// rounded, the circle, sparkle and rhombus are the same shapes the SVG writes as an ellipse / polygon.
         /// </summary>
-        public static ShapeOutline ForHighlight(HighlightShape shape, double radius, double starCore = 1.0) =>
-            ForShape(ShapeKinds.Of(shape), radius, highlight: true, starCore);
+        public static ShapeOutline ForHighlight(HighlightShape shape, double radius, double starCore = 1.0,
+            double arcCurve = HighlightItem.DefaultArcCurve, double arcThickness = HighlightItem.DefaultArcThickness) =>
+            shape == HighlightShape.Arc
+                ? Arc(radius, arcCurve, arcThickness)
+                : ForShape(ShapeKinds.Of(shape), radius, highlight: true, starCore);
+
+        /// <summary>
+        /// 弧: a thin curved band of light, <paramref name="radius"/> × 2 from tip to tip, bulging upward (⌒). Both edges
+        /// are circular arcs through the two tips: the outer one rises 反り × radius + 太さ × radius / 2 above the tips,
+        /// the inner one 太さ × radius less, so the band is 太さ × radius thick in the middle and comes to a point at both
+        /// tips. 反り 0 is a straight, lens-shaped streak. The outline's box is centered at (0, 0).
+        /// </summary>
+        public static ShapeOutline Arc(double radius, double curve, double thickness)
+        {
+            double a = radius;
+            double outer = (curve + thickness / 2.0) * radius, inner = (curve - thickness / 2.0) * radius;
+            double y0 = (outer + Math.Min(0.0, inner)) / 2.0; // the tips, so that the box is centered
+            var left = new Point(-a, y0);
+            var right = new Point(a, y0);
+            var segments = new List<OutlineSegment>();
+            AppendArcThrough(segments, a, y0, outer, true);
+            AppendArcThrough(segments, a, y0, inner, false);
+            // Snap the ends onto the tips (removes rounding noise from the arc math)
+            segments[^1] = segments[^1].IsLine ? OutlineSegment.Line(segments[^1].C1, left) : new OutlineSegment(segments[^1].C1, segments[^1].C2, left);
+            return new ShapeOutline(left, segments);
+        }
+
+        /// <summary>
+        /// A circular arc from (−a, y0) to (a, y0) (or back), whose middle is <paramref name="sagitta"/> above the tips
+        /// (below when negative); a straight line when it is about 0.
+        /// </summary>
+        private static void AppendArcThrough(List<OutlineSegment> segments, double a, double y0, double sagitta, bool leftToRight)
+        {
+            var from = new Point(leftToRight ? -a : a, y0);
+            var to = new Point(leftToRight ? a : -a, y0);
+            if (Math.Abs(sagitta) < a * 1e-4)
+            {
+                segments.Add(OutlineSegment.Line(from, to));
+                return;
+            }
+            double r = (a * a + sagitta * sagitta) / (2.0 * Math.Abs(sagitta));
+            double half = 2.0 * Math.Atan(Math.Abs(sagitta) / a);   // half the angle the arc spans
+            if (sagitta > 0)
+            {
+                var center = new Point(0, y0 - sagitta + r);           // the middle is straight above the center
+                double start = leftToRight ? -Math.PI / 2.0 - half : -Math.PI / 2.0 + half;
+                AppendArc(segments, center, r, r, start, leftToRight ? 2.0 * half : -2.0 * half);
+            }
+            else
+            {
+                var center = new Point(0, y0 - sagitta - r);           // the middle is straight below the center
+                double start = leftToRight ? Math.PI / 2.0 + half : Math.PI / 2.0 - half;
+                AppendArc(segments, center, r, r, start, leftToRight ? -2.0 * half : 2.0 * half);
+            }
+        }
 
         /// <summary>The butterfly pupil is drawn this much larger than the pupil radius, to read about as large as the round one.</summary>
         public const double ButterflyPupilScale = 1.1;

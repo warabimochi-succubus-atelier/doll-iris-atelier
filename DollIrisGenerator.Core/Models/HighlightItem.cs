@@ -15,6 +15,8 @@ namespace DollIrisGenerator.Models
         private double _size = 0.22;       // relative to radius
         private int _count = 1;            // 繰り返し数: copies on a ring round the position (as the symbols' Count)
         private double _starCoreScale = 1.0; // 星の芯の太さ (1 = the standard star)
+        private double _arcCurve = DefaultArcCurve;
+        private double _arcThickness = DefaultArcThickness;
         private double _cornerRounding = 0.0; // 角の丸み of the 4点星 / 菱形 (a circle has no corners)
         private double _rotation = 0.0;    // degrees
         private string _color = "#FFFFFF";
@@ -125,6 +127,24 @@ namespace DollIrisGenerator.Models
             set { _starCoreScale = StarCore.Clamp(value); OnPropertyChanged(); }
         }
 
+        /// <summary>弧の反り and 弧の太さ: ranges and defaults (ShapeOutline.Arc).</summary>
+        public const double MaxArcCurve = 1.0, DefaultArcCurve = 0.30;
+        public const double MinArcThickness = 0.05, MaxArcThickness = 0.60, DefaultArcThickness = 0.18;
+
+        /// <summary>弧の反り: how far the 弧's middle rises above its tips, in its radii (0 = straight). Other shapes ignore it.</summary>
+        public double ArcCurve
+        {
+            get => _arcCurve;
+            set { _arcCurve = double.IsFinite(value) ? Math.Clamp(value, 0.0, MaxArcCurve) : DefaultArcCurve; OnPropertyChanged(); }
+        }
+
+        /// <summary>弧の太さ: the 弧's thickness in the middle, in its radii (the tips are points). Other shapes ignore it.</summary>
+        public double ArcThickness
+        {
+            get => _arcThickness;
+            set { _arcThickness = double.IsFinite(value) ? Math.Clamp(value, MinArcThickness, MaxArcThickness) : DefaultArcThickness; OnPropertyChanged(); }
+        }
+
         /// <summary>
         /// 上の長さ: the part of the shape above its center, stretched by this (1 = as drawn). When the right eye's
         /// highlight's shape is mirrored (<see cref="RightEyeFlip"/> 鏡像), 左 and 右 trade places there.
@@ -191,7 +211,7 @@ namespace DollIrisGenerator.Models
         {
             nameof(Enabled), nameof(Shape), nameof(Color), nameof(Size), nameof(Count),
             nameof(StretchTop), nameof(StretchBottom), nameof(StretchLeft), nameof(StretchRight),
-            nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale), nameof(Opacity),
+            nameof(Rotation), nameof(CornerRounding), nameof(StarCoreScale), nameof(ArcCurve), nameof(ArcThickness), nameof(Opacity),
             nameof(Softness), nameof(Glow), nameof(Blend), nameof(RightEyeFlip)
         };
 
@@ -206,6 +226,8 @@ namespace DollIrisGenerator.Models
                 case nameof(Count): target.Count = Count; return true;
                 case nameof(CornerRounding): target.CornerRounding = CornerRounding; return true;
                 case nameof(StarCoreScale): target.StarCoreScale = StarCoreScale; return true;
+                case nameof(ArcCurve): target.ArcCurve = ArcCurve; return true;
+                case nameof(ArcThickness): target.ArcThickness = ArcThickness; return true;
                 case nameof(StretchTop): target.StretchTop = StretchTop; return true;
                 case nameof(StretchBottom): target.StretchBottom = StretchBottom; return true;
                 case nameof(StretchLeft): target.StretchLeft = StretchLeft; return true;
@@ -232,6 +254,8 @@ namespace DollIrisGenerator.Models
                 Count = this.Count,
                 CornerRounding = this.CornerRounding,
                 StarCoreScale = this.StarCoreScale,
+                ArcCurve = this.ArcCurve,
+                ArcThickness = this.ArcThickness,
                 StretchTop = this.StretchTop,
                 StretchBottom = this.StretchBottom,
                 StretchLeft = this.StretchLeft,

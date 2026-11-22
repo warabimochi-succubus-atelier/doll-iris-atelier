@@ -26,7 +26,9 @@ namespace DollIrisGenerator.Services
         /// <summary>ダイヤ: a diamond-shaped glint and a small circle.</summary>
         Diamond,
         /// <summary>三日月: a large circle and a crescent of reflected light along the lower edge.</summary>
-        Crescent
+        Crescent,
+        /// <summary>弧: a large circle and a thin arc of reflected light following the lower right edge.</summary>
+        Arc
     }
 
     public static class HighlightStyles
@@ -104,6 +106,12 @@ namespace DollIrisGenerator.Services
                     // A moon bulging toward the lower right: a thin reflection following that edge
                     Item(HighlightShape.Moon, 0.36, 0.38, 0.20, 0.55, rotation: Turn(45.0, 16.0))
                 },
+                HighlightStyle.Arc => new()
+                {
+                    Item(HighlightShape.Circle, -0.32, -0.32, 0.25, 0.95),
+                    // Bulging toward the lower right (turned 135°), curved about as the rim there
+                    Item(HighlightShape.Arc, 0.42, 0.42, 0.32, 0.65, rotation: Turn(135.0, 16.0))
+                },
                 _ => new()
                 {
                     Item(HighlightShape.Circle, -0.32, -0.32, 0.26, 0.95),
@@ -113,6 +121,6 @@ namespace DollIrisGenerator.Services
         }
 
         /// <summary>Shapes without points, which 輪郭のぼかし softens without losing what they are.</summary>
-        public static bool IsSmooth(HighlightShape shape) => shape is HighlightShape.Circle or HighlightShape.Moon;
+        public static bool IsSmooth(HighlightShape shape) => shape is HighlightShape.Circle or HighlightShape.Moon or HighlightShape.Arc;
     }
 }
