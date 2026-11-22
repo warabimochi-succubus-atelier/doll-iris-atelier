@@ -121,7 +121,7 @@ namespace DollIrisGenerator.Tests
                     Assert.InRange(p.ParticleShapeRatio, 0.3, 1.0);
                 }
             }
-            Assert.InRange(shaped, 50, 120); // about 20%
+            Assert.InRange(shaped, 25, 80); // about 12% (アニメ・幻想・宝石 designs with glitter, SPECIFICATION.md 7.4)
 
             var kept = Glitter(GlitterShape.Diamond, 0.6);
             IrisRandomizer.RandomizeAttributes(kept, RandomizeLocks.Particles, new Random(3));

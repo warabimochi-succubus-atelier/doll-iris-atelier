@@ -20,6 +20,55 @@ namespace DollIrisGenerator.Tests
             }
         }
 
+        /// <summary>The extra effects a design has on (IrisRandomizer.Extra).</summary>
+        private static int ExtrasOn(IrisParameters p) => new[]
+        {
+            p.CollaretteIntensity > 0, p.LimbalInnerRingIntensity > 0, p.CausticIntensity > 0, p.DomeEdgeIntensity > 0,
+            p.CenterGlowIntensity > 0, p.ToneBandIntensity > 0, p.TwoToneIntensity > 0, p.PupilOutlineIntensity > 0,
+            p.PupilInnerRingIntensity > 0, p.RimRayIntensity > 0, p.AuroraOpacity > 0, p.NebulaOpacity > 0, p.HoloIntensity > 0,
+            p.IrisFacetIntensity > 0, p.ParticleGlowCustomColor, p.ParticleShape != GlitterShape.Mixed, p.Symbols.Count > 0, p.IsOddEye
+        }.Count(x => x);
+
+        [Fact]
+        public void Tables_AreComplete_AndAddUpTo100()
+        {
+            Assert.Equal(100, IrisRandomizer.Looks.Sum(x => x.Weight));
+            Assert.Equal(Enum.GetValues<IrisRandomizer.Extra>().OrderBy(e => e), IrisRandomizer.Extras.Keys.OrderBy(e => e));
+            foreach (var (look, _, _) in IrisRandomizer.Looks)
+            {
+                Assert.Equal(100, IrisRandomizer.PupilShapesOf(look).Sum(x => x.Weight));
+                Assert.DoesNotContain(IrisRandomizer.PupilShapesOf(look), x => x.Shape == PupilShape.Cross);
+            }
+            // Together the looks use every highlight layout
+            Assert.Equal(HighlightStyles.All.OrderBy(s => s),
+                IrisRandomizer.Looks.SelectMany(x => IrisRandomizer.HighlightStylesOf(x.Look)).Distinct().OrderBy(s => s));
+        }
+
+        [Fact]
+        public void Extras_StayWithinTheBudget_AndDoNotPileUp()
+        {
+            var counts = Designs(600).Select(ExtrasOn).ToList();
+            Assert.All(counts, c => Assert.InRange(c, 0, IrisRandomizer.MaxExtras));
+            Assert.InRange(counts.Average(), 1.5, 3.0);
+            Assert.Contains(counts, c => c == IrisRandomizer.MaxExtras);
+            // One color split at a time, and no two-tone split with the odd eye
+            Assert.All(Designs(600), p => Assert.False(p.TwoToneIntensity > 0 && (p.ToneBandIntensity > 0 || p.IsOddEye)));
+            // The black glitter and the grain shapes only where there are grains
+            Assert.All(Designs(600), p => Assert.True(p.ParticleCount > 0 || (!p.ParticleGlowCustomColor && p.ParticleShape == GlitterShape.Mixed)));
+        }
+
+        [Fact]
+        public void TheLooks_AllShowUp_PlainAndDecorated()
+        {
+            var designs = Designs(600).ToList();
+            // ナチュラル: fibers without glitter or symbols; 幻想: aurora, nebula or holographic sheen; 宝石: gem facets
+            Assert.Contains(designs, p => p.FiberNoise >= 0.25 && p.ParticleCount == 0 && p.Symbols.Count == 0);
+            Assert.Contains(designs, p => p.NebulaOpacity > 0);
+            Assert.Contains(designs, p => p.HoloIntensity > 0 && p.AuroraOpacity == 0);
+            Assert.Contains(designs, p => p.IrisFacetIntensity > 0 && p.PupilFacetIntensity > 0);
+            Assert.Contains(designs, p => p.TwoToneIntensity > 0);
+        }
+
         [Fact]
         public void PupilShapes_ComeFromTheTable_WithoutTheCross()
         {
@@ -61,7 +110,7 @@ namespace DollIrisGenerator.Tests
                     Assert.InRange(r, 0.46, 0.64);
                 }
             }
-            Assert.True(seen > 100);
+            Assert.True(seen > 50);
             Assert.Contains(Designs(400), p => p.Symbols.Count == 2);
             Assert.Contains(Designs(400), p => p.Symbols.Any(s => s.Type == SymbolType.Butterfly));
         }

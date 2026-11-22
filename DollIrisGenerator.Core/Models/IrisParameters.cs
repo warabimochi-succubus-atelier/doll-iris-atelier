@@ -55,7 +55,7 @@ namespace DollIrisGenerator.Models
         public const string DefaultRimRayColor = "#0D1B3E";
 
         /// <summary>偏光の虹色 (SvgExporter.AppendHolo): ranges and defaults.</summary>
-        public const double MinHoloScale = 1.0, MaxHoloScale = 12.0, DefaultHoloScale = 4.0;
+        public const double MinHoloScale = 1.0, MaxHoloScale = 5.0, DefaultHoloScale = 4.0;
 
         /// <summary>中心の光: the default color.</summary>
         public const string DefaultCenterGlowColor = "#FFFFFF";

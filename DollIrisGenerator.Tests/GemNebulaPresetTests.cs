@@ -209,6 +209,7 @@ namespace DollIrisGenerator.Tests
             "ベーシック: クリアブルー", "ベーシック: ピンク", "ベーシック: グリーン", "ベーシック: アンバー", "ベーシック: ブラウン",
             "特殊: 星屑", "特殊: オーロラ", "特殊: 銀河", "特殊: 夕焼け", "特殊: 夜空", "特殊: 宝石", "特殊: ハート",
             "特殊: 桜", "特殊: キャットアイ", "特殊: 蝶々", "特殊: 三日月", "特殊: クリスタル",
+            "特殊: ホログラム", "特殊: 黒ラメ", "特殊: アニメ塗り", "特殊: グラスアイ",
             "雰囲気: A. ナチュラル (ピンク系)", "雰囲気: B. 精霊 (ブルー系)", "雰囲気: C. アンニュイ (パープル系)",
             "雰囲気: D. つんでれ (レッド系)", "雰囲気: E. 小悪魔 (赤紫系)", "雰囲気: F. 無邪気 (アクア系)",
             "雰囲気: G. 儚げ (シルバー系)", "雰囲気: H. クール (アイス系)"
@@ -311,14 +312,15 @@ namespace DollIrisGenerator.Tests
         {
             var p = new IrisParameters();
             ColorPresets.ApplyPreset(p, Preset("特殊: ハート"));
-            var heart = p.Symbols.Single(s => s.Enabled);
-            Assert.Equal(SymbolType.Heart, heart.Type);
-            Assert.Equal(0.0, heart.PositionX);
-            Assert.Equal(0.0, heart.PositionY);
-            Assert.True(heart.Size < p.PupilSizeRatio); // smaller than the pupil heart: only its rim shows
+            // A pale heart pupil with a deep rim (its own 縁取り線), and heart glitter
+            Assert.Equal(PupilShape.Heart, p.PupilShape);
+            Assert.True(p.PupilOutlineIntensity > 0.5);
+            Assert.Equal(GlitterShape.Heart, p.ParticleShape);
+            Assert.DoesNotContain(p.Symbols, s => s.Enabled);
 
             ColorPresets.ApplyPreset(p, Preset("ベーシック: グリーン"));
-            Assert.DoesNotContain(p.Symbols, s => s.Enabled);
+            Assert.Equal(0.0, p.PupilOutlineIntensity);
+            Assert.Equal(GlitterShape.Mixed, p.ParticleShape);
         }
 
         [Fact]
@@ -345,7 +347,7 @@ namespace DollIrisGenerator.Tests
         {
             // Start from a built-in look with a symbol, then change the look settings by hand
             var source = new IrisParameters();
-            ColorPresets.ApplyPreset(source, Preset("特殊: ハート"));
+            ColorPresets.ApplyPreset(source, Preset("特殊: 夜空"));
             source.RayCount = 37;
             source.RayIntensity = 0.42;
             source.ParticleCount = 123;
