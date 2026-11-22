@@ -832,7 +832,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="瞳孔模様" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockPupil}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色と、縁取り線・中の輪・瞳孔まわりの輪をランダム生成で変えない"/>
+                                                      ToolTip="瞳孔の形・大きさ・透明度・ぼかし・宝石カット・色と、縁取り線・中の輪 (3 本とも)・瞳孔まわりの輪をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -951,19 +951,20 @@
                                             <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilOutlineColor, Mode=TwoWay}"/>
                                         </DockPanel>
 
-                                        <!-- 瞳孔の中の輪 (Pupil inner ring) -->
+                                        <!-- 瞳孔の中の輪 (Pupil inner rings) -->
                                         <TextBlock Text="瞳孔の中の輪" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
-                                        <TextBlock Text="瞳孔の中に、瞳孔と同じ形を小さくした細い輪を引きます。縁取り線と同時に使えます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <TextBlock Text="瞳孔の中に、瞳孔と同じ形を小さくした細い輪を 3 本まで引きます。輪ごとに強さ・大きさ・太さ・色を決めます。縁取り線と同時に使えます (強さ 0% でその輪はオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <TextBlock Text="1 本目" FontSize="11" Foreground="{StaticResource TextPrimary}" Margin="0,0,0,4"/>
                                         <DockPanel Margin="0,0,0,4" ToolTip="輪の濃さ。0% でオフ">
                                             <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilInnerRingIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilInnerRingIntensity}" Margin="0,0,0,8"/>
-                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔に対する輪の大きさ (50% で瞳孔の半分)">
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔に対する輪の大きさ (50% で瞳孔の半分)。輪ごとに大きさを決めるので、間隔は自由です">
                                             <TextBlock Text="大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilInnerRingSize, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.2" Maximum="0.95" Value="{Binding CurrentIris.PupilInnerRingSize}" Margin="0,0,0,8"/>
+                                        <Slider Minimum="0.1" Maximum="0.95" Value="{Binding CurrentIris.PupilInnerRingSize}" Margin="0,0,0,8"/>
                                         <DockPanel Margin="0,0,0,4" ToolTip="線の太さ。虹彩の半径に対する割合 (輪の大きさを変えても太さは変わりません)">
                                             <TextBlock Text="太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.PupilInnerRingWidth, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
@@ -972,6 +973,46 @@
                                         <DockPanel Margin="0,0,0,6">
                                             <TextBlock Text="輪の色:" VerticalAlignment="Center" Width="110"/>
                                             <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilInnerRingColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="2 本目" FontSize="11" Foreground="{StaticResource TextPrimary}" Margin="0,6,0,4"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="輪の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingIntensity2, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilInnerRingIntensity2}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔に対する輪の大きさ (50% で瞳孔の半分)。輪ごとに大きさを決めるので、間隔は自由です">
+                                            <TextBlock Text="大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingSize2, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.1" Maximum="0.95" Value="{Binding CurrentIris.PupilInnerRingSize2}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="線の太さ。虹彩の半径に対する割合 (輪の大きさを変えても太さは変わりません)">
+                                            <TextBlock Text="太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingWidth2, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.005" Maximum="0.05" Value="{Binding CurrentIris.PupilInnerRingWidth2}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="輪の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilInnerRingColor2, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="3 本目" FontSize="11" Foreground="{StaticResource TextPrimary}" Margin="0,6,0,4"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="輪の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingIntensity3, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.PupilInnerRingIntensity3}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="瞳孔に対する輪の大きさ (50% で瞳孔の半分)。輪ごとに大きさを決めるので、間隔は自由です">
+                                            <TextBlock Text="大きさ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingSize3, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.1" Maximum="0.95" Value="{Binding CurrentIris.PupilInnerRingSize3}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="線の太さ。虹彩の半径に対する割合 (輪の大きさを変えても太さは変わりません)">
+                                            <TextBlock Text="太さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.PupilInnerRingWidth3, StringFormat='{}{0:P1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.005" Maximum="0.05" Value="{Binding CurrentIris.PupilInnerRingWidth3}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="輪の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.PupilInnerRingColor3, Mode=TwoWay}"/>
                                         </DockPanel>
 
                                         <!-- 瞳孔まわりの輪 (Collarette) -->

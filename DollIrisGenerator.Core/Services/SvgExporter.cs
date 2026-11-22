@@ -1051,13 +1051,18 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine("      </g>");
                 }
 
-                // 瞳孔の中の輪: the same outline shrunk about the pupil's center; the stroke widened to match, so the line
-                // keeps its width. Under the 縁取り線
-                if (p.PupilInnerRingIntensity > 0.01)
+                // 瞳孔の中の輪 (up to three, each on its own): the same outline shrunk about the pupil's center; the stroke
+                // widened to match, so the line keeps its width. Under the 縁取り線
+                foreach (var (strength, k, width, color, suffix) in new[]
                 {
-                    string ringColor = GeometryHelper.SanitizeColorHex(p.PupilInnerRingColor, IrisParameters.DefaultPupilInnerRingColor);
-                    double k = p.PupilInnerRingSize;
-                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * p.PupilInnerRingWidth / k, 4)}"" stroke-linejoin=""round"" opacity=""{p.PupilInnerRingIntensity.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
+                    (p.PupilInnerRingIntensity, p.PupilInnerRingSize, p.PupilInnerRingWidth, p.PupilInnerRingColor, ""),
+                    (p.PupilInnerRingIntensity2, p.PupilInnerRingSize2, p.PupilInnerRingWidth2, p.PupilInnerRingColor2, "2"),
+                    (p.PupilInnerRingIntensity3, p.PupilInnerRingSize3, p.PupilInnerRingWidth3, p.PupilInnerRingColor3, "3")
+                })
+                {
+                    if (strength <= 0.01) continue;
+                    string ringColor = GeometryHelper.SanitizeColorHex(color, IrisParameters.DefaultPupilInnerRingColor);
+                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width / k, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
                 }
 
                 // 瞳孔の縁取り線: a line centered on the same outline (not blurred)

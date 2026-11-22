@@ -304,6 +304,30 @@ namespace DollIrisGenerator.Services
                 p.ParticleGlowColor = Chance(50) ? IrisParameters.DefaultParticleGlowColor : HslToHex(hue, paleSat, 0.88);
                 if (blackGlitter) p.ParticleColor = HslToHex(hue, sat * 0.5, 0.06);
             }
+
+            // 瞳孔の中の輪の 2 本目・3 本目 (drawn last): smaller rings inside the first, not evenly spaced, each with its
+            // own strength, width and (sometimes) color
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                bool second = p.PupilInnerRingIntensity > 0 && Chance(35);
+                bool third = second && Chance(30);
+                double f2 = Range(0.45, 0.75), f3 = Range(0.4, 0.7);
+                p.PupilInnerRingSize2 = Math.Max(IrisParameters.MinPupilInnerRingSize, Math.Round(p.PupilInnerRingSize * f2, 2));
+                p.PupilInnerRingSize3 = Math.Max(IrisParameters.MinPupilInnerRingSize, Math.Round(p.PupilInnerRingSize2 * f3, 2));
+                // A third ring only when it fits inside the second
+                if (p.PupilInnerRingSize3 >= p.PupilInnerRingSize2) third = false;
+                p.PupilInnerRingIntensity2 = second ? Range(0.4, 0.9) : 0.0;
+                p.PupilInnerRingIntensity3 = third ? Range(0.3, 0.8) : 0.0;
+                p.PupilInnerRingWidth2 = Range(0.006, 0.018, 3);
+                p.PupilInnerRingWidth3 = Range(0.005, 0.015, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil))
+            {
+                // Half the time the same color as the first ring, otherwise white or a pale theme color
+                string Other() => Chance(50) ? p.PupilInnerRingColor : Chance(50) ? "#FFFFFF" : HslToHex(hue + 20.0, paleSat, 0.85);
+                p.PupilInnerRingColor2 = Other();
+                p.PupilInnerRingColor3 = Other();
+            }
         }
 
         /// <summary>

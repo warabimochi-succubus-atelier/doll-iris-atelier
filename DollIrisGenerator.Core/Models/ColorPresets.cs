@@ -60,6 +60,14 @@ namespace DollIrisGenerator.Models
         public double? PupilInnerRingSize { get; set; }
         public double? PupilInnerRingWidth { get; set; }
         public string? PupilInnerRingColor { get; set; }
+        public double? PupilInnerRingIntensity2 { get; set; }
+        public double? PupilInnerRingSize2 { get; set; }
+        public double? PupilInnerRingWidth2 { get; set; }
+        public string? PupilInnerRingColor2 { get; set; }
+        public double? PupilInnerRingIntensity3 { get; set; }
+        public double? PupilInnerRingSize3 { get; set; }
+        public double? PupilInnerRingWidth3 { get; set; }
+        public string? PupilInnerRingColor3 { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
         public int? RayCount { get; set; }
@@ -496,6 +504,14 @@ namespace DollIrisGenerator.Models
             target.PupilInnerRingSize = preset.PupilInnerRingSize ?? d.PupilInnerRingSize;
             target.PupilInnerRingWidth = preset.PupilInnerRingWidth ?? d.PupilInnerRingWidth;
             target.PupilInnerRingColor = preset.PupilInnerRingColor ?? d.PupilInnerRingColor;
+            target.PupilInnerRingIntensity2 = preset.PupilInnerRingIntensity2 ?? d.PupilInnerRingIntensity2;
+            target.PupilInnerRingSize2 = preset.PupilInnerRingSize2 ?? d.PupilInnerRingSize2;
+            target.PupilInnerRingWidth2 = preset.PupilInnerRingWidth2 ?? d.PupilInnerRingWidth2;
+            target.PupilInnerRingColor2 = preset.PupilInnerRingColor2 ?? d.PupilInnerRingColor2;
+            target.PupilInnerRingIntensity3 = preset.PupilInnerRingIntensity3 ?? d.PupilInnerRingIntensity3;
+            target.PupilInnerRingSize3 = preset.PupilInnerRingSize3 ?? d.PupilInnerRingSize3;
+            target.PupilInnerRingWidth3 = preset.PupilInnerRingWidth3 ?? d.PupilInnerRingWidth3;
+            target.PupilInnerRingColor3 = preset.PupilInnerRingColor3 ?? d.PupilInnerRingColor3;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
             target.RayCount = preset.RayCount ?? d.RayCount;
@@ -694,6 +710,14 @@ namespace DollIrisGenerator.Models
                 PupilInnerRingSize = design.PupilInnerRingSize,
                 PupilInnerRingWidth = design.PupilInnerRingWidth,
                 PupilInnerRingColor = design.PupilInnerRingColor,
+                PupilInnerRingIntensity2 = design.PupilInnerRingIntensity2,
+                PupilInnerRingSize2 = design.PupilInnerRingSize2,
+                PupilInnerRingWidth2 = design.PupilInnerRingWidth2,
+                PupilInnerRingColor2 = design.PupilInnerRingColor2,
+                PupilInnerRingIntensity3 = design.PupilInnerRingIntensity3,
+                PupilInnerRingSize3 = design.PupilInnerRingSize3,
+                PupilInnerRingWidth3 = design.PupilInnerRingWidth3,
+                PupilInnerRingColor3 = design.PupilInnerRingColor3,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
                 RayCount = design.RayCount,

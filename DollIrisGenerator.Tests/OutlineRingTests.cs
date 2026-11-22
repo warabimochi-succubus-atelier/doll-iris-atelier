@@ -77,10 +77,104 @@ namespace DollIrisGenerator.Tests
             Assert.DoesNotContain("_pupil_inner_ring", SvgExporter.GeneratePairSvg(p));
         }
 
+        [Fact]
+        public void PupilInnerRings_UpToThree_EachWithItsOwnSettings()
+        {
+            var p = new IrisParameters { PupilInnerRingIntensity = 0.7, PupilInnerRingSize = 0.7, PupilSizeRatio = 0.4 };
+            Assert.Equal(0.0, p.PupilInnerRingIntensity2);
+            Assert.Equal(0.0, p.PupilInnerRingIntensity3);
+            Assert.Equal(IrisParameters.DefaultPupilInnerRingSize2, p.PupilInnerRingSize2);
+            Assert.Equal(IrisParameters.DefaultPupilInnerRingSize3, p.PupilInnerRingSize3);
+            string svg = SvgExporter.GeneratePairSvg(p);
+            Assert.DoesNotContain("_pupil_inner_ring2", svg);
+            Assert.DoesNotContain("_pupil_inner_ring3", svg);
+
+            // Only the third on: drawn with its own settings, the second not
+            p.PupilInnerRingIntensity3 = 0.5;
+            p.PupilInnerRingSize3 = 0.25;
+            p.PupilInnerRingColor3 = "#FF80AB";
+            svg = SvgExporter.GeneratePairSvg(p);
+            Assert.DoesNotContain("_pupil_inner_ring2", svg);
+            string third = Element(svg, "left_eye_pupil_inner_ring3");
+            Assert.Contains(" scale(0.25000) ", third);
+            Assert.Contains("stroke=\"#FF80AB\"", third);
+            Assert.Contains("opacity=\"0.50\"", third);
+
+            // The second with its own width and strength; not evenly spaced
+            p.PupilInnerRingIntensity2 = 0.9;
+            p.PupilInnerRingSize2 = 0.6;
+            p.PupilInnerRingWidth2 = 0.03;
+            svg = SvgExporter.GeneratePairSvg(p);
+            double baseR = p.SizeMm / 2.0;
+            string second = Element(svg, "left_eye_pupil_inner_ring2");
+            Assert.Contains(" scale(0.60000) ", second);
+            Assert.Contains($"stroke-width=\"{(baseR * 0.03 / 0.6).ToFixed(4)}\"", second);
+            Assert.Contains("opacity=\"0.90\"", second);
+            Assert.Contains("stroke=\"#FFFFFF\"", second);
+            int first = svg.IndexOf("id=\"left_eye_pupil_inner_ring\"", StringComparison.Ordinal);
+            Assert.True(first < svg.IndexOf("left_eye_pupil_inner_ring2", StringComparison.Ordinal));
+            Assert.True(svg.IndexOf("left_eye_pupil_inner_ring2", StringComparison.Ordinal) < svg.IndexOf("left_eye_pupil_inner_ring3", StringComparison.Ordinal));
+            System.Xml.Linq.XDocument.Parse(svg);
+
+            // The first ring off: the others still drawn
+            p.PupilInnerRingIntensity = 0;
+            svg = SvgExporter.GeneratePairSvg(p);
+            Assert.DoesNotContain("id=\"left_eye_pupil_inner_ring\"", svg);
+            Assert.Contains("id=\"left_eye_pupil_inner_ring2\"", svg);
+
+            // Clamped like the first ring
+            p.PupilInnerRingSize2 = 0.01;
+            Assert.Equal(IrisParameters.MinPupilInnerRingSize, p.PupilInnerRingSize2);
+            p.PupilInnerRingSize3 = double.NaN;
+            Assert.Equal(IrisParameters.DefaultPupilInnerRingSize3, p.PupilInnerRingSize3);
+            p.PupilInnerRingWidth3 = 1;
+            Assert.Equal(IrisParameters.MaxPupilOutlineWidth, p.PupilInnerRingWidth3);
+            p.PupilInnerRingColor2 = null!;
+            Assert.Equal(IrisParameters.DefaultPupilInnerRingColor, p.PupilInnerRingColor2);
+
+            // Saved and carried by presets
+            var q = new IrisParameters { PupilInnerRingIntensity2 = 0.4, PupilInnerRingSize2 = 0.3, PupilInnerRingColor3 = "#123456" };
+            var restored = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(q))!;
+            Assert.Equal(0.4, restored.PupilInnerRingIntensity2);
+            Assert.Equal(0.3, restored.PupilInnerRingSize2);
+            Assert.Equal("#123456", restored.PupilInnerRingColor3);
+            var target = new IrisParameters();
+            ColorPresets.ApplyPreset(target, ColorPresets.FromDesign(restored, "test", ""));
+            Assert.Equal(0.4, target.PupilInnerRingIntensity2);
+            Assert.Equal("#123456", target.PupilInnerRingColor3);
+            ColorPresets.ApplyPreset(target, ColorPresets.All[0]);
+            Assert.Equal(0.0, target.PupilInnerRingIntensity2);
+        }
+
+        [Fact]
+        public void Randomizer_SometimesAddsSmallerRingsInside()
+        {
+            int two = 0, three = 0;
+            for (int i = 0; i < 1500; i++)
+            {
+                var p = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(p, new Random(i));
+                if (p.PupilInnerRingIntensity2 > 0)
+                {
+                    two++;
+                    Assert.True(p.PupilInnerRingIntensity > 0);
+                    Assert.True(p.PupilInnerRingSize2 < p.PupilInnerRingSize);
+                }
+                if (p.PupilInnerRingIntensity3 > 0)
+                {
+                    three++;
+                    Assert.True(p.PupilInnerRingIntensity2 > 0);
+                    Assert.True(p.PupilInnerRingSize3 < p.PupilInnerRingSize2);
+                }
+            }
+            Assert.InRange(two, 40, 140);   // 35% of the 15% with a ring
+            Assert.InRange(three, 5, 60);   // 30% of those
+        }
+
         /// <summary>The element of the given id.</summary>
         private static string Element(string svg, string id)
         {
-            int at = svg.IndexOf($"id=\"{id}\"", StringComparison.Ordinal);
+            int at = svg.IndexOf($"id=\"{id}\" ", StringComparison.Ordinal);
             int start = svg.LastIndexOf('<', at);
             return svg[start..(svg.IndexOf("/>", at, StringComparison.Ordinal) + 2)];
         }

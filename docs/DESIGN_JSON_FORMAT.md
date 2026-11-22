@@ -194,10 +194,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilOutlineIntensity` | 0〜1 | 瞳孔の縁取り線の強さ（不透明度）。0 でオフ（既定） |
 | `PupilOutlineWidth` | 0.005〜0.05 | 縁取り線の太さの比率（既定 0.015） |
 | `PupilOutlineColor` | 色（単色） | 縁取り線の色（既定 `#FFFFFF`） |
-| `PupilInnerRingIntensity` | 0〜1 | 瞳孔の中の輪（瞳孔と同じ形を小さくした光の輪）の強さ。0 でオフ（既定）。縁取り線と同時に使える |
-| `PupilInnerRingSize` | 0.2〜0.95 | 瞳孔に対する中の輪の大きさ（既定 0.6） |
-| `PupilInnerRingWidth` | 0.005〜0.05 | 中の輪の線の太さの比率（既定 0.012） |
-| `PupilInnerRingColor` | 色（単色） | 中の輪の色（既定 `#FFFFFF`） |
+| `PupilInnerRingIntensity`, `PupilInnerRingIntensity2`, `PupilInnerRingIntensity3` | 0〜1 | 瞳孔の中の輪（瞳孔と同じ形を小さくした光の輪）の 1〜3 本目の強さ。0 でその輪はオフ（既定）。縁取り線と同時に使える |
+| `PupilInnerRingSize`, `PupilInnerRingSize2`, `PupilInnerRingSize3` | 0.1〜0.95 | 各輪の、瞳孔に対する大きさ（既定 0.6 / 0.4 / 0.25）。間隔・順番は自由 |
+| `PupilInnerRingWidth`, `PupilInnerRingWidth2`, `PupilInnerRingWidth3` | 0.005〜0.05 | 各輪の線の太さの比率（既定 0.012） |
+| `PupilInnerRingColor`, `PupilInnerRingColor2`, `PupilInnerRingColor3` | 色（単色） | 各輪の色（既定 `#FFFFFF`） |
 
 ### 瞳孔まわりの輪（瞳孔の縁から外へ広がるギザギザの色の輪）
 
@@ -440,6 +440,14 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilInnerRingSize": 0.6,
   "PupilInnerRingWidth": 0.012,
   "PupilInnerRingColor": "#FFFFFF",
+  "PupilInnerRingIntensity2": 0.0,
+  "PupilInnerRingSize2": 0.4,
+  "PupilInnerRingWidth2": 0.012,
+  "PupilInnerRingColor2": "#FFFFFF",
+  "PupilInnerRingIntensity3": 0.0,
+  "PupilInnerRingSize3": 0.25,
+  "PupilInnerRingWidth3": 0.012,
+  "PupilInnerRingColor3": "#FFFFFF",
   "CollaretteIntensity": 0.0,
   "CollaretteColor": "#FFD54F",
   "CollaretteWidth": 0.2,
