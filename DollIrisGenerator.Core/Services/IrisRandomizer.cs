@@ -328,6 +328,33 @@ namespace DollIrisGenerator.Services
                 p.PupilInnerRingColor2 = Other();
                 p.PupilInnerRingColor3 = Other();
             }
+
+            // 下部反射光の始まる高さ (drawn last): mostly the usual 45%, sometimes higher or only at the bottom
+            if (!colorsLocked)
+            {
+                bool moved = Chance(30);
+                double start = Range(0.30, 0.70);
+                p.BottomHighlightStart = moved ? start : IrisParameters.DefaultBottomHighlightStart;
+            }
+
+            // 粒の形 (drawn last): mostly the usual round grains with stars, sometimes one shape (or a share of it)
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                GlitterShape[] shapes = { GlitterShape.Star4, GlitterShape.Star5, GlitterShape.Heart, GlitterShape.Diamond, GlitterShape.SakuraPetal };
+                bool shaped = Chance(20);
+                var shape = shapes[rng.Next(shapes.Length)];
+                double ratio = Range(0.3, 1.0);
+                p.ParticleShape = shaped ? shape : GlitterShape.Mixed;
+                p.ParticleShapeRatio = shaped ? ratio : 1.0;
+            }
+
+            // 外周からの線の見える範囲 (drawn last): mostly everywhere, sometimes the upper or the lower half only
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                int roll = rng.Next(10);
+                var style = roll < 7 ? PatternRange.Styles[0] : roll < 9 ? PatternRange.Styles[3] : PatternRange.Styles[1];
+                PatternRange.Apply(p, PatternLayer.RimRays, style);
+            }
         }
 
         /// <summary>

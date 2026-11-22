@@ -155,5 +155,67 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(99, kept.RimRayCount);
             Assert.Equal("#010101", kept.RimRayColor);
         }
+
+        [Fact]
+        public void Range_MasksTheLines_WithoutMovingThem()
+        {
+            var p = WithRimRays();
+            Assert.True(PatternRange.IsFull(p, PatternLayer.RimRays));
+            string full = SvgExporter.GeneratePairSvg(p);
+            Assert.DoesNotContain("_rim_rays_range", full);
+
+            PatternRange.Apply(p, PatternLayer.RimRays, PatternRange.Styles[3]); // 上半分
+            Assert.Equal("上半分", PatternRange.Match(p, PatternLayer.RimRays)?.Name);
+            string svg = SvgExporter.GeneratePairSvg(p);
+            Assert.Contains($"<g id=\"left_eye_rim_rays\" fill=\"{p.RimRayColor}\" mask=\"url(#left_eye_rim_rays_range)\">", svg);
+            Assert.Contains("<mask id=\"right_eye_rim_rays_range\"", svg);
+
+            static string Lines(string s)
+            {
+                int g = s.IndexOf("<g id=\"left_eye_rim_rays\"", StringComparison.Ordinal);
+                g = s.IndexOf('>', g);
+                return s[g..s.IndexOf("</g>", g, StringComparison.Ordinal)];
+            }
+            Assert.Equal(Lines(full), Lines(svg));
+            System.Xml.Linq.XDocument.Parse(svg);
+        }
+
+        [Fact]
+        public void Range_IsSaved_AndCarriedByPresets()
+        {
+            var q = WithRimRays();
+            PatternRange.Set(q, PatternLayer.RimRays, 270, 200, 50);
+            var restored = JsonSerializer.Deserialize<IrisParameters>(JsonSerializer.Serialize(q))!;
+            Assert.Equal((270.0, 200.0, 50.0), PatternRange.Of(restored, PatternLayer.RimRays));
+            Assert.True(PatternRange.IsFull(JsonSerializer.Deserialize<IrisParameters>("{\"RimRayIntensity\": 0.5}")!, PatternLayer.RimRays));
+
+            var target = new IrisParameters();
+            ColorPresets.ApplyPreset(target, ColorPresets.FromDesign(q, "test", ""));
+            Assert.Equal((270.0, 200.0, 50.0), PatternRange.Of(target, PatternLayer.RimRays));
+            ColorPresets.ApplyPreset(target, ColorPresets.All[0]);
+            Assert.True(PatternRange.IsFull(target, PatternLayer.RimRays));
+        }
+
+        [Fact]
+        public void Randomizer_MostlyShowsTheWholeRim_AndTheRaysLockKeepsTheRange()
+        {
+            int upper = 0, lower = 0;
+            for (int i = 0; i < 400; i++)
+            {
+                var p = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(p, new Random(i));
+                var name = PatternRange.Match(p, PatternLayer.RimRays)?.Name;
+                Assert.Contains(name, new[] { "全体", "上半分", "下半分" });
+                if (name == "上半分") upper++;
+                if (name == "下半分") lower++;
+            }
+            Assert.InRange(upper, 50, 120); // about 20%
+            Assert.InRange(lower, 20, 70);  // about 10%
+
+            var kept = WithRimRays();
+            PatternRange.Set(kept, PatternLayer.RimRays, 10, 20, 5);
+            IrisRandomizer.RandomizeAttributes(kept, RandomizeLocks.Rays, new Random(3));
+            Assert.Equal((10.0, 20.0, 5.0), PatternRange.Of(kept, PatternLayer.RimRays));
+        }
     }
 }

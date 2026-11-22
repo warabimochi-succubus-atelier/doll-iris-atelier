@@ -95,6 +95,9 @@ public static class DesignFields
         new SliderField<IrisParameters>("外周グラデ範囲", p => p.OuterGradientRadius, (p, v) => p.OuterGradientRadius = v, 0.3, 1.2, 0.01, Fmt.Percent),
         new ColorField<IrisParameters>("下部反射光 (照り返し)", p => p.BottomHighlightColor, (p, v) => p.BottomHighlightColor = v),
         new SliderField<IrisParameters>("反射光の強さ", p => p.BottomHighlightIntensity, (p, v) => p.BottomHighlightIntensity = v, 0, 1, 0.01, Fmt.Percent),
+        new SliderField<IrisParameters>("反射光の始まる高さ", p => p.BottomHighlightStart, (p, v) => p.BottomHighlightStart = v,
+            0, IrisParameters.MaxBottomHighlightStart, 0.01, Fmt.Percent,
+            "照り返しが始まるところ。虹彩の高さに対する、上端からの割合 (最初は 45%)。小さいほど上まで広がり、大きいほど下端だけの細い照り返しになります"),
         new SliderField<IrisParameters>("まぶたの影の強さ", p => p.UpperShadowIntensity, (p, v) => p.UpperShadowIntensity = v, 0, 1, 0.01, Fmt.Percent,
             "虹彩の上側に落ちる影の濃さ。0% で影なし (最初は 65%)"),
         new SliderField<IrisParameters>("まぶたの影の深さ", p => p.UpperShadowDepth, (p, v) => p.UpperShadowDepth = v,
@@ -230,17 +233,18 @@ public static class DesignFields
             IrisParameters.MinRimRayWidth, IrisParameters.MaxRimRayWidth, 0.1, Fmt.F1, "外周での線の太さ (放射ラインの線幅と同じ単位)"),
         new SliderField<IrisParameters>("外周からの線のランダム性", p => p.RimRayRandomness, (p, v) => p.RimRayRandomness = v, 0, 1, 0.01, Fmt.Percent,
             "向き・長さ・濃さのばらつき"),
+        .. RangeFields(PatternLayer.RimRays, "外周からの線の見える範囲"),
     ];
 
     /// <summary>
     /// A pattern layer's 見える範囲: quick-select buttons and the three sliders (the same as the desktop app).
     /// </summary>
-    private static Field<IrisParameters>[] RangeFields(PatternLayer layer)
+    private static Field<IrisParameters>[] RangeFields(PatternLayer layer, string heading = "見える範囲")
     {
         Func<IrisParameters, (double A, double W, double F)> of = p => PatternRange.Of(p, layer);
         return new Field<IrisParameters>[]
         {
-            new HeadingField<IrisParameters>("見える範囲", "中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"),
+            new HeadingField<IrisParameters>(heading, "中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"),
             new ChoiceField<IrisParameters>("簡単選択", p => PatternRange.Match(p, layer)?.Name ?? "",
                 (p, v) => { var s = PatternRange.Styles.FirstOrDefault(x => x.Name == (string)v); if (s != null) PatternRange.Apply(p, layer, s); },
                 PatternRange.Styles.Select(s => (s.Name, (object)s.Name)).ToArray()),
@@ -273,6 +277,11 @@ public static class DesignFields
         new SliderField<IrisParameters>("粒径 (最大サイズ)", p => p.ParticleMaxSize, (p, v) => p.ParticleMaxSize = v, 0.5, 5.0, 0.1, Fmt.F1),
         Transparency<IrisParameters>(p => p.ParticleOpacity, (p, v) => p.ParticleOpacity = v),
         new SliderField<IrisParameters>("分布範囲 (外周比率)", p => p.ParticleRadiusRatio, (p, v) => p.ParticleRadiusRatio = v, 0.30, 0.95, 0.01, Fmt.Percent),
+        new ChoiceField<IrisParameters>("粒の形", p => p.ParticleShape, (p, v) => p.ParticleShape = (GlitterShape)v,
+            new (string, object)[] { ("従来 (丸と 4芒星)", GlitterShape.Mixed), ("丸", GlitterShape.Circle), ("4芒星", GlitterShape.Star4), ("5芒星", GlitterShape.Star5), ("ハート", GlitterShape.Heart), ("ダイヤ", GlitterShape.Diamond), ("桜の花びら", GlitterShape.SakuraPetal) },
+            "従来: 丸い粒で、5 粒に 1 粒が 4芒星。ほかの形は「形の粒の割合」の粒がその形になり、残りは丸になります"),
+        new SliderField<IrisParameters>("形の粒の割合", p => p.ParticleShapeRatio, (p, v) => p.ParticleShapeRatio = v,
+            IrisParameters.MinParticleShapeRatio, 1, 0.01, Fmt.Percent, "選んだ形にする粒の割合。残りは丸い粒になります (従来・丸では使いません)"),
         new HeadingField<IrisParameters>("光るラメ (0 でにじみ・フレアなし)"),
         new SliderField<IrisParameters>("光のにじみ", p => p.ParticleGlow, (p, v) => p.ParticleGlow = v, 0, 1, 0.01, Fmt.Percent),
         new ToggleField<IrisParameters>("にじみの色を変える", p => p.ParticleGlowCustomColor, (p, v) => p.ParticleGlowCustomColor = v),

@@ -114,6 +114,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `OuterGradientRadius` | 0.3〜1.2 | 外周色が始まる位置 |
 | `BottomHighlightColor` | 色 | 下側の照り返しの色 |
 | `BottomHighlightIntensity` | 0〜1 | 照り返しの強さ |
+| `BottomHighlightStart` | 0〜0.90 | 照り返しが始まる高さ。虹彩の高さに対する上端からの割合（既定 0.45）。小さいほど上まで広がる |
 | `LightStrength` | 0〜1 | 明るい場所を光の向きへずらす（0 でオフ） |
 | `LightAngle` | 0〜360 | 光の来る向き（270 = 上、225 前後 = 左上） |
 | `LightRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目で光の向きを左右反転するか。2 にすると両目で同じ向きから光が入る（ハイライトも 2 にすると、光源が固定された自然な光） |
@@ -240,6 +241,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `RimRayWidth` | 0.5〜4.0 | 外周での線の太さ。放射ラインの `RayThickness` と同じ単位（既定 1.2） |
 | `RimRayRandomness` | 0〜1 | 向き・長さ・濃さのばらつき（既定 0.4） |
 | `RimRayColor` | 色（単色） | 線の色（既定 `#0D1B3E`） |
+| `RimRayRangeAngle` | 0〜360（度） | 線の見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `RimRayRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `RimRayRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### 外輪（虹彩のふちの濃い輪）
 
@@ -264,6 +268,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleMaxSize` | 0.5〜5.0 | 最大の粒の大きさ |
 | `ParticleOpacity` | 0〜1 | |
 | `ParticleRadiusRatio` | 0.30〜0.95 | ラメが散らばる範囲（外周までの比率） |
+| `ParticleShape` | 0 従来, 1 丸, 2 4芒星, 3 5芒星, 4 ハート, 5 ダイヤ, 6 桜の花びら | 粒の形。0 は丸い粒で 5 粒に 1 粒が 4芒星（既定） |
+| `ParticleShapeRatio` | 0.05〜1 | 形にする粒の割合。残りは丸（既定 1。0 と 1 の形では使わない） |
 | `ParticleGlow` | 0〜1 | 粒の光のにじみ |
 | `ParticleGlowCustomColor` | true / false | true でにじみを `ParticleGlowColor` の色にする（既定 false = 粒と同じ色） |
 | `ParticleGlowColor` | 色（単色） | にじみの色（既定 `#FFF8E1`）。`ParticleColor` を黒にすると後光のある黒いラメになる（`GlitterBlend` は 0） |
@@ -384,6 +390,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "InnerGradientRadius": 0.55,
   "OuterGradientRadius": 0.95,
   "BottomHighlightIntensity": 0.4,
+  "BottomHighlightStart": 0.45,
   "LightAngle": 270.0,
   "LightRightEyeFlip": 0,
   "LightStrength": 0.0,
@@ -403,6 +410,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "RimRayWidth": 1.2,
   "RimRayRandomness": 0.4,
   "RimRayColor": "#0D1B3E",
+  "RimRayRangeAngle": 90.0,
+  "RimRayRangeWidth": 360.0,
+  "RimRayRangeFeather": 30.0,
   "UpperShadowIntensity": 0.65,
   "UpperShadowDepth": 0.65,
   "UpperShadowColor": "#000000",
@@ -483,6 +493,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ParticleMaxSize": 2.4,
   "ParticleOpacity": 0.85,
   "ParticleRadiusRatio": 0.75,
+  "ParticleShape": 0,
+  "ParticleShapeRatio": 1.0,
   "ParticleGlow": 0.7,
   "ParticleFlareRatio": 0.15,
   "ParticleFlareLength": 4.0,

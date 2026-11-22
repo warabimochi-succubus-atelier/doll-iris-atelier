@@ -649,6 +649,11 @@
                                             <TextBlock Text="反射光の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.BottomHighlightIntensity}" Minimum="0.0" Maximum="1.0"/>
                                         </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="照り返しが始まるところ。虹彩の高さに対する、上端からの割合 (最初は 45%)。小さいほど上まで広がり、大きいほど下端だけの細い照り返しになります">
+                                            <TextBlock Text="反射光の始まる高さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.BottomHighlightStart, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.BottomHighlightStart}" Minimum="0.0" Maximum="0.9"/>
+                                        </DockPanel>
 
                                         <!-- まぶたの影 (Upper eyelid shadow) -->
                                         <DockPanel Margin="0,8,0,4" ToolTip="虹彩の上側に落ちるまぶたの影の濃さ。0% で影なし (最初は 65%)">
@@ -1200,7 +1205,38 @@
                                             <TextBlock Text="ランダム性:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="{Binding CurrentIris.RimRayRandomness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
-                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.RimRayRandomness}"/>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.RimRayRandomness}" Margin="0,0,0,8"/>
+
+                                        <!-- 見える範囲 (RimRay) -->
+                                        <TextBlock Text="外周からの線の見える範囲:" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,10,0,4"
+                                                   ToolTip="中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"/>
+                                        <ItemsControl ItemsSource="{Binding RimRayRangeChoices}" Margin="0,0,0,6">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding Style.Name}" Padding="8,2" Margin="0,0,6,4" Background="#333842" Foreground="#80D8FF"
+                                                            Command="{Binding DataContext.ApplyPatternRangeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の中心の向き。0° = 右、90° = 下、180° = 左、270° = 上">
+                                            <TextBlock Text="範囲の向き:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayRangeAngle, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.RimRayRangeAngle}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の広さ。360° で全体 (範囲の制限なし)、180° で半分">
+                                            <TextBlock Text="範囲の広さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayRangeWidth, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="360" Value="{Binding CurrentIris.RimRayRangeWidth}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="扇形の両端で、だんだん消えていく角度の幅">
+                                            <TextBlock Text="端のぼかし:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayRangeFeather, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.RimRayRangeFeather}" Margin="0,0,0,8" TickFrequency="1" IsSnapToTickEnabled="True"/>
                                     </StackPanel>
                                 </GroupBox>
                             </StackPanel>
@@ -1571,6 +1607,25 @@
                                             <TextBlock Text="{Binding CurrentIris.ParticleRadiusRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.ParticleRadiusRatio}" Margin="0,0,0,10"/>
+
+                                        <!-- 粒の形 (Grain shape) -->
+                                        <DockPanel Margin="0,0,0,4" ToolTip="ラメの粒の形。従来: 丸い粒で、5 粒に 1 粒が 4芒星。ほかの形は「形の粒の割合」の粒がその形になり、残りは丸になります">
+                                            <TextBlock Text="粒の形:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="従来 (丸と 4芒星)" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mixed}"/>
+                                                <RadioButton Content="丸" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                <RadioButton Content="4芒星" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                <RadioButton Content="5芒星" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                <RadioButton Content="ハート" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                <RadioButton Content="ダイヤ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                <RadioButton Content="桜の花びら" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="選んだ形にする粒の割合。残りは丸い粒になります (従来・丸では使いません)">
+                                            <TextBlock Text="形の粒の割合:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleShapeRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.05" Maximum="1.0" Value="{Binding CurrentIris.ParticleShapeRatio}" Margin="0,0,0,10"/>
 
                                         <!-- Glowing glitter (光るラメ) -->
                                         <TextBlock Text="光るラメ (0 でにじみ・フレアなし)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>

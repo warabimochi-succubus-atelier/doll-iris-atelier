@@ -544,11 +544,12 @@ namespace DollIrisGenerator.Services
         /// there), then a strip of that width out to <see cref="RimRayReach"/>, along its direction on the stretched iris.
         /// </summary>
         private static void AppendRimRays(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
-            IrisParameters p, bool isRightEye, int seed)
+            IrisParameters p, bool isRightEye, int seed, string? rangeMaskId)
         {
             string color = GeometryHelper.SanitizeColorHex(p.RimRayColor, IrisParameters.DefaultRimRayColor);
             double half = p.RimRayWidth * IrisStyle.MmPerStyleUnit / 2.0;
-            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}"">");
+            string mask = rangeMaskId != null ? $@" mask=""url(#{rangeMaskId})""" : "";
+            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}""{mask}>");
             foreach (var ray in IrisPatterns.RimRays(p.RimRayCount, p.RimRayRandomness, seed, isRightEye))
             {
                 double ux = Math.Cos(ray.Angle) * rx, uy = Math.Sin(ray.Angle) * ry; // radius 1 on the stretched iris
@@ -728,9 +729,9 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("    </linearGradient>");
             }
 
-            // Lower Glow
+            // Lower Glow (clear at 始まる高さ, the old fixed 45% by default, to 強さ at the bottom)
             sb.AppendLine($@"    <linearGradient id=""{bottomGlowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
-            sb.AppendLine($@"      <stop offset=""45%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""0"" />");
+            sb.AppendLine($@"      <stop offset=""{(p.BottomHighlightStart * 100.0).ToString("0.###", Inv)}%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""0"" />");
             sb.AppendLine($@"      <stop offset=""100%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""{p.BottomHighlightIntensity.ToFixed(2)}"" />");
             sb.AppendLine("    </linearGradient>");
 
@@ -792,7 +793,9 @@ namespace DollIrisGenerator.Services
             // 外周からの線: tapered lines from the rim inward, under the rays (and the limbal ring drawn later)
             if (p.RimRayIntensity > 0.01)
             {
-                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed);
+                // 見える範囲: the mask goes on the lines' group
+                string? rimRange = AppendRangeMask(sb, $"{idPrefix}_rim_rays_range", p, PatternLayer.RimRays, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, rimRange);
             }
 
             // Radial Rays
@@ -1052,7 +1055,8 @@ namespace DollIrisGenerator.Services
                 }
 
                 // 瞳孔の中の輪 (up to three, each on its own): the same outline shrunk about the pupil's center; the stroke
-                // widened to match, so the line keeps its width. Under the 縁取り線
+                // widened to match, so the line keeps its width. The cross and the moon, which would come out of
+                // themselves that way, get their own inner outline (ShapeOutline.PupilInnerRing). Under the 縁取り線
                 foreach (var (strength, k, width, color, suffix) in new[]
                 {
                     (p.PupilInnerRingIntensity, p.PupilInnerRingSize, p.PupilInnerRingWidth, p.PupilInnerRingColor, ""),
@@ -1062,6 +1066,13 @@ namespace DollIrisGenerator.Services
                 {
                     if (strength <= 0.01) continue;
                     string ringColor = GeometryHelper.SanitizeColorHex(color, IrisParameters.DefaultPupilInnerRingColor);
+                    var inner = pupilOutline == null ? null : ShapeOutline.PupilInnerRing(p.PupilShape, prx, k);
+                    if (inner != null)
+                    {
+                        inner = inner.Rounded(p.PupilCornerRounding).Stretched(pTop, pBottom, pLeft, pRight);
+                        AppendPath(sb, @"      <path d=""", inner, cx, cy, $@""" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" />", mirrorPupil);
+                        continue;
+                    }
                     AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width / k, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
                 }
 
@@ -1110,7 +1121,16 @@ namespace DollIrisGenerator.Services
                     OpacityUnlessMasked(p.ParticleColor, p.ParticleOpacity), irisBox);
                 foreach (var g in grains)
                 {
-                    if (g.IsStar)
+                    if (g.Shape is ShapeKind kind)
+                    {
+                        // 粒の形: the symbols' outline, turned about the grain
+                        string turn = Math.Abs(g.Rotation) > 0.05
+                            ? $@" transform=""rotate({g.Rotation.ToFixed(1)}, {g.Position.X.ToFixed(3)}, {g.Position.Y.ToFixed(3)})"""
+                            : "";
+                        AppendPath(sb, "        <path d=\"", ShapeOutline.ForShape(kind, g.Size * IrisPatterns.GrainShapeRadius(kind)),
+                            g.Position.X, g.Position.Y, "\"" + turn + " />");
+                    }
+                    else if (g.IsStar)
                     {
                         sb.AppendLine(BuildSvgStar4(g.Position.X, g.Position.Y, g.Size * 1.5, 0.25));
                     }

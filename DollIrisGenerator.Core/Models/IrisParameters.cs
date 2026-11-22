@@ -60,6 +60,12 @@ namespace DollIrisGenerator.Models
         public const double MaxTwoToneCurve = 0.8, DefaultTwoToneCurve = 0.25;
         public const double DefaultTwoToneAngle = 90.0; // the lower side
 
+        /// <summary>下部反射光の始まる高さ: range and default (the old fixed value).</summary>
+        public const double MaxBottomHighlightStart = 0.90, DefaultBottomHighlightStart = 0.45;
+
+        /// <summary>形の粒の割合: the smallest share.</summary>
+        public const double MinParticleShapeRatio = 0.05;
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -134,6 +140,7 @@ namespace DollIrisGenerator.Models
         private double _innerGradientRadius = 0.55;
         private double _outerGradientRadius = 0.95;
         private double _bottomHighlightIntensity = 0.40;
+        private double _bottomHighlightStart = DefaultBottomHighlightStart; // 下部反射光の始まる高さ (the old fixed 45%)
 
         // Limbal Ring (外輪)
         private double _limbalRingThickness = 0.08; // fraction of radius
@@ -268,6 +275,8 @@ namespace DollIrisGenerator.Models
         private double _particleOpacity = 0.85;
         private string _particleColor = "#FFFFFF";
         private double _particleRadiusRatio = 0.75;
+        private GlitterShape _particleShape = GlitterShape.Mixed; // 粒の形 (従来: round with every fifth a 4-point star)
+        private double _particleShapeRatio = 1.0;                 // 形の粒の割合
         // Glowing glitter (光るラメ). On by default (also for older files); 0 = plain grains.
         private bool _particleGlowCustomColor = false;            // false: the glow takes the grains' own color
         private string _particleGlowColor = DefaultParticleGlowColor;
@@ -297,6 +306,9 @@ namespace DollIrisGenerator.Models
         private double _irisFacetRangeAngle = DefaultRangeAngle;
         private double _irisFacetRangeWidth = FullRangeWidth;
         private double _irisFacetRangeFeather = DefaultRangeFeather;
+        private double _rimRayRangeAngle = DefaultRangeAngle;
+        private double _rimRayRangeWidth = FullRangeWidth;
+        private double _rimRayRangeFeather = DefaultRangeFeather;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -463,6 +475,13 @@ namespace DollIrisGenerator.Models
         {
             get => _bottomHighlightIntensity;
             set { _bottomHighlightIntensity = Math.Max(0.0, Math.Min(1.0, value)); OnPropertyChanged(); }
+        }
+
+        /// <summary>下部反射光の始まる高さ: where the lower glow starts (clear), as a fraction of the iris box's height from the top.</summary>
+        public double BottomHighlightStart
+        {
+            get => _bottomHighlightStart;
+            set { _bottomHighlightStart = ClampFinite(value, 0.0, MaxBottomHighlightStart, DefaultBottomHighlightStart); OnPropertyChanged(); }
         }
 
         // Limbal Ring
@@ -1124,6 +1143,20 @@ namespace DollIrisGenerator.Models
             set { _particleRadiusRatio = Math.Max(0.1, Math.Min(1.0, value)); OnPropertyChanged(); }
         }
 
+        /// <summary>粒の形. Unknown numbers from a file become 従来 (Mixed).</summary>
+        public GlitterShape ParticleShape
+        {
+            get => _particleShape;
+            set { _particleShape = Enum.IsDefined(value) ? value : GlitterShape.Mixed; OnPropertyChanged(); }
+        }
+
+        /// <summary>形の粒の割合: the share of grains drawn in <see cref="ParticleShape"/> (the rest are round).</summary>
+        public double ParticleShapeRatio
+        {
+            get => _particleShapeRatio;
+            set { _particleShapeRatio = ClampFinite(value, MinParticleShapeRatio, 1.0, 1.0); OnPropertyChanged(); }
+        }
+
         /// <summary>光のにじみ: a soft halo of the grain's color around every grain. 0 = off.</summary>
         public double ParticleGlow
         {
@@ -1326,6 +1359,27 @@ namespace DollIrisGenerator.Models
         {
             get => _irisFacetRangeFeather;
             set { _irisFacetRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の向き (see PatternRange).</summary>
+        public double RimRayRangeAngle
+        {
+            get => _rimRayRangeAngle;
+            set { _rimRayRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の広さ. 360 = everywhere.</summary>
+        public double RimRayRangeWidth
+        {
+            get => _rimRayRangeWidth;
+            set { _rimRayRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の端のぼかし.</summary>
+        public double RimRayRangeFeather
+        {
+            get => _rimRayRangeFeather;
+            set { _rimRayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
         // Collections

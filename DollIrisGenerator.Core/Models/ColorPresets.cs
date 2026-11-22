@@ -70,10 +70,13 @@ namespace DollIrisGenerator.Models
         public string? PupilInnerRingColor3 { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
+        public double? BottomHighlightStart { get; set; }
         public int? RayCount { get; set; }
         public double? RayIntensity { get; set; }
         public int? ParticleCount { get; set; }
         public double? ParticleRadiusRatio { get; set; }
+        public GlitterShape? ParticleShape { get; set; }
+        public double? ParticleShapeRatio { get; set; }
         public double? ParticleGlow { get; set; }
         public double? ParticleFlareRatio { get; set; }
         public double? SymbolSize { get; set; }
@@ -146,6 +149,9 @@ namespace DollIrisGenerator.Models
         public double? IrisFacetRangeAngle { get; set; }
         public double? IrisFacetRangeWidth { get; set; }
         public double? IrisFacetRangeFeather { get; set; }
+        public double? RimRayRangeAngle { get; set; }
+        public double? RimRayRangeWidth { get; set; }
+        public double? RimRayRangeFeather { get; set; }
         public int? IrisFacetCount { get; set; }
         public LayerBlend? IrisFacetBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
@@ -514,10 +520,13 @@ namespace DollIrisGenerator.Models
             target.PupilInnerRingColor3 = preset.PupilInnerRingColor3 ?? d.PupilInnerRingColor3;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
+            target.BottomHighlightStart = preset.BottomHighlightStart ?? d.BottomHighlightStart;
             target.RayCount = preset.RayCount ?? d.RayCount;
             target.RayIntensity = preset.RayIntensity ?? d.RayIntensity;
             target.ParticleCount = preset.ParticleCount ?? d.ParticleCount;
             target.ParticleRadiusRatio = preset.ParticleRadiusRatio ?? d.ParticleRadiusRatio;
+            target.ParticleShape = preset.ParticleShape ?? d.ParticleShape;
+            target.ParticleShapeRatio = preset.ParticleShapeRatio ?? d.ParticleShapeRatio;
             target.ParticleGlow = preset.ParticleGlow ?? d.ParticleGlow;
             target.ParticleFlareRatio = preset.ParticleFlareRatio ?? d.ParticleFlareRatio;
 
@@ -603,6 +612,9 @@ namespace DollIrisGenerator.Models
             target.IrisFacetRangeAngle = preset.IrisFacetRangeAngle ?? d.IrisFacetRangeAngle;
             target.IrisFacetRangeWidth = preset.IrisFacetRangeWidth ?? d.IrisFacetRangeWidth;
             target.IrisFacetRangeFeather = preset.IrisFacetRangeFeather ?? d.IrisFacetRangeFeather;
+            target.RimRayRangeAngle = preset.RimRayRangeAngle ?? d.RimRayRangeAngle;
+            target.RimRayRangeWidth = preset.RimRayRangeWidth ?? d.RimRayRangeWidth;
+            target.RimRayRangeFeather = preset.RimRayRangeFeather ?? d.RimRayRangeFeather;
             target.IrisFacetCount = preset.IrisFacetCount ?? d.IrisFacetCount;
             target.IrisFacetBlend = preset.IrisFacetBlend ?? d.IrisFacetBlend;
 
@@ -720,10 +732,13 @@ namespace DollIrisGenerator.Models
                 PupilInnerRingColor3 = design.PupilInnerRingColor3,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
+                BottomHighlightStart = design.BottomHighlightStart,
                 RayCount = design.RayCount,
                 RayIntensity = design.RayIntensity,
                 ParticleCount = design.ParticleCount,
                 ParticleRadiusRatio = design.ParticleRadiusRatio,
+                ParticleShape = design.ParticleShape,
+                ParticleShapeRatio = design.ParticleShapeRatio,
                 ParticleGlow = design.ParticleGlow,
                 ParticleFlareRatio = design.ParticleFlareRatio,
 
@@ -808,6 +823,9 @@ namespace DollIrisGenerator.Models
                 IrisFacetRangeAngle = design.IrisFacetRangeAngle,
                 IrisFacetRangeWidth = design.IrisFacetRangeWidth,
                 IrisFacetRangeFeather = design.IrisFacetRangeFeather,
+                RimRayRangeAngle = design.RimRayRangeAngle,
+                RimRayRangeWidth = design.RimRayRangeWidth,
+                RimRayRangeFeather = design.RimRayRangeFeather,
                 IrisFacetCount = design.IrisFacetCount,
                 IrisFacetBlend = design.IrisFacetBlend,
 
