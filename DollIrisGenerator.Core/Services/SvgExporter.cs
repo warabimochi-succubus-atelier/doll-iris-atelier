@@ -544,11 +544,12 @@ namespace DollIrisGenerator.Services
         /// there), then a strip of that width out to <see cref="RimRayReach"/>, along its direction on the stretched iris.
         /// </summary>
         private static void AppendRimRays(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
-            IrisParameters p, bool isRightEye, int seed)
+            IrisParameters p, bool isRightEye, int seed, string? rangeMaskId)
         {
             string color = GeometryHelper.SanitizeColorHex(p.RimRayColor, IrisParameters.DefaultRimRayColor);
             double half = p.RimRayWidth * IrisStyle.MmPerStyleUnit / 2.0;
-            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}"">");
+            string mask = rangeMaskId != null ? $@" mask=""url(#{rangeMaskId})""" : "";
+            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}""{mask}>");
             foreach (var ray in IrisPatterns.RimRays(p.RimRayCount, p.RimRayRandomness, seed, isRightEye))
             {
                 double ux = Math.Cos(ray.Angle) * rx, uy = Math.Sin(ray.Angle) * ry; // radius 1 on the stretched iris
@@ -792,7 +793,9 @@ namespace DollIrisGenerator.Services
             // 外周からの線: tapered lines from the rim inward, under the rays (and the limbal ring drawn later)
             if (p.RimRayIntensity > 0.01)
             {
-                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed);
+                // 見える範囲: the mask goes on the lines' group
+                string? rimRange = AppendRangeMask(sb, $"{idPrefix}_rim_rays_range", p, PatternLayer.RimRays, isRightEye, cx, cy, rx, ry, baseR, irisBox);
+                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, rimRange);
             }
 
             // Radial Rays

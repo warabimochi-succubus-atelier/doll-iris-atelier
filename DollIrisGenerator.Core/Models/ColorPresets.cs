@@ -149,6 +149,9 @@ namespace DollIrisGenerator.Models
         public double? IrisFacetRangeAngle { get; set; }
         public double? IrisFacetRangeWidth { get; set; }
         public double? IrisFacetRangeFeather { get; set; }
+        public double? RimRayRangeAngle { get; set; }
+        public double? RimRayRangeWidth { get; set; }
+        public double? RimRayRangeFeather { get; set; }
         public int? IrisFacetCount { get; set; }
         public LayerBlend? IrisFacetBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
@@ -609,6 +612,9 @@ namespace DollIrisGenerator.Models
             target.IrisFacetRangeAngle = preset.IrisFacetRangeAngle ?? d.IrisFacetRangeAngle;
             target.IrisFacetRangeWidth = preset.IrisFacetRangeWidth ?? d.IrisFacetRangeWidth;
             target.IrisFacetRangeFeather = preset.IrisFacetRangeFeather ?? d.IrisFacetRangeFeather;
+            target.RimRayRangeAngle = preset.RimRayRangeAngle ?? d.RimRayRangeAngle;
+            target.RimRayRangeWidth = preset.RimRayRangeWidth ?? d.RimRayRangeWidth;
+            target.RimRayRangeFeather = preset.RimRayRangeFeather ?? d.RimRayRangeFeather;
             target.IrisFacetCount = preset.IrisFacetCount ?? d.IrisFacetCount;
             target.IrisFacetBlend = preset.IrisFacetBlend ?? d.IrisFacetBlend;
 
@@ -817,6 +823,9 @@ namespace DollIrisGenerator.Models
                 IrisFacetRangeAngle = design.IrisFacetRangeAngle,
                 IrisFacetRangeWidth = design.IrisFacetRangeWidth,
                 IrisFacetRangeFeather = design.IrisFacetRangeFeather,
+                RimRayRangeAngle = design.RimRayRangeAngle,
+                RimRayRangeWidth = design.RimRayRangeWidth,
+                RimRayRangeFeather = design.RimRayRangeFeather,
                 IrisFacetCount = design.IrisFacetCount,
                 IrisFacetBlend = design.IrisFacetBlend,
 

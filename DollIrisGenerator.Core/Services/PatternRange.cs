@@ -10,7 +10,8 @@ namespace DollIrisGenerator.Services
         Rays,       // 放射ライン (main and fine rays)
         Glitter,    // ラメ (grains, flares and their glow)
         LensRings,  // レンズ風リング (the rings; not the center glow)
-        IrisFacets  // 宝石カット面
+        IrisFacets, // 宝石カット面
+        RimRays     // 外周からの線
     }
 
     /// <summary>A named 見える範囲 for the quick-select buttons.</summary>
@@ -54,6 +55,7 @@ namespace DollIrisGenerator.Services
                 case PatternLayer.Glitter: p.ParticleRangeAngle = angle; p.ParticleRangeWidth = width; p.ParticleRangeFeather = feather; break;
                 case PatternLayer.LensRings: p.LensRangeAngle = angle; p.LensRangeWidth = width; p.LensRangeFeather = feather; break;
                 case PatternLayer.IrisFacets: p.IrisFacetRangeAngle = angle; p.IrisFacetRangeWidth = width; p.IrisFacetRangeFeather = feather; break;
+                case PatternLayer.RimRays: p.RimRayRangeAngle = angle; p.RimRayRangeWidth = width; p.RimRayRangeFeather = feather; break;
                 default: throw new ArgumentOutOfRangeException(nameof(layer));
             }
         }
@@ -81,6 +83,7 @@ namespace DollIrisGenerator.Services
             PatternLayer.Glitter => "ラメ",
             PatternLayer.LensRings => "レンズ風リング",
             PatternLayer.IrisFacets => "宝石カット面",
+            PatternLayer.RimRays => "外周からの線",
             _ => layer.ToString()
         };
 
@@ -90,6 +93,7 @@ namespace DollIrisGenerator.Services
             PatternLayer.Glitter => (p.ParticleRangeAngle, p.ParticleRangeWidth, p.ParticleRangeFeather),
             PatternLayer.LensRings => (p.LensRangeAngle, p.LensRangeWidth, p.LensRangeFeather),
             PatternLayer.IrisFacets => (p.IrisFacetRangeAngle, p.IrisFacetRangeWidth, p.IrisFacetRangeFeather),
+            PatternLayer.RimRays => (p.RimRayRangeAngle, p.RimRayRangeWidth, p.RimRayRangeFeather),
             _ => throw new ArgumentOutOfRangeException(nameof(layer))
         };
 

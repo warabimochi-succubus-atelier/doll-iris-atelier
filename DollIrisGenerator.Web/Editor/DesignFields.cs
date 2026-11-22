@@ -233,17 +233,18 @@ public static class DesignFields
             IrisParameters.MinRimRayWidth, IrisParameters.MaxRimRayWidth, 0.1, Fmt.F1, "外周での線の太さ (放射ラインの線幅と同じ単位)"),
         new SliderField<IrisParameters>("外周からの線のランダム性", p => p.RimRayRandomness, (p, v) => p.RimRayRandomness = v, 0, 1, 0.01, Fmt.Percent,
             "向き・長さ・濃さのばらつき"),
+        .. RangeFields(PatternLayer.RimRays, "外周からの線の見える範囲"),
     ];
 
     /// <summary>
     /// A pattern layer's 見える範囲: quick-select buttons and the three sliders (the same as the desktop app).
     /// </summary>
-    private static Field<IrisParameters>[] RangeFields(PatternLayer layer)
+    private static Field<IrisParameters>[] RangeFields(PatternLayer layer, string heading = "見える範囲")
     {
         Func<IrisParameters, (double A, double W, double F)> of = p => PatternRange.Of(p, layer);
         return new Field<IrisParameters>[]
         {
-            new HeadingField<IrisParameters>("見える範囲", "中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"),
+            new HeadingField<IrisParameters>(heading, "中心から見た扇形の中だけに模様を出します。向きは 0° = 右、90° = 下、270° = 上 (右目は自動で鏡像)。広さ 360° で全体"),
             new ChoiceField<IrisParameters>("簡単選択", p => PatternRange.Match(p, layer)?.Name ?? "",
                 (p, v) => { var s = PatternRange.Styles.FirstOrDefault(x => x.Name == (string)v); if (s != null) PatternRange.Apply(p, layer, s); },
                 PatternRange.Styles.Select(s => (s.Name, (object)s.Name)).ToArray()),

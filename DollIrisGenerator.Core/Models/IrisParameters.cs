@@ -306,6 +306,9 @@ namespace DollIrisGenerator.Models
         private double _irisFacetRangeAngle = DefaultRangeAngle;
         private double _irisFacetRangeWidth = FullRangeWidth;
         private double _irisFacetRangeFeather = DefaultRangeFeather;
+        private double _rimRayRangeAngle = DefaultRangeAngle;
+        private double _rimRayRangeWidth = FullRangeWidth;
+        private double _rimRayRangeFeather = DefaultRangeFeather;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -1356,6 +1359,27 @@ namespace DollIrisGenerator.Models
         {
             get => _irisFacetRangeFeather;
             set { _irisFacetRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の向き (see PatternRange).</summary>
+        public double RimRayRangeAngle
+        {
+            get => _rimRayRangeAngle;
+            set { _rimRayRangeAngle = NormalizeAngle(value); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の広さ. 360 = everywhere.</summary>
+        public double RimRayRangeWidth
+        {
+            get => _rimRayRangeWidth;
+            set { _rimRayRangeWidth = ClampFinite(value, 0.0, FullRangeWidth, FullRangeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の範囲の端のぼかし.</summary>
+        public double RimRayRangeFeather
+        {
+            get => _rimRayRangeFeather;
+            set { _rimRayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
         }
 
         // Collections

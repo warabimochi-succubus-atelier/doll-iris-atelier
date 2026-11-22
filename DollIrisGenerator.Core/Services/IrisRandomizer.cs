@@ -347,6 +347,14 @@ namespace DollIrisGenerator.Services
                 p.ParticleShape = shaped ? shape : GlitterShape.Mixed;
                 p.ParticleShapeRatio = shaped ? ratio : 1.0;
             }
+
+            // 外周からの線の見える範囲 (drawn last): mostly everywhere, sometimes the upper or the lower half only
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                int roll = rng.Next(10);
+                var style = roll < 7 ? PatternRange.Styles[0] : roll < 9 ? PatternRange.Styles[3] : PatternRange.Styles[1];
+                PatternRange.Apply(p, PatternLayer.RimRays, style);
+            }
         }
 
         /// <summary>

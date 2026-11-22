@@ -241,6 +241,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `RimRayWidth` | 0.5〜4.0 | 外周での線の太さ。放射ラインの `RayThickness` と同じ単位（既定 1.2） |
 | `RimRayRandomness` | 0〜1 | 向き・長さ・濃さのばらつき（既定 0.4） |
 | `RimRayColor` | 色（単色） | 線の色（既定 `#0D1B3E`） |
+| `RimRayRangeAngle` | 0〜360（度） | 線の見える範囲の向き。0 = 右、90 = 下、270 = 上。右目は自動で鏡像 |
+| `RimRayRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
+| `RimRayRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
 ### 外輪（虹彩のふちの濃い輪）
 
@@ -407,6 +410,9 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "RimRayWidth": 1.2,
   "RimRayRandomness": 0.4,
   "RimRayColor": "#0D1B3E",
+  "RimRayRangeAngle": 90.0,
+  "RimRayRangeWidth": 360.0,
+  "RimRayRangeFeather": 30.0,
   "UpperShadowIntensity": 0.65,
   "UpperShadowDepth": 0.65,
   "UpperShadowColor": "#000000",
