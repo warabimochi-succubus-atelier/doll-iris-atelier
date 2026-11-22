@@ -12,7 +12,8 @@ namespace DollIrisGenerator.Services
     public readonly record struct RimRaySpec(double Angle, double LengthFactor, double AlphaFactor);
 
     /// <summary>One glitter grain: where it sits, its size (drawing units), and how it is drawn.</summary>
-    public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare);
+    public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare,
+        ShapeKind? Shape = null, double Rotation = 0.0);
 
     /// <summary>
     /// Where the rays and glitter grains go. The screen / PDF / PNG renderer and the SVG exporter both lay
@@ -175,6 +176,16 @@ namespace DollIrisGenerator.Services
 
             var rng = new Random(seed + 1000);
             var flareRng = new Random(seed + FlareSeedOffset);
+            // 粒の形: which grains take the shape, and their turn, from a sequence of its own (positions stay as they were)
+            var shapeRng = new Random(seed + GrainShapeSeedOffset);
+            ShapeKind? kind = p.ParticleShape switch
+            {
+                GlitterShape.Star5 => ShapeKind.Star5,
+                GlitterShape.Heart => ShapeKind.Heart,
+                GlitterShape.Diamond => ShapeKind.Diamond,
+                GlitterShape.SakuraPetal => ShapeKind.SakuraPetal,
+                _ => null
+            };
             double minR = baseR * p.PupilSizeRatio * 0.95;
             double maxR = baseR * p.ParticleRadiusRatio;
 
@@ -186,10 +197,40 @@ namespace DollIrisGenerator.Services
 
                 double size = (p.ParticleMinSize + rng.NextDouble() * Math.Max(0.1, p.ParticleMaxSize - p.ParticleMinSize)) * styleUnit;
                 bool flare = flareRng.NextDouble() < p.ParticleFlareRatio;
-                grains.Add(new GrainSpec(OnIris(center, rx, ry, baseR, dist, angle), size, i % 5 == 0, flare));
+                var position = OnIris(center, rx, ry, baseR, dist, angle);
+                if (p.ParticleShape == GlitterShape.Mixed)
+                {
+                    grains.Add(new GrainSpec(position, size, i % 5 == 0, flare));
+                    continue;
+                }
+                bool shaped = shapeRng.NextDouble() < p.ParticleShapeRatio;
+                double turn = shapeRng.NextDouble();
+                double rotation = kind switch
+                {
+                    ShapeKind.Star5 => turn * 72.0,
+                    ShapeKind.Heart => (turn - 0.5) * 40.0,
+                    ShapeKind.Diamond => (turn - 0.5) * 30.0,
+                    ShapeKind.SakuraPetal => turn * 360.0,
+                    _ => 0.0
+                };
+                if (isRightEye) rotation = -rotation;
+                bool star4 = shaped && p.ParticleShape == GlitterShape.Star4;
+                grains.Add(new GrainSpec(position, size, star4, flare, shaped ? kind : null, rotation));
             }
             return grains;
         }
+
+        private const int GrainShapeSeedOffset = 3500;
+
+        /// <summary>Radius of a shaped grain (粒の形), in grain sizes.</summary>
+        public static double GrainShapeRadius(ShapeKind kind) => kind switch
+        {
+            ShapeKind.Star5 => 0.9,
+            ShapeKind.Heart => 0.65,
+            ShapeKind.Diamond => 0.8,
+            ShapeKind.SakuraPetal => 0.7,
+            _ => 0.5
+        };
 
         private const int FacetSeedOffset = 5000;
 

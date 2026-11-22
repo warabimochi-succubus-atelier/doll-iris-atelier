@@ -75,6 +75,8 @@ namespace DollIrisGenerator.Models
         public double? RayIntensity { get; set; }
         public int? ParticleCount { get; set; }
         public double? ParticleRadiusRatio { get; set; }
+        public GlitterShape? ParticleShape { get; set; }
+        public double? ParticleShapeRatio { get; set; }
         public double? ParticleGlow { get; set; }
         public double? ParticleFlareRatio { get; set; }
         public double? SymbolSize { get; set; }
@@ -520,6 +522,8 @@ namespace DollIrisGenerator.Models
             target.RayIntensity = preset.RayIntensity ?? d.RayIntensity;
             target.ParticleCount = preset.ParticleCount ?? d.ParticleCount;
             target.ParticleRadiusRatio = preset.ParticleRadiusRatio ?? d.ParticleRadiusRatio;
+            target.ParticleShape = preset.ParticleShape ?? d.ParticleShape;
+            target.ParticleShapeRatio = preset.ParticleShapeRatio ?? d.ParticleShapeRatio;
             target.ParticleGlow = preset.ParticleGlow ?? d.ParticleGlow;
             target.ParticleFlareRatio = preset.ParticleFlareRatio ?? d.ParticleFlareRatio;
 
@@ -727,6 +731,8 @@ namespace DollIrisGenerator.Models
                 RayIntensity = design.RayIntensity,
                 ParticleCount = design.ParticleCount,
                 ParticleRadiusRatio = design.ParticleRadiusRatio,
+                ParticleShape = design.ParticleShape,
+                ParticleShapeRatio = design.ParticleShapeRatio,
                 ParticleGlow = design.ParticleGlow,
                 ParticleFlareRatio = design.ParticleFlareRatio,
 

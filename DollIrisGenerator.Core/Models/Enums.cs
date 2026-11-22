@@ -47,6 +47,18 @@ namespace DollIrisGenerator.Models
         Butterfly       // 蝶々 (翅だけ)
     }
 
+    /// <summary>ラメの粒の形. The numbers are what design files store.</summary>
+    public enum GlitterShape
+    {
+        Mixed = 0,        // 従来: round grains, every fifth a 4-point star
+        Circle = 1,       // 丸
+        Star4 = 2,        // 4芒星
+        Star5 = 3,        // 5芒星
+        Heart = 4,        // ハート
+        Diamond = 5,      // ダイヤ
+        SakuraPetal = 6   // 桜の花びら
+    }
+
     /// <summary>Decorative symbol types. The numbers are what design files store: new shapes are added at the end.</summary>
     public enum SymbolType
     {

@@ -336,6 +336,17 @@ namespace DollIrisGenerator.Services
                 double start = Range(0.30, 0.70);
                 p.BottomHighlightStart = moved ? start : IrisParameters.DefaultBottomHighlightStart;
             }
+
+            // 粒の形 (drawn last): mostly the usual round grains with stars, sometimes one shape (or a share of it)
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                GlitterShape[] shapes = { GlitterShape.Star4, GlitterShape.Star5, GlitterShape.Heart, GlitterShape.Diamond, GlitterShape.SakuraPetal };
+                bool shaped = Chance(20);
+                var shape = shapes[rng.Next(shapes.Length)];
+                double ratio = Range(0.3, 1.0);
+                p.ParticleShape = shaped ? shape : GlitterShape.Mixed;
+                p.ParticleShapeRatio = shaped ? ratio : 1.0;
+            }
         }
 
         /// <summary>

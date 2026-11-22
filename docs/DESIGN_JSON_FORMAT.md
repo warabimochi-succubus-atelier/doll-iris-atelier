@@ -265,6 +265,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `ParticleMaxSize` | 0.5〜5.0 | 最大の粒の大きさ |
 | `ParticleOpacity` | 0〜1 | |
 | `ParticleRadiusRatio` | 0.30〜0.95 | ラメが散らばる範囲（外周までの比率） |
+| `ParticleShape` | 0 従来, 1 丸, 2 4芒星, 3 5芒星, 4 ハート, 5 ダイヤ, 6 桜の花びら | 粒の形。0 は丸い粒で 5 粒に 1 粒が 4芒星（既定） |
+| `ParticleShapeRatio` | 0.05〜1 | 形にする粒の割合。残りは丸（既定 1。0 と 1 の形では使わない） |
 | `ParticleGlow` | 0〜1 | 粒の光のにじみ |
 | `ParticleGlowCustomColor` | true / false | true でにじみを `ParticleGlowColor` の色にする（既定 false = 粒と同じ色） |
 | `ParticleGlowColor` | 色（単色） | にじみの色（既定 `#FFF8E1`）。`ParticleColor` を黒にすると後光のある黒いラメになる（`GlitterBlend` は 0） |
@@ -485,6 +487,8 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "ParticleMaxSize": 2.4,
   "ParticleOpacity": 0.85,
   "ParticleRadiusRatio": 0.75,
+  "ParticleShape": 0,
+  "ParticleShapeRatio": 1.0,
   "ParticleGlow": 0.7,
   "ParticleFlareRatio": 0.15,
   "ParticleFlareLength": 4.0,

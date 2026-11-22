@@ -63,6 +63,9 @@ namespace DollIrisGenerator.Models
         /// <summary>下部反射光の始まる高さ: range and default (the old fixed value).</summary>
         public const double MaxBottomHighlightStart = 0.90, DefaultBottomHighlightStart = 0.45;
 
+        /// <summary>形の粒の割合: the smallest share.</summary>
+        public const double MinParticleShapeRatio = 0.05;
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -272,6 +275,8 @@ namespace DollIrisGenerator.Models
         private double _particleOpacity = 0.85;
         private string _particleColor = "#FFFFFF";
         private double _particleRadiusRatio = 0.75;
+        private GlitterShape _particleShape = GlitterShape.Mixed; // 粒の形 (従来: round with every fifth a 4-point star)
+        private double _particleShapeRatio = 1.0;                 // 形の粒の割合
         // Glowing glitter (光るラメ). On by default (also for older files); 0 = plain grains.
         private bool _particleGlowCustomColor = false;            // false: the glow takes the grains' own color
         private string _particleGlowColor = DefaultParticleGlowColor;
@@ -1133,6 +1138,20 @@ namespace DollIrisGenerator.Models
         {
             get => _particleRadiusRatio;
             set { _particleRadiusRatio = Math.Max(0.1, Math.Min(1.0, value)); OnPropertyChanged(); }
+        }
+
+        /// <summary>粒の形. Unknown numbers from a file become 従来 (Mixed).</summary>
+        public GlitterShape ParticleShape
+        {
+            get => _particleShape;
+            set { _particleShape = Enum.IsDefined(value) ? value : GlitterShape.Mixed; OnPropertyChanged(); }
+        }
+
+        /// <summary>形の粒の割合: the share of grains drawn in <see cref="ParticleShape"/> (the rest are round).</summary>
+        public double ParticleShapeRatio
+        {
+            get => _particleShapeRatio;
+            set { _particleShapeRatio = ClampFinite(value, MinParticleShapeRatio, 1.0, 1.0); OnPropertyChanged(); }
         }
 
         /// <summary>光のにじみ: a soft halo of the grain's color around every grain. 0 = off.</summary>

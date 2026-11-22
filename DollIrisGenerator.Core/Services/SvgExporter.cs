@@ -1110,7 +1110,16 @@ namespace DollIrisGenerator.Services
                     OpacityUnlessMasked(p.ParticleColor, p.ParticleOpacity), irisBox);
                 foreach (var g in grains)
                 {
-                    if (g.IsStar)
+                    if (g.Shape is ShapeKind kind)
+                    {
+                        // 粒の形: the symbols' outline, turned about the grain
+                        string turn = Math.Abs(g.Rotation) > 0.05
+                            ? $@" transform=""rotate({g.Rotation.ToFixed(1)}, {g.Position.X.ToFixed(3)}, {g.Position.Y.ToFixed(3)})"""
+                            : "";
+                        AppendPath(sb, "        <path d=\"", ShapeOutline.ForShape(kind, g.Size * IrisPatterns.GrainShapeRadius(kind)),
+                            g.Position.X, g.Position.Y, "\"" + turn + " />");
+                    }
+                    else if (g.IsStar)
                     {
                         sb.AppendLine(BuildSvgStar4(g.Position.X, g.Position.Y, g.Size * 1.5, 0.25));
                     }

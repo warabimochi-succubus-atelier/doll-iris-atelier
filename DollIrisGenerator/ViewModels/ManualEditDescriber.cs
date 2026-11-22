@@ -126,6 +126,8 @@ namespace DollIrisGenerator.ViewModels
             [nameof(IrisParameters.ParticleMaxSize)] = "ラメの粒径",
             [nameof(IrisParameters.ParticleOpacity)] = "ラメの透明度",
             [nameof(IrisParameters.ParticleRadiusRatio)] = "ラメの分布範囲",
+            [nameof(IrisParameters.ParticleShape)] = "ラメの粒の形",
+            [nameof(IrisParameters.ParticleShapeRatio)] = "ラメの形の粒の割合",
             [nameof(IrisParameters.ParticleGlow)] = "ラメの光のにじみ",
             [nameof(IrisParameters.ParticleFlareRatio)] = "十字フレアの割合",
             [nameof(IrisParameters.ParticleFlareLength)] = "フレアの長さ",

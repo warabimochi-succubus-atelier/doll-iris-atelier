@@ -48,7 +48,7 @@ namespace DollIrisGenerator.Tests
                 p.LimbalInnerRingIntensity, p.LimbalInnerRingWidth, p.LimbalInnerRingGap, p.LimbalInnerRingColor),
             RandomizeLocks.Particles => string.Join("|", p.ParticleCount, p.ParticleMinSize, p.ParticleMaxSize,
                 p.ParticleOpacity, p.ParticleRadiusRatio, p.ParticleColor,
-                p.ParticleGlow, p.ParticleFlareRatio, p.ParticleFlareLength, p.GlitterBlend, p.ParticleGlowCustomColor, p.ParticleGlowColor,
+                p.ParticleGlow, p.ParticleFlareRatio, p.ParticleFlareLength, p.GlitterBlend, p.ParticleGlowCustomColor, p.ParticleGlowColor, p.ParticleShape, p.ParticleShapeRatio,
                 p.ParticleRangeAngle, p.ParticleRangeWidth, p.ParticleRangeFeather),
             RandomizeLocks.Symbols => WithoutIds(JsonSerializer.Serialize(p.Symbols)),
             RandomizeLocks.Highlights => WithoutIds(JsonSerializer.Serialize(p.Highlights)),

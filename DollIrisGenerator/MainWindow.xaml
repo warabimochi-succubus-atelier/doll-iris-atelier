@@ -1577,6 +1577,25 @@
                                         </DockPanel>
                                         <Slider Minimum="0.30" Maximum="0.95" Value="{Binding CurrentIris.ParticleRadiusRatio}" Margin="0,0,0,10"/>
 
+                                        <!-- 粒の形 (Grain shape) -->
+                                        <DockPanel Margin="0,0,0,4" ToolTip="ラメの粒の形。従来: 丸い粒で、5 粒に 1 粒が 4芒星。ほかの形は「形の粒の割合」の粒がその形になり、残りは丸になります">
+                                            <TextBlock Text="粒の形:" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="従来 (丸と 4芒星)" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mixed}"/>
+                                                <RadioButton Content="丸" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Circle}"/>
+                                                <RadioButton Content="4芒星" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star4}"/>
+                                                <RadioButton Content="5芒星" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Star5}"/>
+                                                <RadioButton Content="ハート" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heart}"/>
+                                                <RadioButton Content="ダイヤ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Diamond}"/>
+                                                <RadioButton Content="桜の花びら" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ParticleShape, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SakuraPetal}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="選んだ形にする粒の割合。残りは丸い粒になります (従来・丸では使いません)">
+                                            <TextBlock Text="形の粒の割合:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.ParticleShapeRatio, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.05" Maximum="1.0" Value="{Binding CurrentIris.ParticleShapeRatio}" Margin="0,0,0,10"/>
+
                                         <!-- Glowing glitter (光るラメ) -->
                                         <TextBlock Text="光るラメ (0 でにじみ・フレアなし)" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,6"/>
 
