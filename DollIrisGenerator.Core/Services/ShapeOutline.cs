@@ -94,13 +94,23 @@ namespace DollIrisGenerator.Services
         /// Latin cross: a vertical bar from −r to +r (0.32r thick) and a shorter crossbar (±0.65r, 0.32r thick)
         /// centered 0.4r above the middle, so the lower arm is the long one. The outline is centered at (0, 0).
         /// </summary>
-        public static ShapeOutline Cross(double radius)
+        public static ShapeOutline Cross(double radius) => CrossInset(radius, 0.0);
+
+        /// <summary>Half the cross's bar thickness, as a fraction of its radius.</summary>
+        public const double CrossHalfBar = 0.16;
+
+        /// <summary>
+        /// <see cref="Cross"/> with every edge moved inward by <paramref name="inset"/> (thinner bars, shorter arms), so
+        /// it stays inside the cross at the same distance all round. Less than <see cref="CrossHalfBar"/> × radius.
+        /// </summary>
+        public static ShapeOutline CrossInset(double radius, double inset)
         {
-            double r = radius;
-            double w = r * 0.16;            // half the bar thickness
-            double arm = r * 0.65;          // crossbar half length
-            double barTop = -r * 0.56;      // crossbar from y = −0.56r ...
-            double barBottom = -r * 0.24;   // ... to y = −0.24r (center −0.4r)
+            double r = radius, d = inset;
+            double w = r * CrossHalfBar - d;    // half the bar thickness
+            double arm = r * 0.65 - d;          // crossbar half length
+            double barTop = -r * 0.56 + d;      // crossbar from y = −0.56r ...
+            double barBottom = -r * 0.24 - d;   // ... to y = −0.24r (center −0.4r)
+            r -= d;                             // the bar's ends
             return Polygon(new[]
             {
                 new Point(-w, -r), new Point(w, -r), new Point(w, barTop), new Point(arm, barTop),
@@ -173,6 +183,33 @@ namespace DollIrisGenerator.Services
         {
             PupilShape.Cross => Cross(prx * size).Offset(0, CrossJointY * prx * (1.0 - size)),
             PupilShape.Moon => MoonInset(prx, (1.0 - size) * MoonBandWidth(prx) / 2.0),
+            _ => null
+        };
+
+        /// <summary>
+        /// How wide the pupil's blur (輪郭の柔らかさ) is for this shape, as a share of the round pupil's: the thin cross
+        /// and moon are blurred by their thickness (the bar's / the band's at its middle), not by their radius, so a
+        /// soft edge keeps their shape.
+        /// </summary>
+        public static double PupilBlurScale(PupilShape shape) => shape switch
+        {
+            PupilShape.Cross => 2.0 * CrossHalfBar,
+            PupilShape.Moon => MoonBandWidth(1.0),
+            _ => 1.0
+        };
+
+        /// <summary>The pupil shapes whose blurred pupil's sharp core is the outline moved inward (<see cref="PupilCore"/>).</summary>
+        public static bool HasInsetCore(PupilShape shape) => shape is PupilShape.Cross or PupilShape.Moon;
+
+        /// <summary>
+        /// The sharp core of a blurred cross or moon pupil (輪郭の柔らかさ): the outline moved inward by
+        /// <paramref name="inset"/> all round, before the rounding and 上下左右の長さ, or null when the shape is too thin
+        /// for a core that far in. (Shrinking these toward the center would put the core outside them.)
+        /// </summary>
+        public static ShapeOutline? PupilCore(PupilShape shape, double prx, double inset) => shape switch
+        {
+            PupilShape.Cross => inset < prx * CrossHalfBar * 0.95 ? CrossInset(prx, inset) : null,
+            PupilShape.Moon => inset < MoonBandWidth(prx) / 2.0 * 0.95 ? MoonInset(prx, inset) : null,
             _ => null
         };
 

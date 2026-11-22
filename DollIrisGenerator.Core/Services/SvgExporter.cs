@@ -1131,7 +1131,7 @@ namespace DollIrisGenerator.Services
                 if (p.PupilSoftness > 0.02)
                 {
                     string blurId = $"{idPrefix}_pupil_blur";
-                    pupilSigma = Math.Max(prx, pry) * p.PupilSoftness * PupilBlurPerSoftness;
+                    pupilSigma = Math.Max(prx, pry) * p.PupilSoftness * PupilBlurPerSoftness * ShapeOutline.PupilBlurScale(p.PupilShape);
                     AppendBlurFilter(sb, blurId, pupilSigma, pupilBox, 0.0);
                     pupilBlur = $@" filter=""url(#{blurId})""";
                 }
@@ -1142,17 +1142,33 @@ namespace DollIrisGenerator.Services
                 // Sharp core over the blurred pupil: the same pupil, cut to its outline shrunk inward by 2.5 deviations.
                 // A small blur (a few pixels) is computed approximately and can leave the inside of the blurred pupil
                 // a little see-through; the core fills it, while the soft edge stays as the blur drew it.
+                // The cross and the moon, which would come out of themselves that way, get their outline moved inward
+                // instead (ShapeOutline.PupilCore), by the inset over the smallest of the 上下左右の長さ so that it stays
+                // at least that far in once stretched
                 if (pupilSigma > 0)
                 {
-                    double narrowest = Math.Min(prx * Math.Min(pLeft, pRight), pry * Math.Min(pTop, pBottom));
-                    double core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / narrowest);
-                    if (core > 0.05)
+                    ShapeOutline? insetCore = null;
+                    double core = 0.0;
+                    if (pupilOutline != null && ShapeOutline.HasInsetCore(p.PupilShape))
+                    {
+                        double shortest = Math.Min(Math.Min(pTop, pBottom), Math.Min(pLeft, pRight));
+                        insetCore = ShapeOutline.PupilCore(p.PupilShape, prx, PupilCoreInset * pupilSigma / shortest)?
+                            .Rounded(p.PupilCornerRounding).Stretched(pTop, pBottom, pLeft, pRight);
+                    }
+                    else
+                    {
+                        double narrowest = Math.Min(prx * Math.Min(pLeft, pRight), pry * Math.Min(pTop, pBottom));
+                        core = Math.Max(0.0, 1.0 - PupilCoreInset * pupilSigma / narrowest);
+                    }
+                    if (insetCore != null || core > 0.05)
                     {
                         string coreClip = $"{idPrefix}_pupil_core_clip";
-                        string coreTransform = $@" transform=""translate({F(cx)} {F(cy)}) scale({F(core, 5)}) translate({F(-cx)} {F(-cy)})""";
                         sb.AppendLine("      <defs>");
                         sb.AppendLine($@"        <clipPath id=""{coreClip}"">");
-                        AppendPupilShape("          ", coreTransform);
+                        if (insetCore != null)
+                            AppendPath(sb, "          <path d=\"", insetCore, cx, cy, "\" />", mirrorPupil);
+                        else
+                            AppendPupilShape("          ", $@" transform=""translate({F(cx)} {F(cy)}) scale({F(core, 5)}) translate({F(-cx)} {F(-cy)})""");
                         sb.AppendLine("        </clipPath>");
                         sb.AppendLine("      </defs>");
                         sb.AppendLine($@"      <rect id=""{idPrefix}_pupil_core"" x=""{F(pupilBox.X)}"" y=""{F(pupilBox.Y)}"" width=""{F(pupilBox.Width)}"" height=""{F(pupilBox.Height)}"" fill=""{pupilPaint}"" opacity=""{p.PupilOpacity.ToFixed(2)}"" clip-path=""url(#{coreClip})"" />");
