@@ -146,16 +146,78 @@ namespace DollIrisGenerator.Services
             var segments = new List<OutlineSegment>();
             AppendArc(segments, new Point(0, 0), radius, radius, -Math.PI / 2.0, Math.PI);
 
-            double irx = radius * 0.82;
-            double iry = radius * 1.05;
             // Inner ellipse center sits on the x axis so that the ellipse passes through (0, ±radius)
-            double centerOffset = irx * Math.Sqrt(Math.Max(0.0, 1.0 - (radius / iry) * (radius / iry)));
+            var (irx, iry, centerOffset) = MoonHollow(radius);
             double startAngle = Math.Atan2(radius / iry, centerOffset / irx);
             AppendArc(segments, new Point(-centerOffset, 0), irx, iry, startAngle, -2.0 * startAngle);
 
             // Snap the arc ends exactly onto the horn tips (removes rounding noise from the arc math)
             segments[^1] = new OutlineSegment(segments[^1].C1, segments[^1].C2, new Point(0, -radius));
             return new ShapeOutline(new Point(0, -radius), segments);
+        }
+
+        /// <summary>Where the cross's two bars meet, as a fraction of its radius above the center (see <see cref="Cross"/>).</summary>
+        public const double CrossJointY = -0.4;
+
+        /// <summary>
+        /// 瞳孔の中の輪 for the shapes that do not fit inside themselves when shrunk about their center, or null for the
+        /// others (they are drawn as the pupil outline scaled by <paramref name="size"/> about the center). Before the
+        /// pupil's rounding and 上下左右の長さ, like <see cref="ForPupil"/>.
+        /// <list type="bullet">
+        /// <item>Cross: shrunk about the point where the bars meet, so the crossbar stays on the pupil's crossbar.</item>
+        /// <item>Moon: a thinner crescent inside the band, its edges moved in by the same distance (size 1 = the outline,
+        /// smaller = closer to the band's middle line).</item>
+        /// </list>
+        /// </summary>
+        public static ShapeOutline? PupilInnerRing(PupilShape shape, double prx, double size) => shape switch
+        {
+            PupilShape.Cross => Cross(prx * size).Offset(0, CrossJointY * prx * (1.0 - size)),
+            PupilShape.Moon => MoonInset(prx, (1.0 - size) * MoonBandWidth(prx) / 2.0),
+            _ => null
+        };
+
+        /// <summary>Moon's inner (hollow) ellipse: radii and how far left of the center it sits.</summary>
+        private static (double Rx, double Ry, double CenterOffset) MoonHollow(double radius)
+        {
+            double irx = radius * 0.82, iry = radius * 1.05;
+            return (irx, iry, irx * Math.Sqrt(Math.Max(0.0, 1.0 - (radius / iry) * (radius / iry))));
+        }
+
+        /// <summary>Width of the moon's band at its middle (y = 0).</summary>
+        public static double MoonBandWidth(double radius)
+        {
+            var (irx, _, offset) = MoonHollow(radius);
+            return radius - (irx - offset);
+        }
+
+        /// <summary>
+        /// The crescent <see cref="Moon"/> with both edges moved into the band by <paramref name="inset"/>: the outer circle
+        /// smaller, the hollow ellipse (same center) larger, cut where they meet (the new horn tips).
+        /// </summary>
+        public static ShapeOutline MoonInset(double radius, double inset)
+        {
+            var (irx, iry, offset) = MoonHollow(radius);
+            if (inset <= 0) return Moon(radius);
+            double r = radius - inset, a = irx + inset, b = iry + inset;
+            // The lower horn: the angle on the outer circle (0 = right, π/2 = bottom) where it meets the ellipse
+            double F(double t) => Math.Pow((r * Math.Cos(t) + offset) / a, 2) + Math.Pow(r * Math.Sin(t) / b, 2) - 1.0;
+            double lo = 0.0, hi = Math.PI / 2.0;
+            for (int i = 0; i < 60; i++)
+            {
+                double mid = (lo + hi) / 2.0;
+                if (F(mid) > 0) lo = mid; else hi = mid;
+            }
+            double t = (lo + hi) / 2.0;
+            var hornTop = new Point(r * Math.Cos(t), -r * Math.Sin(t));
+            var hornBottom = new Point(hornTop.X, -hornTop.Y);
+            double phi = Math.Atan2(hornBottom.Y / b, (hornBottom.X + offset) / a);
+
+            var segments = new List<OutlineSegment>();
+            AppendArc(segments, new Point(0, 0), r, r, -t, 2.0 * t);
+            segments[^1] = new OutlineSegment(segments[^1].C1, segments[^1].C2, hornBottom);
+            AppendArc(segments, new Point(-offset, 0), a, b, phi, -2.0 * phi);
+            segments[^1] = new OutlineSegment(segments[^1].C1, segments[^1].C2, hornTop);
+            return new ShapeOutline(hornTop, segments);
         }
 
         /// <summary>Cherry blossom petal: base at the bottom, two lobes and the notch (cleft) at the top.</summary>

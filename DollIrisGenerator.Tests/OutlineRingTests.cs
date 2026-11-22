@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using DollIrisGenerator.Core.Geometry;
 using DollIrisGenerator.Models;
 using DollIrisGenerator.Services;
 using Xunit;
@@ -75,6 +76,56 @@ namespace DollIrisGenerator.Tests
 
             p.PupilOpacity = 0;
             Assert.DoesNotContain("_pupil_inner_ring", SvgExporter.GeneratePairSvg(p));
+        }
+
+        [Theory]
+        [InlineData(PupilShape.Cross)]
+        [InlineData(PupilShape.Moon)]
+        public void PupilInnerRing_CrossAndMoon_StayInsideThePupil(PupilShape shape)
+        {
+            const double r = 10.0;
+            var outer = ShapeOutline.ForPupil(shape, r, r).Flatten(64);
+            foreach (double size in new[] { 0.1, 0.25, 0.4, 0.6, 0.8, 0.95 })
+            {
+                var inner = ShapeOutline.PupilInnerRing(shape, r, size)!;
+                Assert.All(inner.Flatten(64), pt => Assert.True(Inside(outer, pt), $"{shape} {size}: {pt}"));
+            }
+            Assert.Null(ShapeOutline.PupilInnerRing(PupilShape.Heart, r, 0.5));
+
+            // Size 1 is the outline itself
+            var full = ShapeOutline.PupilInnerRing(shape, r, 1.0)!.GetBounds();
+            var bounds = ShapeOutline.ForPupil(shape, r, r).GetBounds();
+            Assert.Equal(bounds.Left, full.Left, 6);
+            Assert.Equal(bounds.Top, full.Top, 6);
+            Assert.Equal(bounds.Right, full.Right, 6);
+            Assert.Equal(bounds.Bottom, full.Bottom, 6);
+        }
+
+        [Fact]
+        public void PupilInnerRing_CrossAndMoon_AreDrawnWithoutScaling()
+        {
+            foreach (var shape in new[] { PupilShape.Cross, PupilShape.Moon })
+            {
+                var p = new IrisParameters { PupilShape = shape, PupilInnerRingIntensity = 0.7, PupilInnerRingSize = 0.5, PupilSizeRatio = 0.4, IsOddEye = false };
+                string svg = SvgExporter.GeneratePairSvg(p);
+                string ring = Element(svg, "left_eye_pupil_inner_ring");
+                Assert.DoesNotContain("scale(", ring);
+                Assert.Contains($"stroke-width=\"{(p.SizeMm / 2.0 * p.PupilInnerRingWidth).ToFixed(4)}\"", ring);
+                System.Xml.Linq.XDocument.Parse(svg);
+            }
+        }
+
+        /// <summary>Even-odd point-in-polygon, with the outline's own points counted as inside.</summary>
+        private static bool Inside(System.Collections.Generic.List<Point> poly, Point pt)
+        {
+            bool inside = false;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                var a = poly[i]; var b = poly[j];
+                if (Math.Abs(a.X - pt.X) < 1e-6 && Math.Abs(a.Y - pt.Y) < 1e-6) return true;
+                if ((a.Y > pt.Y) != (b.Y > pt.Y) && pt.X < (b.X - a.X) * (pt.Y - a.Y) / (b.Y - a.Y) + a.X) inside = !inside;
+            }
+            return inside;
         }
 
         [Fact]

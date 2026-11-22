@@ -1055,7 +1055,8 @@ namespace DollIrisGenerator.Services
                 }
 
                 // 瞳孔の中の輪 (up to three, each on its own): the same outline shrunk about the pupil's center; the stroke
-                // widened to match, so the line keeps its width. Under the 縁取り線
+                // widened to match, so the line keeps its width. The cross and the moon, which would come out of
+                // themselves that way, get their own inner outline (ShapeOutline.PupilInnerRing). Under the 縁取り線
                 foreach (var (strength, k, width, color, suffix) in new[]
                 {
                     (p.PupilInnerRingIntensity, p.PupilInnerRingSize, p.PupilInnerRingWidth, p.PupilInnerRingColor, ""),
@@ -1065,6 +1066,13 @@ namespace DollIrisGenerator.Services
                 {
                     if (strength <= 0.01) continue;
                     string ringColor = GeometryHelper.SanitizeColorHex(color, IrisParameters.DefaultPupilInnerRingColor);
+                    var inner = pupilOutline == null ? null : ShapeOutline.PupilInnerRing(p.PupilShape, prx, k);
+                    if (inner != null)
+                    {
+                        inner = inner.Rounded(p.PupilCornerRounding).Stretched(pTop, pBottom, pLeft, pRight);
+                        AppendPath(sb, @"      <path d=""", inner, cx, cy, $@""" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" />", mirrorPupil);
+                        continue;
+                    }
                     AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width / k, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
                 }
 

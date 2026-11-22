@@ -74,7 +74,7 @@ namespace DollIrisGenerator.Tests
             p.ParticleFlareRatio = 0; // flares are paths too
             string group = GlitterGroup(SvgExporter.GeneratePairSvg(p));
             Assert.Equal(60, Regex.Matches(group, "<path d=\"M").Count);
-            Assert.Equal(0, Regex.Matches(group, "<circle ").Count);
+            Assert.Empty(Regex.Matches(group, "<circle "));
             Assert.Contains("transform=\"rotate(", group);
 
             p.ParticleShapeRatio = 0.5;
