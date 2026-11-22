@@ -115,6 +115,47 @@ namespace DollIrisGenerator.Tests
             }
         }
 
+        [Theory]
+        [InlineData(PupilShape.Cross)]
+        [InlineData(PupilShape.Moon)]
+        public void SoftPupil_CrossAndMoon_SharpCoreIsTheOutlineMovedInward(PupilShape shape)
+        {
+            const double r = 10.0;
+            var outer = ShapeOutline.ForPupil(shape, r, r).Flatten(64);
+            foreach (double inset in new[] { 0.2, 0.5, 1.0 })
+            {
+                var core = ShapeOutline.PupilCore(shape, r, inset)!;
+                Assert.All(core.Flatten(64), pt => Assert.True(Inside(outer, pt), $"{shape} {inset}: {pt}"));
+            }
+            // Too thin for a core that far in
+            Assert.Null(ShapeOutline.PupilCore(shape, r, r * 0.3));
+            Assert.Null(ShapeOutline.PupilCore(PupilShape.Heart, r, 0.2));
+
+            // In the SVG: the core is its own path (no shrinking transform); with a large blur there is none
+            var p = new IrisParameters { PupilShape = shape, PupilSizeRatio = 0.5, PupilSoftness = 0.05 };
+            string svg = SvgExporter.GeneratePairSvg(p);
+            int clip = svg.IndexOf("<clipPath id=\"left_eye_pupil_core_clip\">", StringComparison.Ordinal);
+            Assert.True(clip >= 0);
+            string clipPath = svg[clip..svg.IndexOf("</clipPath>", clip, StringComparison.Ordinal)];
+            Assert.Contains("<path d=\"M", clipPath);
+            Assert.DoesNotContain("scale(", clipPath);
+            System.Xml.Linq.XDocument.Parse(svg);
+
+            // The blur follows the shape's thickness: even the strongest one leaves a core, and blurs less than a round pupil's
+            p.PupilSoftness = 0.3;
+            string soft = SvgExporter.GeneratePairSvg(p);
+            Assert.Contains("left_eye_pupil_core", soft);
+            double Sigma(string s) => double.Parse(System.Text.RegularExpressions.Regex.Match(s, @"id=""left_eye_pupil_blur""[\s\S]*?stdDeviation=""([0-9.]+)""").Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+            var round = new IrisParameters { PupilSizeRatio = 0.5, PupilSoftness = 0.3 };
+            Assert.Equal(ShapeOutline.PupilBlurScale(shape), Sigma(soft) / Sigma(SvgExporter.GeneratePairSvg(round)), 2);
+            Assert.True(ShapeOutline.PupilBlurScale(shape) < 0.5);
+
+            // Other shapes keep the outline shrunk toward the center
+            p.PupilShape = PupilShape.Heart;
+            p.PupilSoftness = 0.05;
+            Assert.Contains("scale(", SvgExporter.GeneratePairSvg(p)[SvgExporter.GeneratePairSvg(p).IndexOf("left_eye_pupil_core_clip", StringComparison.Ordinal)..]);
+        }
+
         /// <summary>Even-odd point-in-polygon, with the outline's own points counted as inside.</summary>
         private static bool Inside(System.Collections.Generic.List<Point> poly, Point pt)
         {
