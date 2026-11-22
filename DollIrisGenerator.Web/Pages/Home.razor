@@ -68,20 +68,6 @@
                             break;
                         case "色":
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Colors" />
-                            break;
-                        case "瞳孔・放射線":
-                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.PupilAndRays" />
-                            break;
-                        case "外輪・ラメ":
-                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.RingAndGlitter" />
-                            break;
-                        case "記号":
-                            <ItemList T="DecorativeSymbolItem" Noun="装飾記号" Items="Session.Current.Symbols" Editor="_symbols"
-                                      Fields="DesignFields.Symbol" BulkFields="DesignFields.SymbolBulk" OnMessage="ShowMessage"
-                                      TemplateFields="DesignFields.SymbolTemplate" OnHover="id => _hoveredItemId = id" />
-                            break;
-                        case "レンズ・オッドアイ":
-                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
                             <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.OddEye" />
                             <div class="field">
                                 <span class="field-label">オッドアイ・テンプレート</span>
@@ -93,6 +79,26 @@
                                     }
                                 </select>
                             </div>
+                            break;
+                        case "質感":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Texture" />
+                            break;
+                        case "瞳孔":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Pupil" />
+                            break;
+                        case "放射模様":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Rays" />
+                            break;
+                        case "外輪・ラメ":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.RingAndGlitter" />
+                            break;
+                        case "レンズ":
+                            <FieldList T="IrisParameters" Target="Session.Current" Fields="DesignFields.Lens" />
+                            break;
+                        case "記号":
+                            <ItemList T="DecorativeSymbolItem" Noun="装飾記号" Items="Session.Current.Symbols" Editor="_symbols"
+                                      Fields="DesignFields.Symbol" BulkFields="DesignFields.SymbolBulk" OnMessage="ShowMessage"
+                                      TemplateFields="DesignFields.SymbolTemplate" OnHover="id => _hoveredItemId = id" />
                             break;
                         case "ハイライト":
                             <ItemList T="HighlightItem" Noun="ハイライト" Items="Session.Current.Highlights" Editor="_highlights"
@@ -112,7 +118,7 @@
 </CascadingValue>
 
 @code {
-    private static readonly string[] Tabs = { "基本", "色", "瞳孔・放射線", "外輪・ラメ", "記号", "レンズ・オッドアイ", "ハイライト", "お気に入り" };
+    private static readonly string[] Tabs = { "基本", "色", "質感", "瞳孔", "放射模様", "外輪・ラメ", "レンズ", "記号", "ハイライト", "お気に入り" };
 
     private string _tab = Tabs[0];
     private string _message = "";

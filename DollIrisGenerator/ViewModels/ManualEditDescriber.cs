@@ -63,7 +63,7 @@ namespace DollIrisGenerator.ViewModels
             [nameof(IrisParameters.PupilStretchBottom)] = "瞳孔の下の長さ",
             [nameof(IrisParameters.PupilStretchLeft)] = "瞳孔の左の長さ",
             [nameof(IrisParameters.PupilStretchRight)] = "瞳孔の右の長さ",
-            [nameof(IrisParameters.PupilFacetIntensity)] = "宝石カット",
+            [nameof(IrisParameters.PupilFacetIntensity)] = "瞳孔の宝石カット",
             [nameof(IrisParameters.PupilFacetCount)] = "カット面の数",
             [nameof(IrisParameters.PupilOutlineIntensity)] = "瞳孔の縁取り線の強さ",
             [nameof(IrisParameters.PupilOutlineWidth)] = "瞳孔の縁取り線の太さ",
