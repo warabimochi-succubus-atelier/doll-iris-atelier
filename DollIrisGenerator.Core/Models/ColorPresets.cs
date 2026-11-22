@@ -232,19 +232,24 @@ namespace DollIrisGenerator.Models
             Basic("アンバー", "蜂蜜のようにとろける琥珀色",
                 "#E08A1E", "#FFD27A", "#7A3A06", "#FFE9B8", "#3A1A03", "#2A1202", "#FFE3A8", HighlightStyle.ThreeDots),
             // A natural brown: muted glitter, more fibers and soft-edged highlights that melt into the iris
-            Tweak(Basic("ブラウン", "あたたかく落ち着いたチョコレートブラウン。光はやわらか",
+            Tweak(Basic("ブラウン", "あたたかく落ち着いたチョコレートブラウン。光はやわらかく、下にほのかな照り返し",
                 "#8A5A33", "#D9A86C", "#3A2010", "#F2D2A6", "#1E0F06", "#140A04", "#F5DDB8", HighlightStyle.Window),
-                p => { p.ParticleCount = 40; p.FiberNoise = 0.35; p.Highlights = HighlightStyles.Build(HighlightStyle.Window, softness: 0.3); }),
+                p =>
+                {
+                    p.ParticleCount = 40; p.FiberNoise = 0.35; p.Highlights = HighlightStyles.Build(HighlightStyle.Window, softness: 0.3);
+                    p.CausticIntensity = 0.4; p.CausticColor = "#FFE8C0";
+                }),
 
             // ---------------- 特殊: layers, shaped pupils and symbols ----------------
             new PresetDefinition
             {
                 Name = "特殊: 星屑",
-                Description = "濃紺の虹彩いっぱいに光る星屑が散らばる",
+                Description = "濃紺の虹彩いっぱいに、きらめく星屑が散らばる",
                 BaseColor = "#1C2C8C", InnerColor = "#4E7CFF", OuterColor = "#070D33", BottomHighlightColor = "#8FB4FF",
                 LimbalRingColor = "#03061A", PupilColor = "#02040F", RayColor = "#9FB8FF", ParticleColor = "#FFFFFF",
                 RayCount = 48, RayIntensity = 0.35, ParticleCount = 230, ParticleRadiusRatio = 0.92,
                 ParticleGlow = 0.7, ParticleFlareRatio = 0.15, BottomHighlightIntensity = 0.45,
+                ParticleShape = GlitterShape.Star4, ParticleShapeRatio = 0.35, // some of the grains are sparkles
                 Highlights = HighlightStyles.Build(HighlightStyle.Sparkle, glow: 0.6)
             },
             new PresetDefinition
@@ -272,24 +277,26 @@ namespace DollIrisGenerator.Models
             new PresetDefinition
             {
                 Name = "特殊: 夕焼け",
-                Description = "オレンジから深紅へ沈む夕焼け色。光の筋は下側だけ",
+                Description = "オレンジから深紅へ沈む夕焼け色。下半分は金色、光の筋は下側だけ",
                 BaseColor = "#F2683C", InnerColor = "#FFD08A", OuterColor = "#8A1E12", BottomHighlightColor = "#FFE1B0",
                 LimbalRingColor = "#3D0A05", PupilColor = "radial-gradient(#C62828 0%, #4A0505 100%)", RayColor = "#FFE0B0",
                 ParticleColor = "#FFF1D6", RayCount = 64, RayIntensity = 0.7, ParticleCount = 80, ParticleGlow = 0.6,
                 BottomHighlightIntensity = 0.6, LightStrength = 0.35, LightAngle = 250,
                 // The light of the setting sun from below: rays on the lower side only
                 RayRangeWidth = 200, RayRangeFeather = 50,
+                // ... and a golden lower half
+                TwoToneIntensity = 0.7, TwoToneColor = "#FFC46B", TwoToneHeight = 0.35, TwoToneSoftness = 0.35,
                 Highlights = HighlightStyles.Build(HighlightStyle.Droplet, softness: 0.25, glow: 0.35)
             },
             new PresetDefinition
             {
                 Name = "特殊: 夜空",
-                Description = "夜空の濃紺に小さなハートの瞳孔と星",
+                Description = "夜空の濃紺に小さなハートの瞳孔と、星の形のラメ",
                 BaseColor = "#142060", InnerColor = "#2E4BB0", OuterColor = "#050A24", BottomHighlightColor = "#5C7CFA",
                 LimbalRingColor = "#02051A", PupilColor = "#060B2E", RayColor = "#90A4F8", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.3, PupilFacetIntensity = 0.35, PupilFacetCount = 8,
                 RayCount = 40, RayIntensity = 0.3, ParticleCount = 160, ParticleRadiusRatio = 0.9,
-                ParticleGlow = 0.85, ParticleFlareRatio = 0.12,
+                ParticleGlow = 0.85, ParticleFlareRatio = 0.12, ParticleShape = GlitterShape.Star5, ParticleShapeRatio = 0.3,
                 DefaultSymbol = SymbolType.Star4, SymbolColor = "#FFFFFF", SymbolSize = 0.12, SymbolPositionX = 0.4, SymbolPositionY = -0.35, SymbolCount = 1,
                 Highlights = HighlightStyles.Build(HighlightStyle.Classic, glow: 0.5)
             },
@@ -303,28 +310,30 @@ namespace DollIrisGenerator.Models
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.46, PupilFacetIntensity = 0.85, PupilFacetCount = 10,
                 RayCount = 56, RayIntensity = 0.45, ParticleCount = 120, ParticleGlow = 0.8, ParticleFlareRatio = 0.15,
                 IrisFacetIntensity = 0.45, IrisFacetCount = 10, IrisFacetTableSize = 0.5,
+                DomeEdgeIntensity = 0.4, DomeEdgeColor = "#E6FAFF",
                 Highlights = HighlightStyles.Build(HighlightStyle.Diamond)
             },
             new PresetDefinition
             {
                 Name = "特殊: ハート",
-                Description = "淡いピンクに、ふちどりのハートが浮かぶ",
+                Description = "淡いピンクに、ふちどりのハートの瞳孔とハートのラメ",
                 BaseColor = "#F48FB1", InnerColor = "#FFE0EC", OuterColor = "#C2185B", BottomHighlightColor = "#FFF0F6",
-                LimbalRingColor = "#6A0A33", PupilColor = "#C2185B", RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
+                LimbalRingColor = "#6A0A33", PupilColor = "#FFC1D9", RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.Heart, PupilSizeRatio = 0.46,
                 RayCount = 64, RayIntensity = 0.5, ParticleCount = 110, ParticleGlow = 0.75, ParticleFlareRatio = 0.1,
-                // A pale heart over the pupil heart leaves only its rim: an outlined heart
-                DefaultSymbol = SymbolType.Heart, SymbolColor = "#FFC1D9", SymbolSize = 0.32,
-                SymbolPositionX = 0.0, SymbolPositionY = 0.0, SymbolCount = 1, SymbolOpacity = 1.0,
+                // A pale heart pupil with a deep pink rim: an outlined heart
+                PupilOutlineIntensity = 1.0, PupilOutlineColor = "#C2185B", PupilOutlineWidth = 0.045,
+                ParticleShape = GlitterShape.Heart, ParticleShapeRatio = 0.35,
                 Highlights = HighlightStyles.Build(HighlightStyle.Heart)
             },
             new PresetDefinition
             {
                 Name = "特殊: 桜",
-                Description = "桜の花びらが舞う春色のソフトピンク",
+                Description = "桜の花びらが舞う春色のソフトピンク。ラメにも花びら",
                 BaseColor = "#FF6090", InnerColor = "#FFB2D0", OuterColor = "#7A0035", BottomHighlightColor = "#FFF0F5",
                 LimbalRingColor = "#3B0018", PupilColor = "#1F000C", RayColor = "#FFD6E7", ParticleColor = "#FFFFFF",
                 RayCount = 64, RayIntensity = 0.6, ParticleCount = 70, ParticleGlow = 0.7, ParticleFlareRatio = 0.12,
+                ParticleShape = GlitterShape.SakuraPetal, ParticleShapeRatio = 0.4,
                 LightStrength = 0.25, LightAngle = 235,
                 Symbols = new List<DecorativeSymbolItem>
                 {
@@ -337,12 +346,14 @@ namespace DollIrisGenerator.Models
             new PresetDefinition
             {
                 Name = "特殊: キャットアイ",
-                Description = "縦長の瞳孔を持つ、魅惑的なゴールドの猫目",
+                Description = "縦長の瞳孔を持つ、魅惑的なゴールドの猫目。ふちから入る濃い線",
                 BaseColor = "#FFC400", InnerColor = "#C6F000", OuterColor = "#B33A0A", BottomHighlightColor = "#FFFF8D",
                 LimbalRingColor = "#260E04", PupilColor = "#0D0502", RayColor = "#F4FF81", ParticleColor = "#FFFFFF",
                 PupilShape = PupilShape.CatSlit, PupilSizeRatio = 0.42,
                 RayCount = 80, RayIntensity = 0.7, RayCurve = 0.0, ParticleCount = 40, ParticleGlow = 0.6,
                 FiberNoise = 0.4, LightStrength = 0.3, LightAngle = 240,
+                // Dark lines from the rim and the dome's light below, as a cat's eye
+                RimRayIntensity = 0.5, RimRayColor = "#3A1A04", CausticIntensity = 0.45, CausticColor = "#FFF6B0",
                 Highlights = HighlightStyles.Build(HighlightStyle.Sparkle)
             },
             new PresetDefinition
@@ -388,41 +399,102 @@ namespace DollIrisGenerator.Models
                 PupilShape = PupilShape.Diamond, PupilSizeRatio = 0.4, PupilFacetIntensity = 0.8, PupilFacetCount = 8,
                 RayCount = 96, RayIntensity = 0.5, RayThickness = 0.9, ParticleCount = 100, ParticleGlow = 0.8,
                 IrisFacetIntensity = 0.55, IrisFacetCount = 12, IrisFacetTableSize = 0.4, IrisFacetBlend = LayerBlend.SoftLight,
-                CenterGlowIntensity = 0.35, CenterGlowColor = "#FFFFFF",
+                CenterGlowIntensity = 0.35, CenterGlowColor = "#FFFFFF", DomeEdgeIntensity = 0.45, DomeEdgeColor = "#E6FAFF",
                 Highlights = HighlightStyles.Build(HighlightStyle.Diamond)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: ホログラム",
+                Description = "銀色がかった薄紫に、光の向きに並ぶ虹色の縞",
+                BaseColor = "#B9C3E8", InnerColor = "#F4F6FF", OuterColor = "#4B5694", BottomHighlightColor = "#F0F4FF",
+                LimbalRingColor = "#1E2550", PupilColor = "radial-gradient(#3B3F7A 0%, #0C0D26 100%)",
+                RayColor = "#FFFFFF", ParticleColor = "#FFFFFF",
+                RayCount = 72, RayIntensity = 0.45, ParticleCount = 90, ParticleGlow = 0.8, ParticleFlareRatio = 0.15,
+                LightStrength = 0.35, LightAngle = 225,
+                HoloIntensity = 0.45, HoloScale = 3.5, CenterGlowIntensity = 0.3, DomeEdgeIntensity = 0.45,
+                Highlights = HighlightStyles.Build(HighlightStyle.Sparkle, glow: 0.4)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: 黒ラメ",
+                Description = "蜂蜜色の虹彩に、後光をまとった黒いラメ",
+                BaseColor = "#E0A030", InnerColor = "#FFE29A", OuterColor = "#7A3E08", BottomHighlightColor = "#FFF0C8",
+                LimbalRingColor = "#2E1603", PupilColor = "#120802", RayColor = "#FFE9B0",
+                // Black grains with a light glow round them (blended normally: under スクリーン they would vanish)
+                ParticleColor = "#140A02", ParticleGlowCustomColor = true, ParticleGlowColor = "#FFF8E1", GlitterBlend = LayerBlend.Normal,
+                ParticleCount = 110, ParticleMinSize = 1.0, ParticleMaxSize = 2.6, ParticleGlow = 0.8, ParticleFlareRatio = 0.1,
+                RayCount = 64, RayIntensity = 0.55, FiberNoise = 0.2, LightStrength = 0.25, LightAngle = 235,
+                Highlights = HighlightStyles.Build(HighlightStyle.Classic)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: アニメ塗り",
+                Description = "下半分が明るい二色の空色に、瞳孔の中の光の輪とふちの弧",
+                BaseColor = "#3FA9F5", InnerColor = "#B8E6FF", OuterColor = "#0E3F8C", BottomHighlightColor = "#E2F6FF",
+                LimbalRingColor = "#0A1E4A", PupilColor = "#081433", RayColor = "#E8F7FF", ParticleColor = "#FFFFFF",
+                RayCount = 36, RayThickness = 1.6, RayIntensity = 0.7, ParticleCount = 30, ParticleGlow = 0.6,
+                TwoToneIntensity = 0.75, TwoToneColor = "#9BE0FF", TwoToneHeight = 0.38, TwoToneCurve = 0.3,
+                PupilInnerRingIntensity = 0.85, PupilInnerRingSize = 0.62, PupilInnerRingColor = "#FFFFFF",
+                RimRayIntensity = 0.5, RimRayColor = "#0A1E4A",
+                Highlights = HighlightStyles.Build(HighlightStyle.Arc)
+            },
+            new PresetDefinition
+            {
+                Name = "特殊: グラスアイ",
+                Description = "本物のガラスの義眼のようなヘーゼル。繊維と瞳孔まわりの金色、ドームの照り返し",
+                BaseColor = "#6E8C3A", InnerColor = "#C9B45C", OuterColor = "#2E3E16", BottomHighlightColor = "#E8F0C8",
+                LimbalRingColor = "#141C08", PupilColor = "#050703", RayColor = "#E2D8A0", ParticleColor = "#FFFFFF",
+                RayCount = 96, RayThickness = 0.9, RayIntensity = 0.4, ParticleCount = 0,
+                FiberNoise = 0.45, LightStrength = 0.4, LightAngle = 230, LimbalRingSoftness = 0.4,
+                CollaretteIntensity = 0.45, CollaretteColor = "#C8902A", CollaretteWidth = 0.16, CollaretteSoftness = 0.55,
+                CausticIntensity = 0.55, CausticColor = "#FFF6D8", DomeEdgeIntensity = 0.4,
+                Highlights = HighlightStyles.Build(HighlightStyle.Window, softness: 0.25)
             },
 
             // ---------------- 雰囲気: a basic look with its own glitter, pupil and highlights ----------------
             Tweak(Mood("A. ナチュラル (ピンク系)", "やわらかく自然なピンク。ラメは控えめ",
                 "#E58BA7", "#FBD3DF", "#9A4762", "#FFEFF4", "#4A1A2A", "#2E1019", "#FBE0E8", HighlightStyle.Classic,
                 particles: 40, glow: 0.5, highlightSoftness: 0.25),
-                p => { p.FiberNoise = 0.35; }),
-            Mood("B. 精霊 (ブルー系)", "光をまとったような幻想的なブルー",
+                p => { p.FiberNoise = 0.35; p.CausticIntensity = 0.3; }),
+            Tweak(Mood("B. 精霊 (ブルー系)", "光をまとったような幻想的なブルー。ふちが光る",
                 "#3D7BEA", "#BDEBFF", "#13308A", "#E4F7FF", "#07164A", "#050E30", "#DDF4FF", HighlightStyle.Arc,
                 particles: 150, glow: 0.7, highlightGlow: 0.5,
                 aurora: "conic-gradient(from 270deg, #80D8FF 0%, #FFFFFF 33%, #82B1FF 66%, #80D8FF 100%)", auroraOpacity: 0.3),
-            Tweak(Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル。光の筋は下側だけ",
+                p => { p.DomeEdgeIntensity = 0.35; }),
+            Tweak(Mood("C. アンニュイ (パープル系)", "けだるく落ち着いたスモーキーパープル。深いまぶたの影、光の筋は下側だけ",
                 "#7A5BA8", "#C9B5E6", "#2E1F4D", "#E6DCF2", "#170F29", "#0F0A1C", "#DCCFEE", HighlightStyle.Droplet,
                 particles: 40, glow: 0.45, rays: 0.5, highlightSoftness: 0.35),
-                p => { p.RayRangeWidth = 180; p.RayRangeFeather = 60; p.FiberNoise = 0.3; }),
-            Mood("D. つんでれ (レッド系)", "強気なのに甘さもある鮮やかなレッド",
+                p => { p.RayRangeWidth = 180; p.RayRangeFeather = 60; p.FiberNoise = 0.3; p.UpperShadowIntensity = 0.8; p.UpperShadowDepth = 0.75; }),
+            Tweak(Mood("D. つんでれ (レッド系)", "強気なのに甘さもある鮮やかなレッド。アニメ塗りの色の段",
                 "#E8364F", "#FF9AA8", "#7A0A1E", "#FFE0E4", "#3B0510", "#24030A", "#FFD1D8", HighlightStyle.Sparkle,
                 particles: 80, glow: 0.7,
                 pupilStretchX: 0.75, pupilStretchY: 1.25), // a tall oval pupil
-            Tweak(Mood("E. 小悪魔 (赤紫系)", "ハートの瞳孔がのぞく、あやしい赤紫",
+                p => { p.ToneBandIntensity = 0.5; p.ToneBandCount = 3; }),
+            Tweak(Mood("E. 小悪魔 (赤紫系)", "ハートの瞳孔がのぞく、あやしい赤紫。ピンクの後光の黒いラメ",
                 "#C2185B", "#F06292", "#4A0628", "#FFD6E8", "#2A0216", "#1A010D", "#F8BBD0", HighlightStyle.Heart,
                 particles: 90, glow: 0.8,
                 pupil: PupilShape.Heart, facets: 0.6),
-                p => { p.PupilSizeRatio = 0.38; }),
-            Mood("F. 無邪気 (アクア系)", "くりっとした瞳孔の明るいアクア",
+                p =>
+                {
+                    p.PupilSizeRatio = 0.38;
+                    // Dark grains with a pink glow
+                    p.ParticleColor = "#1A0010"; p.ParticleGlowCustomColor = true; p.ParticleGlowColor = "#FF8AC8"; p.GlitterBlend = LayerBlend.Normal;
+                }),
+            Tweak(Mood("F. 無邪気 (アクア系)", "くりっとした瞳孔の明るいアクア。瞳孔の中に光の輪",
                 "#22C3D6", "#B2F5FF", "#0A6B85", "#E0FDFF", "#033A48", "#022833", "#D2FBFF", HighlightStyle.ThreeDots,
                 particles: 80, glow: 0.7,
                 pupilSize: 0.38),
-            Tweak(Mood("G. 儚げ (シルバー系)", "淡く透ける銀青色。外輪もやわらか",
+                p =>
+                {
+                    p.PupilInnerRingIntensity = 0.8; p.PupilInnerRingSize = 0.62; p.PupilInnerRingColor = "#FFFFFF";
+                    p.PupilInnerRingIntensity2 = 0.6; p.PupilInnerRingSize2 = 0.35; p.PupilInnerRingColor2 = "#B2F5FF";
+                }),
+            Tweak(Mood("G. 儚げ (シルバー系)", "淡く透ける銀青色。外輪もやわらかく、内側に細い光の輪",
                 "#A8B8CC", "#EEF4FA", "#5A6B82", "#F7FBFF", "#3A4658", "#1C2430", "#FFFFFF", HighlightStyle.Window,
                 particles: 120, glow: 0.6, rays: 0.45, pupilSize: 0.28, highlightSoftness: 0.3, highlightGlow: 0.3),
-                p => { p.LimbalRingSoftness = 0.45; p.LimbalRingOpacity = 0.7; p.ParticleMinSize = 0.6; p.ParticleMaxSize = 1.6; p.LightStrength = 0.35; }),
-            Tweak(Mood("H. クール (アイス系)", "小さな瞳孔に細かな光の筋。上側にカット面",
+                p => { p.LimbalRingSoftness = 0.45; p.LimbalRingOpacity = 0.7; p.ParticleMinSize = 0.6; p.ParticleMaxSize = 1.6; p.LightStrength = 0.35;
+                    p.LimbalInnerRingIntensity = 0.45; }),
+            Tweak(Mood("H. クール (アイス系)", "小さな瞳孔に細かな光の筋。上側にカット面、ふちから入る線",
                 "#1FA7D8", "#C8F4FF", "#073C66", "#E6FAFF", "#021C33", "#020F1C", "#E6FAFF", HighlightStyle.Sparkle,
                 particles: 50, glow: 0.6, rays: 0.75, pupilSize: 0.26),
                 p =>
@@ -430,6 +502,7 @@ namespace DollIrisGenerator.Models
                     p.RayCount = 96; p.RayThickness = 0.9; p.RayCurve = 0.0;
                     p.IrisFacetIntensity = 0.35; p.IrisFacetCount = 12;
                     p.IrisFacetRangeAngle = 270; p.IrisFacetRangeWidth = 200; p.IrisFacetRangeFeather = 60;
+                    p.RimRayIntensity = 0.4; p.RimRayColor = "#021C33";
                 })
         };
 

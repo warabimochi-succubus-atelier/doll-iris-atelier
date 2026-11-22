@@ -129,7 +129,7 @@ namespace DollIrisGenerator.Tests
                 if (p.ToneBandIntensity > 0) on++;
                 if (p.IsOddEye) Assert.Equal(LayerBlend.SoftLight, p.ToneBandBlend);
             }
-            Assert.InRange(on, 30, 90); // about 20%
+            Assert.InRange(on, 15, 50); // about 10% (アニメ designs mostly, SPECIFICATION.md 7.4)
 
             var kept = Banded();
             kept.ToneBandCount = 5;

@@ -257,7 +257,7 @@ namespace DollIrisGenerator.Tests
             var q = WithGradients();
             IrisRandomizer.RandomizeAttributes(q, new Random(7));
             Assert.True(ColorFill.IsHexColor(q.RayColor));
-            Assert.True(ColorFill.IsHexColor(q.PupilColor));
+            Assert.NotEqual(WithGradients().PupilColor, q.PupilColor); // its own color (a deep one or a gem gradient)
             Assert.True(SvgValidator.IsWellFormed(SvgExporter.GeneratePairSvg(q), out _));
         }
 
