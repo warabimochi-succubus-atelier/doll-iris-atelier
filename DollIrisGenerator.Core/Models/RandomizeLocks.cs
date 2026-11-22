@@ -20,7 +20,7 @@ namespace DollIrisGenerator.Models
         Colors = 1 << 0,
         /// <summary>乱数シード (the pattern jitter of rays and glitter).</summary>
         Seed = 1 << 1,
-        /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color, the 瞳孔まわりの輪 and the 縁取り線.</summary>
+        /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color, the 瞳孔まわりの輪, the 縁取り線 and the 中の輪.</summary>
         Pupil = 1 << 2,
         /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color, and the 外周からの線.</summary>
         Rays = 1 << 3,

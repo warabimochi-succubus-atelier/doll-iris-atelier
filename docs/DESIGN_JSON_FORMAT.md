@@ -182,6 +182,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `PupilOutlineIntensity` | 0〜1 | 瞳孔の縁取り線の強さ（不透明度）。0 でオフ（既定） |
 | `PupilOutlineWidth` | 0.005〜0.05 | 縁取り線の太さの比率（既定 0.015） |
 | `PupilOutlineColor` | 色（単色） | 縁取り線の色（既定 `#FFFFFF`） |
+| `PupilInnerRingIntensity` | 0〜1 | 瞳孔の中の輪（瞳孔と同じ形を小さくした光の輪）の強さ。0 でオフ（既定）。縁取り線と同時に使える |
+| `PupilInnerRingSize` | 0.2〜0.95 | 瞳孔に対する中の輪の大きさ（既定 0.6） |
+| `PupilInnerRingWidth` | 0.005〜0.05 | 中の輪の線の太さの比率（既定 0.012） |
+| `PupilInnerRingColor` | 色（単色） | 中の輪の色（既定 `#FFFFFF`） |
 
 ### 瞳孔まわりの輪（瞳孔の縁から外へ広がるギザギザの色の輪）
 
@@ -432,6 +436,10 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "PupilOutlineIntensity": 0.0,
   "PupilOutlineWidth": 0.015,
   "PupilOutlineColor": "#FFFFFF",
+  "PupilInnerRingIntensity": 0.0,
+  "PupilInnerRingSize": 0.6,
+  "PupilInnerRingWidth": 0.012,
+  "PupilInnerRingColor": "#FFFFFF",
   "CollaretteIntensity": 0.0,
   "CollaretteColor": "#FFD54F",
   "CollaretteWidth": 0.2,
@@ -553,6 +561,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 - 盛り込みすぎないこと。星雲・オーロラ・レンズ・記号を全部強くすると濁るので、主役を 1〜2 つに絞り、他は 0 か弱めにします。
 - 印刷すると画面より暗く見えやすいので、暗い色ばかりにしないようにします。
 - 小さい記号（`Size` 0.1 未満）は印刷で潰れやすくなります。
+- 虹彩の一部だけ色を変える（扇形の色違い）には、オーロラ層を円周グラデーションにし、同じ位置に止め色を 2 つ置きます。例: `"AuroraColor": "conic-gradient(from 300deg, #C67C2A 0%, #C67C2A 22%, #00C67C2A 22%, #00C67C2A 100%)"`、`"AuroraOpacity": 0.85`、`"AuroraBlend": 0`。`#00` で始まる 8 桁の色は透明です。境目をぼかすなら 22% と 26% のように少し離します。
 
 ---
 

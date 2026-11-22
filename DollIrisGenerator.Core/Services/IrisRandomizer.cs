@@ -277,6 +277,15 @@ namespace DollIrisGenerator.Services
                 p.LimbalInnerRingGap = Range(0.0, 0.03, 3);
             }
             if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalInnerRingColor = Chance(50) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
+
+            // 瞳孔の中の輪 (drawn last): 15% of designs
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.PupilInnerRingIntensity = Chance(15) ? Range(0.5, 0.9) : 0.0;
+                p.PupilInnerRingSize = Range(0.45, 0.75);
+                p.PupilInnerRingWidth = Range(0.008, 0.02, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil)) p.PupilInnerRingColor = Chance(60) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
         }
 
         /// <summary>

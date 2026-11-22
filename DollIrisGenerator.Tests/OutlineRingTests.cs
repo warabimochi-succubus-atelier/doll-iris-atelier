@@ -17,6 +17,7 @@ namespace DollIrisGenerator.Tests
             Assert.Equal(0.0, p.LimbalInnerRingIntensity);
             string svg = SvgExporter.GeneratePairSvg(p);
             Assert.DoesNotContain("_pupil_outline", svg);
+            Assert.DoesNotContain("_pupil_inner_ring", svg);
             Assert.DoesNotContain("_limbal_inner", svg);
         }
 
@@ -45,6 +46,58 @@ namespace DollIrisGenerator.Tests
             // No pupil, no line
             p.PupilOpacity = 0;
             Assert.DoesNotContain("_pupil_outline", SvgExporter.GeneratePairSvg(p));
+        }
+
+        // ---- 瞳孔の中の輪 ----
+
+        [Fact]
+        public void PupilInnerRing_ShrinksTheShape_KeepingTheLineWidth_AndGoesWithTheOutline()
+        {
+            var p = new IrisParameters { PupilInnerRingIntensity = 0.7, PupilInnerRingSize = 0.5, PupilSizeRatio = 0.4 };
+            double baseR = p.SizeMm / 2.0;
+            string svg = SvgExporter.GeneratePairSvg(p);
+            string ring = Element(svg, "left_eye_pupil_inner_ring");
+            Assert.Contains(" scale(0.50000) ", ring);
+            Assert.Contains($"stroke-width=\"{(baseR * p.PupilInnerRingWidth / 0.5).ToFixed(4)}\"", ring);
+            Assert.Contains("opacity=\"0.70\"", ring);
+            Assert.DoesNotContain("_pupil_outline", svg);
+
+            // Both at once: the ring under the outline, both over the pupil
+            p.PupilOutlineIntensity = 0.8;
+            p.PupilShape = PupilShape.Heart;
+            svg = SvgExporter.GeneratePairSvg(p);
+            int pupil = svg.IndexOf("id=\"left_eye_pupil\"", StringComparison.Ordinal);
+            int inner = svg.IndexOf("id=\"left_eye_pupil_inner_ring\"", StringComparison.Ordinal);
+            int outline = svg.IndexOf("id=\"left_eye_pupil_outline\"", StringComparison.Ordinal);
+            Assert.True(pupil < inner && inner < outline);
+            Assert.DoesNotContain("scale(", Element(svg, "left_eye_pupil_outline"));
+            System.Xml.Linq.XDocument.Parse(svg);
+
+            p.PupilOpacity = 0;
+            Assert.DoesNotContain("_pupil_inner_ring", SvgExporter.GeneratePairSvg(p));
+        }
+
+        /// <summary>The element of the given id.</summary>
+        private static string Element(string svg, string id)
+        {
+            int at = svg.IndexOf($"id=\"{id}\"", StringComparison.Ordinal);
+            int start = svg.LastIndexOf('<', at);
+            return svg[start..(svg.IndexOf("/>", at, StringComparison.Ordinal) + 2)];
+        }
+
+        /// <summary>The 扇形の色違い recipe in the manual and DESIGN_JSON_FORMAT.md loads cleanly and draws.</summary>
+        [Fact]
+        public void SectorColorRecipe_IsValidAndDraws()
+        {
+            string json = "{\"Name\": \"t\", \"AuroraColor\": \"conic-gradient(from 300deg, #C67C2A 0%, #C67C2A 22%, #00C67C2A 22%, #00C67C2A 100%)\", "
+                        + "\"AuroraOpacity\": 0.85, \"AuroraBlend\": 0}";
+            var report = DesignFileValidator.Validate(json);
+            Assert.DoesNotContain(report.Issues, i => i.Level != DesignIssueLevel.Note);
+            var p = Assert.Single(report.Designs).Parameters;
+            Assert.True(ColorFill.Parse(p.AuroraColor).IsGradient);
+            string svg = SvgExporter.GeneratePairSvg(p);
+            Assert.Contains("left_eye_aurora_fill", svg);
+            System.Xml.Linq.XDocument.Parse(svg);
         }
 
         // ---- 外輪の内側の輪 ----
@@ -87,11 +140,16 @@ namespace DollIrisGenerator.Tests
             var p = new IrisParameters
             {
                 PupilOutlineIntensity = 2, PupilOutlineWidth = 1, PupilOutlineColor = null!,
+                PupilInnerRingIntensity = -1, PupilInnerRingSize = 2, PupilInnerRingWidth = 0, PupilInnerRingColor = null!,
                 LimbalInnerRingIntensity = -1, LimbalInnerRingWidth = 0, LimbalInnerRingGap = double.NaN, LimbalInnerRingColor = null!
             };
             Assert.Equal(1.0, p.PupilOutlineIntensity);
             Assert.Equal(IrisParameters.MaxPupilOutlineWidth, p.PupilOutlineWidth);
             Assert.Equal(IrisParameters.DefaultPupilOutlineColor, p.PupilOutlineColor);
+            Assert.Equal(0.0, p.PupilInnerRingIntensity);
+            Assert.Equal(IrisParameters.MaxPupilInnerRingSize, p.PupilInnerRingSize);
+            Assert.Equal(IrisParameters.MinPupilOutlineWidth, p.PupilInnerRingWidth);
+            Assert.Equal(IrisParameters.DefaultPupilInnerRingColor, p.PupilInnerRingColor);
             Assert.Equal(0.0, p.LimbalInnerRingIntensity);
             Assert.Equal(IrisParameters.MinLimbalInnerRingWidth, p.LimbalInnerRingWidth);
             Assert.Equal(IrisParameters.DefaultLimbalInnerRingGap, p.LimbalInnerRingGap);
@@ -106,6 +164,7 @@ namespace DollIrisGenerator.Tests
 
             var old = JsonSerializer.Deserialize<IrisParameters>("{\"LimbalRingSoftness\": 0.3}")!;
             Assert.Equal(0.0, old.PupilOutlineIntensity);
+            Assert.Equal(0.0, old.PupilInnerRingIntensity);
             Assert.Equal(0.0, old.LimbalInnerRingIntensity);
         }
 
@@ -137,6 +196,20 @@ namespace DollIrisGenerator.Tests
             }
             Assert.InRange(outline, 20, 75); // about 15%
             Assert.InRange(inner, 30, 90);   // about 20%
+
+            int ring = 0;
+            for (int i = 0; i < 300; i++)
+            {
+                var p = new IrisParameters();
+                IrisRandomizer.RandomizeAttributes(p, new Random(i));
+                if (p.PupilInnerRingIntensity > 0) { ring++; Assert.InRange(p.PupilInnerRingSize, 0.45, 0.75); }
+            }
+            Assert.InRange(ring, 20, 75); // about 15%
+
+            var keptRing = new IrisParameters { PupilInnerRingIntensity = 0.6, PupilInnerRingColor = "#010203" };
+            IrisRandomizer.RandomizeAttributes(keptRing, RandomizeLocks.Pupil, new Random(5));
+            Assert.Equal(0.6, keptRing.PupilInnerRingIntensity);
+            Assert.Equal("#010203", keptRing.PupilInnerRingColor);
 
             var kept = new IrisParameters { PupilOutlineIntensity = 0.7, LimbalInnerRingIntensity = 0.4 };
             IrisRandomizer.RandomizeAttributes(kept, RandomizeLocks.Pupil | RandomizeLocks.LimbalRing, new Random(3));

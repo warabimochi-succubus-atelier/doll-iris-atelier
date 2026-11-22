@@ -41,6 +41,9 @@ namespace DollIrisGenerator.Models
         /// <summary>瞳孔の縁取り線 and 外輪の内側の輪: ranges and defaults.</summary>
         public const double MinPupilOutlineWidth = 0.005, MaxPupilOutlineWidth = 0.05, DefaultPupilOutlineWidth = 0.015;
         public const string DefaultPupilOutlineColor = "#FFFFFF";
+        public const double MinPupilInnerRingSize = 0.2, MaxPupilInnerRingSize = 0.95, DefaultPupilInnerRingSize = 0.6;
+        public const double DefaultPupilInnerRingWidth = 0.012;
+        public const string DefaultPupilInnerRingColor = "#FFFFFF";
         public const double MinLimbalInnerRingWidth = 0.005, MaxLimbalInnerRingWidth = 0.06, DefaultLimbalInnerRingWidth = 0.015;
         public const double MaxLimbalInnerRingGap = 0.10, DefaultLimbalInnerRingGap = 0.01;
         public const string DefaultLimbalInnerRingColor = "#FFFFFF";
@@ -146,6 +149,12 @@ namespace DollIrisGenerator.Models
         private double _pupilOutlineIntensity = 0.0;
         private double _pupilOutlineWidth = DefaultPupilOutlineWidth;
         private string _pupilOutlineColor = DefaultPupilOutlineColor;
+
+        // 瞳孔の中の輪 (the pupil's outline shrunk inside it, as a ring of light): 0 strength = off. Older files load as off.
+        private double _pupilInnerRingIntensity = 0.0;
+        private double _pupilInnerRingSize = DefaultPupilInnerRingSize;
+        private double _pupilInnerRingWidth = DefaultPupilInnerRingWidth;
+        private string _pupilInnerRingColor = DefaultPupilInnerRingColor;
 
         // Pupil (瞳孔)
         private PupilShape _pupilShape = PupilShape.Round;
@@ -565,6 +574,34 @@ namespace DollIrisGenerator.Models
         {
             get => _pupilOutlineColor;
             set { _pupilOutlineColor = value ?? DefaultPupilOutlineColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の中の輪の強さ: the ring's opacity. 0 = off.</summary>
+        public double PupilInnerRingIntensity
+        {
+            get => _pupilInnerRingIntensity;
+            set { _pupilInnerRingIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>大きさ: the ring's size relative to the pupil's outline (0.5 = half the pupil).</summary>
+        public double PupilInnerRingSize
+        {
+            get => _pupilInnerRingSize;
+            set { _pupilInnerRingSize = ClampFinite(value, MinPupilInnerRingSize, MaxPupilInnerRingSize, DefaultPupilInnerRingSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>中の輪の太さ, as a fraction of the iris radius (kept whatever the ring's size).</summary>
+        public double PupilInnerRingWidth
+        {
+            get => _pupilInnerRingWidth;
+            set { _pupilInnerRingWidth = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>中の輪の色 (one color).</summary>
+        public string PupilInnerRingColor
+        {
+            get => _pupilInnerRingColor;
+            set { _pupilInnerRingColor = value ?? DefaultPupilInnerRingColor; OnPropertyChanged(); }
         }
 
         /// <summary>瞳孔まわりの輪の強さ: the ring's opacity. 0 = off.</summary>

@@ -56,6 +56,10 @@ namespace DollIrisGenerator.Models
         public double? PupilOutlineIntensity { get; set; }
         public double? PupilOutlineWidth { get; set; }
         public string? PupilOutlineColor { get; set; }
+        public double? PupilInnerRingIntensity { get; set; }
+        public double? PupilInnerRingSize { get; set; }
+        public double? PupilInnerRingWidth { get; set; }
+        public string? PupilInnerRingColor { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
         public int? RayCount { get; set; }
@@ -487,6 +491,10 @@ namespace DollIrisGenerator.Models
             target.PupilOutlineIntensity = preset.PupilOutlineIntensity ?? d.PupilOutlineIntensity;
             target.PupilOutlineWidth = preset.PupilOutlineWidth ?? d.PupilOutlineWidth;
             target.PupilOutlineColor = preset.PupilOutlineColor ?? d.PupilOutlineColor;
+            target.PupilInnerRingIntensity = preset.PupilInnerRingIntensity ?? d.PupilInnerRingIntensity;
+            target.PupilInnerRingSize = preset.PupilInnerRingSize ?? d.PupilInnerRingSize;
+            target.PupilInnerRingWidth = preset.PupilInnerRingWidth ?? d.PupilInnerRingWidth;
+            target.PupilInnerRingColor = preset.PupilInnerRingColor ?? d.PupilInnerRingColor;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
             target.RayCount = preset.RayCount ?? d.RayCount;
@@ -680,6 +688,10 @@ namespace DollIrisGenerator.Models
                 PupilOutlineIntensity = design.PupilOutlineIntensity,
                 PupilOutlineWidth = design.PupilOutlineWidth,
                 PupilOutlineColor = design.PupilOutlineColor,
+                PupilInnerRingIntensity = design.PupilInnerRingIntensity,
+                PupilInnerRingSize = design.PupilInnerRingSize,
+                PupilInnerRingWidth = design.PupilInnerRingWidth,
+                PupilInnerRingColor = design.PupilInnerRingColor,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
                 RayCount = design.RayCount,

@@ -1024,6 +1024,15 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine("      </g>");
                 }
 
+                // 瞳孔の中の輪: the same outline shrunk about the pupil's center; the stroke widened to match, so the line
+                // keeps its width. Under the 縁取り線
+                if (p.PupilInnerRingIntensity > 0.01)
+                {
+                    string ringColor = GeometryHelper.SanitizeColorHex(p.PupilInnerRingColor, IrisParameters.DefaultPupilInnerRingColor);
+                    double k = p.PupilInnerRingSize;
+                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * p.PupilInnerRingWidth / k, 4)}"" stroke-linejoin=""round"" opacity=""{p.PupilInnerRingIntensity.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
+                }
+
                 // 瞳孔の縁取り線: a line centered on the same outline (not blurred)
                 if (p.PupilOutlineIntensity > 0.01)
                 {
