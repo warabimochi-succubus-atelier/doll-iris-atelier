@@ -647,6 +647,65 @@ namespace DollIrisGenerator.Services
             return $@" fx=""{(fx * 100.0).ToString("0.###", Inv)}%"" fy=""{(fy * 100.0).ToString("0.###", Inv)}%""";
         }
 
+        /// <summary>
+        /// The side opposite the light (集光・縁の屈折), in the iris's own (untilted) angles, radians: 光の入る向き + 180°,
+        /// mirrored for the right eye as the light is, with the tilt taken back out (the iris group turns with it).
+        /// The light's direction counts even when its strength is 0 (by default the light comes from above).
+        /// </summary>
+        internal static double AwayFromLight(IrisParameters p, bool isRightEye, double tilt)
+        {
+            double angle = p.LightAngle;
+            if (RightEyeFlips.MirrorsShape(p.LightRightEyeFlip, isRightEye)) angle = 180.0 - angle;
+            return (angle + 180.0 - tilt) * Math.PI / 180.0;
+        }
+
+        /// <summary>How far the 三日月 集光's dark middle sits from its center, toward the iris center (in its radii), and its size.</summary>
+        public const double CausticCutShift = 0.5, CausticCutSize = 0.85;
+
+        /// <summary>
+        /// 集光: a soft glow of light on the side opposite the light, at 位置 from the center (iris radii, along that
+        /// direction on the stretched iris), 大きさ wide. 三日月: the glow's inner side (toward the iris center) is masked
+        /// out by a soft dark ellipse, leaving an arc along the rim.
+        /// </summary>
+        private static void AppendCaustic(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, double away)
+        {
+            double ux = Math.Cos(away), uy = Math.Sin(away);
+            double gx = cx + ux * rx * p.CausticOffset, gy = cy + uy * ry * p.CausticOffset;
+            double grx = rx * p.CausticSize, gry = ry * p.CausticSize;
+            string color = GeometryHelper.SanitizeColorHex(p.CausticColor, IrisParameters.DefaultCausticColor);
+            bool crescent = p.CausticShape == CausticShape.Crescent;
+            string gradId = $"{idPrefix}_caustic_grad";
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <radialGradient id=""{gradId}"">");
+            sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{color}"" stop-opacity=""1"" />");
+            sb.AppendLine($@"          <stop offset=""{(crescent ? "70" : "45")}%"" stop-color=""{color}"" stop-opacity=""{(crescent ? "0.8" : "0.55")}"" />");
+            sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{color}"" stop-opacity=""0"" />");
+            sb.AppendLine("        </radialGradient>");
+            string mask = "";
+            if (crescent)
+            {
+                string maskId = $"{idPrefix}_caustic_mask";
+                double mx = gx - ux * grx * CausticCutShift, my = gy - uy * gry * CausticCutShift;
+                sb.AppendLine($@"        <radialGradient id=""{maskId}_cut"">");
+                sb.AppendLine(@"          <stop offset=""0%"" stop-color=""#000000"" stop-opacity=""1"" />");
+                sb.AppendLine(@"          <stop offset=""60%"" stop-color=""#000000"" stop-opacity=""1"" />");
+                sb.AppendLine(@"          <stop offset=""100%"" stop-color=""#000000"" stop-opacity=""0"" />");
+                sb.AppendLine("        </radialGradient>");
+                sb.AppendLine($@"        <mask id=""{maskId}"" maskUnits=""userSpaceOnUse"" x=""{F(gx - grx)}"" y=""{F(gy - gry)}"" width=""{F(2 * grx)}"" height=""{F(2 * gry)}"">");
+                sb.AppendLine($@"          <ellipse cx=""{F(gx)}"" cy=""{F(gy)}"" rx=""{F(grx)}"" ry=""{F(gry)}"" fill=""#FFFFFF"" />");
+                sb.AppendLine($@"          <ellipse cx=""{F(mx)}"" cy=""{F(my)}"" rx=""{F(grx * CausticCutSize)}"" ry=""{F(gry * CausticCutSize)}"" fill=""url(#{maskId}_cut)"" />");
+                sb.AppendLine("        </mask>");
+                mask = $@" mask=""url(#{maskId})""";
+            }
+            sb.AppendLine("      </defs>");
+            sb.AppendLine($@"      <ellipse id=""{idPrefix}_caustic"" cx=""{F(gx)}"" cy=""{F(gy)}"" rx=""{F(grx)}"" ry=""{F(gry)}"" fill=""url(#{gradId})"" opacity=""{p.CausticIntensity.ToFixed(2)}""{BlendStyle(p.CausticBlend)}{mask} />");
+        }
+
+        /// <summary>Longest step (in the band's width) between the nested strokes of the 縁の屈折, and how many.</summary>
+        public const double DomeEdgeFadeStep = 1.0 / 16.0;
+        public const int MinDomeEdgeFadeSteps = 8, MaxDomeEdgeFadeSteps = 24;
+
         private static void AppendIrisSvg(
             StringBuilder sb,
             string idPrefix,
@@ -889,6 +948,12 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("      </g>");
             }
 
+            // 集光: on the side opposite the light, over the patterns, under the limbal ring and the pupil
+            if (p.CausticIntensity > 0.01)
+            {
+                AppendCaustic(sb, idPrefix, cx, cy, rx, ry, p, AwayFromLight(p, isRightEye, tilt));
+            }
+
             // Limbal Ring
             if (p.LimbalRingThickness > 0.005 && p.LimbalRingOpacity > 0.01)
             {
@@ -957,6 +1022,49 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("        </mask>");
                 sb.AppendLine("      </defs>");
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_limbal_inner_ring")} fill=""{color}"" opacity=""{p.LimbalInnerRingIntensity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+            }
+
+            // 縁の屈折: a band of light from the limbal ring's inner edge inward, fading out over 幅 (nested strokes of the
+            // rim in a mask, the rim itself masked out), stronger on the side opposite the light (a linear mask over it)
+            if (p.DomeEdgeIntensity > 0.01)
+            {
+                double inset = baseR * p.LimbalRingThickness;
+                double width = baseR * p.DomeEdgeWidth;
+                string maskId = $"{idPrefix}_dome_edge_mask";
+                string Rim(string stroke, double strokeWidth, double opacity) =>
+                    (outlineId != null
+                        ? $@"<use href=""#{outlineId}"" fill=""none"""
+                        : $@"<ellipse cx=""{F(cx)}"" cy=""{F(cy)}"" rx=""{F(rx)}"" ry=""{F(ry)}"" fill=""none""")
+                    + $@" stroke=""{stroke}"" stroke-width=""{F(strokeWidth, 4)}""" + (opacity < 0.9995 ? $@" stroke-opacity=""{F(opacity, 4)}""" : "") + " />";
+                string color = GeometryHelper.SanitizeColorHex(p.DomeEdgeColor, IrisParameters.DefaultDomeEdgeColor);
+                sb.AppendLine("      <defs>");
+                sb.AppendLine($@"        <mask id=""{maskId}"">");
+                foreach (var (reach, opacity) in NestedFadeSteps(width * 0.5, width * 0.25, width * DomeEdgeFadeStep, MinDomeEdgeFadeSteps, MaxDomeEdgeFadeSteps))
+                {
+                    if (opacity < 1e-4) continue;
+                    sb.AppendLine("          " + Rim("#FFFFFF", 2.0 * (inset + reach), opacity));
+                }
+                if (inset > 1e-6) sb.AppendLine("          " + Rim("#000000", 2.0 * inset, 1.0));
+                sb.AppendLine("        </mask>");
+                string? sideMask = null;
+                if (p.DomeEdgeBias > 0.005)
+                {
+                    double away = AwayFromLight(p, isRightEye, tilt);
+                    double vx = Math.Cos(away) * rx, vy = Math.Sin(away) * ry;
+                    sideMask = $"{idPrefix}_dome_edge_side";
+                    var (mx, my, mw, mh) = MaskArea(irisBox);
+                    sb.AppendLine($@"        <linearGradient id=""{sideMask}_grad"" gradientUnits=""userSpaceOnUse"" x1=""{F(cx - vx)}"" y1=""{F(cy - vy)}"" x2=""{F(cx + vx)}"" y2=""{F(cy + vy)}"">");
+                    sb.AppendLine($@"          <stop offset=""0%"" stop-color=""#FFFFFF"" stop-opacity=""{F(1.0 - p.DomeEdgeBias, 4)}"" />");
+                    sb.AppendLine(@"          <stop offset=""100%"" stop-color=""#FFFFFF"" stop-opacity=""1"" />");
+                    sb.AppendLine("        </linearGradient>");
+                    sb.AppendLine($@"        <mask id=""{sideMask}"" maskUnits=""userSpaceOnUse"" x=""{F(mx)}"" y=""{F(my)}"" width=""{F(mw)}"" height=""{F(mh)}"">");
+                    sb.AppendLine($@"          <rect x=""{F(mx)}"" y=""{F(my)}"" width=""{F(mw)}"" height=""{F(mh)}"" fill=""url(#{sideMask}_grad)"" />");
+                    sb.AppendLine("        </mask>");
+                }
+                sb.AppendLine("      </defs>");
+                if (sideMask != null) sb.AppendLine($@"      <g id=""{idPrefix}_dome_edge_sided"" mask=""url(#{sideMask})"">");
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_dome_edge")} fill=""{color}"" opacity=""{p.DomeEdgeIntensity.ToFixed(2)}"" mask=""url(#{maskId})"" />");
+                if (sideMask != null) sb.AppendLine("      </g>");
             }
 
             // Pupil

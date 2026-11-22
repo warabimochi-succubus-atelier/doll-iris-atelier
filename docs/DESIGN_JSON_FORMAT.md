@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `TwoToneBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `TwoToneBlend` / `CausticBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -294,6 +294,22 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `LensRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `LensRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
+### 集光・縁の屈折（ドームのレンズが集める光）
+どちらも「光の入る向き」（`LightAngle`）と反対側に出ます。右目は光の向きと同じく反転します。
+
+| 項目 | 値 | 説明 |
+|---|---|---|
+| `CausticIntensity` | 0〜1 | 集光の強さ。0 でオフ（既定） |
+| `CausticColor` | 色（単色） | 集光の色（既定 `#FFFFFF`） |
+| `CausticOffset` | 0〜0.80 | 中心から光と反対側への位置。虹彩の半径に対する割合（既定 0.45） |
+| `CausticSize` | 0.15〜0.80 | 集光の半径。虹彩の半径に対する割合（既定 0.40） |
+| `CausticShape` | 0 / 1 | 形。0 = 丸、1 = 三日月（既定。虹彩のふちに沿った弧） |
+| `CausticBlend` | 重ね方 | 既定 1（スクリーン） |
+| `DomeEdgeIntensity` | 0〜1 | 縁の屈折（外輪のすぐ内側の光の帯）の強さ。0 でオフ（既定） |
+| `DomeEdgeColor` | 色（単色） | 帯の色（既定 `#FFFFFF`）。暗い色にすると暗い帯 |
+| `DomeEdgeWidth` | 0.03〜0.30 | 外輪の内側から中へ消えていく幅。虹彩の半径に対する割合（既定 0.12） |
+| `DomeEdgeBias` | 0〜1 | 偏り。0 で一周同じ、1 で光と反対側だけ（既定 0.7） |
+
 ### 装飾記号 `Symbols`（配列。0 個でもよい。最大 64 個）
 
 各要素の項目:
@@ -513,6 +529,16 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "LensRangeAngle": 90.0,
   "LensRangeWidth": 360.0,
   "LensRangeFeather": 30.0,
+  "CausticIntensity": 0.0,
+  "CausticColor": "#FFFFFF",
+  "CausticOffset": 0.45,
+  "CausticSize": 0.4,
+  "CausticShape": 1,
+  "CausticBlend": 1,
+  "DomeEdgeIntensity": 0.0,
+  "DomeEdgeColor": "#FFFFFF",
+  "DomeEdgeWidth": 0.12,
+  "DomeEdgeBias": 0.7,
   "IrisFacetIntensity": 0.0,
   "IrisFacetCount": 8,
   "IrisFacetTableSize": 0.45,

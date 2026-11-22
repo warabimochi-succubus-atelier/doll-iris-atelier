@@ -152,6 +152,17 @@ namespace DollIrisGenerator.Models
         public double? RimRayRangeAngle { get; set; }
         public double? RimRayRangeWidth { get; set; }
         public double? RimRayRangeFeather { get; set; }
+        // 集光・縁の屈折
+        public double? CausticIntensity { get; set; }
+        public string? CausticColor { get; set; }
+        public double? CausticOffset { get; set; }
+        public double? CausticSize { get; set; }
+        public CausticShape? CausticShape { get; set; }
+        public LayerBlend? CausticBlend { get; set; }
+        public double? DomeEdgeIntensity { get; set; }
+        public string? DomeEdgeColor { get; set; }
+        public double? DomeEdgeWidth { get; set; }
+        public double? DomeEdgeBias { get; set; }
         public int? IrisFacetCount { get; set; }
         public LayerBlend? IrisFacetBlend { get; set; }
         public LayerBlend? GlitterBlend { get; set; }
@@ -615,6 +626,16 @@ namespace DollIrisGenerator.Models
             target.RimRayRangeAngle = preset.RimRayRangeAngle ?? d.RimRayRangeAngle;
             target.RimRayRangeWidth = preset.RimRayRangeWidth ?? d.RimRayRangeWidth;
             target.RimRayRangeFeather = preset.RimRayRangeFeather ?? d.RimRayRangeFeather;
+            target.CausticIntensity = preset.CausticIntensity ?? d.CausticIntensity;
+            target.CausticColor = preset.CausticColor ?? d.CausticColor;
+            target.CausticOffset = preset.CausticOffset ?? d.CausticOffset;
+            target.CausticSize = preset.CausticSize ?? d.CausticSize;
+            target.CausticShape = preset.CausticShape ?? d.CausticShape;
+            target.CausticBlend = preset.CausticBlend ?? d.CausticBlend;
+            target.DomeEdgeIntensity = preset.DomeEdgeIntensity ?? d.DomeEdgeIntensity;
+            target.DomeEdgeColor = preset.DomeEdgeColor ?? d.DomeEdgeColor;
+            target.DomeEdgeWidth = preset.DomeEdgeWidth ?? d.DomeEdgeWidth;
+            target.DomeEdgeBias = preset.DomeEdgeBias ?? d.DomeEdgeBias;
             target.IrisFacetCount = preset.IrisFacetCount ?? d.IrisFacetCount;
             target.IrisFacetBlend = preset.IrisFacetBlend ?? d.IrisFacetBlend;
 
@@ -826,6 +847,16 @@ namespace DollIrisGenerator.Models
                 RimRayRangeAngle = design.RimRayRangeAngle,
                 RimRayRangeWidth = design.RimRayRangeWidth,
                 RimRayRangeFeather = design.RimRayRangeFeather,
+                CausticIntensity = design.CausticIntensity,
+                CausticColor = design.CausticColor,
+                CausticOffset = design.CausticOffset,
+                CausticSize = design.CausticSize,
+                CausticShape = design.CausticShape,
+                CausticBlend = design.CausticBlend,
+                DomeEdgeIntensity = design.DomeEdgeIntensity,
+                DomeEdgeColor = design.DomeEdgeColor,
+                DomeEdgeWidth = design.DomeEdgeWidth,
+                DomeEdgeBias = design.DomeEdgeBias,
                 IrisFacetCount = design.IrisFacetCount,
                 IrisFacetBlend = design.IrisFacetBlend,
 

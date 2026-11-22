@@ -293,8 +293,30 @@ public static class DesignFields
         .. RangeFields(PatternLayer.Glitter),
     ];
 
+    private static readonly (string, object)[] Blends =
+        { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) };
+
     public static readonly IReadOnlyList<Field<IrisParameters>> Lens =
     [
+        new HeadingField<IrisParameters>("集光", "透明なドームのレンズが集めた光です。「光の入る向き」と反対側に出ます (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("集光の強さ", p => p.CausticIntensity, (p, v) => p.CausticIntensity = v, 0, 1, 0.01, Fmt.Percent, "集めた光の明るさ。0% でオフ"),
+        new ColorField<IrisParameters>("集光の色", p => p.CausticColor, (p, v) => p.CausticColor = v),
+        new ChoiceField<IrisParameters>("集光の形", p => p.CausticShape, (p, v) => p.CausticShape = (CausticShape)v,
+            new (string, object)[] { ("三日月", CausticShape.Crescent), ("丸", CausticShape.Round) },
+            "丸: ぼんやりした光のたまり。三日月: 虹彩のふちに沿った弧の照り返し"),
+        new SliderField<IrisParameters>("集光の位置", p => p.CausticOffset, (p, v) => p.CausticOffset = v, 0, IrisParameters.MaxCausticOffset, 0.01, Fmt.Percent,
+            "中心から、光と反対側へどれだけ寄せるか。虹彩の半径に対する割合"),
+        new SliderField<IrisParameters>("集光の大きさ", p => p.CausticSize, (p, v) => p.CausticSize = v,
+            IrisParameters.MinCausticSize, IrisParameters.MaxCausticSize, 0.01, Fmt.Percent, "光の半径。虹彩の半径に対する割合"),
+        new ChoiceField<IrisParameters>("集光の重ね方", p => p.CausticBlend, (p, v) => p.CausticBlend = (LayerBlend)v, Blends,
+            "スクリーン (最初の値) は明るくなるだけです。覆い焼きは強く光ります"),
+        new HeadingField<IrisParameters>("縁の屈折", "外輪のすぐ内側に出る光の帯です。「光の入る向き」と反対側を強くできます (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("縁の屈折の強さ", p => p.DomeEdgeIntensity, (p, v) => p.DomeEdgeIntensity = v, 0, 1, 0.01, Fmt.Percent, "帯の濃さ。0% でオフ"),
+        new ColorField<IrisParameters>("縁の屈折の色", p => p.DomeEdgeColor, (p, v) => p.DomeEdgeColor = v),
+        new SliderField<IrisParameters>("縁の屈折の幅", p => p.DomeEdgeWidth, (p, v) => p.DomeEdgeWidth = v,
+            IrisParameters.MinDomeEdgeWidth, IrisParameters.MaxDomeEdgeWidth, 0.01, Fmt.Percent, "外輪の内側から中へ、だんだん消えていく幅。虹彩の半径に対する割合"),
+        new SliderField<IrisParameters>("縁の屈折の偏り", p => p.DomeEdgeBias, (p, v) => p.DomeEdgeBias = v, 0, 1, 0.01, Fmt.Percent,
+            "0% で一周同じ、100% で光と反対側だけ"),
         new HeadingField<IrisParameters>("レンズ風パターン"),
         new ToggleField<IrisParameters>("光学レンズ・フレネル屈折リングを有効化", p => p.LensPatternEnabled, (p, v) => p.LensPatternEnabled = v),
         new SliderField<IrisParameters>("屈折リング数", p => p.LensRingCount, (p, v) => p.LensRingCount = Int(v), 2, 20, 1, v => Fmt.Count(v, "本")),

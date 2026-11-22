@@ -54,6 +54,16 @@ namespace DollIrisGenerator.Models
         public const double DefaultRimRayRandomness = 0.4;
         public const string DefaultRimRayColor = "#0D1B3E";
 
+        /// <summary>集光 (SvgExporter: the caustic opposite the light): ranges and defaults.</summary>
+        public const string DefaultCausticColor = "#FFFFFF";
+        public const double MaxCausticOffset = 0.80, DefaultCausticOffset = 0.45;
+        public const double MinCausticSize = 0.15, MaxCausticSize = 0.80, DefaultCausticSize = 0.40;
+
+        /// <summary>縁の屈折 (SvgExporter: the bright band inside the rim): ranges and defaults.</summary>
+        public const string DefaultDomeEdgeColor = "#FFFFFF";
+        public const double MinDomeEdgeWidth = 0.03, MaxDomeEdgeWidth = 0.30, DefaultDomeEdgeWidth = 0.12;
+        public const double DefaultDomeEdgeBias = 0.7;
+
         /// <summary>二色分け (IrisPatterns.TwoToneRegion): ranges and defaults.</summary>
         public const string DefaultTwoToneColor = "#82A8FF";
         public const double MinTwoToneHeight = 0.05, MaxTwoToneHeight = 0.95, DefaultTwoToneHeight = 0.40;
@@ -309,6 +319,16 @@ namespace DollIrisGenerator.Models
         private double _rimRayRangeAngle = DefaultRangeAngle;
         private double _rimRayRangeWidth = FullRangeWidth;
         private double _rimRayRangeFeather = DefaultRangeFeather;
+        private double _causticIntensity;                    // 集光 (off)
+        private string _causticColor = DefaultCausticColor;
+        private double _causticOffset = DefaultCausticOffset;
+        private double _causticSize = DefaultCausticSize;
+        private CausticShape _causticShape = CausticShape.Crescent;
+        private LayerBlend _causticBlend = LayerBlend.Screen;
+        private double _domeEdgeIntensity;                   // 縁の屈折 (off)
+        private string _domeEdgeColor = DefaultDomeEdgeColor;
+        private double _domeEdgeWidth = DefaultDomeEdgeWidth;
+        private double _domeEdgeBias = DefaultDomeEdgeBias;
 
         // Decorative Symbols (装飾記号)
         private ObservableCollection<DecorativeSymbolItem> _symbols = new();
@@ -1380,6 +1400,76 @@ namespace DollIrisGenerator.Models
         {
             get => _rimRayRangeFeather;
             set { _rimRayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の強さ: the light gathered by the dome on the side opposite the light. 0 = off.</summary>
+        public double CausticIntensity
+        {
+            get => _causticIntensity;
+            set { _causticIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の色 (one color).</summary>
+        public string CausticColor
+        {
+            get => _causticColor;
+            set { _causticColor = value ?? DefaultCausticColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の位置: how far from the center (iris radii) toward the side opposite the light.</summary>
+        public double CausticOffset
+        {
+            get => _causticOffset;
+            set { _causticOffset = ClampFinite(value, 0.0, MaxCausticOffset, DefaultCausticOffset); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の大きさ: its radius (iris radii).</summary>
+        public double CausticSize
+        {
+            get => _causticSize;
+            set { _causticSize = ClampFinite(value, MinCausticSize, MaxCausticSize, DefaultCausticSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の形.</summary>
+        public CausticShape CausticShape
+        {
+            get => _causticShape;
+            set { _causticShape = Enum.IsDefined(value) ? value : CausticShape.Crescent; OnPropertyChanged(); }
+        }
+
+        /// <summary>集光の重ね方 (screen by default: it only brightens).</summary>
+        public LayerBlend CausticBlend
+        {
+            get => _causticBlend;
+            set { _causticBlend = Enum.IsDefined(value) ? value : LayerBlend.Screen; OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の強さ: the band of light just inside the rim. 0 = off.</summary>
+        public double DomeEdgeIntensity
+        {
+            get => _domeEdgeIntensity;
+            set { _domeEdgeIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の色 (one color; a dark one makes a dark band).</summary>
+        public string DomeEdgeColor
+        {
+            get => _domeEdgeColor;
+            set { _domeEdgeColor = value ?? DefaultDomeEdgeColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の幅 (iris radii), from the limbal ring's inner edge inward.</summary>
+        public double DomeEdgeWidth
+        {
+            get => _domeEdgeWidth;
+            set { _domeEdgeWidth = ClampFinite(value, MinDomeEdgeWidth, MaxDomeEdgeWidth, DefaultDomeEdgeWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>縁の屈折の偏り: 0 = the same all round, 1 = only on the side opposite the light.</summary>
+        public double DomeEdgeBias
+        {
+            get => _domeEdgeBias;
+            set { _domeEdgeBias = ClampFinite(value, 0.0, 1.0, DefaultDomeEdgeBias); OnPropertyChanged(); }
         }
 
         // Collections
