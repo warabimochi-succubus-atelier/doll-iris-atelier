@@ -610,7 +610,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="虹彩カラー設定" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない (すべての色)" IsChecked="{Binding LockColors}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・まぶたの影・オーロラ層・星雲・色の段・デザイン名をランダム生成で変えない"/>
+                                                      ToolTip="この枠の色だけでなく、瞳孔・放射模様・外輪・ラメ・レンズ風・オッドアイ側を含むすべての色と、グラデーション範囲・反射光の強さ・まぶたの影・オーロラ層・星雲・色の段・二色分け・デザイン名をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -771,6 +771,47 @@
                                                 <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ToneBandBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
                                                 <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ToneBandBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
                                                 <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.ToneBandBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
+                                            </WrapPanel>
+                                        </DockPanel>
+
+                                        <!-- 二色分け (Two-tone split) -->
+                                        <DockPanel Margin="0,8,0,4" ToolTip="弧の境目で虹彩を 2 つに分け、片側 (最初は下側) の色を変えます。放射ライン・外輪・瞳孔はその上に見えます。0 でオフ">
+                                            <TextBlock Text="二色分け:" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.TwoToneIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.TwoToneIntensity}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="色を変える部分の色 (グラデーションも使えます)">
+                                            <TextBlock Text="色を変える部分の色:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <controls:ColorPickerBox AllowGradient="True" SelectedColorHex="{Binding CurrentIris.TwoToneColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="境目の真ん中が、外周から虹彩の直径のどれだけまで来るか (50% で中心)">
+                                            <TextBlock Text="境目の高さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.TwoToneHeight, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.TwoToneHeight}" Minimum="0.05" Maximum="0.95"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="プラスで境目が中心側へ膨らむ弧、0 でまっすぐ、マイナスで外周側へたわむ弧">
+                                            <TextBlock Text="境目の丸み:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.TwoToneCurve, StringFormat='{}{0:F2}'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.TwoToneCurve}" Minimum="-0.8" Maximum="0.8"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="0% でくっきりした境目。上げるほど境目がなじみます">
+                                            <TextBlock Text="境目のぼかし:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.TwoToneSoftness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.TwoToneSoftness}" Minimum="0.0" Maximum="1.0"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="色を変える側の向き。0° = 右、90° = 下 (最初の値)、180° = 左、270° = 上。右目は自動で鏡像">
+                                            <TextBlock Text="向き:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.TwoToneAngle, StringFormat='{}{0:F0}°'}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.TwoToneAngle}" Minimum="0" Maximum="360" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,2,0,4" ToolTip="通常: そのまま重ねる。スクリーン: 明るくなるだけ (発光)。覆い焼き: 強い発光。オーバーレイ: 明るいところをより明るく、暗いところをより暗く。ソフトライト: オーバーレイの弱いもの">
+                                            <TextBlock Text="重ね方:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" Width="120"/>
+                                            <WrapPanel>
+                                                <RadioButton Content="通常" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Normal}"/>
+                                                <RadioButton Content="スクリーン" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Screen}"/>
+                                                <RadioButton Content="覆い焼き" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorDodge}"/>
+                                                <RadioButton Content="オーバーレイ" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}"/>
+                                                <RadioButton Content="ソフトライト" Margin="0,0,8,2" IsChecked="{Binding CurrentIris.TwoToneBlend, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SoftLight}"/>
                                             </WrapPanel>
                                         </DockPanel>
                                     </StackPanel>

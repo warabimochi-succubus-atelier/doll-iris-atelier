@@ -382,6 +382,38 @@ namespace DollIrisGenerator.Services
             return edge;
         }
 
+        /// <summary>Points along a 二色分け boundary (v from −1.5 to 1.5), and how far out (u) the region is closed.</summary>
+        public const int TwoTonePoints = 61;
+        public const double TwoToneSpan = 1.5, TwoToneFar = 2.5;
+
+        /// <summary>
+        /// 二色分け: the recolored region in iris-radius units around (0, 0) (x right, y down): with u along
+        /// <paramref name="angleDeg"/> (0 = right, 90 = down) and v across it, everything with
+        /// u ≥ (1 − 2 × <paramref name="height"/>) + <paramref name="curve"/> × v² + <paramref name="shift"/>, as the
+        /// boundary sampled at <see cref="TwoTonePoints"/> points for v in ±<see cref="TwoToneSpan"/>, closed at
+        /// u = <see cref="TwoToneFar"/> (the iris clip cuts it at the rim). <paramref name="shift"/> moves the boundary
+        /// along u (the soft edge's nested shapes).
+        /// </summary>
+        public static Point[] TwoToneRegion(double height, double curve, double angleDeg, double shift = 0.0)
+        {
+            double a = angleDeg * Math.PI / 180.0;
+            double dx = Math.Cos(a), dy = Math.Sin(a);   // along u
+            double px = -dy, py = dx;                    // along v
+            double u0 = 1.0 - 2.0 * height + shift;
+            Point At(double u, double v) => new(u * dx + v * px, u * dy + v * py);
+
+            var region = new Point[TwoTonePoints + 2];
+            for (int i = 0; i < TwoTonePoints; i++)
+            {
+                double v = -TwoToneSpan + 2.0 * TwoToneSpan * i / (TwoTonePoints - 1);
+                double u = Math.Clamp(u0 + curve * v * v, -TwoToneFar, TwoToneFar);
+                region[i] = At(u, v);
+            }
+            region[TwoTonePoints] = At(TwoToneFar, TwoToneSpan);
+            region[TwoTonePoints + 1] = At(TwoToneFar, -TwoToneSpan);
+            return region;
+        }
+
         private const int RimRaySeedOffset = 8500;
 
         /// <summary>

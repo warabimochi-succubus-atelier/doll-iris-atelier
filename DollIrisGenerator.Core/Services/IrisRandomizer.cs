@@ -286,6 +286,19 @@ namespace DollIrisGenerator.Services
                 p.PupilInnerRingWidth = Range(0.008, 0.02, 3);
             }
             if (ColorFree(RandomizeLocks.Pupil)) p.PupilInnerRingColor = Chance(60) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
+
+            // 二色分け (drawn last): 15% of the designs that are not odd-eyed (one color for both eyes): a lighter lower side
+            if (!colorsLocked)
+            {
+                bool twoTone = Chance(15) && !p.IsOddEye;
+                p.TwoToneIntensity = twoTone ? Range(0.50, 0.85) : 0.0;
+                p.TwoToneColor = HslToHex(hue + 8.0, paleSat, Math.Min(0.85, lit + 0.25));
+                p.TwoToneHeight = Range(0.25, 0.45);
+                p.TwoToneCurve = Range(0.10, 0.40);
+                p.TwoToneSoftness = Range(0.0, 0.40);
+                p.TwoToneAngle = IrisParameters.DefaultTwoToneAngle;
+                p.TwoToneBlend = LayerBlend.Normal;
+            }
         }
 
         /// <summary>

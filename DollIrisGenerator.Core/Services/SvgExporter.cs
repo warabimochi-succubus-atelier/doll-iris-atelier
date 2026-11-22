@@ -468,6 +468,61 @@ namespace DollIrisGenerator.Services
             return stops;
         }
 
+        /// <summary>Gaussian deviation (iris radii) of the 二色分け boundary at 境目のぼかし 1.</summary>
+        public const double TwoToneSigmaPerSoftness = 0.25;
+
+        /// <summary>Reach the soft 二色分け boundary's nested shapes are measured from (past 2.5 deviations at full softness).</summary>
+        private const double TwoToneFadeOrigin = 1.0;
+
+        /// <summary>
+        /// 二色分け (<see cref="IrisPatterns.TwoToneRegion"/>): crisp, the region filled with the paint; soft, the paint over
+        /// the iris body through a mask of the region with its boundary shifted along u (<see cref="NestedFadeSteps"/>),
+        /// so the color rises as Φ(t / σ) across the boundary. The right eye's side is mirrored (180° − 向き).
+        /// </summary>
+        private static void AppendTwoTone(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, Rect irisBox, Func<string, string> irisBody)
+        {
+            double angle = isRightEye ? 180.0 - p.TwoToneAngle : p.TwoToneAngle;
+            string paint = Paint(sb, "      ", $"{idPrefix}_two_tone_fill", p.TwoToneColor, IrisParameters.DefaultTwoToneColor, irisBox, isRightEye);
+            string common = $@" opacity=""{p.TwoToneIntensity.ToFixed(2)}""{BlendStyle(p.TwoToneBlend)}";
+
+            void AppendRegion(double shift)
+            {
+                var region = IrisPatterns.TwoToneRegion(p.TwoToneHeight, p.TwoToneCurve, angle, shift);
+                sb.Append(@" d=""M");
+                for (int i = 0; i < region.Length; i++)
+                {
+                    if (i > 0) sb.Append(" L");
+                    sb.AppendFixed(cx + region[i].X * rx, 3).Append(',').AppendFixed(cy + region[i].Y * ry, 3);
+                }
+                sb.Append(@" Z""");
+            }
+
+            if (p.TwoToneSoftness < 0.01)
+            {
+                sb.Append($@"      <path id=""{idPrefix}_two_tone""");
+                AppendRegion(0.0);
+                sb.AppendLine($@" fill=""{paint}""{common} />");
+                return;
+            }
+
+            // A shape that reaches r covers everything with (origin − t) < r, i.e. t > origin − r (t: past the boundary)
+            string maskId = $"{idPrefix}_two_tone_mask";
+            double sigma = p.TwoToneSoftness * TwoToneSigmaPerSoftness;
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <mask id=""{maskId}"">");
+            foreach (var (reach, opacity) in NestedFadeSteps(TwoToneFadeOrigin, sigma, CollaretteFadeStep / 4.0, MinCollaretteFadeSteps, MaxCollaretteFadeSteps))
+            {
+                if (opacity < 1e-4) continue;
+                sb.Append("          <path");
+                AppendRegion(TwoToneFadeOrigin - reach);
+                sb.AppendLine($@" fill=""#FFFFFF"" fill-opacity=""{F(opacity, 4)}"" />");
+            }
+            sb.AppendLine("        </mask>");
+            sb.AppendLine("      </defs>");
+            sb.AppendLine($@"      {irisBody($"{idPrefix}_two_tone")} fill=""{paint}""{common} mask=""url(#{maskId})"" />");
+        }
+
         /// <summary>How far past the rim (iris radii) a 外周からの線 carries on at full width, so shaped outlines' corners are covered.</summary>
         public const double RimRayReach = 1.5;
 
@@ -734,6 +789,10 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("        </radialGradient>");
                 sb.AppendLine("      </defs>");
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_tone_bands")} fill=""url(#{gradId})"" opacity=""{p.ToneBandIntensity.ToFixed(2)}""{BlendStyle(p.ToneBandBlend)} />");
+            }
+            if (p.TwoToneIntensity > 0.01)
+            {
+                AppendTwoTone(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, irisBox, IrisBody);
             }
             if (p.NebulaOpacity > 0.01)
             {

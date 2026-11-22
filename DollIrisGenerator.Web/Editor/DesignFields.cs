@@ -134,6 +134,18 @@ public static class DesignFields
         new ChoiceField<IrisParameters>("色の段の重ね方", p => p.ToneBandBlend, (p, v) => p.ToneBandBlend = (LayerBlend)v,
             new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) },
             "ソフトライト (最初の値): 白 → 黒なら虹彩の色を残したまま内側を明るく、外側を暗くします。通常: 帯の色で塗ります"),
+        new HeadingField<IrisParameters>("二色分け", "弧の境目で虹彩を 2 つに分け、片側 (最初は下側) の色を変えます。放射ライン・外輪・瞳孔はその上に見えます"),
+        new SliderField<IrisParameters>("二色分けの強さ", p => p.TwoToneIntensity, (p, v) => p.TwoToneIntensity = v, 0, 1, 0.01, Fmt.Percent, "0 でオフ"),
+        new ColorField<IrisParameters>("色を変える部分の色", p => p.TwoToneColor, (p, v) => p.TwoToneColor = v, AllowGradient: true),
+        new SliderField<IrisParameters>("境目の高さ", p => p.TwoToneHeight, (p, v) => p.TwoToneHeight = v,
+            IrisParameters.MinTwoToneHeight, IrisParameters.MaxTwoToneHeight, 0.01, Fmt.Percent, "境目の真ん中が、外周から虹彩の直径のどれだけまで来るか (50% で中心)"),
+        new SliderField<IrisParameters>("境目の丸み", p => p.TwoToneCurve, (p, v) => p.TwoToneCurve = v,
+            -IrisParameters.MaxTwoToneCurve, IrisParameters.MaxTwoToneCurve, 0.01, Fmt.F2, "プラスで中心側へ膨らむ弧、0 でまっすぐ、マイナスで外周側へたわむ弧"),
+        new SliderField<IrisParameters>("境目のぼかし", p => p.TwoToneSoftness, (p, v) => p.TwoToneSoftness = v, 0, 1, 0.01, Fmt.Percent, "0% でくっきり"),
+        new SliderField<IrisParameters>("二色分けの向き", p => p.TwoToneAngle, (p, v) => p.TwoToneAngle = v, 0, 360, 1, Fmt.Deg,
+            "色を変える側。0° = 右、90° = 下 (最初の値)、180° = 左、270° = 上 (右目は自動で鏡像)"),
+        new ChoiceField<IrisParameters>("二色分けの重ね方", p => p.TwoToneBlend, (p, v) => p.TwoToneBlend = (LayerBlend)v,
+            new (string, object)[] { ("通常", LayerBlend.Normal), ("スクリーン", LayerBlend.Screen), ("覆い焼き", LayerBlend.ColorDodge), ("オーバーレイ", LayerBlend.Overlay), ("ソフトライト", LayerBlend.SoftLight) }),
     };
 
     public static readonly IReadOnlyList<Field<IrisParameters>> PupilAndRays =

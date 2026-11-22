@@ -152,6 +152,14 @@ namespace DollIrisGenerator.Models
         public string? ToneBandOuterColor { get; set; }
         public double? ToneBandSoftness { get; set; }
         public LayerBlend? ToneBandBlend { get; set; }
+        // 二色分け
+        public double? TwoToneIntensity { get; set; }
+        public string? TwoToneColor { get; set; }
+        public double? TwoToneHeight { get; set; }
+        public double? TwoToneCurve { get; set; }
+        public double? TwoToneSoftness { get; set; }
+        public double? TwoToneAngle { get; set; }
+        public LayerBlend? TwoToneBlend { get; set; }
         // 斑点
         public double? SpotIntensity { get; set; }
         public int? SpotCount { get; set; }
@@ -518,6 +526,13 @@ namespace DollIrisGenerator.Models
             target.ToneBandOuterColor = preset.ToneBandOuterColor ?? d.ToneBandOuterColor;
             target.ToneBandSoftness = preset.ToneBandSoftness ?? d.ToneBandSoftness;
             target.ToneBandBlend = preset.ToneBandBlend ?? d.ToneBandBlend;
+            target.TwoToneIntensity = preset.TwoToneIntensity ?? d.TwoToneIntensity;
+            target.TwoToneColor = preset.TwoToneColor ?? d.TwoToneColor;
+            target.TwoToneHeight = preset.TwoToneHeight ?? d.TwoToneHeight;
+            target.TwoToneCurve = preset.TwoToneCurve ?? d.TwoToneCurve;
+            target.TwoToneSoftness = preset.TwoToneSoftness ?? d.TwoToneSoftness;
+            target.TwoToneAngle = preset.TwoToneAngle ?? d.TwoToneAngle;
+            target.TwoToneBlend = preset.TwoToneBlend ?? d.TwoToneBlend;
             target.SpotIntensity = preset.SpotIntensity ?? d.SpotIntensity;
             target.SpotCount = preset.SpotCount ?? d.SpotCount;
             target.SpotSize = preset.SpotSize ?? d.SpotSize;
@@ -714,6 +729,13 @@ namespace DollIrisGenerator.Models
                 ToneBandOuterColor = design.ToneBandOuterColor,
                 ToneBandSoftness = design.ToneBandSoftness,
                 ToneBandBlend = design.ToneBandBlend,
+                TwoToneIntensity = design.TwoToneIntensity,
+                TwoToneColor = design.TwoToneColor,
+                TwoToneHeight = design.TwoToneHeight,
+                TwoToneCurve = design.TwoToneCurve,
+                TwoToneSoftness = design.TwoToneSoftness,
+                TwoToneAngle = design.TwoToneAngle,
+                TwoToneBlend = design.TwoToneBlend,
                 SpotIntensity = design.SpotIntensity,
                 SpotCount = design.SpotCount,
                 SpotSize = design.SpotSize,

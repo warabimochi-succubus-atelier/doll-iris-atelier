@@ -72,7 +72,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 
 「グラデ可」でない項目に書くと、最初の色だけが使われます。
 
-### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `SpotBlend` / 各記号・ハイライトの `Blend`）
+### 重ね方（`AuroraBlend` / `GlitterBlend` / `ToneBandBlend` / `CollaretteBlend` / `SpotBlend` / `TwoToneBlend` / 各記号・ハイライトの `Blend`）
 
 | 値 | 重ね方 |
 |---|---|
@@ -142,6 +142,18 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 |---|---|---|
 | `FiberNoise` | 0〜1 | 0 でオフ。0.15〜0.45 が自然 |
 | `FiberNoiseScale` | 0.5〜2.0 | 大きいほど細かい |
+
+### 二色分け（弧の境目で虹彩の片側の色を変える）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `TwoToneIntensity` | 0〜1 | 強さ（不透明度）。0 でオフ（既定） |
+| `TwoToneColor` | 色（グラデ可） | 色を変える部分の色（既定 `#82A8FF`） |
+| `TwoToneHeight` | 0.05〜0.95 | 境目の真ん中が、外周から虹彩の直径のどれだけまで来るか。0.5 で中心（既定 0.40） |
+| `TwoToneCurve` | −0.8〜0.8 | 境目の丸み。プラスで中心側へ膨らむ弧、0 でまっすぐ、マイナスで外周側へたわむ弧（既定 0.25） |
+| `TwoToneSoftness` | 0〜1 | 境目のぼかし。0 でくっきり（既定） |
+| `TwoToneAngle` | 0〜360（度） | 色を変える側の向き。90 = 下（既定）、270 = 上。右目は自動で鏡像 |
+| `TwoToneBlend` | 重ね方 | 既定 0（通常） |
 
 ### まぶたの影（虹彩の上側に落ちる影）
 
@@ -405,6 +417,13 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "UpperShadowIntensity": 0.65,
   "UpperShadowDepth": 0.65,
   "UpperShadowColor": "#000000",
+  "TwoToneIntensity": 0.0,
+  "TwoToneColor": "#82A8FF",
+  "TwoToneHeight": 0.4,
+  "TwoToneCurve": 0.25,
+  "TwoToneSoftness": 0.0,
+  "TwoToneAngle": 90.0,
+  "TwoToneBlend": 0,
   "ToneBandIntensity": 0.0,
   "ToneBandCount": 3,
   "ToneBandInnerColor": "#FFFFFF",
@@ -561,7 +580,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 - 盛り込みすぎないこと。星雲・オーロラ・レンズ・記号を全部強くすると濁るので、主役を 1〜2 つに絞り、他は 0 か弱めにします。
 - 印刷すると画面より暗く見えやすいので、暗い色ばかりにしないようにします。
 - 小さい記号（`Size` 0.1 未満）は印刷で潰れやすくなります。
-- 虹彩の一部だけ色を変える（扇形の色違い）には、オーロラ層を円周グラデーションにし、同じ位置に止め色を 2 つ置きます。例: `"AuroraColor": "conic-gradient(from 300deg, #C67C2A 0%, #C67C2A 22%, #00C67C2A 22%, #00C67C2A 100%)"`、`"AuroraOpacity": 0.85`、`"AuroraBlend": 0`。`#00` で始まる 8 桁の色は透明です。境目をぼかすなら 22% と 26% のように少し離します。
+- 弧の境目で虹彩の片側（下側など）の色を変えるには、二色分け（`TwoTone…`）を使います。中心から放射状に区切った扇形の色違いには、オーロラ層を円周グラデーションにし、同じ位置に止め色を 2 つ置きます。例: `"AuroraColor": "conic-gradient(from 300deg, #C67C2A 0%, #C67C2A 22%, #00C67C2A 22%, #00C67C2A 100%)"`、`"AuroraOpacity": 0.85`、`"AuroraBlend": 0`。`#00` で始まる 8 桁の色は透明です。境目をぼかすなら 22% と 26% のように少し離します。
 
 ---
 

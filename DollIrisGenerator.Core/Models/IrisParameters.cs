@@ -60,6 +60,12 @@ namespace DollIrisGenerator.Models
         public const double DefaultRimRayRandomness = 0.4;
         public const string DefaultRimRayColor = "#0D1B3E";
 
+        /// <summary>二色分け (IrisPatterns.TwoToneRegion): ranges and defaults.</summary>
+        public const string DefaultTwoToneColor = "#82A8FF";
+        public const double MinTwoToneHeight = 0.05, MaxTwoToneHeight = 0.95, DefaultTwoToneHeight = 0.40;
+        public const double MaxTwoToneCurve = 0.8, DefaultTwoToneCurve = 0.25;
+        public const double DefaultTwoToneAngle = 90.0; // the lower side
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -211,6 +217,15 @@ namespace DollIrisGenerator.Models
         private string _toneBandOuterColor = DefaultToneBandOuterColor;
         private double _toneBandSoftness = DefaultToneBandSoftness;
         private LayerBlend _toneBandBlend = LayerBlend.SoftLight;
+
+        // 二色分け (one side of the iris, past an arched boundary, in another color): 0 strength = off. Older files load as off.
+        private double _twoToneIntensity = 0.0;
+        private string _twoToneColor = DefaultTwoToneColor;
+        private double _twoToneHeight = DefaultTwoToneHeight;
+        private double _twoToneCurve = DefaultTwoToneCurve;
+        private double _twoToneSoftness = 0.0;
+        private double _twoToneAngle = DefaultTwoToneAngle;
+        private LayerBlend _twoToneBlend = LayerBlend.Normal;
 
         // 斑点 (dark freckles / crypts scattered over the iris): 0 strength = off. Files saved before it existed load as off.
         private double _spotIntensity = 0.0;
@@ -777,6 +792,55 @@ namespace DollIrisGenerator.Models
         {
             get => _toneBandBlend;
             set { _toneBandBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
+        }
+
+        /// <summary>二色分けの強さ: the recolored side's opacity. 0 = off.</summary>
+        public double TwoToneIntensity
+        {
+            get => _twoToneIntensity;
+            set { _twoToneIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>二色分けの色 (solid or gradient, laid across the iris).</summary>
+        public string TwoToneColor
+        {
+            get => _twoToneColor;
+            set { _twoToneColor = value ?? DefaultTwoToneColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>高さ: how far the boundary's middle comes in from the rim, as a fraction of the iris diameter (0.5 = the center).</summary>
+        public double TwoToneHeight
+        {
+            get => _twoToneHeight;
+            set { _twoToneHeight = ClampFinite(value, MinTwoToneHeight, MaxTwoToneHeight, DefaultTwoToneHeight); OnPropertyChanged(); }
+        }
+
+        /// <summary>境目の丸み: + arches the boundary toward the center, 0 = straight, − sags it toward the rim.</summary>
+        public double TwoToneCurve
+        {
+            get => _twoToneCurve;
+            set { _twoToneCurve = ClampFinite(value, -MaxTwoToneCurve, MaxTwoToneCurve, DefaultTwoToneCurve); OnPropertyChanged(); }
+        }
+
+        /// <summary>境目のぼかし: 0 = a crisp boundary.</summary>
+        public double TwoToneSoftness
+        {
+            get => _twoToneSoftness;
+            set { _twoToneSoftness = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>向き: the recolored side (degrees; 0 = right, 90 = down, 270 = up).</summary>
+        public double TwoToneAngle
+        {
+            get => _twoToneAngle;
+            set { _twoToneAngle = double.IsFinite(value) ? NormalizeAngle(value) : DefaultTwoToneAngle; OnPropertyChanged(); }
+        }
+
+        /// <summary>二色分けの重ね方.</summary>
+        public LayerBlend TwoToneBlend
+        {
+            get => _twoToneBlend;
+            set { _twoToneBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
         /// <summary>斑点の強さ: the darkest spot's opacity. 0 = off.</summary>
