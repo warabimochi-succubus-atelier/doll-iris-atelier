@@ -16,13 +16,13 @@ namespace DollIrisGenerator.Models
     public enum RandomizeLocks
     {
         None = 0,
-        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity, the design name, and the rest of the 「虹彩カラー設定」 box (aurora / nebula strength and blend, light direction and strength, fiber noise, tone bands).</summary>
+        /// <summary>配色: every color (iris, pupil, rays, limbal ring, glitter, lens, odd-eye side), the gradient ranges, the glow intensity, the design name, and the rest of the 「虹彩カラー設定」 box (aurora / nebula strength and blend, light direction and strength, fiber noise, tone bands, eyelid shadow, two-tone split).</summary>
         Colors = 1 << 0,
         /// <summary>乱数シード (the pattern jitter of rays and glitter).</summary>
         Seed = 1 << 1,
-        /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color, the 瞳孔まわりの輪 and the 縁取り線.</summary>
+        /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color, the 瞳孔まわりの輪, the 縁取り線 and the 中の輪.</summary>
         Pupil = 1 << 2,
-        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color.</summary>
+        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color, and the 外周からの線.</summary>
         Rays = 1 << 3,
         /// <summary>外輪: thickness, opacity, softness and color, and the 外輪の内側の輪.</summary>
         LimbalRing = 1 << 4,
@@ -38,10 +38,8 @@ namespace DollIrisGenerator.Models
         OddEye = 1 << 9,
         /// <summary>宝石カット面: strength, facet count, table size, shading, blend mode and visible range.</summary>
         IrisFacets = 1 << 10,
-        /// <summary>斑点: strength, count, size, elongation, softness, spread, color and blend mode.</summary>
-        Spots = 1 << 11,
 
-        All = Colors | Seed | Pupil | Rays | LimbalRing | Particles | Symbols | Highlights | Lens | OddEye | IrisFacets | Spots
+        All = Colors | Seed | Pupil | Rays | LimbalRing | Particles | Symbols | Highlights | Lens | OddEye | IrisFacets
     }
 
     public static class RandomizeLocksInfo
@@ -55,7 +53,6 @@ namespace DollIrisGenerator.Models
             (RandomizeLocks.Rays, "放射模様"),
             (RandomizeLocks.LimbalRing, "外輪"),
             (RandomizeLocks.Particles, "ラメ"),
-            (RandomizeLocks.Spots, "斑点"),
             (RandomizeLocks.Symbols, "装飾記号"),
             (RandomizeLocks.Highlights, "ハイライト"),
             (RandomizeLocks.Lens, "レンズ風"),

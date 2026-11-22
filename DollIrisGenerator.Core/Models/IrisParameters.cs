@@ -31,19 +31,34 @@ namespace DollIrisGenerator.Models
         public const string DefaultToneBandInnerColor = "#FFFFFF", DefaultToneBandOuterColor = "#000000";
         public const double DefaultToneBandSoftness = 0.1;
 
-        /// <summary>斑点 (IrisPatterns.Spots): ranges and defaults.</summary>
-        public const int MinSpotCount = 1, MaxSpotCount = 120, DefaultSpotCount = 24;
-        public const double MinSpotSize = 0.01, MaxSpotSize = 0.10, DefaultSpotSize = 0.035;
-        public const double DefaultSpotElongation = 0.3, DefaultSpotSoftness = 0.5;
-        public const double MinSpotRadiusRatio = 0.30, MaxSpotRadiusRatio = 0.95, DefaultSpotRadiusRatio = 0.80;
-        public const string DefaultSpotColor = "#3E2723";
-
         /// <summary>瞳孔の縁取り線 and 外輪の内側の輪: ranges and defaults.</summary>
         public const double MinPupilOutlineWidth = 0.005, MaxPupilOutlineWidth = 0.05, DefaultPupilOutlineWidth = 0.015;
         public const string DefaultPupilOutlineColor = "#FFFFFF";
+        public const double MinPupilInnerRingSize = 0.1, MaxPupilInnerRingSize = 0.95, DefaultPupilInnerRingSize = 0.6;
+        public const double DefaultPupilInnerRingSize2 = 0.4, DefaultPupilInnerRingSize3 = 0.25;
+        public const double DefaultPupilInnerRingWidth = 0.012;
+        public const string DefaultPupilInnerRingColor = "#FFFFFF";
         public const double MinLimbalInnerRingWidth = 0.005, MaxLimbalInnerRingWidth = 0.06, DefaultLimbalInnerRingWidth = 0.015;
         public const double MaxLimbalInnerRingGap = 0.10, DefaultLimbalInnerRingGap = 0.01;
         public const string DefaultLimbalInnerRingColor = "#FFFFFF";
+
+        /// <summary>まぶたの影: ranges and defaults (the defaults are the fixed shadow of earlier versions).</summary>
+        public const double DefaultUpperShadowIntensity = 0.65;
+        public const double MinUpperShadowDepth = 0.20, MaxUpperShadowDepth = 1.0, DefaultUpperShadowDepth = 0.65;
+        public const string DefaultUpperShadowColor = "#000000";
+
+        /// <summary>外周からの線 (IrisPatterns.RimRays): ranges and defaults.</summary>
+        public const int MinRimRayCount = 4, MaxRimRayCount = 120, DefaultRimRayCount = 36;
+        public const double MinRimRayLength = 0.05, MaxRimRayLength = 0.60, DefaultRimRayLength = 0.20;
+        public const double MinRimRayWidth = 0.5, MaxRimRayWidth = 4.0, DefaultRimRayWidth = 1.2;
+        public const double DefaultRimRayRandomness = 0.4;
+        public const string DefaultRimRayColor = "#0D1B3E";
+
+        /// <summary>二色分け (IrisPatterns.TwoToneRegion): ranges and defaults.</summary>
+        public const string DefaultTwoToneColor = "#82A8FF";
+        public const double MinTwoToneHeight = 0.05, MaxTwoToneHeight = 0.95, DefaultTwoToneHeight = 0.40;
+        public const double MaxTwoToneCurve = 0.8, DefaultTwoToneCurve = 0.25;
+        public const double DefaultTwoToneAngle = 90.0; // the lower side
 
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
@@ -72,6 +87,8 @@ namespace DollIrisGenerator.Models
         public const double DefaultParticleGlow = 0.7;
         public const double DefaultParticleFlareRatio = 0.15;
         public const double DefaultParticleFlareLength = 4.0;
+        /// <summary>にじみの色 used when ParticleGlowCustomColor is on: a warm white.</summary>
+        public const string DefaultParticleGlowColor = "#FFF8E1";
 
         /// <summary>見える範囲 (pattern ranges, see PatternRange): a fan this wide covers the whole iris (off).</summary>
         public const double FullRangeWidth = 360.0;
@@ -135,6 +152,21 @@ namespace DollIrisGenerator.Models
         private double _pupilOutlineWidth = DefaultPupilOutlineWidth;
         private string _pupilOutlineColor = DefaultPupilOutlineColor;
 
+        // 瞳孔の中の輪 (the pupil's outline shrunk inside it, as rings of light): up to three rings, each with its own
+        // strength (0 = off), size, width and color. Older files load as off.
+        private double _pupilInnerRingIntensity = 0.0;
+        private double _pupilInnerRingSize = DefaultPupilInnerRingSize;
+        private double _pupilInnerRingWidth = DefaultPupilInnerRingWidth;
+        private string _pupilInnerRingColor = DefaultPupilInnerRingColor;
+        private double _pupilInnerRingIntensity2 = 0.0;
+        private double _pupilInnerRingSize2 = DefaultPupilInnerRingSize2;
+        private double _pupilInnerRingWidth2 = DefaultPupilInnerRingWidth;
+        private string _pupilInnerRingColor2 = DefaultPupilInnerRingColor;
+        private double _pupilInnerRingIntensity3 = 0.0;
+        private double _pupilInnerRingSize3 = DefaultPupilInnerRingSize3;
+        private double _pupilInnerRingWidth3 = DefaultPupilInnerRingWidth;
+        private string _pupilInnerRingColor3 = DefaultPupilInnerRingColor;
+
         // Pupil (瞳孔)
         private PupilShape _pupilShape = PupilShape.Round;
         private double _pupilSizeRatio = 0.32; // fraction of iris diameter
@@ -170,6 +202,19 @@ namespace DollIrisGenerator.Models
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
 
+        // 外周からの線 (tapered lines from the rim inward): 0 strength = off. Older files load as off.
+        private double _rimRayIntensity = 0.0;
+        private int _rimRayCount = DefaultRimRayCount;
+        private double _rimRayLength = DefaultRimRayLength;
+        private double _rimRayWidth = DefaultRimRayWidth;
+        private double _rimRayRandomness = DefaultRimRayRandomness;
+        private string _rimRayColor = DefaultRimRayColor;
+
+        // まぶたの影 (the shadow over the top of the iris). Files saved before it was adjustable load as the old fixed shadow.
+        private double _upperShadowIntensity = DefaultUpperShadowIntensity;
+        private double _upperShadowDepth = DefaultUpperShadowDepth;
+        private string _upperShadowColor = DefaultUpperShadowColor;
+
         // 色の段 (concentric bands of color from the pupil to the rim): 0 strength = off. Files saved before it existed load as off.
         private double _toneBandIntensity = 0.0;
         private int _toneBandCount = DefaultToneBandCount;
@@ -178,15 +223,15 @@ namespace DollIrisGenerator.Models
         private double _toneBandSoftness = DefaultToneBandSoftness;
         private LayerBlend _toneBandBlend = LayerBlend.SoftLight;
 
-        // 斑点 (dark freckles / crypts scattered over the iris): 0 strength = off. Files saved before it existed load as off.
-        private double _spotIntensity = 0.0;
-        private int _spotCount = DefaultSpotCount;
-        private double _spotSize = DefaultSpotSize;
-        private double _spotElongation = DefaultSpotElongation;
-        private double _spotSoftness = DefaultSpotSoftness;
-        private double _spotRadiusRatio = DefaultSpotRadiusRatio;
-        private string _spotColor = DefaultSpotColor;
-        private LayerBlend _spotBlend = LayerBlend.Normal;
+        // 二色分け (one side of the iris, past an arched boundary, in another color): 0 strength = off. Older files load as off.
+        private double _twoToneIntensity = 0.0;
+        private string _twoToneColor = DefaultTwoToneColor;
+        private double _twoToneHeight = DefaultTwoToneHeight;
+        private double _twoToneCurve = DefaultTwoToneCurve;
+        private double _twoToneSoftness = 0.0;
+        private double _twoToneAngle = DefaultTwoToneAngle;
+        private LayerBlend _twoToneBlend = LayerBlend.Normal;
+
         private double _lightStrength = 0.0;
         private double _lightAngle = 270.0;
 
@@ -224,6 +269,8 @@ namespace DollIrisGenerator.Models
         private string _particleColor = "#FFFFFF";
         private double _particleRadiusRatio = 0.75;
         // Glowing glitter (光るラメ). On by default (also for older files); 0 = plain grains.
+        private bool _particleGlowCustomColor = false;            // false: the glow takes the grains' own color
+        private string _particleGlowColor = DefaultParticleGlowColor;
         private double _particleGlow = DefaultParticleGlow;       // soft halo around every grain
         private double _particleFlareRatio = DefaultParticleFlareRatio;   // share of grains that also get a cross-shaped flare
         private double _particleFlareLength = DefaultParticleFlareLength;  // flare length, in grain sizes
@@ -542,6 +589,90 @@ namespace DollIrisGenerator.Models
             set { _pupilOutlineColor = value ?? DefaultPupilOutlineColor; OnPropertyChanged(); }
         }
 
+        /// <summary>瞳孔の中の輪 (1 本目) の強さ: the ring's opacity. 0 = off.</summary>
+        public double PupilInnerRingIntensity
+        {
+            get => _pupilInnerRingIntensity;
+            set { _pupilInnerRingIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>1 本目の大きさ: the ring's size relative to the pupil's outline (0.5 = half the pupil). The rings need not be evenly spaced or in order.</summary>
+        public double PupilInnerRingSize
+        {
+            get => _pupilInnerRingSize;
+            set { _pupilInnerRingSize = ClampFinite(value, MinPupilInnerRingSize, MaxPupilInnerRingSize, DefaultPupilInnerRingSize); OnPropertyChanged(); }
+        }
+
+        /// <summary>1 本目の太さ, as a fraction of the iris radius (kept whatever the ring's size).</summary>
+        public double PupilInnerRingWidth
+        {
+            get => _pupilInnerRingWidth;
+            set { _pupilInnerRingWidth = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>1 本目の色 (one color).</summary>
+        public string PupilInnerRingColor
+        {
+            get => _pupilInnerRingColor;
+            set { _pupilInnerRingColor = value ?? DefaultPupilInnerRingColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の中の輪 (2 本目) の強さ: the ring's opacity. 0 = off.</summary>
+        public double PupilInnerRingIntensity2
+        {
+            get => _pupilInnerRingIntensity2;
+            set { _pupilInnerRingIntensity2 = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>2 本目の大きさ: the ring's size relative to the pupil's outline (0.5 = half the pupil). The rings need not be evenly spaced or in order.</summary>
+        public double PupilInnerRingSize2
+        {
+            get => _pupilInnerRingSize2;
+            set { _pupilInnerRingSize2 = ClampFinite(value, MinPupilInnerRingSize, MaxPupilInnerRingSize, DefaultPupilInnerRingSize2); OnPropertyChanged(); }
+        }
+
+        /// <summary>2 本目の太さ, as a fraction of the iris radius (kept whatever the ring's size).</summary>
+        public double PupilInnerRingWidth2
+        {
+            get => _pupilInnerRingWidth2;
+            set { _pupilInnerRingWidth2 = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>2 本目の色 (one color).</summary>
+        public string PupilInnerRingColor2
+        {
+            get => _pupilInnerRingColor2;
+            set { _pupilInnerRingColor2 = value ?? DefaultPupilInnerRingColor; OnPropertyChanged(); }
+        }
+
+        /// <summary>瞳孔の中の輪 (3 本目) の強さ: the ring's opacity. 0 = off.</summary>
+        public double PupilInnerRingIntensity3
+        {
+            get => _pupilInnerRingIntensity3;
+            set { _pupilInnerRingIntensity3 = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>3 本目の大きさ: the ring's size relative to the pupil's outline (0.5 = half the pupil). The rings need not be evenly spaced or in order.</summary>
+        public double PupilInnerRingSize3
+        {
+            get => _pupilInnerRingSize3;
+            set { _pupilInnerRingSize3 = ClampFinite(value, MinPupilInnerRingSize, MaxPupilInnerRingSize, DefaultPupilInnerRingSize3); OnPropertyChanged(); }
+        }
+
+        /// <summary>3 本目の太さ, as a fraction of the iris radius (kept whatever the ring's size).</summary>
+        public double PupilInnerRingWidth3
+        {
+            get => _pupilInnerRingWidth3;
+            set { _pupilInnerRingWidth3 = ClampFinite(value, MinPupilOutlineWidth, MaxPupilOutlineWidth, DefaultPupilInnerRingWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>3 本目の色 (one color).</summary>
+        public string PupilInnerRingColor3
+        {
+            get => _pupilInnerRingColor3;
+            set { _pupilInnerRingColor3 = value ?? DefaultPupilInnerRingColor; OnPropertyChanged(); }
+        }
+
         /// <summary>瞳孔まわりの輪の強さ: the ring's opacity. 0 = off.</summary>
         public double CollaretteIntensity
         {
@@ -654,6 +785,27 @@ namespace DollIrisGenerator.Models
             set { _fiberNoiseScale = ClampFinite(value, 0.5, 2.0, 1.0); OnPropertyChanged(); }
         }
 
+        /// <summary>まぶたの影の強さ: the shadow's opacity at the top edge. 0 = no shadow.</summary>
+        public double UpperShadowIntensity
+        {
+            get => _upperShadowIntensity;
+            set { _upperShadowIntensity = ClampFinite(value, 0.0, 1.0, DefaultUpperShadowIntensity); OnPropertyChanged(); }
+        }
+
+        /// <summary>深さ: where the shadow has faded out, as a fraction of the iris box's height from the top.</summary>
+        public double UpperShadowDepth
+        {
+            get => _upperShadowDepth;
+            set { _upperShadowDepth = ClampFinite(value, MinUpperShadowDepth, MaxUpperShadowDepth, DefaultUpperShadowDepth); OnPropertyChanged(); }
+        }
+
+        /// <summary>まぶたの影の色 (one color).</summary>
+        public string UpperShadowColor
+        {
+            get => _upperShadowColor;
+            set { _upperShadowColor = value ?? DefaultUpperShadowColor; OnPropertyChanged(); }
+        }
+
         /// <summary>色の段の強さ: the bands' opacity. 0 = off.</summary>
         public double ToneBandIntensity
         {
@@ -696,61 +848,55 @@ namespace DollIrisGenerator.Models
             set { _toneBandBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
-        /// <summary>斑点の強さ: the darkest spot's opacity. 0 = off.</summary>
-        public double SpotIntensity
+        /// <summary>二色分けの強さ: the recolored side's opacity. 0 = off.</summary>
+        public double TwoToneIntensity
         {
-            get => _spotIntensity;
-            set { _spotIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+            get => _twoToneIntensity;
+            set { _twoToneIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
-        /// <summary>斑点の数.</summary>
-        public int SpotCount
+        /// <summary>二色分けの色 (solid or gradient, laid across the iris).</summary>
+        public string TwoToneColor
         {
-            get => _spotCount;
-            set { _spotCount = Math.Clamp(value, MinSpotCount, MaxSpotCount); OnPropertyChanged(); }
+            get => _twoToneColor;
+            set { _twoToneColor = value ?? DefaultTwoToneColor; OnPropertyChanged(); }
         }
 
-        /// <summary>大きさ: the largest spot's radius, as a fraction of the iris radius.</summary>
-        public double SpotSize
+        /// <summary>高さ: how far the boundary's middle comes in from the rim, as a fraction of the iris diameter (0.5 = the center).</summary>
+        public double TwoToneHeight
         {
-            get => _spotSize;
-            set { _spotSize = ClampFinite(value, MinSpotSize, MaxSpotSize, DefaultSpotSize); OnPropertyChanged(); }
+            get => _twoToneHeight;
+            set { _twoToneHeight = ClampFinite(value, MinTwoToneHeight, MaxTwoToneHeight, DefaultTwoToneHeight); OnPropertyChanged(); }
         }
 
-        /// <summary>細長さ: 0 = round freckles; 1 = crypts stretched along the radius (3.5 × as long as wide).</summary>
-        public double SpotElongation
+        /// <summary>境目の丸み: + arches the boundary toward the center, 0 = straight, − sags it toward the rim.</summary>
+        public double TwoToneCurve
         {
-            get => _spotElongation;
-            set { _spotElongation = ClampFinite(value, 0.0, 1.0, DefaultSpotElongation); OnPropertyChanged(); }
+            get => _twoToneCurve;
+            set { _twoToneCurve = ClampFinite(value, -MaxTwoToneCurve, MaxTwoToneCurve, DefaultTwoToneCurve); OnPropertyChanged(); }
         }
 
-        /// <summary>柔らかさ: how softly a spot's edge fades out. 0 = crisp.</summary>
-        public double SpotSoftness
+        /// <summary>境目のぼかし: 0 = a crisp boundary.</summary>
+        public double TwoToneSoftness
         {
-            get => _spotSoftness;
-            set { _spotSoftness = ClampFinite(value, 0.0, 1.0, DefaultSpotSoftness); OnPropertyChanged(); }
+            get => _twoToneSoftness;
+            set { _twoToneSoftness = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
         }
 
-        /// <summary>分布範囲: the farthest a spot sits from the center, as a fraction of the iris radius.</summary>
-        public double SpotRadiusRatio
+        /// <summary>向き: the recolored side (degrees; 0 = right, 90 = down, 270 = up).</summary>
+        public double TwoToneAngle
         {
-            get => _spotRadiusRatio;
-            set { _spotRadiusRatio = ClampFinite(value, MinSpotRadiusRatio, MaxSpotRadiusRatio, DefaultSpotRadiusRatio); OnPropertyChanged(); }
+            get => _twoToneAngle;
+            set { _twoToneAngle = double.IsFinite(value) ? NormalizeAngle(value) : DefaultTwoToneAngle; OnPropertyChanged(); }
         }
 
-        /// <summary>斑点の色 (one color).</summary>
-        public string SpotColor
+        /// <summary>二色分けの重ね方.</summary>
+        public LayerBlend TwoToneBlend
         {
-            get => _spotColor;
-            set { _spotColor = value ?? DefaultSpotColor; OnPropertyChanged(); }
+            get => _twoToneBlend;
+            set { _twoToneBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
         }
 
-        /// <summary>斑点の重ね方.</summary>
-        public LayerBlend SpotBlend
-        {
-            get => _spotBlend;
-            set { _spotBlend = Enum.IsDefined(value) ? value : LayerBlend.Normal; OnPropertyChanged(); }
-        }
 
         /// <summary>オーロラ層の重ね方: How the aurora layer is laid over the iris. Unknown numbers from a file become Normal.</summary>
         public LayerBlend AuroraBlend
@@ -993,6 +1139,21 @@ namespace DollIrisGenerator.Models
         }
 
         /// <summary>フレアの長さ: flare reach, in multiples of the grain's size.</summary>
+        /// <summary>にじみの色を変える: on, the glow is <see cref="ParticleGlowColor"/> (a light halo round black glitter);
+        /// off, it takes the grains' own color as before.</summary>
+        public bool ParticleGlowCustomColor
+        {
+            get => _particleGlowCustomColor;
+            set { _particleGlowCustomColor = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>にじみの色 (one color), used when <see cref="ParticleGlowCustomColor"/> is on.</summary>
+        public string ParticleGlowColor
+        {
+            get => _particleGlowColor;
+            set { _particleGlowColor = value ?? DefaultParticleGlowColor; OnPropertyChanged(); }
+        }
+
         public double ParticleFlareLength
         {
             get => _particleFlareLength;
@@ -1018,6 +1179,48 @@ namespace DollIrisGenerator.Models
         {
             get => _rayRangeFeather;
             set { _rayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の強さ: the darkest line's opacity. 0 = off.</summary>
+        public double RimRayIntensity
+        {
+            get => _rimRayIntensity;
+            set { _rimRayIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の本数.</summary>
+        public int RimRayCount
+        {
+            get => _rimRayCount;
+            set { _rimRayCount = Math.Clamp(value, MinRimRayCount, MaxRimRayCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>長さ: from the rim to the inner tip, as a fraction of the iris radius.</summary>
+        public double RimRayLength
+        {
+            get => _rimRayLength;
+            set { _rimRayLength = ClampFinite(value, MinRimRayLength, MaxRimRayLength, DefaultRimRayLength); OnPropertyChanged(); }
+        }
+
+        /// <summary>線幅 at the rim (the rays' style units).</summary>
+        public double RimRayWidth
+        {
+            get => _rimRayWidth;
+            set { _rimRayWidth = ClampFinite(value, MinRimRayWidth, MaxRimRayWidth, DefaultRimRayWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>ランダム性: how much the lines' direction, length and strength vary.</summary>
+        public double RimRayRandomness
+        {
+            get => _rimRayRandomness;
+            set { _rimRayRandomness = ClampFinite(value, 0.0, 1.0, DefaultRimRayRandomness); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の色 (one color).</summary>
+        public string RimRayColor
+        {
+            get => _rimRayColor;
+            set { _rimRayColor = value ?? DefaultRimRayColor; OnPropertyChanged(); }
         }
 
         /// <summary>ラメの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>

@@ -56,6 +56,18 @@ namespace DollIrisGenerator.Models
         public double? PupilOutlineIntensity { get; set; }
         public double? PupilOutlineWidth { get; set; }
         public string? PupilOutlineColor { get; set; }
+        public double? PupilInnerRingIntensity { get; set; }
+        public double? PupilInnerRingSize { get; set; }
+        public double? PupilInnerRingWidth { get; set; }
+        public string? PupilInnerRingColor { get; set; }
+        public double? PupilInnerRingIntensity2 { get; set; }
+        public double? PupilInnerRingSize2 { get; set; }
+        public double? PupilInnerRingWidth2 { get; set; }
+        public string? PupilInnerRingColor2 { get; set; }
+        public double? PupilInnerRingIntensity3 { get; set; }
+        public double? PupilInnerRingSize3 { get; set; }
+        public double? PupilInnerRingWidth3 { get; set; }
+        public string? PupilInnerRingColor3 { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
         public int? RayCount { get; set; }
@@ -99,10 +111,19 @@ namespace DollIrisGenerator.Models
         public double? ParticleMaxSize { get; set; }
         public double? ParticleOpacity { get; set; }
         public double? ParticleFlareLength { get; set; }
+        public bool? ParticleGlowCustomColor { get; set; }
+        public string? ParticleGlowColor { get; set; }
         // 見える範囲 (放射ライン・ラメ・レンズ風リング)
         public double? RayRangeAngle { get; set; }
         public double? RayRangeWidth { get; set; }
         public double? RayRangeFeather { get; set; }
+        // 外周からの線
+        public double? RimRayIntensity { get; set; }
+        public int? RimRayCount { get; set; }
+        public double? RimRayLength { get; set; }
+        public double? RimRayWidth { get; set; }
+        public double? RimRayRandomness { get; set; }
+        public string? RimRayColor { get; set; }
         public double? ParticleRangeAngle { get; set; }
         public double? ParticleRangeWidth { get; set; }
         public double? ParticleRangeFeather { get; set; }
@@ -130,6 +151,10 @@ namespace DollIrisGenerator.Models
         public LayerBlend? GlitterBlend { get; set; }
         public LayerBlend? AuroraBlend { get; set; }
         public double? FiberNoiseScale { get; set; }
+        // まぶたの影
+        public double? UpperShadowIntensity { get; set; }
+        public double? UpperShadowDepth { get; set; }
+        public string? UpperShadowColor { get; set; }
         // 色の段
         public double? ToneBandIntensity { get; set; }
         public int? ToneBandCount { get; set; }
@@ -137,15 +162,14 @@ namespace DollIrisGenerator.Models
         public string? ToneBandOuterColor { get; set; }
         public double? ToneBandSoftness { get; set; }
         public LayerBlend? ToneBandBlend { get; set; }
-        // 斑点
-        public double? SpotIntensity { get; set; }
-        public int? SpotCount { get; set; }
-        public double? SpotSize { get; set; }
-        public double? SpotElongation { get; set; }
-        public double? SpotSoftness { get; set; }
-        public double? SpotRadiusRatio { get; set; }
-        public string? SpotColor { get; set; }
-        public LayerBlend? SpotBlend { get; set; }
+        // 二色分け
+        public double? TwoToneIntensity { get; set; }
+        public string? TwoToneColor { get; set; }
+        public double? TwoToneHeight { get; set; }
+        public double? TwoToneCurve { get; set; }
+        public double? TwoToneSoftness { get; set; }
+        public double? TwoToneAngle { get; set; }
+        public LayerBlend? TwoToneBlend { get; set; }
         public double? FiberNoise { get; set; }
         public double? LightStrength { get; set; }
         public double? LightAngle { get; set; }
@@ -476,6 +500,18 @@ namespace DollIrisGenerator.Models
             target.PupilOutlineIntensity = preset.PupilOutlineIntensity ?? d.PupilOutlineIntensity;
             target.PupilOutlineWidth = preset.PupilOutlineWidth ?? d.PupilOutlineWidth;
             target.PupilOutlineColor = preset.PupilOutlineColor ?? d.PupilOutlineColor;
+            target.PupilInnerRingIntensity = preset.PupilInnerRingIntensity ?? d.PupilInnerRingIntensity;
+            target.PupilInnerRingSize = preset.PupilInnerRingSize ?? d.PupilInnerRingSize;
+            target.PupilInnerRingWidth = preset.PupilInnerRingWidth ?? d.PupilInnerRingWidth;
+            target.PupilInnerRingColor = preset.PupilInnerRingColor ?? d.PupilInnerRingColor;
+            target.PupilInnerRingIntensity2 = preset.PupilInnerRingIntensity2 ?? d.PupilInnerRingIntensity2;
+            target.PupilInnerRingSize2 = preset.PupilInnerRingSize2 ?? d.PupilInnerRingSize2;
+            target.PupilInnerRingWidth2 = preset.PupilInnerRingWidth2 ?? d.PupilInnerRingWidth2;
+            target.PupilInnerRingColor2 = preset.PupilInnerRingColor2 ?? d.PupilInnerRingColor2;
+            target.PupilInnerRingIntensity3 = preset.PupilInnerRingIntensity3 ?? d.PupilInnerRingIntensity3;
+            target.PupilInnerRingSize3 = preset.PupilInnerRingSize3 ?? d.PupilInnerRingSize3;
+            target.PupilInnerRingWidth3 = preset.PupilInnerRingWidth3 ?? d.PupilInnerRingWidth3;
+            target.PupilInnerRingColor3 = preset.PupilInnerRingColor3 ?? d.PupilInnerRingColor3;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
             target.RayCount = preset.RayCount ?? d.RayCount;
@@ -490,20 +526,22 @@ namespace DollIrisGenerator.Models
             target.GlitterBlend = preset.GlitterBlend ?? d.GlitterBlend;
             target.AuroraBlend = preset.AuroraBlend ?? d.AuroraBlend;
             target.FiberNoiseScale = preset.FiberNoiseScale ?? d.FiberNoiseScale;
+            target.UpperShadowIntensity = preset.UpperShadowIntensity ?? d.UpperShadowIntensity;
+            target.UpperShadowDepth = preset.UpperShadowDepth ?? d.UpperShadowDepth;
+            target.UpperShadowColor = preset.UpperShadowColor ?? d.UpperShadowColor;
             target.ToneBandIntensity = preset.ToneBandIntensity ?? d.ToneBandIntensity;
             target.ToneBandCount = preset.ToneBandCount ?? d.ToneBandCount;
             target.ToneBandInnerColor = preset.ToneBandInnerColor ?? d.ToneBandInnerColor;
             target.ToneBandOuterColor = preset.ToneBandOuterColor ?? d.ToneBandOuterColor;
             target.ToneBandSoftness = preset.ToneBandSoftness ?? d.ToneBandSoftness;
             target.ToneBandBlend = preset.ToneBandBlend ?? d.ToneBandBlend;
-            target.SpotIntensity = preset.SpotIntensity ?? d.SpotIntensity;
-            target.SpotCount = preset.SpotCount ?? d.SpotCount;
-            target.SpotSize = preset.SpotSize ?? d.SpotSize;
-            target.SpotElongation = preset.SpotElongation ?? d.SpotElongation;
-            target.SpotSoftness = preset.SpotSoftness ?? d.SpotSoftness;
-            target.SpotRadiusRatio = preset.SpotRadiusRatio ?? d.SpotRadiusRatio;
-            target.SpotColor = preset.SpotColor ?? d.SpotColor;
-            target.SpotBlend = preset.SpotBlend ?? d.SpotBlend;
+            target.TwoToneIntensity = preset.TwoToneIntensity ?? d.TwoToneIntensity;
+            target.TwoToneColor = preset.TwoToneColor ?? d.TwoToneColor;
+            target.TwoToneHeight = preset.TwoToneHeight ?? d.TwoToneHeight;
+            target.TwoToneCurve = preset.TwoToneCurve ?? d.TwoToneCurve;
+            target.TwoToneSoftness = preset.TwoToneSoftness ?? d.TwoToneSoftness;
+            target.TwoToneAngle = preset.TwoToneAngle ?? d.TwoToneAngle;
+            target.TwoToneBlend = preset.TwoToneBlend ?? d.TwoToneBlend;
             target.FiberNoise = preset.FiberNoise ?? d.FiberNoise;
             target.LightStrength = preset.LightStrength ?? d.LightStrength;
             target.LightAngle = preset.LightAngle ?? d.LightAngle;
@@ -534,9 +572,17 @@ namespace DollIrisGenerator.Models
             target.ParticleMaxSize = preset.ParticleMaxSize ?? d.ParticleMaxSize;
             target.ParticleOpacity = preset.ParticleOpacity ?? d.ParticleOpacity;
             target.ParticleFlareLength = preset.ParticleFlareLength ?? d.ParticleFlareLength;
+            target.ParticleGlowCustomColor = preset.ParticleGlowCustomColor ?? d.ParticleGlowCustomColor;
+            target.ParticleGlowColor = preset.ParticleGlowColor ?? d.ParticleGlowColor;
             target.RayRangeAngle = preset.RayRangeAngle ?? d.RayRangeAngle;
             target.RayRangeWidth = preset.RayRangeWidth ?? d.RayRangeWidth;
             target.RayRangeFeather = preset.RayRangeFeather ?? d.RayRangeFeather;
+            target.RimRayIntensity = preset.RimRayIntensity ?? d.RimRayIntensity;
+            target.RimRayCount = preset.RimRayCount ?? d.RimRayCount;
+            target.RimRayLength = preset.RimRayLength ?? d.RimRayLength;
+            target.RimRayWidth = preset.RimRayWidth ?? d.RimRayWidth;
+            target.RimRayRandomness = preset.RimRayRandomness ?? d.RimRayRandomness;
+            target.RimRayColor = preset.RimRayColor ?? d.RimRayColor;
             target.ParticleRangeAngle = preset.ParticleRangeAngle ?? d.ParticleRangeAngle;
             target.ParticleRangeWidth = preset.ParticleRangeWidth ?? d.ParticleRangeWidth;
             target.ParticleRangeFeather = preset.ParticleRangeFeather ?? d.ParticleRangeFeather;
@@ -660,6 +706,18 @@ namespace DollIrisGenerator.Models
                 PupilOutlineIntensity = design.PupilOutlineIntensity,
                 PupilOutlineWidth = design.PupilOutlineWidth,
                 PupilOutlineColor = design.PupilOutlineColor,
+                PupilInnerRingIntensity = design.PupilInnerRingIntensity,
+                PupilInnerRingSize = design.PupilInnerRingSize,
+                PupilInnerRingWidth = design.PupilInnerRingWidth,
+                PupilInnerRingColor = design.PupilInnerRingColor,
+                PupilInnerRingIntensity2 = design.PupilInnerRingIntensity2,
+                PupilInnerRingSize2 = design.PupilInnerRingSize2,
+                PupilInnerRingWidth2 = design.PupilInnerRingWidth2,
+                PupilInnerRingColor2 = design.PupilInnerRingColor2,
+                PupilInnerRingIntensity3 = design.PupilInnerRingIntensity3,
+                PupilInnerRingSize3 = design.PupilInnerRingSize3,
+                PupilInnerRingWidth3 = design.PupilInnerRingWidth3,
+                PupilInnerRingColor3 = design.PupilInnerRingColor3,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
                 RayCount = design.RayCount,
@@ -673,20 +731,22 @@ namespace DollIrisGenerator.Models
                 GlitterBlend = design.GlitterBlend,
                 AuroraBlend = design.AuroraBlend,
                 FiberNoiseScale = design.FiberNoiseScale,
+                UpperShadowIntensity = design.UpperShadowIntensity,
+                UpperShadowDepth = design.UpperShadowDepth,
+                UpperShadowColor = design.UpperShadowColor,
                 ToneBandIntensity = design.ToneBandIntensity,
                 ToneBandCount = design.ToneBandCount,
                 ToneBandInnerColor = design.ToneBandInnerColor,
                 ToneBandOuterColor = design.ToneBandOuterColor,
                 ToneBandSoftness = design.ToneBandSoftness,
                 ToneBandBlend = design.ToneBandBlend,
-                SpotIntensity = design.SpotIntensity,
-                SpotCount = design.SpotCount,
-                SpotSize = design.SpotSize,
-                SpotElongation = design.SpotElongation,
-                SpotSoftness = design.SpotSoftness,
-                SpotRadiusRatio = design.SpotRadiusRatio,
-                SpotColor = design.SpotColor,
-                SpotBlend = design.SpotBlend,
+                TwoToneIntensity = design.TwoToneIntensity,
+                TwoToneColor = design.TwoToneColor,
+                TwoToneHeight = design.TwoToneHeight,
+                TwoToneCurve = design.TwoToneCurve,
+                TwoToneSoftness = design.TwoToneSoftness,
+                TwoToneAngle = design.TwoToneAngle,
+                TwoToneBlend = design.TwoToneBlend,
                 FiberNoise = design.FiberNoise,
                 LightStrength = design.LightStrength,
                 LightAngle = design.LightAngle,
@@ -717,9 +777,17 @@ namespace DollIrisGenerator.Models
                 ParticleMaxSize = design.ParticleMaxSize,
                 ParticleOpacity = design.ParticleOpacity,
                 ParticleFlareLength = design.ParticleFlareLength,
+                ParticleGlowCustomColor = design.ParticleGlowCustomColor,
+                ParticleGlowColor = design.ParticleGlowColor,
                 RayRangeAngle = design.RayRangeAngle,
                 RayRangeWidth = design.RayRangeWidth,
                 RayRangeFeather = design.RayRangeFeather,
+                RimRayIntensity = design.RimRayIntensity,
+                RimRayCount = design.RimRayCount,
+                RimRayLength = design.RimRayLength,
+                RimRayWidth = design.RimRayWidth,
+                RimRayRandomness = design.RimRayRandomness,
+                RimRayColor = design.RimRayColor,
                 ParticleRangeAngle = design.ParticleRangeAngle,
                 ParticleRangeWidth = design.ParticleRangeWidth,
                 ParticleRangeFeather = design.ParticleRangeFeather,

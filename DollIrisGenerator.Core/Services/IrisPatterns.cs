@@ -8,11 +8,8 @@ namespace DollIrisGenerator.Services
     /// <summary>One radial ray: its direction (radians, already mirrored for the right eye) and where it starts / ends.</summary>
     public readonly record struct RaySpec(double Angle, double InnerR, double OuterR, double WidthFactor);
 
-    /// <summary>
-    /// One 斑点: its center (iris-radius units around the iris center, x right, y down), the direction its long axis
-    /// points (radians, in the same units), its size (0.4–1 of 大きさ) and its opacity (0.6–1 of 強さ).
-    /// </summary>
-    public readonly record struct SpotSpec(Point Position, double Angle, double SizeFactor, double AlphaFactor);
+    /// <summary>One 外周からの線: its direction (radians, iris-radius units, already mirrored), length factor and opacity factor.</summary>
+    public readonly record struct RimRaySpec(double Angle, double LengthFactor, double AlphaFactor);
 
     /// <summary>One glitter grain: where it sits, its size (drawing units), and how it is drawn.</summary>
     public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare);
@@ -379,36 +376,58 @@ namespace DollIrisGenerator.Services
             return edge;
         }
 
-        private const int SpotSeedOffset = 7500;
+        /// <summary>Points along a 二色分け boundary (v from −1.5 to 1.5), and how far out (u) the region is closed.</summary>
+        public const int TwoTonePoints = 61;
+        public const double TwoToneSpan = 1.5, TwoToneFar = 2.5;
 
         /// <summary>
-        /// 斑点: <paramref name="count"/> spots between 1.1 × the pupil's radius and <paramref name="outer"/>, spread
-        /// evenly over the area (r = √(a² + (b² − a²) × random)), each pointing along its radius ± 15°. Every spot takes
-        /// the same five draws, so changing the count keeps the first spots where they were. <paramref name="mirror"/>
-        /// mirrors them left-right (right eye).
+        /// 二色分け: the recolored region in iris-radius units around (0, 0) (x right, y down): with u along
+        /// <paramref name="angleDeg"/> (0 = right, 90 = down) and v across it, everything with
+        /// u ≥ (1 − 2 × <paramref name="height"/>) + <paramref name="curve"/> × v² + <paramref name="shift"/>, as the
+        /// boundary sampled at <see cref="TwoTonePoints"/> points for v in ±<see cref="TwoToneSpan"/>, closed at
+        /// u = <see cref="TwoToneFar"/> (the iris clip cuts it at the rim). <paramref name="shift"/> moves the boundary
+        /// along u (the soft edge's nested shapes).
         /// </summary>
-        public static List<SpotSpec> Spots(int count, double pupil, double outer, int seed, bool mirror)
+        public static Point[] TwoToneRegion(double height, double curve, double angleDeg, double shift = 0.0)
         {
-            var spots = new List<SpotSpec>(Math.Max(0, count));
-            var rng = new Random(seed + SpotSeedOffset);
-            double a = pupil * 1.1, b = Math.Max(a, outer);
+            double a = angleDeg * Math.PI / 180.0;
+            double dx = Math.Cos(a), dy = Math.Sin(a);   // along u
+            double px = -dy, py = dx;                    // along v
+            double u0 = 1.0 - 2.0 * height + shift;
+            Point At(double u, double v) => new(u * dx + v * px, u * dy + v * py);
+
+            var region = new Point[TwoTonePoints + 2];
+            for (int i = 0; i < TwoTonePoints; i++)
+            {
+                double v = -TwoToneSpan + 2.0 * TwoToneSpan * i / (TwoTonePoints - 1);
+                double u = Math.Clamp(u0 + curve * v * v, -TwoToneFar, TwoToneFar);
+                region[i] = At(u, v);
+            }
+            region[TwoTonePoints] = At(TwoToneFar, TwoToneSpan);
+            region[TwoTonePoints + 1] = At(TwoToneFar, -TwoToneSpan);
+            return region;
+        }
+
+        private const int RimRaySeedOffset = 8500;
+
+        /// <summary>
+        /// 外周からの線: <paramref name="count"/> lines evenly round from the top, each turned by up to
+        /// ± <paramref name="randomness"/> × 0.2 of the spacing, shortened by up to randomness × 50% and faded by up to
+        /// randomness × 40%. Every line takes the same three draws. <paramref name="mirror"/> mirrors them (right eye).
+        /// </summary>
+        public static List<RimRaySpec> RimRays(int count, double randomness, int seed, bool mirror)
+        {
+            var rays = new List<RimRaySpec>(Math.Max(0, count));
+            var rng = new Random(seed + RimRaySeedOffset);
+            double step = 2.0 * Math.PI / Math.Max(1, count);
             for (int i = 0; i < count; i++)
             {
-                double angle = rng.NextDouble() * 2.0 * Math.PI;
-                double r = Math.Sqrt(a * a + (b * b - a * a) * rng.NextDouble());
-                double size = 0.4 + 0.6 * rng.NextDouble();
-                double alpha = 0.6 + 0.4 * rng.NextDouble();
-                double tilt = (rng.NextDouble() - 0.5) * (Math.PI / 6.0);
-                double axis = angle + tilt;
-                var position = new Point(r * Math.Cos(angle), r * Math.Sin(angle));
-                if (mirror)
-                {
-                    position = new Point(-position.X, position.Y);
-                    axis = Math.PI - axis;
-                }
-                spots.Add(new SpotSpec(position, axis, size, alpha));
+                double angle = -Math.PI / 2.0 + step * (i + randomness * 0.4 * (rng.NextDouble() - 0.5));
+                double length = 1.0 - randomness * 0.5 * rng.NextDouble();
+                double alpha = 1.0 - randomness * 0.4 * rng.NextDouble();
+                rays.Add(new RimRaySpec(mirror ? Math.PI - angle : angle, length, alpha));
             }
-            return spots;
+            return rays;
         }
 
         /// <summary>Cross-shaped flare (a thin four-point star) of a grain, around (0, 0).</summary>

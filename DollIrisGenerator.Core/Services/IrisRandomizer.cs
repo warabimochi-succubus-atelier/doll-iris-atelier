@@ -226,18 +226,29 @@ namespace DollIrisGenerator.Services
                 p.ToneBandBlend = themed ? LayerBlend.Normal : LayerBlend.SoftLight;
             }
 
-            // 斑点 (after everything else): 20% of designs, dark spots of the theme's hue
-            if (!Locked(RandomizeLocks.Spots))
+            // まぶたの影 (after everything else): mostly the usual shadow, sometimes light or deep, sometimes tinted
+            if (!colorsLocked)
             {
-                p.SpotIntensity = Chance(20) ? Range(0.30, 0.60) : 0.0;
-                p.SpotCount = rng.Next(8, 41);
-                p.SpotSize = Range(0.025, 0.05, 3);
-                p.SpotElongation = Range(0.0, 0.7);
-                p.SpotSoftness = Range(0.3, 0.7);
-                p.SpotRadiusRatio = Range(0.60, 0.85);
-                p.SpotBlend = Chance(40) ? LayerBlend.SoftLight : LayerBlend.Normal;
+                int roll = rng.Next(100);
+                double strength = rng.NextDouble(), depth = rng.NextDouble();
+                bool tinted = Chance(30);
+                p.UpperShadowIntensity = roll < 70 ? IrisParameters.DefaultUpperShadowIntensity
+                    : roll < 85 ? Math.Round(0.25 + strength * 0.25, 2) : Math.Round(0.70 + strength * 0.15, 2);
+                p.UpperShadowDepth = roll < 70 ? IrisParameters.DefaultUpperShadowDepth
+                    : roll < 85 ? Math.Round(0.45 + depth * 0.15, 2) : Math.Round(0.70 + depth * 0.15, 2);
+                p.UpperShadowColor = tinted ? HslToHex(hue, sat, 0.10) : IrisParameters.DefaultUpperShadowColor;
             }
-            if (ColorFree(RandomizeLocks.Spots)) p.SpotColor = HslToHex(hue - 15.0, sat * 0.6, Range(0.12, 0.22));
+
+            // 外周からの線 (after everything else): 20% of designs, dark lines of the theme's hue
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                p.RimRayIntensity = Chance(20) ? Range(0.35, 0.70) : 0.0;
+                p.RimRayCount = rng.Next(24, 73);
+                p.RimRayLength = Range(0.12, 0.30);
+                p.RimRayWidth = Range(0.8, 1.6, 1);
+                p.RimRayRandomness = Range(0.3, 0.6);
+            }
+            if (ColorFree(RandomizeLocks.Rays)) p.RimRayColor = HslToHex(hue - 10.0, sat, 0.12);
 
             // 瞳孔の縁取り線 and 外輪の内側の輪 (after everything else)
             if (!Locked(RandomizeLocks.Pupil))
@@ -253,6 +264,70 @@ namespace DollIrisGenerator.Services
                 p.LimbalInnerRingGap = Range(0.0, 0.03, 3);
             }
             if (ColorFree(RandomizeLocks.LimbalRing)) p.LimbalInnerRingColor = Chance(50) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
+
+            // 瞳孔の中の輪 (drawn last): 15% of designs
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                p.PupilInnerRingIntensity = Chance(15) ? Range(0.5, 0.9) : 0.0;
+                p.PupilInnerRingSize = Range(0.45, 0.75);
+                p.PupilInnerRingWidth = Range(0.008, 0.02, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil)) p.PupilInnerRingColor = Chance(60) ? "#FFFFFF" : HslToHex(hue, paleSat, 0.85);
+
+            // 二色分け (drawn last): 15% of the designs that are not odd-eyed (one color for both eyes): a lighter lower side
+            if (!colorsLocked)
+            {
+                bool twoTone = Chance(15) && !p.IsOddEye;
+                p.TwoToneIntensity = twoTone ? Range(0.50, 0.85) : 0.0;
+                p.TwoToneColor = HslToHex(hue + 8.0, paleSat, Math.Min(0.85, lit + 0.25));
+                p.TwoToneHeight = Range(0.25, 0.45);
+                p.TwoToneCurve = Range(0.10, 0.40);
+                p.TwoToneSoftness = Range(0.0, 0.40);
+                p.TwoToneAngle = IrisParameters.DefaultTwoToneAngle;
+                p.TwoToneBlend = LayerBlend.Normal;
+            }
+
+            // 黒いラメ (drawn last): 10% of the designs with glitter get black grains with a light halo (にじみの色).
+            // Blended normally: under スクリーン black grains would vanish
+            bool blackGlitter = Chance(10) && p.ParticleCount > 0 && !colorsLocked;
+            if (!Locked(RandomizeLocks.Particles))
+            {
+                p.ParticleGlowCustomColor = blackGlitter;
+                if (blackGlitter)
+                {
+                    p.ParticleGlow = Range(0.6, 0.9);
+                    p.GlitterBlend = LayerBlend.Normal;
+                }
+            }
+            if (ColorFree(RandomizeLocks.Particles))
+            {
+                p.ParticleGlowColor = Chance(50) ? IrisParameters.DefaultParticleGlowColor : HslToHex(hue, paleSat, 0.88);
+                if (blackGlitter) p.ParticleColor = HslToHex(hue, sat * 0.5, 0.06);
+            }
+
+            // 瞳孔の中の輪の 2 本目・3 本目 (drawn last): smaller rings inside the first, not evenly spaced, each with its
+            // own strength, width and (sometimes) color
+            if (!Locked(RandomizeLocks.Pupil))
+            {
+                bool second = p.PupilInnerRingIntensity > 0 && Chance(35);
+                bool third = second && Chance(30);
+                double f2 = Range(0.45, 0.75), f3 = Range(0.4, 0.7);
+                p.PupilInnerRingSize2 = Math.Max(IrisParameters.MinPupilInnerRingSize, Math.Round(p.PupilInnerRingSize * f2, 2));
+                p.PupilInnerRingSize3 = Math.Max(IrisParameters.MinPupilInnerRingSize, Math.Round(p.PupilInnerRingSize2 * f3, 2));
+                // A third ring only when it fits inside the second
+                if (p.PupilInnerRingSize3 >= p.PupilInnerRingSize2) third = false;
+                p.PupilInnerRingIntensity2 = second ? Range(0.4, 0.9) : 0.0;
+                p.PupilInnerRingIntensity3 = third ? Range(0.3, 0.8) : 0.0;
+                p.PupilInnerRingWidth2 = Range(0.006, 0.018, 3);
+                p.PupilInnerRingWidth3 = Range(0.005, 0.015, 3);
+            }
+            if (ColorFree(RandomizeLocks.Pupil))
+            {
+                // Half the time the same color as the first ring, otherwise white or a pale theme color
+                string Other() => Chance(50) ? p.PupilInnerRingColor : Chance(50) ? "#FFFFFF" : HslToHex(hue + 20.0, paleSat, 0.85);
+                p.PupilInnerRingColor2 = Other();
+                p.PupilInnerRingColor3 = Other();
+            }
         }
 
         /// <summary>

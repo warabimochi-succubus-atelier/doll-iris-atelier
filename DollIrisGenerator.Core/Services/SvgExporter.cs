@@ -269,6 +269,9 @@ namespace DollIrisGenerator.Services
         /// <summary>The glow's alpha is multiplied by this (clamped) so the faint blurred edges still read as light.</summary>
         public const double GlowAlphaSlope = 2.5;
 
+        /// <summary>The same for a glow in its own color (にじみの色): stronger, so a halo reads round dark grains.</summary>
+        public const double HaloAlphaSlope = 6.0;
+
         /// <summary>Blur (one deviation) of a highlight's 輪郭のぼかし at 100%, in highlight radii.</summary>
         public const double HighlightSoftnessBlur = 0.35;
 
@@ -359,17 +362,27 @@ namespace DollIrisGenerator.Services
         /// by <paramref name="extra"/> plus three deviations (user space: a stroke is outside an element's bounding box).
         /// <paramref name="alphaSlope"/> &gt; 1 strengthens the blurred alpha.
         /// </summary>
-        private static void AppendBlurFilter(StringBuilder sb, string id, double stdDeviation, Rect box, double extra, double alphaSlope = 1.0)
+        private static void AppendBlurFilter(StringBuilder sb, string id, double stdDeviation, Rect box, double extra, double alphaSlope = 1.0,
+            string? floodColor = null)
         {
             double m = extra + stdDeviation * 3.0;
             sb.AppendLine("      <defs>");
             sb.AppendLine($@"        <filter id=""{id}"" filterUnits=""userSpaceOnUse"" x=""{F(box.X - m)}"" y=""{F(box.Y - m)}"" width=""{F(box.Width + 2 * m)}"" height=""{F(box.Height + 2 * m)}"">");
-            sb.AppendLine($@"          <feGaussianBlur stdDeviation=""{F(stdDeviation, 4)}"" />");
+            // With a flood color, the blurred alpha is named and filled with that color (the shape's own colors dropped)
+            string named = floodColor != null ? @" result=""shape""" : "";
+            sb.AppendLine($@"          <feGaussianBlur stdDeviation=""{F(stdDeviation, 4)}""{(alphaSlope > 1.0 ? "" : named)} />");
             if (alphaSlope > 1.0)
             {
-                sb.AppendLine("          <feComponentTransfer>");
+                sb.AppendLine($"          <feComponentTransfer{named}>");
                 sb.AppendLine($@"            <feFuncA type=""linear"" slope=""{F(alphaSlope, 2)}"" />");
                 sb.AppendLine("          </feComponentTransfer>");
+            }
+            if (floodColor != null)
+            {
+                var (rgb, alpha) = SvgStopColor(floodColor);
+                string opacity = alpha < 1.0 ? $@" flood-opacity=""{alpha.ToString("0.###", Inv)}""" : "";
+                sb.AppendLine($@"          <feFlood flood-color=""{rgb}""{opacity} />");
+                sb.AppendLine(@"          <feComposite in2=""shape"" operator=""in"" />");
             }
             sb.AppendLine("        </filter>");
             sb.AppendLine("      </defs>");
@@ -468,43 +481,89 @@ namespace DollIrisGenerator.Services
             return stops;
         }
 
-        /// <summary>Length of a 斑点 at 細長さ 1, in widths (1 + this × 細長さ).</summary>
-        public const double SpotStretchPerElongation = 2.5;
+        /// <summary>Gaussian deviation (iris radii) of the 二色分け boundary at 境目のぼかし 1.</summary>
+        public const double TwoToneSigmaPerSoftness = 0.25;
+
+        /// <summary>Reach the soft 二色分け boundary's nested shapes are measured from (past 2.5 deviations at full softness).</summary>
+        private const double TwoToneFadeOrigin = 1.0;
 
         /// <summary>
-        /// 斑点: dark ellipses (<see cref="IrisPatterns.Spots"/>) in one group carrying the blend mode. Soft spots share a
-        /// bounding-box radial gradient: the color up to 1 − 柔らかさ, clear at the edge.
+        /// 二色分け (<see cref="IrisPatterns.TwoToneRegion"/>): crisp, the region filled with the paint; soft, the paint over
+        /// the iris body through a mask of the region with its boundary shifted along u (<see cref="NestedFadeSteps"/>),
+        /// so the color rises as Φ(t / σ) across the boundary. The right eye's side is mirrored (180° − 向き).
         /// </summary>
-        private static void AppendSpots(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry, double baseR,
-            IrisParameters p, bool isRightEye, int seed)
+        private static void AppendTwoTone(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, Rect irisBox, Func<string, string> irisBody)
         {
-            var (rgb, colorAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.SpotColor, IrisParameters.DefaultSpotColor));
-            string fill = rgb;
-            if (p.SpotSoftness > 0.005)
+            double angle = isRightEye ? 180.0 - p.TwoToneAngle : p.TwoToneAngle;
+            string paint = Paint(sb, "      ", $"{idPrefix}_two_tone_fill", p.TwoToneColor, IrisParameters.DefaultTwoToneColor, irisBox, isRightEye);
+            string common = $@" opacity=""{p.TwoToneIntensity.ToFixed(2)}""{BlendStyle(p.TwoToneBlend)}";
+
+            void AppendRegion(double shift)
             {
-                string gradId = $"{idPrefix}_spots_grad";
-                string opacityAttr = colorAlpha < 1.0 ? $@" stop-opacity=""{colorAlpha.ToString("0.###", Inv)}""" : "";
-                sb.AppendLine("      <defs>");
-                sb.AppendLine($@"        <radialGradient id=""{gradId}"">");
-                sb.AppendLine($@"          <stop offset=""0%"" stop-color=""{rgb}""{opacityAttr} />");
-                sb.AppendLine($@"          <stop offset=""{((1.0 - p.SpotSoftness) * 100.0).ToString("0.###", Inv)}%"" stop-color=""{rgb}""{opacityAttr} />");
-                sb.AppendLine($@"          <stop offset=""100%"" stop-color=""{rgb}"" stop-opacity=""0"" />");
-                sb.AppendLine("        </radialGradient>");
-                sb.AppendLine("      </defs>");
-                fill = $"url(#{gradId})";
-                colorAlpha = 1.0; // carried by the stops
+                var region = IrisPatterns.TwoToneRegion(p.TwoToneHeight, p.TwoToneCurve, angle, shift);
+                sb.Append(@" d=""M");
+                for (int i = 0; i < region.Length; i++)
+                {
+                    if (i > 0) sb.Append(" L");
+                    sb.AppendFixed(cx + region[i].X * rx, 3).Append(',').AppendFixed(cy + region[i].Y * ry, 3);
+                }
+                sb.Append(@" Z""");
             }
 
-            double width = p.SpotSize * baseR;
-            double length = width * (1.0 + SpotStretchPerElongation * p.SpotElongation);
-            sb.AppendLine($@"      <g id=""{idPrefix}_spots"" fill=""{fill}""{BlendStyle(p.SpotBlend)}>");
-            foreach (var spot in IrisPatterns.Spots(p.SpotCount, p.PupilSizeRatio, p.SpotRadiusRatio, seed, isRightEye))
+            if (p.TwoToneSoftness < 0.01)
             {
-                double x = cx + spot.Position.X * rx, y = cy + spot.Position.Y * ry;
-                // The long (vertical) axis turned to the spot's direction, as seen on the stretched iris
-                double deg = Math.Atan2(Math.Sin(spot.Angle) * ry, Math.Cos(spot.Angle) * rx) * 180.0 / Math.PI - 90.0;
-                double alpha = p.SpotIntensity * spot.AlphaFactor * colorAlpha;
-                sb.AppendLine($@"        <ellipse cx=""{F(x)}"" cy=""{F(y)}"" rx=""{F(width * spot.SizeFactor, 4)}"" ry=""{F(length * spot.SizeFactor, 4)}"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" transform=""rotate({deg.ToFixed(1)}, {F(x)}, {F(y)})"" />");
+                sb.Append($@"      <path id=""{idPrefix}_two_tone""");
+                AppendRegion(0.0);
+                sb.AppendLine($@" fill=""{paint}""{common} />");
+                return;
+            }
+
+            // A shape that reaches r covers everything with (origin − t) < r, i.e. t > origin − r (t: past the boundary)
+            string maskId = $"{idPrefix}_two_tone_mask";
+            double sigma = p.TwoToneSoftness * TwoToneSigmaPerSoftness;
+            sb.AppendLine("      <defs>");
+            sb.AppendLine($@"        <mask id=""{maskId}"">");
+            foreach (var (reach, opacity) in NestedFadeSteps(TwoToneFadeOrigin, sigma, CollaretteFadeStep / 4.0, MinCollaretteFadeSteps, MaxCollaretteFadeSteps))
+            {
+                if (opacity < 1e-4) continue;
+                sb.Append("          <path");
+                AppendRegion(TwoToneFadeOrigin - reach);
+                sb.AppendLine($@" fill=""#FFFFFF"" fill-opacity=""{F(opacity, 4)}"" />");
+            }
+            sb.AppendLine("        </mask>");
+            sb.AppendLine("      </defs>");
+            sb.AppendLine($@"      {irisBody($"{idPrefix}_two_tone")} fill=""{paint}""{common} mask=""url(#{maskId})"" />");
+        }
+
+        /// <summary>How far past the rim (iris radii) a 外周からの線 carries on at full width, so shaped outlines' corners are covered.</summary>
+        public const double RimRayReach = 1.5;
+
+        /// <summary>
+        /// 外周からの線 (<see cref="IrisPatterns.RimRays"/>): each line a triangle from its inner tip to the rim (線幅 wide
+        /// there), then a strip of that width out to <see cref="RimRayReach"/>, along its direction on the stretched iris.
+        /// </summary>
+        private static void AppendRimRays(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, int seed)
+        {
+            string color = GeometryHelper.SanitizeColorHex(p.RimRayColor, IrisParameters.DefaultRimRayColor);
+            double half = p.RimRayWidth * IrisStyle.MmPerStyleUnit / 2.0;
+            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}"">");
+            foreach (var ray in IrisPatterns.RimRays(p.RimRayCount, p.RimRayRandomness, seed, isRightEye))
+            {
+                double ux = Math.Cos(ray.Angle) * rx, uy = Math.Sin(ray.Angle) * ry; // radius 1 on the stretched iris
+                double len = Math.Sqrt(ux * ux + uy * uy);
+                double nx = -uy / len * half, ny = ux / len * half;                 // half the width, across the line
+                double tip = 1.0 - p.RimRayLength * ray.LengthFactor;
+                double alpha = p.RimRayIntensity * ray.AlphaFactor;
+                sb.Append(@"        <path d=""M");
+                sb.AppendFixed(cx + ux * tip, 3).Append(',').AppendFixed(cy + uy * tip, 3);
+                foreach (var (r, side) in new[] { (1.0, 1.0), (RimRayReach, 1.0), (RimRayReach, -1.0), (1.0, -1.0) })
+                {
+                    sb.Append(" L");
+                    sb.AppendFixed(cx + ux * r + nx * side, 3).Append(',').AppendFixed(cy + uy * r + ny * side, 3);
+                }
+                sb.AppendLine($@" Z"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
             }
             sb.AppendLine("      </g>");
         }
@@ -657,11 +716,17 @@ namespace DollIrisGenerator.Services
             sb.AppendLine($@"      <stop offset=""100%"" stop-color=""{effectiveOuterColor}"" />");
             sb.AppendLine("    </radialGradient>");
 
-            // Upper Shadow
-            sb.AppendLine($@"    <linearGradient id=""{upperShadowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
-            sb.AppendLine($@"      <stop offset=""0%"" stop-color=""#000000"" stop-opacity=""0.65"" />");
-            sb.AppendLine($@"      <stop offset=""65%"" stop-color=""#000000"" stop-opacity=""0"" />");
-            sb.AppendLine("    </linearGradient>");
+            // Upper Shadow (まぶたの影): the shadow color at 強さ on the top edge, clear at 深さ. The defaults write what
+            // the fixed shadow always did
+            bool upperShadow = p.UpperShadowIntensity > 0.005;
+            if (upperShadow)
+            {
+                var (shadowRgb, shadowAlpha) = SvgStopColor(GeometryHelper.SanitizeColorHex(p.UpperShadowColor, IrisParameters.DefaultUpperShadowColor));
+                sb.AppendLine($@"    <linearGradient id=""{upperShadowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
+                sb.AppendLine($@"      <stop offset=""0%"" stop-color=""{shadowRgb}"" stop-opacity=""{(p.UpperShadowIntensity * shadowAlpha).ToString("0.###", Inv)}"" />");
+                sb.AppendLine($@"      <stop offset=""{(p.UpperShadowDepth * 100.0).ToString("0.###", Inv)}%"" stop-color=""{shadowRgb}"" stop-opacity=""0"" />");
+                sb.AppendLine("    </linearGradient>");
+            }
 
             // Lower Glow
             sb.AppendLine($@"    <linearGradient id=""{bottomGlowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
@@ -697,6 +762,10 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("      </defs>");
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_tone_bands")} fill=""url(#{gradId})"" opacity=""{p.ToneBandIntensity.ToFixed(2)}""{BlendStyle(p.ToneBandBlend)} />");
             }
+            if (p.TwoToneIntensity > 0.01)
+            {
+                AppendTwoTone(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, irisBox, IrisBody);
+            }
             if (p.NebulaOpacity > 0.01)
             {
                 // The same cloud pixels the screen / PDF renderer draws, embedded as a PNG over the iris box
@@ -707,18 +776,23 @@ namespace DollIrisGenerator.Services
             {
                 AppendFiberNoise(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
             }
-            if (p.SpotIntensity > 0.01)
-            {
-                AppendSpots(sb, idPrefix, cx, cy, rx, ry, baseR, p, isRightEye, effectiveSeed);
-            }
             if (p.CollaretteIntensity > 0.01)
             {
                 AppendCollarette(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed, irisBox);
             }
-            sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
+            if (upperShadow)
+            {
+                sb.AppendLine($@"      {IrisBody($"{idPrefix}_upper_shadow")} fill=""url(#{upperShadowId})"" />");
+            }
             if (p.BottomHighlightIntensity > 0.01)
             {
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_bottom_glow")} fill=""url(#{bottomGlowId})"" />");
+            }
+
+            // 外周からの線: tapered lines from the rim inward, under the rays (and the limbal ring drawn later)
+            if (p.RimRayIntensity > 0.01)
+            {
+                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed);
             }
 
             // Radial Rays
@@ -977,6 +1051,20 @@ namespace DollIrisGenerator.Services
                     sb.AppendLine("      </g>");
                 }
 
+                // 瞳孔の中の輪 (up to three, each on its own): the same outline shrunk about the pupil's center; the stroke
+                // widened to match, so the line keeps its width. Under the 縁取り線
+                foreach (var (strength, k, width, color, suffix) in new[]
+                {
+                    (p.PupilInnerRingIntensity, p.PupilInnerRingSize, p.PupilInnerRingWidth, p.PupilInnerRingColor, ""),
+                    (p.PupilInnerRingIntensity2, p.PupilInnerRingSize2, p.PupilInnerRingWidth2, p.PupilInnerRingColor2, "2"),
+                    (p.PupilInnerRingIntensity3, p.PupilInnerRingSize3, p.PupilInnerRingWidth3, p.PupilInnerRingColor3, "3")
+                })
+                {
+                    if (strength <= 0.01) continue;
+                    string ringColor = GeometryHelper.SanitizeColorHex(color, IrisParameters.DefaultPupilInnerRingColor);
+                    AppendPupilShape("      ", $@" id=""{idPrefix}_pupil_inner_ring{suffix}"" fill=""none"" stroke=""{ringColor}"" stroke-width=""{F(baseR * width / k, 4)}"" stroke-linejoin=""round"" opacity=""{strength.ToFixed(2)}"" transform=""translate({F(cx)} {F(cy)}) scale({F(k, 5)}) translate({F(-cx)} {F(-cy)})""");
+                }
+
                 // 瞳孔の縁取り線: a line centered on the same outline (not blurred)
                 if (p.PupilOutlineIntensity > 0.01)
                 {
@@ -1008,8 +1096,12 @@ namespace DollIrisGenerator.Services
                     foreach (var g in grains) meanSize += g.Size;
                     meanSize /= grains.Count;
                     string glowId = $"{idPrefix}_glitter_glow";
+                    // にじみの色: the blurred shape filled with its own color (a light halo round dark grains)
+                    string? glowColor = p.ParticleGlowCustomColor
+                        ? GeometryHelper.SanitizeColorHex(p.ParticleGlowColor, IrisParameters.DefaultParticleGlowColor)
+                        : null;
                     AppendBlurFilter(sb, glowId + "_filter", meanSize * (GlowBlurBase + GlowBlurPerGlow * p.ParticleGlow), irisBox, meanSize * 4.0,
-                        alphaSlope: GlowAlphaSlope);
+                        alphaSlope: glowColor != null ? HaloAlphaSlope : GlowAlphaSlope, floodColor: glowColor);
                     sb.AppendLine($@"      <use id=""{glowId}"" href=""#{idPrefix}_glitter"" filter=""url(#{glowId}_filter)"" opacity=""{F(Math.Min(1.0, p.ParticleGlow))}"" />");
                 }
 
