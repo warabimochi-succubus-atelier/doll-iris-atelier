@@ -48,6 +48,8 @@ public static class Fmt
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
     public static string Percent(double v) => $"{Math.Round(v * 100.0).ToString("F0", Inv)}%";
+    /// <summary>One decimal, for thin widths (the same as the desktop app's P1).</summary>
+    public static string Percent1(double v) => $"{(v * 100.0).ToString("F1", Inv)}%";
     public static string Mm(double v) => $"{v.ToString("F1", Inv)} mm";
     public static string Deg(double v) => $"{v.ToString("F0", Inv)}°";
     public static string F1(double v) => v.ToString("F1", Inv);
