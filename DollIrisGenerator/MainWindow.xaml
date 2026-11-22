@@ -961,7 +961,7 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="放射模様" VerticalAlignment="Center"/>
                                             <CheckBox Content="🔒 ランダム生成で変えない" IsChecked="{Binding LockRays}" Style="{StaticResource RandomizeLockCheckBox}"
-                                                      ToolTip="放射模様の本数・線幅・長さ・強度・ランダム性・内側半径・繊維の質感・色をランダム生成で変えない"/>
+                                                      ToolTip="放射模様の本数・線幅・長さ・強度・ランダム性・内側半径・繊維の質感・色と、外周からの線をランダム生成で変えない"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <StackPanel>
@@ -1063,6 +1063,39 @@
                                             <TextBlock Text="{Binding CurrentIris.RayRangeFeather, StringFormat='{}{0:F0}°'}" FontSize="11" HorizontalAlignment="Right"/>
                                         </DockPanel>
                                         <Slider Minimum="0" Maximum="90" Value="{Binding CurrentIris.RayRangeFeather}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+
+                                        <!-- 外周からの線 (Rim rays) -->
+                                        <TextBlock Text="外周からの線" Foreground="{StaticResource TextPrimary}" Margin="0,12,0,2"/>
+                                        <TextBlock Text="外周から内側へ伸びる先細りの線です。瞳孔側からの放射ラインとは別の組で、両方を同時に描けます (強さ 0% でオフ):" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="線の濃さ。0% でオフ">
+                                            <TextBlock Text="強さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayIntensity, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.RimRayIntensity}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock Text="本数:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayCount, StringFormat='{}{0} 本'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="4" Maximum="120" Value="{Binding CurrentIris.RimRayCount}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <TextBlock Text="線の色:" VerticalAlignment="Center" Width="110"/>
+                                            <controls:ColorPickerBox SelectedColorHex="{Binding CurrentIris.RimRayColor, Mode=TwoWay}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="外周から内側の先までの長さ。虹彩の半径に対する割合">
+                                            <TextBlock Text="長さ:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayLength, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.05" Maximum="0.60" Value="{Binding CurrentIris.RimRayLength}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="外周での線の太さ (放射ラインの線幅と同じ単位)">
+                                            <TextBlock Text="線幅:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayWidth, StringFormat='{}{0:F1}'}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.5" Maximum="4.0" Value="{Binding CurrentIris.RimRayWidth}" Margin="0,0,0,8"/>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="向き・長さ・濃さのばらつき">
+                                            <TextBlock Text="ランダム性:" FontSize="11" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding CurrentIris.RimRayRandomness, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" HorizontalAlignment="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding CurrentIris.RimRayRandomness}"/>
                                     </StackPanel>
                                 </GroupBox>
                             </StackPanel>

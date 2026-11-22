@@ -14,6 +14,9 @@ namespace DollIrisGenerator.Services
     /// </summary>
     public readonly record struct SpotSpec(Point Position, double Angle, double SizeFactor, double AlphaFactor);
 
+    /// <summary>One 外周からの線: its direction (radians, iris-radius units, already mirrored), length factor and opacity factor.</summary>
+    public readonly record struct RimRaySpec(double Angle, double LengthFactor, double AlphaFactor);
+
     /// <summary>One glitter grain: where it sits, its size (drawing units), and how it is drawn.</summary>
     public readonly record struct GrainSpec(Point Position, double Size, bool IsStar, bool HasFlare);
 
@@ -377,6 +380,28 @@ namespace DollIrisGenerator.Services
                 for (int k = 0; k < edge.Length; k++) edge[k] = (Math.PI - edge[k].Item1, edge[k].Item2);
             }
             return edge;
+        }
+
+        private const int RimRaySeedOffset = 8500;
+
+        /// <summary>
+        /// 外周からの線: <paramref name="count"/> lines evenly round from the top, each turned by up to
+        /// ± <paramref name="randomness"/> × 0.2 of the spacing, shortened by up to randomness × 50% and faded by up to
+        /// randomness × 40%. Every line takes the same three draws. <paramref name="mirror"/> mirrors them (right eye).
+        /// </summary>
+        public static List<RimRaySpec> RimRays(int count, double randomness, int seed, bool mirror)
+        {
+            var rays = new List<RimRaySpec>(Math.Max(0, count));
+            var rng = new Random(seed + RimRaySeedOffset);
+            double step = 2.0 * Math.PI / Math.Max(1, count);
+            for (int i = 0; i < count; i++)
+            {
+                double angle = -Math.PI / 2.0 + step * (i + randomness * 0.4 * (rng.NextDouble() - 0.5));
+                double length = 1.0 - randomness * 0.5 * rng.NextDouble();
+                double alpha = 1.0 - randomness * 0.4 * rng.NextDouble();
+                rays.Add(new RimRaySpec(mirror ? Math.PI - angle : angle, length, alpha));
+            }
+            return rays;
         }
 
         private const int SpotSeedOffset = 7500;

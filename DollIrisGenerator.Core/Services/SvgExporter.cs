@@ -468,6 +468,38 @@ namespace DollIrisGenerator.Services
             return stops;
         }
 
+        /// <summary>How far past the rim (iris radii) a 外周からの線 carries on at full width, so shaped outlines' corners are covered.</summary>
+        public const double RimRayReach = 1.5;
+
+        /// <summary>
+        /// 外周からの線 (<see cref="IrisPatterns.RimRays"/>): each line a triangle from its inner tip to the rim (線幅 wide
+        /// there), then a strip of that width out to <see cref="RimRayReach"/>, along its direction on the stretched iris.
+        /// </summary>
+        private static void AppendRimRays(StringBuilder sb, string idPrefix, double cx, double cy, double rx, double ry,
+            IrisParameters p, bool isRightEye, int seed)
+        {
+            string color = GeometryHelper.SanitizeColorHex(p.RimRayColor, IrisParameters.DefaultRimRayColor);
+            double half = p.RimRayWidth * IrisStyle.MmPerStyleUnit / 2.0;
+            sb.AppendLine($@"      <g id=""{idPrefix}_rim_rays"" fill=""{color}"">");
+            foreach (var ray in IrisPatterns.RimRays(p.RimRayCount, p.RimRayRandomness, seed, isRightEye))
+            {
+                double ux = Math.Cos(ray.Angle) * rx, uy = Math.Sin(ray.Angle) * ry; // radius 1 on the stretched iris
+                double len = Math.Sqrt(ux * ux + uy * uy);
+                double nx = -uy / len * half, ny = ux / len * half;                 // half the width, across the line
+                double tip = 1.0 - p.RimRayLength * ray.LengthFactor;
+                double alpha = p.RimRayIntensity * ray.AlphaFactor;
+                sb.Append(@"        <path d=""M");
+                sb.AppendFixed(cx + ux * tip, 3).Append(',').AppendFixed(cy + uy * tip, 3);
+                foreach (var (r, side) in new[] { (1.0, 1.0), (RimRayReach, 1.0), (RimRayReach, -1.0), (1.0, -1.0) })
+                {
+                    sb.Append(" L");
+                    sb.AppendFixed(cx + ux * r + nx * side, 3).Append(',').AppendFixed(cy + uy * r + ny * side, 3);
+                }
+                sb.AppendLine($@" Z"" fill-opacity=""{alpha.ToString("0.###", Inv)}"" />");
+            }
+            sb.AppendLine("      </g>");
+        }
+
         /// <summary>Length of a 斑点 at 細長さ 1, in widths (1 + this × 細長さ).</summary>
         public const double SpotStretchPerElongation = 2.5;
 
@@ -728,6 +760,12 @@ namespace DollIrisGenerator.Services
             if (p.BottomHighlightIntensity > 0.01)
             {
                 sb.AppendLine($@"      {IrisBody($"{idPrefix}_bottom_glow")} fill=""url(#{bottomGlowId})"" />");
+            }
+
+            // 外周からの線: tapered lines from the rim inward, under the rays (and the limbal ring drawn later)
+            if (p.RimRayIntensity > 0.01)
+            {
+                AppendRimRays(sb, idPrefix, cx, cy, rx, ry, p, isRightEye, effectiveSeed);
             }
 
             // Radial Rays

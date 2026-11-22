@@ -103,6 +103,13 @@ namespace DollIrisGenerator.Models
         public double? RayRangeAngle { get; set; }
         public double? RayRangeWidth { get; set; }
         public double? RayRangeFeather { get; set; }
+        // 外周からの線
+        public double? RimRayIntensity { get; set; }
+        public int? RimRayCount { get; set; }
+        public double? RimRayLength { get; set; }
+        public double? RimRayWidth { get; set; }
+        public double? RimRayRandomness { get; set; }
+        public string? RimRayColor { get; set; }
         public double? ParticleRangeAngle { get; set; }
         public double? ParticleRangeWidth { get; set; }
         public double? ParticleRangeFeather { get; set; }
@@ -544,6 +551,12 @@ namespace DollIrisGenerator.Models
             target.RayRangeAngle = preset.RayRangeAngle ?? d.RayRangeAngle;
             target.RayRangeWidth = preset.RayRangeWidth ?? d.RayRangeWidth;
             target.RayRangeFeather = preset.RayRangeFeather ?? d.RayRangeFeather;
+            target.RimRayIntensity = preset.RimRayIntensity ?? d.RimRayIntensity;
+            target.RimRayCount = preset.RimRayCount ?? d.RimRayCount;
+            target.RimRayLength = preset.RimRayLength ?? d.RimRayLength;
+            target.RimRayWidth = preset.RimRayWidth ?? d.RimRayWidth;
+            target.RimRayRandomness = preset.RimRayRandomness ?? d.RimRayRandomness;
+            target.RimRayColor = preset.RimRayColor ?? d.RimRayColor;
             target.ParticleRangeAngle = preset.ParticleRangeAngle ?? d.ParticleRangeAngle;
             target.ParticleRangeWidth = preset.ParticleRangeWidth ?? d.ParticleRangeWidth;
             target.ParticleRangeFeather = preset.ParticleRangeFeather ?? d.ParticleRangeFeather;
@@ -730,6 +743,12 @@ namespace DollIrisGenerator.Models
                 RayRangeAngle = design.RayRangeAngle,
                 RayRangeWidth = design.RayRangeWidth,
                 RayRangeFeather = design.RayRangeFeather,
+                RimRayIntensity = design.RimRayIntensity,
+                RimRayCount = design.RimRayCount,
+                RimRayLength = design.RimRayLength,
+                RimRayWidth = design.RimRayWidth,
+                RimRayRandomness = design.RimRayRandomness,
+                RimRayColor = design.RimRayColor,
                 ParticleRangeAngle = design.ParticleRangeAngle,
                 ParticleRangeWidth = design.ParticleRangeWidth,
                 ParticleRangeFeather = design.ParticleRangeFeather,

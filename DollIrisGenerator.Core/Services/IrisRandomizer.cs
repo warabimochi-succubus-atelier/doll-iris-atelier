@@ -252,6 +252,17 @@ namespace DollIrisGenerator.Services
                 p.UpperShadowColor = tinted ? HslToHex(hue, sat, 0.10) : IrisParameters.DefaultUpperShadowColor;
             }
 
+            // 外周からの線 (after everything else): 20% of designs, dark lines of the theme's hue
+            if (!Locked(RandomizeLocks.Rays))
+            {
+                p.RimRayIntensity = Chance(20) ? Range(0.35, 0.70) : 0.0;
+                p.RimRayCount = rng.Next(24, 73);
+                p.RimRayLength = Range(0.12, 0.30);
+                p.RimRayWidth = Range(0.8, 1.6, 1);
+                p.RimRayRandomness = Range(0.3, 0.6);
+            }
+            if (ColorFree(RandomizeLocks.Rays)) p.RimRayColor = HslToHex(hue - 10.0, sat, 0.12);
+
             // 瞳孔の縁取り線 and 外輪の内側の輪 (after everything else)
             if (!Locked(RandomizeLocks.Pupil))
             {

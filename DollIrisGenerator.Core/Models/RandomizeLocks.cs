@@ -22,7 +22,7 @@ namespace DollIrisGenerator.Models
         Seed = 1 << 1,
         /// <summary>瞳孔: shape, size, opacity, softness, corner rounding, gem cut and color, the 瞳孔まわりの輪 and the 縁取り線.</summary>
         Pupil = 1 << 2,
-        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color.</summary>
+        /// <summary>放射模様: count, thickness, length, intensity, randomness, inner radius, fiber look and color, and the 外周からの線.</summary>
         Rays = 1 << 3,
         /// <summary>外輪: thickness, opacity, softness and color, and the 外輪の内側の輪.</summary>
         LimbalRing = 1 << 4,

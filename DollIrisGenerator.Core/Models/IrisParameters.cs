@@ -50,6 +50,13 @@ namespace DollIrisGenerator.Models
         public const double MinUpperShadowDepth = 0.20, MaxUpperShadowDepth = 1.0, DefaultUpperShadowDepth = 0.65;
         public const string DefaultUpperShadowColor = "#000000";
 
+        /// <summary>外周からの線 (IrisPatterns.RimRays): ranges and defaults.</summary>
+        public const int MinRimRayCount = 4, MaxRimRayCount = 120, DefaultRimRayCount = 36;
+        public const double MinRimRayLength = 0.05, MaxRimRayLength = 0.60, DefaultRimRayLength = 0.20;
+        public const double MinRimRayWidth = 0.5, MaxRimRayWidth = 4.0, DefaultRimRayWidth = 1.2;
+        public const double DefaultRimRayRandomness = 0.4;
+        public const string DefaultRimRayColor = "#0D1B3E";
+
         public const int MinPupilFacetCount = 4;
         public const int MaxPupilFacetCount = 24;
 
@@ -174,6 +181,14 @@ namespace DollIrisGenerator.Models
         private LayerBlend _auroraBlend = LayerBlend.Normal;
         private double _fiberNoiseScale = 1.0;
         private double _fiberNoise = 0.0;
+
+        // 外周からの線 (tapered lines from the rim inward): 0 strength = off. Older files load as off.
+        private double _rimRayIntensity = 0.0;
+        private int _rimRayCount = DefaultRimRayCount;
+        private double _rimRayLength = DefaultRimRayLength;
+        private double _rimRayWidth = DefaultRimRayWidth;
+        private double _rimRayRandomness = DefaultRimRayRandomness;
+        private string _rimRayColor = DefaultRimRayColor;
 
         // まぶたの影 (the shadow over the top of the iris). Files saved before it was adjustable load as the old fixed shadow.
         private double _upperShadowIntensity = DefaultUpperShadowIntensity;
@@ -1049,6 +1064,48 @@ namespace DollIrisGenerator.Models
         {
             get => _rayRangeFeather;
             set { _rayRangeFeather = ClampFinite(value, 0.0, MaxRangeFeather, DefaultRangeFeather); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の強さ: the darkest line's opacity. 0 = off.</summary>
+        public double RimRayIntensity
+        {
+            get => _rimRayIntensity;
+            set { _rimRayIntensity = ClampFinite(value, 0.0, 1.0, 0.0); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の本数.</summary>
+        public int RimRayCount
+        {
+            get => _rimRayCount;
+            set { _rimRayCount = Math.Clamp(value, MinRimRayCount, MaxRimRayCount); OnPropertyChanged(); }
+        }
+
+        /// <summary>長さ: from the rim to the inner tip, as a fraction of the iris radius.</summary>
+        public double RimRayLength
+        {
+            get => _rimRayLength;
+            set { _rimRayLength = ClampFinite(value, MinRimRayLength, MaxRimRayLength, DefaultRimRayLength); OnPropertyChanged(); }
+        }
+
+        /// <summary>線幅 at the rim (the rays' style units).</summary>
+        public double RimRayWidth
+        {
+            get => _rimRayWidth;
+            set { _rimRayWidth = ClampFinite(value, MinRimRayWidth, MaxRimRayWidth, DefaultRimRayWidth); OnPropertyChanged(); }
+        }
+
+        /// <summary>ランダム性: how much the lines' direction, length and strength vary.</summary>
+        public double RimRayRandomness
+        {
+            get => _rimRayRandomness;
+            set { _rimRayRandomness = ClampFinite(value, 0.0, 1.0, DefaultRimRayRandomness); OnPropertyChanged(); }
+        }
+
+        /// <summary>外周からの線の色 (one color).</summary>
+        public string RimRayColor
+        {
+            get => _rimRayColor;
+            set { _rimRayColor = value ?? DefaultRimRayColor; OnPropertyChanged(); }
         }
 
         /// <summary>ラメの範囲の向き: the direction (degrees; 0 = right, 90 = down) the visible fan points.</summary>

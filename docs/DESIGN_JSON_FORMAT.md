@@ -214,6 +214,17 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `RayRangeWidth` | 0〜360（度） | 見える範囲の広さ。360 で全体（既定）、180 で半分 |
 | `RayRangeFeather` | 0〜90（度） | 見える範囲の端のぼかし（既定 30） |
 
+### 外周からの線（外周から内側へ伸びる線）
+
+| 項目 | 範囲・値 | 説明 |
+|---|---|---|
+| `RimRayIntensity` | 0〜1 | 強さ（濃さ）。0 でオフ（既定） |
+| `RimRayCount` | 4〜120 | 線の数（既定 36） |
+| `RimRayLength` | 0.05〜0.60 | 外周から内側の先までの長さの比率（既定 0.20） |
+| `RimRayWidth` | 0.5〜4.0 | 外周での線の太さ。放射ラインの `RayThickness` と同じ単位（既定 1.2） |
+| `RimRayRandomness` | 0〜1 | 向き・長さ・濃さのばらつき（既定 0.4） |
+| `RimRayColor` | 色（単色） | 線の色（既定 `#0D1B3E`） |
+
 ### 外輪（虹彩のふちの濃い輪）
 
 | 項目 | 範囲・値 | 説明 |
@@ -381,6 +392,12 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "NebulaSwirl": 0.4,
   "FiberNoise": 0.0,
   "FiberNoiseScale": 1.0,
+  "RimRayIntensity": 0.0,
+  "RimRayCount": 36,
+  "RimRayLength": 0.2,
+  "RimRayWidth": 1.2,
+  "RimRayRandomness": 0.4,
+  "RimRayColor": "#0D1B3E",
   "UpperShadowIntensity": 0.65,
   "UpperShadowDepth": 0.65,
   "UpperShadowColor": "#000000",

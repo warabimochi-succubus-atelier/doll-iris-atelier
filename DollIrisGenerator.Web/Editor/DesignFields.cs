@@ -188,6 +188,17 @@ public static class DesignFields
         new SliderField<IrisParameters>("うねり (渦巻き)", p => p.RayCurve, (p, v) => p.RayCurve = v, -1, 1, 0.01, Fmt.Percent, "マイナスで逆回り (右目は自動で鏡像)"),
         new SliderField<IrisParameters>("細線レイヤー", p => p.RayFineLayer, (p, v) => p.RayFineLayer = v, 0, 1, 0.01, Fmt.Percent),
         .. RangeFields(PatternLayer.Rays),
+        new HeadingField<IrisParameters>("外周からの線", "外周から内側へ伸びる先細りの線です。瞳孔側からの放射ラインとは別の組で、両方を同時に描けます (強さ 0% でオフ)"),
+        new SliderField<IrisParameters>("外周からの線の強さ", p => p.RimRayIntensity, (p, v) => p.RimRayIntensity = v, 0, 1, 0.01, Fmt.Percent, "線の濃さ。0% でオフ"),
+        new SliderField<IrisParameters>("外周からの線の本数", p => p.RimRayCount, (p, v) => p.RimRayCount = Int(v),
+            IrisParameters.MinRimRayCount, IrisParameters.MaxRimRayCount, 1, v => Fmt.Count(v, "本")),
+        new ColorField<IrisParameters>("外周からの線の色", p => p.RimRayColor, (p, v) => p.RimRayColor = v),
+        new SliderField<IrisParameters>("外周からの線の長さ", p => p.RimRayLength, (p, v) => p.RimRayLength = v,
+            IrisParameters.MinRimRayLength, IrisParameters.MaxRimRayLength, 0.01, Fmt.Percent, "外周から内側の先まで。虹彩の半径に対する割合"),
+        new SliderField<IrisParameters>("外周からの線の線幅", p => p.RimRayWidth, (p, v) => p.RimRayWidth = v,
+            IrisParameters.MinRimRayWidth, IrisParameters.MaxRimRayWidth, 0.1, Fmt.F1, "外周での線の太さ (放射ラインの線幅と同じ単位)"),
+        new SliderField<IrisParameters>("外周からの線のランダム性", p => p.RimRayRandomness, (p, v) => p.RimRayRandomness = v, 0, 1, 0.01, Fmt.Percent,
+            "向き・長さ・濃さのばらつき"),
     ];
 
     /// <summary>
