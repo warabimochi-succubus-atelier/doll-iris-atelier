@@ -114,6 +114,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
 | `OuterGradientRadius` | 0.3〜1.2 | 外周色が始まる位置 |
 | `BottomHighlightColor` | 色 | 下側の照り返しの色 |
 | `BottomHighlightIntensity` | 0〜1 | 照り返しの強さ |
+| `BottomHighlightStart` | 0〜0.90 | 照り返しが始まる高さ。虹彩の高さに対する上端からの割合（既定 0.45）。小さいほど上まで広がる |
 | `LightStrength` | 0〜1 | 明るい場所を光の向きへずらす（0 でオフ） |
 | `LightAngle` | 0〜360 | 光の来る向き（270 = 上、225 前後 = 左上） |
 | `LightRightEyeFlip` | 0 鏡像, 2 反転しない（省略時 0） | 右目で光の向きを左右反転するか。2 にすると両目で同じ向きから光が入る（ハイライトも 2 にすると、光源が固定された自然な光） |
@@ -384,6 +385,7 @@ Doll Iris Atelier のデザインは、すべて **数値と色を並べた JSON
   "InnerGradientRadius": 0.55,
   "OuterGradientRadius": 0.95,
   "BottomHighlightIntensity": 0.4,
+  "BottomHighlightStart": 0.45,
   "LightAngle": 270.0,
   "LightRightEyeFlip": 0,
   "LightStrength": 0.0,

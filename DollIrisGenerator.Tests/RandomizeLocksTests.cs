@@ -22,7 +22,7 @@ namespace DollIrisGenerator.Tests
         private static string Snapshot(IrisParameters p, RandomizeLocks group) => group switch
         {
             RandomizeLocks.Colors => string.Join("|", p.Name, p.BaseColor, p.InnerColor, p.OuterColor, p.BottomHighlightColor,
-                p.InnerGradientRadius, p.OuterGradientRadius, p.BottomHighlightIntensity,
+                p.InnerGradientRadius, p.OuterGradientRadius, p.BottomHighlightIntensity, p.BottomHighlightStart,
                 p.LimbalRingColor, p.PupilColor, p.RayColor, p.ParticleColor, p.LensRingColor, p.CollaretteColor,
                 p.PupilOutlineColor, p.LimbalInnerRingColor, p.RimRayColor, p.PupilInnerRingColor, p.PupilInnerRingColor2, p.PupilInnerRingColor3,
                 p.OddEyeBaseColor, p.OddEyeInnerColor, p.OddEyeOuterColor, p.OddEyeRayColor, p.OddEyeBottomHighlightColor,
@@ -84,6 +84,7 @@ namespace DollIrisGenerator.Tests
                 InnerGradientRadius = 0.9,
                 OuterGradientRadius = 1.2,
                 BottomHighlightIntensity = 0.05,
+                BottomHighlightStart = 0.89,
                 LimbalRingThickness = 0.29,
                 LimbalRingColor = "#111111",
                 LimbalRingOpacity = 0.1,

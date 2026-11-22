@@ -728,9 +728,9 @@ namespace DollIrisGenerator.Services
                 sb.AppendLine("    </linearGradient>");
             }
 
-            // Lower Glow
+            // Lower Glow (clear at 始まる高さ, the old fixed 45% by default, to 強さ at the bottom)
             sb.AppendLine($@"    <linearGradient id=""{bottomGlowId}"" x1=""0"" y1=""0"" x2=""0"" y2=""1"">");
-            sb.AppendLine($@"      <stop offset=""45%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""0"" />");
+            sb.AppendLine($@"      <stop offset=""{(p.BottomHighlightStart * 100.0).ToString("0.###", Inv)}%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""0"" />");
             sb.AppendLine($@"      <stop offset=""100%"" stop-color=""{effectiveBottomColor}"" stop-opacity=""{p.BottomHighlightIntensity.ToFixed(2)}"" />");
             sb.AppendLine("    </linearGradient>");
 

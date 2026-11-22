@@ -70,6 +70,7 @@ namespace DollIrisGenerator.Models
         public string? PupilInnerRingColor3 { get; set; }
         public double? PupilSizeRatio { get; set; }
         public double? BottomHighlightIntensity { get; set; }
+        public double? BottomHighlightStart { get; set; }
         public int? RayCount { get; set; }
         public double? RayIntensity { get; set; }
         public int? ParticleCount { get; set; }
@@ -514,6 +515,7 @@ namespace DollIrisGenerator.Models
             target.PupilInnerRingColor3 = preset.PupilInnerRingColor3 ?? d.PupilInnerRingColor3;
             target.PupilSizeRatio = preset.PupilSizeRatio ?? d.PupilSizeRatio;
             target.BottomHighlightIntensity = preset.BottomHighlightIntensity ?? d.BottomHighlightIntensity;
+            target.BottomHighlightStart = preset.BottomHighlightStart ?? d.BottomHighlightStart;
             target.RayCount = preset.RayCount ?? d.RayCount;
             target.RayIntensity = preset.RayIntensity ?? d.RayIntensity;
             target.ParticleCount = preset.ParticleCount ?? d.ParticleCount;
@@ -720,6 +722,7 @@ namespace DollIrisGenerator.Models
                 PupilInnerRingColor3 = design.PupilInnerRingColor3,
                 PupilSizeRatio = design.PupilSizeRatio,
                 BottomHighlightIntensity = design.BottomHighlightIntensity,
+                BottomHighlightStart = design.BottomHighlightStart,
                 RayCount = design.RayCount,
                 RayIntensity = design.RayIntensity,
                 ParticleCount = design.ParticleCount,

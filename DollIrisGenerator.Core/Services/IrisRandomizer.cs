@@ -328,6 +328,14 @@ namespace DollIrisGenerator.Services
                 p.PupilInnerRingColor2 = Other();
                 p.PupilInnerRingColor3 = Other();
             }
+
+            // 下部反射光の始まる高さ (drawn last): mostly the usual 45%, sometimes higher or only at the bottom
+            if (!colorsLocked)
+            {
+                bool moved = Chance(30);
+                double start = Range(0.30, 0.70);
+                p.BottomHighlightStart = moved ? start : IrisParameters.DefaultBottomHighlightStart;
+            }
         }
 
         /// <summary>

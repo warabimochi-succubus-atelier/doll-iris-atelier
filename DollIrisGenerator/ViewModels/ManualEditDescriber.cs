@@ -29,6 +29,7 @@ namespace DollIrisGenerator.ViewModels
             [nameof(IrisParameters.InnerGradientRadius)] = "内周グラデ範囲",
             [nameof(IrisParameters.OuterGradientRadius)] = "外周グラデ範囲",
             [nameof(IrisParameters.BottomHighlightIntensity)] = "反射光の強さ",
+            [nameof(IrisParameters.BottomHighlightStart)] = "反射光の始まる高さ",
             [nameof(IrisParameters.AuroraColor)] = "オーロラ層の色",
             [nameof(IrisParameters.AuroraOpacity)] = "オーロラ層の強さ",
             [nameof(IrisParameters.NebulaColor)] = "星雲の色",

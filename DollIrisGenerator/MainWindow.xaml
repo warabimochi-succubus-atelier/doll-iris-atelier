@@ -649,6 +649,11 @@
                                             <TextBlock Text="反射光の強さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
                                             <Slider Value="{Binding CurrentIris.BottomHighlightIntensity}" Minimum="0.0" Maximum="1.0"/>
                                         </DockPanel>
+                                        <DockPanel Margin="0,0,0,4" ToolTip="照り返しが始まるところ。虹彩の高さに対する、上端からの割合 (最初は 45%)。小さいほど上まで広がり、大きいほど下端だけの細い照り返しになります">
+                                            <TextBlock Text="反射光の始まる高さ:" FontSize="10" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Width="120"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding CurrentIris.BottomHighlightStart, Converter={StaticResource DoubleToPercentConverter}}" FontSize="11" Width="40" TextAlignment="Right" VerticalAlignment="Center"/>
+                                            <Slider Value="{Binding CurrentIris.BottomHighlightStart}" Minimum="0.0" Maximum="0.9"/>
+                                        </DockPanel>
 
                                         <!-- まぶたの影 (Upper eyelid shadow) -->
                                         <DockPanel Margin="0,8,0,4" ToolTip="虹彩の上側に落ちるまぶたの影の濃さ。0% で影なし (最初は 65%)">
